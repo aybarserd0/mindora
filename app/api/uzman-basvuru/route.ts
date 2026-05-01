@@ -1,72 +1,82 @@
-import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { NextRequest, NextResponse } from 'next/server'
+import nodemailer from 'nodemailer'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
   try {
-    const data = await req.json();
+    const body = await req.json()
 
     const {
       name,
       phone,
       email,
       title,
-      areas = [],
+      areas,
       experience,
       online,
       price,
-      availability = [],
+      availability,
       expectation,
       note,
-    } = data;
+    } = body
 
-    if (!name || !phone || !email || !title) {
-      return NextResponse.json(
-        { ok: false, error: 'Zorunlu alanlar eksik.' },
-        { status: 400 }
-      );
+    // 🔹 1. Supabase’e kaydet
+    const { error } = await supabaseAdmin.from('experts').insert([
+      {
+        name,
+        phone,
+        email,
+        title,
+        areas,
+        experience,
+        online,
+        price,
+        availability,
+        expectation,
+        note,
+        status: 'pending',
+      },
+    ])
+
+    if (error) {
+      console.error('DB ERROR:', error)
+      return NextResponse.json({ ok: false, error: 'DB error' }, { status: 500 })
     }
 
+    // 🔹 2. Mail gönder
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 465),
+      port: Number(process.env.SMTP_PORT),
       secure: true,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-    });
-
-    const text = `
-Mindora Uzman Başvurusu
-
-Ad Soyad: ${name}
-Telefon: ${phone}
-E-posta: ${email}
-Ünvan: ${title}
-Uzmanlık Alanları: ${areas.join(', ')}
-Deneyim: ${experience || '-'}
-Online Çalışma: ${online || '-'}
-Seans Ücreti: ${price || '-'}
-Uygun Saatler: ${availability.join(', ')}
-Mindora’dan Beklenti: ${expectation || '-'}
-Ek Not: ${note || '-'}
-`;
+    })
 
     await transporter.sendMail({
-      from: `"Mindora Başvuru" <${process.env.SMTP_USER}>`,
+      from: `"Mindora" <${process.env.SMTP_USER}>`,
       to: process.env.CONTACT_TO,
-      subject: 'Mindora Uzman Başvurusu',
-      text,
-      replyTo: email,
-    });
+      subject: 'Yeni Uzman Başvurusu',
+      html: `
+        <h2>Yeni Uzman Başvurusu</h2>
+        <p><b>Ad:</b> ${name}</p>
+        <p><b>Telefon:</b> ${phone}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Ünvan:</b> ${title}</p>
+        <p><b>Alanlar:</b> ${areas}</p>
+        <p><b>Deneyim:</b> ${experience}</p>
+        <p><b>Online:</b> ${online}</p>
+        <p><b>Ücret:</b> ${price}</p>
+        <p><b>Müsaitlik:</b> ${availability}</p>
+        <p><b>Beklenti:</b> ${expectation}</p>
+        <p><b>Not:</b> ${note}</p>
+      `,
+    })
 
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error('Uzman başvuru mail hatası:', error);
-
-    return NextResponse.json(
-      { ok: false, error: 'Başvuru gönderilemedi.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error(err)
+    return NextResponse.json({ ok: false }, { status: 500 })
   }
 }
