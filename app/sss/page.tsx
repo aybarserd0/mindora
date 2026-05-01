@@ -117,12 +117,10 @@ export default function SSS() {
           </p>
 
           <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLScwAz1rbyfY_4xveOv9fhreITIw8KzE_f6B3r5-x6SUXP91yA/viewform"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-8 inline-block rounded-2xl bg-white px-9 py-4 font-bold text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
-          >
-            Ücretsiz ön eşleşme başlat
+               href="/eslesme"
+               className="mt-8 inline-block rounded-2xl bg-white px-9 py-4 font-bold text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
+            >
+              Ücretsiz ön eşleşme başlat
           </a>
         </div>
       </section>

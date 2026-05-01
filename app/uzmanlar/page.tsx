@@ -57,9 +57,7 @@ export default function Uzmanlar() {
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLScwAz1rbyfY_4xveOv9fhreITIw8KzE_f6B3r5-x6SUXP91yA/viewform"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/eslesme"
               className="rounded-2xl bg-black px-8 py-4 text-center font-bold text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
             >
               Ücretsiz ön eşleşme başlat
@@ -177,9 +175,7 @@ export default function Uzmanlar() {
           </p>
 
           <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLScwAz1rbyfY_4xveOv9fhreITIw8KzE_f6B3r5-x6SUXP91yA/viewform"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/eslesme"
             className="mt-8 inline-block rounded-2xl bg-black px-9 py-4 font-bold text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
           >
             Ücretsiz ön eşleşme başlat
