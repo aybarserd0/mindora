@@ -8,16 +8,29 @@ export async function GET() {
     const { data, error } = await supabase
       .from('experts')
       .select(
-        'id, name, title, areas, experience, online, price, availability, created_at'
+        `
+        id,
+        name,
+        title,
+        areas,
+        experience,
+        online,
+        availability,
+        photo_url,
+        created_at
+      `
       )
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('PUBLIC EXPERTS ERROR:', error)
+      console.error('PUBLIC EXPERTS DB ERROR:', error)
 
       return NextResponse.json(
-        { ok: false, error: error.message },
+        {
+          ok: false,
+          error: 'Onaylı uzmanlar alınamadı.',
+        },
         { status: 500 }
       )
     }
@@ -30,7 +43,10 @@ export async function GET() {
     console.error('PUBLIC EXPERTS API ERROR:', error)
 
     return NextResponse.json(
-      { ok: false, error: 'Server error' },
+      {
+        ok: false,
+        error: 'Sunucu hatası.',
+      },
       { status: 500 }
     )
   }

@@ -11,6 +11,7 @@ type Expert = {
   experience: string | null
   online: string | null
   availability: string | null
+  photo_url: string | null
 }
 
 function formatTitle(title: string | null) {
@@ -34,6 +35,11 @@ function splitAreas(areas: string | null) {
     .split(',')
     .map((area) => area.trim())
     .filter(Boolean)
+}
+
+function isPhotoUrlValid(url: string | null) {
+  if (!url) return false
+  return url.startsWith('http://') || url.startsWith('https://')
 }
 
 export default function Uzmanlar() {
@@ -122,15 +128,24 @@ export default function Uzmanlar() {
           <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {experts.map((expert) => {
               const expertAreas = splitAreas(expert.areas)
+              const showPhoto = isPhotoUrlValid(expert.photo_url)
 
               return (
                 <div
                   key={expert.id}
                   className="group rounded-[2rem] bg-white/80 p-7 text-center shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:bg-white hover:shadow-md"
                 >
-                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-lg">
-                    {getInitials(expert.name)}
-                  </div>
+                  {showPhoto ? (
+                    <img
+                      src={expert.photo_url || ''}
+                      alt={expert.name}
+                      className="mx-auto h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-white"
+                    />
+                  ) : (
+                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-lg">
+                      {getInitials(expert.name)}
+                    </div>
+                  )}
 
                   <h3 className="mt-6 text-xl font-black">{expert.name}</h3>
 
