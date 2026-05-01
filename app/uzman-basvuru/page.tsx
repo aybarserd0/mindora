@@ -4,30 +4,51 @@ import { FormEvent, useState } from 'react';
 
 export default function UzmanBasvuruPage() {
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSent(false);
+    setLoading(true);
 
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
 
-    const body = `
-Mindora Uzman Başvurusu
+    const payload = {
+      name: form.get('name'),
+      phone: form.get('phone'),
+      email: form.get('email'),
+      title: form.get('title'),
+      areas: form.getAll('areas'),
+      experience: form.get('experience'),
+      online: form.get('online'),
+      price: form.get('price'),
+      availability: form.getAll('availability'),
+      expectation: form.get('expectation'),
+      note: form.get('note'),
+    };
 
-Ad Soyad: ${form.get('name')}
-Telefon: ${form.get('phone')}
-E-posta: ${form.get('email')}
-Ünvan: ${form.get('title')}
-Uzmanlık Alanları: ${form.getAll('areas').join(', ')}
-Deneyim: ${form.get('experience')}
-Online Çalışma: ${form.get('online')}
-Seans Ücreti: ${form.get('price')}
-Uygun Saatler: ${form.getAll('availability').join(', ')}
-Mindora’dan Beklenti: ${form.get('expectation')}
-Ek Not: ${form.get('note')}
-`;
+    try {
+      const res = await fetch('/api/uzman-basvuru', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    window.location.href = `mailto:mindora.live@gmail.com?subject=Mindora Uzman Başvurusu&body=${encodeURIComponent(body)}`;
-    setSent(true);
+      const result = await res.json();
+
+      if (!res.ok || !result.ok) {
+        alert('Başvuru gönderilemedi. Lütfen tekrar dene.');
+        return;
+      }
+
+      setSent(true);
+      formElement.reset();
+    } catch {
+      alert('Başvuru gönderilemedi. Lütfen internet bağlantını kontrol edip tekrar dene.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -38,7 +59,11 @@ Ek Not: ${form.get('note')}
             <img src="/logo.png" alt="Mindora" className="h-10 w-10 rounded-xl" />
             <span className="text-xl font-bold tracking-tight">Mindora</span>
           </a>
-          <a href="/eslesme" className="rounded-full bg-black px-5 py-2.5 text-sm font-bold text-white">
+
+          <a
+            href="/eslesme"
+            className="rounded-full bg-black px-5 py-2.5 text-sm font-bold text-white"
+          >
             Danışan eşleşmesi
           </a>
         </div>
@@ -55,7 +80,8 @@ Ek Not: ${form.get('note')}
           </h1>
 
           <p className="mt-6 text-lg leading-8 text-neutral-700">
-            Uzmanlık alanına uygun danışanlarla çalışmak, online yönlendirme almak ve Mindora ekosisteminde yer almak için başvurunu iletebilirsin.
+            Uzmanlık alanına uygun danışanlarla çalışmak, online yönlendirme almak
+            ve Mindora ekosisteminde yer almak için başvurunu iletebilirsin.
           </p>
 
           <div className="mt-8 grid gap-3 text-sm font-bold text-neutral-700 sm:grid-cols-2">
@@ -151,13 +177,16 @@ Ek Not: ${form.get('note')}
               <textarea name="note" rows={3} className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none" />
             </div>
 
-            <button className="w-full rounded-2xl bg-black px-6 py-4 font-bold text-white transition hover:bg-neutral-800">
-              Uzman başvurusunu gönder
+            <button
+              disabled={loading}
+              className="w-full rounded-2xl bg-black px-6 py-4 font-bold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? 'Gönderiliyor...' : 'Uzman başvurusunu gönder'}
             </button>
 
             {sent && (
-              <p className="text-center text-sm font-semibold text-neutral-600">
-                Mail ekranı açıldı. Gönder’e basarak başvurunu iletebilirsin.
+              <p className="text-center text-sm font-semibold text-green-700">
+                Başvurun alındı 🙌 En kısa sürede seninle iletişime geçeceğiz.
               </p>
             )}
           </form>
