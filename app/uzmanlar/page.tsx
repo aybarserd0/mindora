@@ -10,8 +10,30 @@ type Expert = {
   areas: string | null
   experience: string | null
   online: string | null
-  price: string | null
   availability: string | null
+}
+
+function formatTitle(title: string | null) {
+  if (!title) return 'Uzman'
+  return title.charAt(0).toUpperCase() + title.slice(1)
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(' ').filter(Boolean)
+
+  if (parts.length === 0) return 'M'
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || 'M'
+
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+}
+
+function splitAreas(areas: string | null) {
+  if (!areas) return []
+
+  return areas
+    .split(',')
+    .map((area) => area.trim())
+    .filter(Boolean)
 }
 
 export default function Uzmanlar() {
@@ -85,7 +107,9 @@ export default function Uzmanlar() {
         </div>
 
         {loading ? (
-          <p className="mt-16 text-center text-neutral-600">Uzmanlar yükleniyor...</p>
+          <div className="mx-auto mt-16 max-w-3xl rounded-[2rem] bg-white/70 p-8 text-center shadow-sm ring-1 ring-black/5">
+            <p className="font-bold text-neutral-700">Uzmanlar yükleniyor...</p>
+          </div>
         ) : experts.length === 0 ? (
           <div className="mx-auto mt-16 max-w-3xl rounded-[2rem] bg-white/70 p-8 text-center shadow-sm ring-1 ring-black/5">
             <h2 className="text-2xl font-black">Henüz onaylı uzman yok.</h2>
@@ -95,42 +119,69 @@ export default function Uzmanlar() {
             </p>
           </div>
         ) : (
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
-            {experts.map((expert) => (
-              <div
-                key={expert.id}
-                className="rounded-[2rem] bg-white/70 p-7 text-center shadow-sm ring-1 ring-black/5"
-              >
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-black text-3xl font-black text-white">
-                  {expert.name.charAt(0).toUpperCase()}
+          <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {experts.map((expert) => {
+              const expertAreas = splitAreas(expert.areas)
+
+              return (
+                <div
+                  key={expert.id}
+                  className="group rounded-[2rem] bg-white/80 p-7 text-center shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:bg-white hover:shadow-md"
+                >
+                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-lg">
+                    {getInitials(expert.name)}
+                  </div>
+
+                  <h3 className="mt-6 text-xl font-black">{expert.name}</h3>
+
+                  <p className="mt-1 text-sm font-bold text-neutral-500">
+                    {formatTitle(expert.title)}
+                  </p>
+
+                  {expertAreas.length > 0 ? (
+                    <div className="mt-5 flex flex-wrap justify-center gap-2">
+                      {expertAreas.map((area) => (
+                        <span
+                          key={area}
+                          className="rounded-full bg-[#f6f1ea] px-3 py-1 text-xs font-bold text-neutral-700 ring-1 ring-black/5"
+                        >
+                          {area}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-5 text-sm text-neutral-500">
+                      Uzmanlık alanı belirtilmedi.
+                    </p>
+                  )}
+
+                  <div className="mt-6 space-y-3 rounded-3xl bg-[#f6f1ea] p-5 text-sm text-neutral-700">
+                    <p>
+                      <b>Deneyim:</b> {expert.experience || 'Belirtilmedi'}
+                    </p>
+
+                    <p>
+                      <b>Görüşme:</b>{' '}
+                      {expert.online === 'Evet'
+                        ? 'Online görüşme yapıyor'
+                        : expert.online || 'Belirtilmedi'}
+                    </p>
+
+                    <p>
+                      <b>Müsaitlik:</b>{' '}
+                      {expert.availability || 'Eşleşme sırasında netleşir'}
+                    </p>
+                  </div>
+
+                  <a
+                    href="/eslesme"
+                    className="mt-6 inline-block rounded-2xl bg-black px-6 py-3 text-sm font-bold text-white transition hover:bg-neutral-800"
+                  >
+                    Bu uzmanla eşleşme iste
+                  </a>
                 </div>
-
-                <h3 className="mt-6 text-xl font-black">{expert.name}</h3>
-
-                <p className="mt-1 text-sm font-bold text-neutral-500">
-                  {expert.title || 'Uzman'}
-                </p>
-
-                <p className="mt-4 leading-7 text-neutral-600">
-                  {expert.areas || 'Uzmanlık alanı belirtilmedi'}
-                </p>
-
-                <div className="mt-5 space-y-2 text-sm text-neutral-600">
-                  <p>
-                    <b>Deneyim:</b> {expert.experience || '-'}
-                  </p>
-                  <p>
-                    <b>Online görüşme:</b> {expert.online || '-'}
-                  </p>
-                  <p>
-                    <b>Seans ücreti:</b> {expert.price || '-'}
-                  </p>
-                  <p>
-                    <b>Müsaitlik:</b> {expert.availability || '-'}
-                  </p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>
@@ -155,8 +206,8 @@ export default function Uzmanlar() {
             </p>
 
             <p>
-              Form yanıtların; destek konusu, uzman tercihi, bütçe, uygun zaman
-              ve beklenti gibi kriterlerle değerlendirilir.
+              Form yanıtların; destek konusu, uzman tercihi, uygun zaman ve
+              beklenti gibi kriterlerle değerlendirilir.
             </p>
           </div>
         </div>
