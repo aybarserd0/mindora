@@ -1,26 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
+
+function toText(value: unknown) {
+  if (Array.isArray(value)) return value.join(', ')
+  if (value === null || value === undefined) return ''
+  return String(value)
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    const {
-      name,
-      phone,
-      email,
-      title,
-      areas,
-      experience,
-      online,
-      price,
-      availability,
-      expectation,
-      note,
-    } = body
+    const name = toText(body.name)
+    const phone = toText(body.phone)
+    const email = toText(body.email)
+    const title = toText(body.title)
+    const areas = toText(body.areas)
+    const experience = toText(body.experience)
+    const online = toText(body.online)
+    const price = toText(body.price)
+    const availability = toText(body.availability)
+    const expectation = toText(body.expectation)
+    const note = toText(body.note)
 
-    // 🔹 1. Supabase’e kaydet
+    if (!name || !email) {
+      return NextResponse.json(
+        { ok: false, error: 'Name and email are required' },
+        { status: 400 }
+      )
+    }
+
+    const supabaseAdmin = getSupabaseAdmin()
+
     const { error } = await supabaseAdmin.from('experts').insert([
       {
         name,
@@ -40,13 +52,15 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('DB ERROR:', error)
-      return NextResponse.json({ ok: false, error: 'DB error' }, { status: 500 })
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 }
+      )
     }
 
-    // 🔹 2. Mail gönder
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
+      port: Number(process.env.SMTP_PORT || 465),
       secure: true,
       auth: {
         user: process.env.SMTP_USER,
@@ -76,7 +90,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error(err)
-    return NextResponse.json({ ok: false }, { status: 500 })
+    console.error('UZMAN BASVURU ERROR:', err)
+    return NextResponse.json(
+      { ok: false, error: 'Server error' },
+      { status: 500 }
+    )
   }
 }
