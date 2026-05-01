@@ -70,7 +70,7 @@ export default function Home() {
     },
     {
       q: "Bilgileri gönderdikten sonra ne olacak?",
-      a: "Bilgilerin değerlendirilir ve 60 dakika içinde sana uygun yönlendirme için dönüş yapılır.",
+      a: "Bilgilerin değerlendirilir ve sana uygun yönlendirme için dönüş yapılır.",
     },
     {
       q: "Görüşmeler online mı?",
@@ -87,16 +87,36 @@ export default function Home() {
       <nav className="sticky top-0 z-50 border-b border-black/10 bg-[#f6f1ea]/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <a href="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="Mindora" className="h-10 w-10 rounded-xl" />
+            <img
+              src="/logo.png"
+              alt="Mindora"
+              className="h-10 w-10 rounded-xl object-cover"
+            />
             <span className="text-xl font-bold tracking-tight">Mindora</span>
           </a>
 
           <div className="hidden items-center gap-7 text-sm font-medium text-neutral-600 md:flex">
-            <a href="/hakkimizda" className="hover:text-black">Hakkımızda</a>
-            <a href="/uzmanlar" className="hover:text-black">Uzmanlarımız</a>
-            <a href="/psikolojik-testler" className="hover:text-black">Testler</a>
-            <a href="/uzman-basvuru" className="hover:text-black">Psikolog Başvuru</a>
-            <a href="/sss" className="hover:text-black">SSS</a>
+            <a href="/hakkimizda" className="transition hover:text-black">
+              Hakkımızda
+            </a>
+            <a href="/uzmanlar" className="transition hover:text-black">
+              Uzmanlarımız
+            </a>
+            <a href="/psikolojik-testler" className="transition hover:text-black">
+              Testler
+            </a>
+            <a href="/uzman-basvuru" className="transition hover:text-black">
+              Psikolog Başvuru
+            </a>
+            <a href="/sss" className="transition hover:text-black">
+              SSS
+            </a>
+            <a
+              href="/admin/uzman-basvurulari"
+              className="rounded-full bg-black px-4 py-2 text-xs font-bold text-white transition hover:bg-neutral-800"
+            >
+              Admin
+            </a>
           </div>
 
           <a
@@ -111,16 +131,17 @@ export default function Home() {
       <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-14 md:grid-cols-2 md:pt-24">
         <div>
           <div className="mb-6 inline-flex rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm">
-            60 dakika içinde dönüş
+            Online ön eşleşme platformu
           </div>
 
           <h1 className="max-w-3xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
-            60 dakika içinde sana en uygun psikoloğu bul.
+            Sana uygun psikolojik desteğe daha kolay başla.
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-8 text-neutral-700 md:text-xl">
-            Kısa bilgilerini paylaş, ihtiyacına göre sana uygun psikolog önerisini hazırlayalım.
-            İlk eşleşme ücretsizdir; seans satın alma zorunluluğu yoktur.
+            Kısa bilgilerini paylaş, ihtiyacına göre sana uygun psikolog
+            önerisini hazırlayalım. İlk eşleşme ücretsizdir; seans satın alma
+            zorunluluğu yoktur.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -140,10 +161,18 @@ export default function Home() {
           </div>
 
           <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 text-sm font-bold text-neutral-700 sm:grid-cols-4">
-            <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">60 dk dönüş</span>
-            <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">Ücretsiz eşleşme</span>
-            <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">Sana özel öneri</span>
-            <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">Online görüşme</span>
+            <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">
+              Ücretsiz eşleşme
+            </span>
+            <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">
+              Sana özel öneri
+            </span>
+            <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">
+              Online görüşme
+            </span>
+            <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">
+              Manuel değerlendirme
+            </span>
           </div>
         </div>
 
@@ -151,10 +180,16 @@ export default function Home() {
           <div className="rounded-[2rem] bg-black p-3 shadow-2xl">
             <div className="rounded-[1.5rem] bg-white p-6">
               <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
-                <img src="/logo.png" alt="Mindora" className="h-11 w-11 rounded-xl" />
+                <img
+                  src="/logo.png"
+                  alt="Mindora"
+                  className="h-11 w-11 rounded-xl object-cover"
+                />
                 <div>
                   <p className="text-sm text-neutral-500">Mindora eşleşme süreci</p>
-                  <h3 className="font-bold">60 dakika içinde uygun eşleşmeyi hazırlayalım</h3>
+                  <h3 className="font-bold">
+                    Uygun başlangıcı birlikte planlayalım
+                  </h3>
                 </div>
               </div>
 
@@ -169,9 +204,15 @@ export default function Home() {
                 <div>
                   <p className="mb-2 text-sm font-semibold">Uzman tercihi</p>
                   <div className="grid grid-cols-3 gap-2 text-xs font-semibold">
-                    <span className="rounded-xl bg-black px-3 py-3 text-center text-white">Kadın</span>
-                    <span className="rounded-xl bg-neutral-100 px-3 py-3 text-center">Erkek</span>
-                    <span className="rounded-xl bg-neutral-100 px-3 py-3 text-center">Fark etmez</span>
+                    <span className="rounded-xl bg-black px-3 py-3 text-center text-white">
+                      Kadın
+                    </span>
+                    <span className="rounded-xl bg-neutral-100 px-3 py-3 text-center">
+                      Erkek
+                    </span>
+                    <span className="rounded-xl bg-neutral-100 px-3 py-3 text-center">
+                      Fark etmez
+                    </span>
                   </div>
                 </div>
 
@@ -201,10 +242,6 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-6 pb-10">
         <div className="grid gap-4 rounded-[2rem] bg-white/70 p-6 text-center shadow-sm ring-1 ring-black/5 md:grid-cols-3 md:p-8">
           <div>
-            <p className="text-3xl font-black">60 dk</p>
-            <p className="mt-1 text-sm text-neutral-600">içinde dönüş</p>
-          </div>
-          <div>
             <p className="text-3xl font-black">Ücretsiz</p>
             <p className="mt-1 text-sm text-neutral-600">ilk eşleşme</p>
           </div>
@@ -212,12 +249,18 @@ export default function Home() {
             <p className="text-3xl font-black">2 seçenek</p>
             <p className="mt-1 text-sm text-neutral-600">uzman önerisi</p>
           </div>
+          <div>
+            <p className="text-3xl font-black">Online</p>
+            <p className="mt-1 text-sm text-neutral-600">görüşme süreci</p>
+          </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">Neden Mindora?</p>
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
+            Neden Mindora?
+          </p>
           <h2 className="mt-3 text-4xl font-black md:text-5xl">
             Destek almaya başlamayı kolaylaştırıyoruz.
           </h2>
@@ -225,7 +268,10 @@ export default function Home() {
 
         <div className="mt-12 grid gap-5 md:grid-cols-4">
           {reasons.map((item) => (
-            <div key={item.title} className="rounded-[2rem] bg-white/70 p-7 shadow-sm ring-1 ring-black/5">
+            <div
+              key={item.title}
+              className="rounded-[2rem] bg-white/70 p-7 shadow-sm ring-1 ring-black/5"
+            >
               <h3 className="text-xl font-black">{item.title}</h3>
               <p className="mt-3 leading-7 text-neutral-600">{item.text}</p>
             </div>
@@ -235,13 +281,20 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">3 adımda başla</p>
-          <h2 className="mt-3 text-4xl font-black md:text-5xl">Süreç sade ve anlaşılır.</h2>
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
+            3 adımda başla
+          </p>
+          <h2 className="mt-3 text-4xl font-black md:text-5xl">
+            Süreç sade ve anlaşılır.
+          </h2>
         </div>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           {steps.map((step, index) => (
-            <div key={step.title} className="rounded-[2rem] bg-white/70 p-7 shadow-sm ring-1 ring-black/5">
+            <div
+              key={step.title}
+              className="rounded-[2rem] bg-white/70 p-7 shadow-sm ring-1 ring-black/5"
+            >
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-lg font-black text-white">
                 {index + 1}
               </div>
@@ -255,7 +308,9 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="grid gap-8 rounded-[2rem] bg-white/70 p-8 shadow-sm ring-1 ring-black/5 md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">Mindora nedir?</p>
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
+              Mindora nedir?
+            </p>
             <h2 className="mt-4 text-4xl font-black md:text-5xl">
               Psikolojik desteğe başlamayı kolaylaştıran bir eşleşme platformu.
             </h2>
@@ -263,10 +318,13 @@ export default function Home() {
 
           <div className="space-y-5 text-lg leading-8 text-neutral-700">
             <p>
-              Mindora, doğru desteği arayan kişileri ihtiyaçlarına uygun uzmanlarla buluşturmayı hedefleyen online ön eşleşme platformudur.
+              Mindora, doğru desteği arayan kişileri ihtiyaçlarına uygun
+              uzmanlarla buluşturmayı hedefleyen online ön eşleşme platformudur.
             </p>
             <p>
-              Başlangıçta süreci manuel ve dikkatli yürütüyoruz. Böylece kişinin destek konusu, uzman tercihi, zamanı ve beklentisi daha sağlıklı değerlendirilir.
+              Başlangıçta süreci manuel ve dikkatli yürütüyoruz. Böylece kişinin
+              destek konusu, uzman tercihi, zamanı ve beklentisi daha sağlıklı
+              değerlendirilir.
             </p>
             <a href="/hakkimizda" className="inline-block font-bold text-black underline">
               Hakkımızda sayfasına git
@@ -289,7 +347,8 @@ export default function Home() {
 
             <div>
               <p className="text-lg leading-8 text-neutral-300">
-                Hangi konuda destek almak istediğini bilmiyor olabilirsin. Yanıtların üzerinden ihtiyaç alanın daha anlaşılır hale getirilir.
+                Hangi konuda destek almak istediğini bilmiyor olabilirsin.
+                Yanıtların üzerinden ihtiyaç alanın daha anlaşılır hale getirilir.
               </p>
 
               <a
@@ -314,7 +373,9 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">Kullanıcı deneyimi</p>
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
+            Kullanıcı deneyimi
+          </p>
           <h2 className="mt-3 text-4xl font-black md:text-5xl">
             Başlamayı kolaylaştıran sade süreç.
           </h2>
@@ -322,7 +383,10 @@ export default function Home() {
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           {testimonials.map((item) => (
-            <div key={item.name} className="rounded-[2rem] bg-white/70 p-7 shadow-sm ring-1 ring-black/5">
+            <div
+              key={item.name}
+              className="rounded-[2rem] bg-white/70 p-7 shadow-sm ring-1 ring-black/5"
+            >
               <p className="leading-7 text-neutral-700">“{item.text}”</p>
               <p className="mt-5 font-black">{item.name}</p>
             </div>
@@ -333,13 +397,19 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="grid gap-8 rounded-[2rem] bg-white/70 p-8 shadow-sm ring-1 ring-black/5 md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">Uzmanlar için</p>
-            <h2 className="mt-4 text-4xl font-black md:text-5xl">Mindora uzman ağına katıl.</h2>
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
+              Uzmanlar için
+            </p>
+            <h2 className="mt-4 text-4xl font-black md:text-5xl">
+              Mindora uzman ağına katıl.
+            </h2>
           </div>
 
           <div>
             <p className="text-lg leading-8 text-neutral-700">
-              Online danışan yönlendirmesi almak, uzmanlık alanına uygun kişilerle buluşmak ve Mindora ekosisteminde yer almak isteyen psikologlar için başvuru süreci açıktır.
+              Online danışan yönlendirmesi almak, uzmanlık alanına uygun
+              kişilerle buluşmak ve Mindora ekosisteminde yer almak isteyen
+              psikologlar için başvuru süreci açıktır.
             </p>
 
             <a
@@ -354,13 +424,20 @@ export default function Home() {
 
       <section className="mx-auto max-w-5xl px-6 py-20">
         <div className="text-center">
-          <h2 className="text-4xl font-black md:text-5xl">Sık sorulan sorular</h2>
-          <p className="mt-4 text-neutral-600">Başlamadan önce aklına gelebilecek kısa cevaplar.</p>
+          <h2 className="text-4xl font-black md:text-5xl">
+            Sık sorulan sorular
+          </h2>
+          <p className="mt-4 text-neutral-600">
+            Başlamadan önce aklına gelebilecek kısa cevaplar.
+          </p>
         </div>
 
         <div className="mt-10 space-y-4">
           {faqs.map((faq) => (
-            <div key={faq.q} className="rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-black/5">
+            <div
+              key={faq.q}
+              className="rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-black/5"
+            >
               <h3 className="text-lg font-black">{faq.q}</h3>
               <p className="mt-2 leading-7 text-neutral-600">{faq.a}</p>
             </div>
@@ -376,9 +453,12 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-black/5 md:p-14">
-          <h2 className="text-4xl font-black md:text-5xl">Kendin için ilk adımı at.</h2>
+          <h2 className="text-4xl font-black md:text-5xl">
+            Kendin için ilk adımı at.
+          </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-neutral-600">
-            Kısa bilgilerini paylaş, 60 dakika içinde sana uygun psikolog önerisi için ilk adımı atalım.
+            Kısa bilgilerini paylaş, sana uygun psikolog önerisi için ilk adımı
+            atalım.
           </p>
 
           <a
@@ -389,7 +469,9 @@ export default function Home() {
           </a>
 
           <p className="mx-auto mt-6 max-w-3xl text-xs leading-6 text-neutral-500">
-            Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da 112 ile iletişime geç.
+            Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar
+            verme riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da 112
+            ile iletişime geç.
           </p>
         </div>
       </section>
@@ -398,7 +480,11 @@ export default function Home() {
         <div className="mx-auto grid max-w-7xl gap-8 text-sm text-neutral-600 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Mindora" className="h-9 w-9 rounded-xl" />
+              <img
+                src="/logo.png"
+                alt="Mindora"
+                className="h-9 w-9 rounded-xl object-cover"
+              />
               <div>
                 <p className="font-black text-black">Mindora</p>
                 <p>Zihnine iyi gelen yer.</p>
@@ -425,9 +511,12 @@ export default function Home() {
           </div>
 
           <div>
-            <p className="mb-3 font-black text-black">İletişim</p>
-            <p>Instagram: @mindora.live</p>
-            <p>Mail: mindora.live@gmail.com</p>
+            <p className="mb-3 font-black text-black">Yönetim</p>
+            <div className="space-y-2">
+              <p><a href="/admin/uzman-basvurulari">Admin paneli</a></p>
+              <p>Instagram: @mindora.live</p>
+              <p>Mail: mindora.live@gmail.com</p>
+            </div>
           </div>
         </div>
       </footer>
