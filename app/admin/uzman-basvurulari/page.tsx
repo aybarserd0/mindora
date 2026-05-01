@@ -19,6 +19,36 @@ type Expert = {
   created_at: string
 }
 
+function getStatusLabel(status: Expert['status']) {
+  switch (status) {
+    case 'pending':
+      return 'Beklemede'
+    case 'approved':
+      return 'Onaylandı'
+    case 'rejected':
+      return 'Reddedildi'
+    case 'passive':
+      return 'Pasif'
+    default:
+      return status
+  }
+}
+
+function getStatusStyle(status: Expert['status']) {
+  switch (status) {
+    case 'approved':
+      return 'bg-green-100 text-green-700'
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-700'
+    case 'rejected':
+      return 'bg-red-100 text-red-700'
+    case 'passive':
+      return 'bg-gray-200 text-gray-700'
+    default:
+      return 'bg-gray-100 text-gray-700'
+  }
+}
+
 export default function UzmanBasvurulariPage() {
   const [experts, setExperts] = useState<Expert[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,8 +116,12 @@ export default function UzmanBasvurulariPage() {
                         {expert.name}
                       </h2>
 
-                      <span className="rounded-full bg-[#efe7dc] px-3 py-1 text-xs font-semibold text-[#6b4f35]">
-                        {expert.status}
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(
+                          expert.status
+                        )}`}
+                      >
+                        {getStatusLabel(expert.status)}
                       </span>
                     </div>
 
