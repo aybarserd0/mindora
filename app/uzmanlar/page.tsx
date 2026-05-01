@@ -1,40 +1,52 @@
-import Header from "@/components/Header";
+'use client'
+
+import Header from '@/components/Header'
+import { useEffect, useState } from 'react'
+
+type Expert = {
+  id: string
+  name: string
+  title: string | null
+  areas: string | null
+  experience: string | null
+  online: string | null
+  price: string | null
+  availability: string | null
+}
 
 export default function Uzmanlar() {
-  const experts = [
-    {
-      name: "Uzman Klinik Psikolog",
-      area: "Kaygı & Depresyon",
-      image: "https://randomuser.me/api/portraits/women/44.jpg",
-      text: "Kaygı, stres, yoğun düşünceler ve duygu düzenleme alanlarında danışanlarla çalışır.",
-      tags: ["Kaygı", "Stres", "Depresyon"],
-    },
-    {
-      name: "Psikolojik Danışman",
-      area: "İlişki & Aile",
-      image: "https://randomuser.me/api/portraits/men/32.jpg",
-      text: "İlişki problemleri, iletişim, sınır koyma ve aile içi süreçler üzerine destek verir.",
-      tags: ["İlişki", "Aile", "İletişim"],
-    },
-    {
-      name: "Uzman Psikolog",
-      area: "Stres & Özgüven",
-      image: "https://randomuser.me/api/portraits/women/68.jpg",
-      text: "Stres yönetimi, özgüven, motivasyon ve kişisel farkındalık konularında danışmanlık sağlar.",
-      tags: ["Özgüven", "Motivasyon", "Stres"],
-    },
-  ];
+  const [experts, setExperts] = useState<Expert[]>([])
+  const [loading, setLoading] = useState(true)
 
   const areas = [
-    "Kaygı ve stres",
-    "İlişki problemleri",
-    "Özgüven sorunları",
-    "Depresif duygu durumu",
-    "Aile içi iletişim",
-    "Sınav ve gelecek kaygısı",
-    "Motivasyon eksikliği",
-    "Tükenmişlik",
-  ];
+    'Kaygı ve stres',
+    'İlişki problemleri',
+    'Özgüven sorunları',
+    'Depresif duygu durumu',
+    'Aile içi iletişim',
+    'Sınav ve gelecek kaygısı',
+    'Motivasyon eksikliği',
+    'Tükenmişlik',
+  ]
+
+  useEffect(() => {
+    async function fetchExperts() {
+      try {
+        const res = await fetch('/api/experts')
+        const data = await res.json()
+
+        if (data.ok) {
+          setExperts(data.experts || [])
+        }
+      } catch (error) {
+        console.error('Uzmanlar alınamadı:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchExperts()
+  }, [])
 
   return (
     <main className="min-h-screen bg-[#f6f1ea] text-[#171717]">
@@ -47,12 +59,12 @@ export default function Uzmanlar() {
           </p>
 
           <h1 className="mt-4 text-5xl font-black leading-tight md:text-6xl">
-            Sana uygun psikolojik destek için uzman ağı.
+            Onaylı uzmanlarla güvenli başlangıç.
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
-            Mindora’da uzman eşleşmesi; destek almak istediğin konu, uzman
-            tercihin, uygun zamanın ve beklentilerin dikkate alınarak planlanır.
+            Mindora’da uzmanlar başvuru sonrası değerlendirilir. Onaylanan
+            uzmanlar burada görünür ve danışanlar uygun uzmanla eşleştirilir.
           </p>
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -72,45 +84,55 @@ export default function Uzmanlar() {
           </div>
         </div>
 
-        <div className="mt-16 grid gap-6 md:grid-cols-3">
-          {experts.map((expert) => (
-            <div
-              key={expert.area}
-              className="rounded-[2rem] bg-white/70 p-7 text-center shadow-sm ring-1 ring-black/5"
-            >
-              <img
-                src={expert.image}
-                alt={expert.name}
-                className="mx-auto h-28 w-28 rounded-full object-cover"
-              />
+        {loading ? (
+          <p className="mt-16 text-center text-neutral-600">Uzmanlar yükleniyor...</p>
+        ) : experts.length === 0 ? (
+          <div className="mx-auto mt-16 max-w-3xl rounded-[2rem] bg-white/70 p-8 text-center shadow-sm ring-1 ring-black/5">
+            <h2 className="text-2xl font-black">Henüz onaylı uzman yok.</h2>
+            <p className="mt-3 leading-7 text-neutral-600">
+              Uzman başvuruları incelendikten sonra onaylanan uzmanlar bu
+              sayfada otomatik olarak listelenecek.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-16 grid gap-6 md:grid-cols-3">
+            {experts.map((expert) => (
+              <div
+                key={expert.id}
+                className="rounded-[2rem] bg-white/70 p-7 text-center shadow-sm ring-1 ring-black/5"
+              >
+                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-black text-3xl font-black text-white">
+                  {expert.name.charAt(0).toUpperCase()}
+                </div>
 
-              <h3 className="mt-6 text-xl font-black">{expert.name}</h3>
+                <h3 className="mt-6 text-xl font-black">{expert.name}</h3>
 
-              <p className="mt-1 text-sm font-bold text-neutral-500">
-                {expert.area}
-              </p>
+                <p className="mt-1 text-sm font-bold text-neutral-500">
+                  {expert.title || 'Uzman'}
+                </p>
 
-              <p className="mt-4 leading-7 text-neutral-600">{expert.text}</p>
+                <p className="mt-4 leading-7 text-neutral-600">
+                  {expert.areas || 'Uzmanlık alanı belirtilmedi'}
+                </p>
 
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {expert.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-[#f6f1ea] px-3 py-1 text-xs font-bold text-neutral-600"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                <div className="mt-5 space-y-2 text-sm text-neutral-600">
+                  <p>
+                    <b>Deneyim:</b> {expert.experience || '-'}
+                  </p>
+                  <p>
+                    <b>Online görüşme:</b> {expert.online || '-'}
+                  </p>
+                  <p>
+                    <b>Seans ücreti:</b> {expert.price || '-'}
+                  </p>
+                  <p>
+                    <b>Müsaitlik:</b> {expert.availability || '-'}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        <p className="mx-auto mt-10 max-w-3xl text-center text-sm leading-6 text-neutral-500">
-          Not: Bu uzman kartları demo içerik olarak hazırlanmıştır. Gerçek
-          uzmanlar onaylandıkça isim, fotoğraf, unvan ve uzmanlık bilgileri
-          güncellenmelidir.
-        </p>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-20">
@@ -183,5 +205,5 @@ export default function Uzmanlar() {
         </div>
       </section>
     </main>
-  );
+  )
 }
