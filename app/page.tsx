@@ -8,8 +8,8 @@ export default function Home() {
       text: "İhtiyacını, beklentini, uygun zamanını ve uzman tercihlerini birkaç dakikada paylaş.",
     },
     {
-      title: "Sana uygun eşleşmeyi planlayalım",
-      text: "Yanıtlarına göre destek konusu, bütçe, zaman ve tercihlerin dikkate alınarak yönlendirme yapılır.",
+      title: "60 dakika içinde dönüş yapalım",
+      text: "Yanıtlarına göre destek konusu, bütçe, zaman ve tercihlerin dikkate alınarak sana uygun psikolog önerisi hazırlanır.",
     },
     {
       title: "Online görüşmeye başla",
@@ -126,7 +126,7 @@ export default function Home() {
       <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-14 md:grid-cols-2 md:pt-24">
         <div>
           <div className="mb-6 inline-flex rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm">
-            Ön eşleşme ücretsiz
+            60 dakika içinde dönüş
           </div>
 
           <h1 className="max-w-3xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
@@ -159,16 +159,16 @@ export default function Home() {
 
           <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 text-sm font-bold text-neutral-700 sm:grid-cols-4">
             <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">
-              Gizli
+              60 dk dönüş
             </span>
             <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">
-              Güvenli
+              Ücretsiz eşleşme
             </span>
             <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">
-              Yargısız
+              Sana özel öneri
             </span>
             <span className="rounded-full bg-white/70 px-4 py-2 text-center shadow-sm">
-              Online
+              Online görüşme
             </span>
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function Home() {
                 <div>
                   <p className="text-sm text-neutral-500">Mindora eşleşme formu</p>
                   <h3 className="font-bold">
-                    Senin için en doğru başlangıcı bulalım
+                    60 dakika içinde uygun eşleşmeyi hazırlayalım
                   </h3>
                 </div>
               </div>
@@ -388,10 +388,7 @@ export default function Home() {
           ))}
         </div>
 
-        <p className="mt-6 text-center text-xs leading-6 text-neutral-500">
-          Not: Bu yorum alanı örnek arayüz olarak hazırlanmıştır. Gerçek kullanıcı
-          yorumları geldikçe güncellenmelidir.
-        </p>
+        
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-20">
