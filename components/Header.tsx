@@ -1,15 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
 export default function Header() {
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    const cookie = document.cookie.includes('mindora_admin=true')
-    setIsAdmin(cookie)
-  }, [])
-
   return (
     <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f6f1ea]/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
@@ -45,15 +36,13 @@ export default function Header() {
             SSS
           </a>
 
-          {/* 🔐 ADMIN BUTTON */}
-          {isAdmin && (
-            <a
-              href="/admin/uzman-basvurulari"
-              className="rounded-full bg-black px-4 py-2 text-xs font-bold text-white"
-            >
-              Admin
-            </a>
-          )}
+          {/* 🔐 ADMIN */}
+          <a
+            href="/admin/uzman-basvurulari"
+            className="rounded-full bg-black px-4 py-2 text-xs font-bold text-white"
+          >
+            Admin
+          </a>
         </nav>
 
         {/* CTA */}
