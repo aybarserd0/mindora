@@ -1,49 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Iyzipay from 'iyzipay'
+import crypto from 'crypto'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 
-const iyzipay = new Iyzipay({
-  apiKey: process.env.IYZICO_API_KEY!,
-  secretKey: process.env.IYZICO_SECRET_KEY!,
-  uri: process.env.IYZICO_BASE_URL || 'https://sandbox-api.iyzipay.com',
-})
-
 function cleanPhone(phone?: string | null) {
   if (!phone) return '+905350000000'
-
   let value = phone.replace(/\s/g, '')
-
-  if (value.startsWith('0')) {
-    value = '+9' + value
-  }
-
-  if (!value.startsWith('+90')) {
-    value = '+905350000000'
-  }
-
+  if (value.startsWith('0')) value = '+9' + value
+  if (!value.startsWith('+90')) return '+905350000000'
   return value
 }
 
 function splitName(fullName?: string | null) {
   const parts = (fullName || 'Mindora Uzman').trim().split(' ')
-  const contactName = parts[0] || 'Mindora'
-  const contactSurname = parts.slice(1).join(' ') || 'Uzman'
+  return {
+    contactName: parts[0] || 'Mindora',
+    contactSurname: parts.slice(1).join(' ') || 'Uzman',
+  }
+}
 
-  return { contactName, contactSurname }
+function createIyzicoAuthHeader({
+  apiKey,
+  secretKey,
+  randomKey,
+  uri,
+  body,
+}: {
+  apiKey: string
+  secretKey: string
+  randomKey: string
+  uri: string
+  body: string
+}) {
+  const payload = randomKey + uri + body
+  const signature = crypto
+    .createHmac('sha256', secretKey)
+    .update(payload)
+    .digest('hex')
+
+  const authorizationString = `apiKey:${apiKey}&randomKey:${randomKey}&signature:${signature}`
+
+  return `IYZWSv2 ${Buffer.from(authorizationString).toString('base64')}`
 }
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.IYZICO_API_KEY || !process.env.IYZICO_SECRET_KEY) {
+    const apiKey = process.env.IYZICO_API_KEY
+    const secretKey = process.env.IYZICO_SECRET_KEY
+    const baseUrl =
+      process.env.IYZICO_BASE_URL || 'https://sandbox-api.iyzipay.com'
+
+    if (!apiKey || !secretKey) {
       return NextResponse.json(
         { ok: false, error: 'Iyzico env bilgileri eksik.' },
         { status: 500 }
       )
     }
-
-    const body = await req.json()
 
     const {
       expertId,
@@ -51,7 +64,7 @@ export async function POST(req: NextRequest) {
       identityNumber,
       address,
       city,
-    } = body
+    } = await req.json()
 
     if (!expertId || !iban || !identityNumber || !address || !city) {
       return NextResponse.json(
@@ -94,16 +107,15 @@ export async function POST(req: NextRequest) {
       'Mindora Uzman'
 
     const { contactName, contactSurname } = splitName(fullName)
-
     const subMerchantExternalId = `expert_${expert.id}`
 
-    const request = {
-      locale: Iyzipay.LOCALE.TR,
+    const iyzicoPath = '/onboarding/submerchant'
+
+    const iyzicoBody = {
+      locale: 'tr',
       conversationId: subMerchantExternalId,
-
       subMerchantExternalId,
-      subMerchantType: Iyzipay.SUB_MERCHANT_TYPE.PERSONAL,
-
+      subMerchantType: 'PERSONAL',
       address: `${address}, ${city}`,
       contactName,
       contactSurname,
@@ -112,17 +124,33 @@ export async function POST(req: NextRequest) {
       name: fullName,
       iban,
       identityNumber,
-      currency: Iyzipay.CURRENCY.TRY,
+      currency: 'TRY',
     }
 
-    const result: any = await new Promise((resolve, reject) => {
-      iyzipay.subMerchant.create(request, (err: any, result: any) => {
-        if (err) reject(err)
-        else resolve(result)
-      })
+    const bodyString = JSON.stringify(iyzicoBody)
+    const randomKey = `${Date.now()}${Math.floor(Math.random() * 1000000)}`
+
+    const authorization = createIyzicoAuthHeader({
+      apiKey,
+      secretKey,
+      randomKey,
+      uri: iyzicoPath,
+      body: bodyString,
     })
 
-    if (result.status !== 'success') {
+    const iyzicoRes = await fetch(`${baseUrl}${iyzicoPath}`, {
+      method: 'POST',
+      headers: {
+        Authorization: authorization,
+        'Content-Type': 'application/json',
+        'x-iyzi-rnd': randomKey,
+      },
+      body: bodyString,
+    })
+
+    const result = await iyzicoRes.json()
+
+    if (!iyzicoRes.ok || result.status !== 'success') {
       return NextResponse.json(
         {
           ok: false,
