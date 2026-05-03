@@ -1,22 +1,23 @@
-'use client';
+'use client'
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState } from 'react'
 
 export default function EslesmePage() {
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSent(false);
-    setLoading(true);
+    event.preventDefault()
+    setSent(false)
+    setLoading(true)
 
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
+    const formElement = event.currentTarget
+    const form = new FormData(formElement)
 
     const payload = {
       name: form.get('name'),
       phone: form.get('phone'),
+      email: form.get('email'),
       age: form.get('age'),
       topic: form.get('topic'),
       duration: form.get('duration'),
@@ -25,28 +26,28 @@ export default function EslesmePage() {
       preference: form.get('preference'),
       availability: form.getAll('availability'),
       note: form.get('note'),
-    };
+    }
 
     try {
       const res = await fetch('/api/eslesme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+      })
 
-      const result = await res.json();
+      const result = await res.json()
 
       if (!res.ok || !result.ok) {
-        alert('Başvuru gönderilemedi. Lütfen tekrar dene.');
-        return;
+        alert(result.error || 'Başvuru gönderilemedi. Lütfen tekrar dene.')
+        return
       }
 
-      setSent(true);
-      formElement.reset();
+      setSent(true)
+      formElement.reset()
     } catch {
-      alert('Başvuru gönderilemedi. Lütfen internet bağlantını kontrol edip tekrar dene.');
+      alert('Başvuru gönderilemedi. Lütfen internet bağlantını kontrol edip tekrar dene.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -84,18 +85,10 @@ export default function EslesmePage() {
           </p>
 
           <div className="mt-8 grid gap-3 text-sm font-bold text-neutral-700 sm:grid-cols-2">
-            <span className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm">
-              ⏱ 60 dk içinde dönüş
-            </span>
-            <span className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm">
-              🎯 Sana özel öneri
-            </span>
-            <span className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm">
-              🔒 Gizli süreç
-            </span>
-            <span className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm">
-              💬 Online görüşme
-            </span>
+            <span className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm">⏱ 60 dk içinde dönüş</span>
+            <span className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm">🎯 Sana özel öneri</span>
+            <span className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm">🔒 Gizli süreç</span>
+            <span className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm">💬 Online görüşme</span>
           </div>
 
           <p className="mt-8 text-sm leading-6 text-neutral-500">
@@ -113,29 +106,28 @@ export default function EslesmePage() {
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div>
               <label className="mb-2 block text-sm font-bold">Ad Soyad</label>
-              <input
-                name="name"
-                required
-                className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
-              />
+              <input name="name" required className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none" />
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-bold">Telefon numarası</label>
+              <input name="phone" required className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none" />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold">E-posta adresi</label>
               <input
-                name="phone"
+                name="email"
+                type="email"
                 required
+                placeholder="ornek@mail.com"
                 className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
               />
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-bold">Yaş aralığın nedir?</label>
-              <select
-                name="age"
-                required
-                className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
-              >
+              <select name="age" required className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none">
                 <option value="">Seç</option>
                 <option>18–25</option>
                 <option>25–35</option>
@@ -145,14 +137,8 @@ export default function EslesmePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold">
-                Şu an seni en çok zorlayan konu nedir?
-              </label>
-              <select
-                name="topic"
-                required
-                className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
-              >
+              <label className="mb-2 block text-sm font-bold">Şu an seni en çok zorlayan konu nedir?</label>
+              <select name="topic" required className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none">
                 <option value="">Seç</option>
                 <option>Kaygı / stres</option>
                 <option>İlişki / aile</option>
@@ -164,14 +150,8 @@ export default function EslesmePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold">
-                Bu durum ne zamandır devam ediyor?
-              </label>
-              <select
-                name="duration"
-                required
-                className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
-              >
+              <label className="mb-2 block text-sm font-bold">Bu durum ne zamandır devam ediyor?</label>
+              <select name="duration" required className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none">
                 <option value="">Seç</option>
                 <option>Birkaç hafta</option>
                 <option>Birkaç ay</option>
@@ -180,14 +160,8 @@ export default function EslesmePage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold">
-                Daha önce psikolojik destek aldın mı?
-              </label>
-              <select
-                name="previousSupport"
-                required
-                className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
-              >
+              <label className="mb-2 block text-sm font-bold">Daha önce psikolojik destek aldın mı?</label>
+              <select name="previousSupport" required className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none">
                 <option value="">Seç</option>
                 <option>Evet</option>
                 <option>Hayır</option>
@@ -196,11 +170,7 @@ export default function EslesmePage() {
 
             <div>
               <label className="mb-2 block text-sm font-bold">Ne zaman başlamak istersin?</label>
-              <select
-                name="startTime"
-                required
-                className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
-              >
+              <select name="startTime" required className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none">
                 <option value="">Seç</option>
                 <option>Hemen</option>
                 <option>Bu hafta</option>
@@ -210,11 +180,7 @@ export default function EslesmePage() {
 
             <div>
               <label className="mb-2 block text-sm font-bold">Psikolog tercihin var mı?</label>
-              <select
-                name="preference"
-                required
-                className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
-              >
+              <select name="preference" required className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none">
                 <option value="">Seç</option>
                 <option>Kadın psikolog</option>
                 <option>Erkek psikolog</option>
@@ -223,21 +189,10 @@ export default function EslesmePage() {
             </div>
 
             <div>
-              <label className="mb-3 block text-sm font-bold">
-                Görüşme için genelde hangi saatler sana daha uygun?
-              </label>
-
+              <label className="mb-3 block text-sm font-bold">Görüşme için genelde hangi saatler sana daha uygun?</label>
               <div className="grid gap-3 sm:grid-cols-2">
-                {[
-                  'Hafta içi gündüz',
-                  'Hafta içi akşam',
-                  'Hafta sonu',
-                  'Esnek / fark etmez',
-                ].map((item) => (
-                  <label
-                    key={item}
-                    className="rounded-2xl bg-[#f6f1ea] px-4 py-3 text-sm font-semibold"
-                  >
+                {['Hafta içi gündüz', 'Hafta içi akşam', 'Hafta sonu', 'Esnek / fark etmez'].map((item) => (
+                  <label key={item} className="rounded-2xl bg-[#f6f1ea] px-4 py-3 text-sm font-semibold">
                     <input name="availability" type="checkbox" value={item} className="mr-2" />
                     {item}
                   </label>
@@ -247,11 +202,7 @@ export default function EslesmePage() {
 
             <div>
               <label className="mb-2 block text-sm font-bold">Eklemek istediğin bir şey var mı?</label>
-              <textarea
-                name="note"
-                rows={4}
-                className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none"
-              />
+              <textarea name="note" rows={4} className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none" />
             </div>
 
             <button
@@ -270,5 +221,5 @@ export default function EslesmePage() {
         </div>
       </section>
     </main>
-  );
+  )
 }
