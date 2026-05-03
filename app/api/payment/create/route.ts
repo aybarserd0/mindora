@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     const { data: experts, error: expertError } = await supabase
       .from('experts')
-      .select('id, full_name, name, email, session_price, status')
+      .select('id, name, email, session_price, status')
       .eq('id', client.matched_expert_id)
 
     const expert = experts?.[0]
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
         {
           id: `session_${expert.id}`,
           name: `Mindora Psikolojik Danışmanlık - ${
-            expert.full_name || expert.name || 'Uzman'
+            expert.name || 'Uzman'
           }`,
           category1: 'Psikolojik Danışmanlık',
           itemType: 'VIRTUAL',
