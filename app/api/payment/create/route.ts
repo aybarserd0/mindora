@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'price gerekli' }, { status: 400 })
     }
 
-    const uri = '/payment/iyzipos/checkoutform/initialize'
+    const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
 
     const randomKey = Date.now().toString()
 
@@ -110,8 +110,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
+      token: data.token,
+      paymentPageUrl: data.paymentPageUrl,
       checkoutFormContent: data.checkoutFormContent
-    })
+  })
 
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
