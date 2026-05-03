@@ -4,7 +4,57 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 function toText(value: unknown) {
   if (value === null || value === undefined) return ''
-  return String(value)
+  return String(value).trim()
+}
+
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 465),
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  })
+}
+
+async function safeSendMail({
+  transporter,
+  to,
+  subject,
+  text,
+  logName,
+}: {
+  transporter: nodemailer.Transporter
+  to: string | null | undefined
+  subject: string
+  text: string
+  logName: string
+}) {
+  const receiver = toText(to)
+
+  if (!receiver) {
+    console.log(`${logName} EMAIL EMPTY`)
+    return { ok: false, skipped: true }
+  }
+
+  try {
+    console.log(`${logName} EMAIL:`, receiver)
+
+    await transporter.sendMail({
+      from: `"Mindora" <${process.env.SMTP_USER}>`,
+      to: receiver,
+      subject,
+      text,
+    })
+
+    console.log(`${logName} MAIL SENT`)
+    return { ok: true, skipped: false }
+  } catch (err) {
+    console.error(`${logName} MAIL ERROR:`, err)
+    return { ok: false, skipped: false }
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -27,6 +77,7 @@ export async function POST(req: NextRequest) {
         id,
         name,
         phone,
+        email,
         age,
         topic,
         duration,
@@ -92,15 +143,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 465),
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
+    const transporter = createTransporter()
 
     const adminText = `
 Mindora Eşleştirme Bildirimi
@@ -108,6 +151,7 @@ Mindora Eşleştirme Bildirimi
 Danışan:
 Ad Soyad: ${toText(client.name)}
 Telefon: ${toText(client.phone)}
+E-posta: ${toText(client.email)}
 Yaş: ${toText(client.age)}
 Konu: ${toText(client.topic)}
 Süre: ${toText(client.duration)}
@@ -136,6 +180,7 @@ Mindora üzerinden sana yeni bir danışan eşleştirildi.
 Danışan Bilgileri:
 Ad Soyad: ${toText(client.name)}
 Telefon: ${toText(client.phone)}
+E-posta: ${toText(client.email)}
 Yaş: ${toText(client.age)}
 Konu: ${toText(client.topic)}
 Süre: ${toText(client.duration)}
@@ -150,25 +195,56 @@ Lütfen danışanla en kısa sürede iletişime geç.
 Mindora
 `
 
-    await transporter.sendMail({
-      from: `"Mindora" <${process.env.SMTP_USER}>`,
+    const clientText = `
+Merhaba ${toText(client.name)},
+
+Mindora başvurun incelendi ve sana uygun bir uzmanla eşleştirildin.
+
+Eşleşen Uzman:
+Ad Soyad: ${toText(expert.name)}
+Ünvan: ${toText(expert.title)}
+Alanlar: ${toText(expert.areas)}
+
+Uzmanımız veya Mindora ekibi en kısa sürede seninle iletişime geçecektir.
+
+Mindora
+`
+
+    const adminMail = await safeSendMail({
+      transporter,
       to: process.env.CONTACT_TO,
       subject: 'Mindora Yeni Eşleştirme',
       text: adminText,
+      logName: 'ADMIN MATCH',
     })
 
-    if (expert.email) {
-      await transporter.sendMail({
-        from: `"Mindora" <${process.env.SMTP_USER}>`,
-        to: expert.email,
-        subject: 'Mindora Yeni Danışan Eşleştirmesi',
-        text: expertText,
-      })
-    }
+    const expertMail = await safeSendMail({
+      transporter,
+      to: expert.email,
+      subject: 'Mindora Yeni Danışan Eşleştirmesi',
+      text: expertText,
+      logName: 'EXPERT MATCH',
+    })
 
-    return NextResponse.json({ ok: true })
+    const clientMail = await safeSendMail({
+      transporter,
+      to: client.email,
+      subject: 'Mindora Eşleşmeniz Yapıldı',
+      text: clientText,
+      logName: 'CLIENT MATCH',
+    })
+
+    return NextResponse.json({
+      ok: true,
+      mail: {
+        admin: adminMail,
+        expert: expertMail,
+        client: clientMail,
+      },
+    })
   } catch (err) {
     console.error('MATCH SERVER ERROR:', err)
+
     return NextResponse.json(
       { ok: false, error: 'Sunucu hatası oluştu.' },
       { status: 500 }
