@@ -1,39 +1,155 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import AdminHeader from '@/components/AdminHeader'
+
+type ClientStatus =
+  | 'new'
+  | 'reviewing'
+  | 'matched'
+  | 'contacted'
+  | 'completed'
+  | 'cancelled'
 
 type Client = {
   id: string
-  name: string
-  phone: string
-  age: string
-  topic: string
-  duration: string
-  previous_support: string
-  start_time: string
-  preference: string
-  availability: string
-  note: string
-  status: string
+  name: string | null
+  phone: string | null
+  age: string | null
+  topic: string | null
+  duration: string | null
+  previous_support: string | null
+  start_time: string | null
+  preference: string | null
+  availability: string | null
+  note: string | null
+  status: ClientStatus
+  matched_expert_id: string | null
   created_at: string
+}
+
+function getStatusLabel(status: ClientStatus) {
+  switch (status) {
+    case 'new':
+      return 'Yeni'
+    case 'reviewing':
+      return 'İncelemede'
+    case 'matched':
+      return 'Eşleşti'
+    case 'contacted':
+      return 'İletişime Geçildi'
+    case 'completed':
+      return 'Tamamlandı'
+    case 'cancelled':
+      return 'İptal'
+  }
+}
+
+function getStatusStyle(status: ClientStatus) {
+  switch (status) {
+    case 'new':
+      return 'bg-blue-100 text-blue-700 ring-blue-200'
+    case 'reviewing':
+      return 'bg-yellow-100 text-yellow-700 ring-yellow-200'
+    case 'matched':
+      return 'bg-purple-100 text-purple-700 ring-purple-200'
+    case 'contacted':
+      return 'bg-indigo-100 text-indigo-700 ring-indigo-200'
+    case 'completed':
+      return 'bg-green-100 text-green-700 ring-green-200'
+    case 'cancelled':
+      return 'bg-red-100 text-red-700 ring-red-200'
+  }
+}
+
+function formatDate(date: string) {
+  try {
+    return new Intl.DateTimeFormat('tr-TR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(date))
+  } catch {
+    return '-'
+  }
+}
+
+function safeText(value: string | null | undefined) {
+  return value && value.trim() ? value : '-'
 }
 
 export default function DanisanBasvurulariPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [filter, setFilter] = useState<'all' | ClientStatus>('all')
+  const [error, setError] = useState('')
+
+  const counts = useMemo(() => {
+    return {
+      all: clients.length,
+      new: clients.filter((client) => client.status === 'new').length,
+      reviewing: clients.filter((client) => client.status === 'reviewing').length,
+      matched: clients.filter((client) => client.status === 'matched').length,
+      contacted: clients.filter((client) => client.status === 'contacted').length,
+      completed: clients.filter((client) => client.status === 'completed').length,
+      cancelled: clients.filter((client) => client.status === 'cancelled').length,
+    }
+  }, [clients])
+
+  const filteredClients = useMemo(() => {
+    if (filter === 'all') return clients
+    return clients.filter((client) => client.status === filter)
+  }, [clients, filter])
 
   async function fetchClients() {
     try {
-      const res = await fetch('/api/admin/clients')
+      setLoading(true)
+      setError('')
+
+      const res = await fetch('/api/admin/clients', {
+        cache: 'no-store',
+      })
+
       const data = await res.json()
 
-      if (data.ok) {
-        setClients(data.clients)
+      if (!res.ok || !data.ok) {
+        setError('Danışan başvuruları alınamadı.')
+        return
       }
-    } catch (err) {
-      console.error(err)
+
+      setClients(data.clients || [])
+    } catch {
+      setError('Sunucuya bağlanırken hata oluştu.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function updateStatus(id: string, status: ClientStatus) {
+    try {
+      setUpdatingId(id)
+
+      const res = await fetch('/api/admin/clients/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.ok) {
+        alert('Danışan durumu güncellenemedi.')
+        return
+      }
+
+      await fetchClients()
+    } catch {
+      alert('Durum güncellenirken hata oluştu.')
+    } finally {
+      setUpdatingId(null)
     }
   }
 
@@ -41,44 +157,179 @@ export default function DanisanBasvurulariPage() {
     fetchClients()
   }, [])
 
-  if (loading) {
-    return <div style={{ padding: 20 }}>Yükleniyor...</div>
-  }
-
   return (
-    <div style={{ padding: 20 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20 }}>
-        Danışan Başvuruları
-      </h1>
+    <main className="min-h-screen bg-[#f7f3ee] px-6 py-10 text-[#171717]">
+      <div className="mx-auto max-w-6xl">
+        <AdminHeader />
 
-      {clients.length === 0 && <div>Başvuru yok</div>}
+        <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/70 p-6 shadow-sm">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
+              Operasyon Yönetimi
+            </p>
 
-      {clients.map((c) => (
-        <div
-          key={c.id}
-          style={{
-            border: '1px solid #eee',
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 16,
-          }}
-        >
-          <h2 style={{ fontWeight: 600 }}>{c.name}</h2>
+            <h2 className="mt-2 text-3xl font-black text-[#2b2118]">
+              Danışan Başvuruları
+            </h2>
 
-          <div>📞 {c.phone}</div>
-          <div>🎯 {c.topic}</div>
-          <div>⏳ {c.duration}</div>
-          <div>🧠 Önce destek: {c.previous_support}</div>
-          <div>🚀 Başlama: {c.start_time}</div>
-          <div>👤 Tercih: {c.preference}</div>
-          <div>📅 Müsaitlik: {c.availability}</div>
-          <div>📝 Not: {c.note}</div>
-
-          <div style={{ marginTop: 10, fontSize: 12, opacity: 0.6 }}>
-            {new Date(c.created_at).toLocaleString()}
+            <p className="mt-2 max-w-2xl text-[#6b5c4d]">
+              Gelen danışan başvurularını incele, süreci takip et ve uygun
+              uzmanla eşleştirmeye hazır hale getir.
+            </p>
           </div>
-        </div>
-      ))}
-    </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <button
+              onClick={() => setFilter('all')}
+              className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
+                filter === 'all'
+                  ? 'bg-black text-white'
+                  : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
+              }`}
+            >
+              Tümü ({counts.all})
+            </button>
+
+            {(['new', 'reviewing', 'matched', 'contacted', 'completed', 'cancelled'] as ClientStatus[]).map(
+              (status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
+                    filter === status
+                      ? 'bg-black text-white'
+                      : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
+                  }`}
+                >
+                  {getStatusLabel(status)} ({counts[status]})
+                </button>
+              )
+            )}
+          </div>
+        </section>
+
+        {loading ? (
+          <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
+            <p className="font-bold text-[#6b5c4d]">
+              Danışan başvuruları yükleniyor...
+            </p>
+          </div>
+        ) : error ? (
+          <div className="mt-8 rounded-3xl bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
+            <p className="font-bold text-red-700">{error}</p>
+          </div>
+        ) : filteredClients.length === 0 ? (
+          <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
+            <p className="font-bold text-[#6b5c4d]">
+              Bu filtrede danışan başvurusu bulunmuyor.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-8 grid gap-5">
+            {filteredClients.map((client) => (
+              <article
+                key={client.id}
+                className="rounded-3xl border border-[#e5d9cc] bg-white p-6 shadow-sm transition hover:shadow-md"
+              >
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-xl font-black text-[#2b2118]">
+                        {safeText(client.name)}
+                      </h3>
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getStatusStyle(
+                          client.status
+                        )}`}
+                      >
+                        {getStatusLabel(client.status)}
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-sm text-[#6b5c4d]">
+                      {safeText(client.topic)} • {safeText(client.age)}
+                    </p>
+
+                    <p className="mt-2 text-xs font-semibold text-[#8a7662]">
+                      Başvuru tarihi: {formatDate(client.created_at)}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      disabled={updatingId === client.id}
+                      onClick={() => updateStatus(client.id, 'reviewing')}
+                      className="rounded-full bg-yellow-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-yellow-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      İncelemede
+                    </button>
+
+                    <button
+                      disabled={updatingId === client.id}
+                      onClick={() => updateStatus(client.id, 'contacted')}
+                      className="rounded-full bg-indigo-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      İletişime Geçildi
+                    </button>
+
+                    <button
+                      disabled={updatingId === client.id}
+                      onClick={() => updateStatus(client.id, 'completed')}
+                      className="rounded-full bg-green-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Tamamlandı
+                    </button>
+
+                    <button
+                      disabled={updatingId === client.id}
+                      onClick={() => updateStatus(client.id, 'cancelled')}
+                      className="rounded-full bg-red-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      İptal
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-3 rounded-2xl bg-[#faf7f2] p-5 text-sm text-[#3c3128] md:grid-cols-2">
+                  <p>
+                    <b>Telefon:</b> {safeText(client.phone)}
+                  </p>
+                  <p>
+                    <b>Yaş:</b> {safeText(client.age)}
+                  </p>
+                  <p>
+                    <b>Destek Konusu:</b> {safeText(client.topic)}
+                  </p>
+                  <p>
+                    <b>Süre:</b> {safeText(client.duration)}
+                  </p>
+                  <p>
+                    <b>Daha Önce Destek:</b>{' '}
+                    {safeText(client.previous_support)}
+                  </p>
+                  <p>
+                    <b>Başlama Zamanı:</b> {safeText(client.start_time)}
+                  </p>
+                  <p>
+                    <b>Psikolog Tercihi:</b> {safeText(client.preference)}
+                  </p>
+                  <p>
+                    <b>Müsaitlik:</b> {safeText(client.availability)}
+                  </p>
+                  <p className="md:col-span-2">
+                    <b>Eşleşen Uzman ID:</b>{' '}
+                    {safeText(client.matched_expert_id)}
+                  </p>
+                  <p className="md:col-span-2">
+                    <b>Ek Not:</b> {safeText(client.note)}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   )
 }

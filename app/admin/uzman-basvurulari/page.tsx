@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import AdminHeader from '@/components/AdminHeader'
 
 type ExpertStatus = 'pending' | 'approved' | 'rejected' | 'passive'
 
@@ -61,12 +62,26 @@ function formatDate(date: string) {
   }
 }
 
+function safeText(value: string | null | undefined) {
+  return value && value.trim() ? value : '-'
+}
+
 export default function UzmanBasvurulariPage() {
   const [experts, setExperts] = useState<Expert[]>([])
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | ExpertStatus>('all')
   const [error, setError] = useState('')
+
+  const counts = useMemo(() => {
+    return {
+      all: experts.length,
+      pending: experts.filter((expert) => expert.status === 'pending').length,
+      approved: experts.filter((expert) => expert.status === 'approved').length,
+      rejected: experts.filter((expert) => expert.status === 'rejected').length,
+      passive: experts.filter((expert) => expert.status === 'passive').length,
+    }
+  }, [experts])
 
   const filteredExperts = useMemo(() => {
     if (filter === 'all') return experts
@@ -122,14 +137,6 @@ export default function UzmanBasvurulariPage() {
     }
   }
 
-  async function handleLogout() {
-    await fetch('/api/admin/logout', {
-      method: 'POST',
-    })
-
-    window.location.href = '/admin/login'
-  }
-
   useEffect(() => {
     fetchExperts()
   }, [])
@@ -137,15 +144,17 @@ export default function UzmanBasvurulariPage() {
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-6 py-10 text-[#171717]">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+        <AdminHeader />
+
+        <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/70 p-6 shadow-sm">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
-              Mindora Admin
+              Başvuru Yönetimi
             </p>
 
-            <h1 className="mt-2 text-3xl font-black text-[#2b2118]">
+            <h2 className="mt-2 text-3xl font-black text-[#2b2118]">
               Uzman Başvuruları
-            </h1>
+            </h2>
 
             <p className="mt-2 max-w-2xl text-[#6b5c4d]">
               Gelen uzman başvurularını incele, onayla, reddet veya pasife al.
@@ -153,50 +162,35 @@ export default function UzmanBasvurulariPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <a
-              href="/"
-              className="rounded-full border border-black/10 bg-white px-5 py-2 text-sm font-bold text-black transition hover:bg-[#f0e8df]"
-            >
-              Siteye Dön
-            </a>
-
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <button
-              onClick={handleLogout}
-              className="rounded-full bg-black px-5 py-2 text-sm font-bold text-white transition hover:bg-neutral-800"
+              onClick={() => setFilter('all')}
+              className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
+                filter === 'all'
+                  ? 'bg-black text-white'
+                  : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
+              }`}
             >
-              Çıkış Yap
+              Tümü ({counts.all})
             </button>
+
+            {(['pending', 'approved', 'rejected', 'passive'] as ExpertStatus[]).map(
+              (status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
+                    filter === status
+                      ? 'bg-black text-white'
+                      : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
+                  }`}
+                >
+                  {getStatusLabel(status)} ({counts[status]})
+                </button>
+              )
+            )}
           </div>
-        </div>
-
-        <div className="mt-8 grid gap-4 md:grid-cols-4">
-          <button
-            onClick={() => setFilter('all')}
-            className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 ${
-              filter === 'all' ? 'bg-black text-white' : 'bg-white text-[#3c3128]'
-            }`}
-          >
-            Tümü ({experts.length})
-          </button>
-
-          {(['pending', 'approved', 'rejected', 'passive'] as ExpertStatus[]).map(
-            (status) => (
-              <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 ${
-                  filter === status
-                    ? 'bg-black text-white'
-                    : 'bg-white text-[#3c3128]'
-                }`}
-              >
-                {getStatusLabel(status)} (
-                {experts.filter((expert) => expert.status === status).length})
-              </button>
-            )
-          )}
-        </div>
+        </section>
 
         {loading ? (
           <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
@@ -215,16 +209,16 @@ export default function UzmanBasvurulariPage() {
         ) : (
           <div className="mt-8 grid gap-5">
             {filteredExperts.map((expert) => (
-              <div
+              <article
                 key={expert.id}
-                className="rounded-3xl border border-[#e5d9cc] bg-white p-6 shadow-sm"
+                className="rounded-3xl border border-[#e5d9cc] bg-white p-6 shadow-sm transition hover:shadow-md"
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="text-xl font-black text-[#2b2118]">
+                      <h3 className="text-xl font-black text-[#2b2118]">
                         {expert.name}
-                      </h2>
+                      </h3>
 
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getStatusStyle(
@@ -236,8 +230,7 @@ export default function UzmanBasvurulariPage() {
                     </div>
 
                     <p className="mt-1 text-sm text-[#6b5c4d]">
-                      {expert.title || 'Ünvan belirtilmedi'} •{' '}
-                      {expert.areas || 'Uzmanlık alanı belirtilmedi'}
+                      {safeText(expert.title)} • {safeText(expert.areas)}
                     </p>
 
                     <p className="mt-2 text-xs font-semibold text-[#8a7662]">
@@ -249,7 +242,7 @@ export default function UzmanBasvurulariPage() {
                     <button
                       disabled={updatingId === expert.id}
                       onClick={() => updateStatus(expert.id, 'approved')}
-                      className="rounded-full bg-green-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-800 disabled:opacity-60"
+                      className="rounded-full bg-green-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Onayla
                     </button>
@@ -257,7 +250,7 @@ export default function UzmanBasvurulariPage() {
                     <button
                       disabled={updatingId === expert.id}
                       onClick={() => updateStatus(expert.id, 'rejected')}
-                      className="rounded-full bg-red-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-800 disabled:opacity-60"
+                      className="rounded-full bg-red-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Reddet
                     </button>
@@ -265,40 +258,40 @@ export default function UzmanBasvurulariPage() {
                     <button
                       disabled={updatingId === expert.id}
                       onClick={() => updateStatus(expert.id, 'passive')}
-                      className="rounded-full bg-zinc-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-zinc-800 disabled:opacity-60"
+                      className="rounded-full bg-zinc-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Pasife Al
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-3 text-sm text-[#3c3128] md:grid-cols-2">
+                <div className="mt-6 grid gap-3 rounded-2xl bg-[#faf7f2] p-5 text-sm text-[#3c3128] md:grid-cols-2">
                   <p>
-                    <b>Telefon:</b> {expert.phone || '-'}
+                    <b>Telefon:</b> {safeText(expert.phone)}
                   </p>
                   <p>
-                    <b>E-posta:</b> {expert.email}
+                    <b>E-posta:</b> {safeText(expert.email)}
                   </p>
                   <p>
-                    <b>Deneyim:</b> {expert.experience || '-'}
+                    <b>Deneyim:</b> {safeText(expert.experience)}
                   </p>
                   <p>
-                    <b>Online Görüşme:</b> {expert.online || '-'}
+                    <b>Online Görüşme:</b> {safeText(expert.online)}
                   </p>
                   <p>
-                    <b>Seans Ücreti:</b> {expert.price || '-'}
+                    <b>Seans Ücreti:</b> {safeText(expert.price)}
                   </p>
                   <p>
-                    <b>Müsaitlik:</b> {expert.availability || '-'}
+                    <b>Müsaitlik:</b> {safeText(expert.availability)}
                   </p>
                   <p className="md:col-span-2">
-                    <b>Mindora’dan Beklenti:</b> {expert.expectation || '-'}
+                    <b>Mindora’dan Beklenti:</b> {safeText(expert.expectation)}
                   </p>
                   <p className="md:col-span-2">
-                    <b>Ek Not:</b> {expert.note || '-'}
+                    <b>Ek Not:</b> {safeText(expert.note)}
                   </p>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
