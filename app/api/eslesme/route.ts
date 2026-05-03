@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 function toText(value: unknown) {
   if (Array.isArray(value)) return value.join(', ')
@@ -21,6 +22,38 @@ export async function POST(req: NextRequest) {
     const preference = toText(data.preference)
     const availability = toText(data.availability)
     const note = toText(data.note) || '-'
+
+    if (!name.trim()) {
+      return NextResponse.json(
+        { ok: false, error: 'Ad soyad zorunlu.' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = getSupabaseAdmin()
+
+    const { error: dbError } = await supabase
+      .from('client_applications')
+      .insert({
+        name,
+        phone,
+        age,
+        topic,
+        duration,
+        previous_support: previousSupport,
+        start_time: startTime,
+        preference,
+        availability,
+        note,
+      })
+
+    if (dbError) {
+      console.error('ESLESME DB ERROR:', dbError)
+      return NextResponse.json(
+        { ok: false, error: 'Danışan başvurusu kaydedilemedi.' },
+        { status: 500 }
+      )
+    }
 
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
