@@ -4,12 +4,16 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 
-function createAuthHeader(apiKey: string, secretKey: string, randomKey: string, uri: string, body: string) {
-  const payload = randomKey + uri + body
-
+function createAuthHeader(
+  apiKey: string,
+  secretKey: string,
+  randomKey: string,
+  uri: string,
+  body: string
+) {
   const signature = crypto
     .createHmac('sha256', secretKey)
-    .update(payload)
+    .update(randomKey + uri + body)
     .digest('hex')
 
   const authString = `apiKey:${apiKey}&randomKey:${randomKey}&signature:${signature}`
@@ -18,22 +22,23 @@ function createAuthHeader(apiKey: string, secretKey: string, randomKey: string, 
 }
 
 function cleanSiteUrl(url?: string) {
-  return (url || '').replace(/\/$/, '')
+  return (url || '').replace(/\/+$/, '')
 }
 
 function cleanPhone(phone?: string | null) {
   if (!phone) return '+905350000000'
 
-  let value = phone.replace(/\s/g, '')
+  let value = phone.replace(/\s/g, '').replace(/[()-]/g, '')
 
   if (value.startsWith('0')) value = '+9' + value
-  if (!value.startsWith('+90')) return '+905350000000'
+  if (value.startsWith('90')) value = '+' + value
 
-  return value
+  return value.startsWith('+90') ? value : '+905350000000'
 }
 
 function splitName(fullName?: string | null) {
-  const parts = (fullName || 'Mindora Danışan').trim().split(' ')
+  const value = (fullName || 'Mindora Danışan').trim()
+  const parts = value.split(/\s+/)
 
   return {
     name: parts[0] || 'Mindora',
@@ -41,11 +46,15 @@ function splitName(fullName?: string | null) {
   }
 }
 
+function money(value: number) {
+  return Number(value).toFixed(2)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.IYZICO_API_KEY
     const secretKey = process.env.IYZICO_SECRET_KEY
-    const baseUrl = process.env.IYZICO_BASE_URL
+    const baseUrl = cleanSiteUrl(process.env.IYZICO_BASE_URL)
     const siteUrl = cleanSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)
 
     if (!apiKey || !secretKey || !baseUrl || !siteUrl) {
@@ -57,9 +66,9 @@ export async function POST(req: NextRequest) {
 
     const { clientId } = await req.json()
 
-    if (!clientId) {
+    if (!clientId || typeof clientId !== 'string') {
       return NextResponse.json(
-        { ok: false, error: 'clientId gerekli.' },
+        { ok: false, error: 'Geçerli clientId gerekli.' },
         { status: 400 }
       )
     }
@@ -70,7 +79,7 @@ export async function POST(req: NextRequest) {
       .from('client_applications')
       .select('*')
       .eq('id', clientId)
-      .single()
+      .maybeSingle()
 
     if (clientError || !client) {
       return NextResponse.json(
@@ -86,45 +95,56 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { data: expert, error: expertError } = await supabase
+    const { data: experts, error: expertError } = await supabase
       .from('experts')
       .select('id, full_name, name, email, session_price, status')
       .eq('id', client.matched_expert_id)
-      .single()
+
+    const expert = experts?.[0]
 
     if (expertError || !expert) {
       return NextResponse.json(
-        { ok: false, error: 'Eşleşen psikolog bulunamadı.' },
+        {
+          ok: false,
+          error: 'Eşleşen psikolog bulunamadı.',
+          debug: {
+            matchedExpertId: client.matched_expert_id,
+            expertError: expertError?.message || null,
+          },
+        },
         { status: 404 }
       )
     }
 
-    if (expert.status && expert.status !== 'approved') {
+    if (expert.status !== 'approved') {
       return NextResponse.json(
         { ok: false, error: 'Eşleşen psikolog aktif/onaylı değil.' },
         { status: 400 }
       )
     }
 
-    if (!expert.session_price || expert.session_price <= 0) {
+    const amount = Number(expert.session_price)
+
+    if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json(
-        { ok: false, error: 'Psikolog seans ücreti bulunamadı.' },
+        { ok: false, error: 'Psikolog seans ücreti bulunamadı veya geçersiz.' },
         { status: 400 }
       )
     }
 
-    const amount = Number(expert.session_price)
     const commissionAmount = Math.round(amount * 0.3)
     const expertAmount = amount - commissionAmount
 
-    const conversationId = `payment_${client.id}_${Date.now()}`
-    const randomKey = Date.now().toString()
+    const now = Date.now()
+    const randomKey = `${now}${Math.floor(Math.random() * 100000)}`
+    const conversationId = `payment_${client.id}_${now}`
     const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
 
     const clientFullName =
       client.full_name ||
       client.name ||
       client.client_name ||
+      client.fullName ||
       'Mindora Danışan'
 
     const { name, surname } = splitName(clientFullName)
@@ -133,12 +153,16 @@ export async function POST(req: NextRequest) {
     const clientPhone = cleanPhone(client.phone || client.phone_number)
     const clientCity = client.city || 'Ankara'
     const clientAddress = client.address || clientCity || 'Türkiye'
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      '85.34.78.112'
 
     const body = {
       locale: 'tr',
       conversationId,
-      price: amount.toString(),
-      paidPrice: amount.toString(),
+      price: money(amount),
+      paidPrice: money(amount),
       currency: 'TRY',
       basketId: `mindora_${client.id}`,
       paymentGroup: 'PRODUCT',
@@ -151,24 +175,24 @@ export async function POST(req: NextRequest) {
         email: clientEmail,
         identityNumber: '11111111111',
         registrationAddress: clientAddress,
-        ip:
-          req.headers.get('x-forwarded-for')?.split(',')[0] ||
-          req.headers.get('x-real-ip') ||
-          '85.34.78.112',
+        ip,
         city: clientCity,
         country: 'Turkey',
+        zipCode: '06000',
       },
       shippingAddress: {
         contactName: `${name} ${surname}`,
         city: clientCity,
         country: 'Turkey',
         address: clientAddress,
+        zipCode: '06000',
       },
       billingAddress: {
         contactName: `${name} ${surname}`,
         city: clientCity,
         country: 'Turkey',
         address: clientAddress,
+        zipCode: '06000',
       },
       basketItems: [
         {
@@ -178,16 +202,15 @@ export async function POST(req: NextRequest) {
           }`,
           category1: 'Psikolojik Danışmanlık',
           itemType: 'VIRTUAL',
-          price: amount.toString(),
+          price: money(amount),
         },
       ],
     }
 
     const bodyStr = JSON.stringify(body)
-
     const auth = createAuthHeader(apiKey, secretKey, randomKey, uri, bodyStr)
 
-    const res = await fetch(baseUrl + uri, {
+    const res = await fetch(`${baseUrl}${uri}`, {
       method: 'POST',
       headers: {
         Authorization: auth,
@@ -199,7 +222,7 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json()
 
-    if (data.status !== 'success') {
+    if (!res.ok || data.status !== 'success') {
       return NextResponse.json(
         {
           ok: false,
@@ -231,8 +254,8 @@ export async function POST(req: NextRequest) {
           ok: false,
           error: 'Ödeme linki oluştu ama payments tablosuna kaydedilemedi.',
           detail: paymentError.message,
-          paymentPageUrl: data.paymentPageUrl,
           token: data.token,
+          paymentPageUrl: data.paymentPageUrl,
         },
         { status: 500 }
       )
