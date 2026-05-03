@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 
@@ -18,18 +19,34 @@ function createAuthHeader(apiKey: string, secretKey: string, randomKey: string, 
 
 export async function POST(req: NextRequest) {
   try {
+    const { expertId } = await req.json()
+
+    if (!expertId) {
+      return NextResponse.json({ ok: false, error: 'expertId gerekli' }, { status: 400 })
+    }
+
+    const supabase = getSupabaseAdmin()
+
+    const { data: expert } = await supabase
+      .from('experts')
+      .select('session_price')
+      .eq('id', expertId)
+      .single()
+
+    if (!expert || !expert.session_price) {
+      return NextResponse.json(
+        { ok: false, error: 'Uzman fiyatı bulunamadı' },
+        { status: 400 }
+      )
+    }
+
+    const price = expert.session_price
+
     const apiKey = process.env.IYZICO_API_KEY!
     const secretKey = process.env.IYZICO_SECRET_KEY!
     const baseUrl = process.env.IYZICO_BASE_URL!
 
-    const { price } = await req.json()
-
-    if (!price) {
-      return NextResponse.json({ ok: false, error: 'price gerekli' }, { status: 400 })
-    }
-
     const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
-
     const randomKey = Date.now().toString()
 
     const body = {
@@ -48,27 +65,22 @@ export async function POST(req: NextRequest) {
         gsmNumber: '+905350000000',
         email: 'test@test.com',
         identityNumber: '11111111111',
-        lastLoginDate: '2020-05-15 12:43:35',
-        registrationDate: '2013-04-21 15:12:09',
         registrationAddress: 'Ankara',
         ip: '85.34.78.112',
         city: 'Ankara',
-        country: 'Turkey',
-        zipCode: '06000'
+        country: 'Turkey'
       },
       shippingAddress: {
         contactName: 'Test User',
         city: 'Ankara',
         country: 'Turkey',
-        address: 'Ankara',
-        zipCode: '06000'
+        address: 'Ankara'
       },
       billingAddress: {
         contactName: 'Test User',
         city: 'Ankara',
         country: 'Turkey',
-        address: 'Ankara',
-        zipCode: '06000'
+        address: 'Ankara'
       },
       basketItems: [
         {
@@ -98,22 +110,17 @@ export async function POST(req: NextRequest) {
     const data = await res.json()
 
     if (data.status !== 'success') {
-  return NextResponse.json(
-    {
-      ok: false,
-      error: data.errorMessage || 'iyzico ödeme başlatılamadı',
-      iyzico: data
-    },
-    { status: 400 }
-  )
-}
+      return NextResponse.json(
+        { ok: false, error: data.errorMessage, iyzico: data },
+        { status: 400 }
+      )
+    }
 
     return NextResponse.json({
       ok: true,
-      token: data.token,
       paymentPageUrl: data.paymentPageUrl,
-      checkoutFormContent: data.checkoutFormContent
-  })
+      token: data.token
+    })
 
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
