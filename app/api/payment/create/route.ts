@@ -98,8 +98,15 @@ export async function POST(req: NextRequest) {
     const data = await res.json()
 
     if (data.status !== 'success') {
-      return NextResponse.json({ ok: false, error: data.errorMessage }, { status: 400 })
-    }
+  return NextResponse.json(
+    {
+      ok: false,
+      error: data.errorMessage || 'iyzico ödeme başlatılamadı',
+      iyzico: data
+    },
+    { status: 400 }
+  )
+}
 
     return NextResponse.json({
       ok: true,
