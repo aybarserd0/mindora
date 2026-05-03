@@ -5,7 +5,11 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 function toText(value: unknown) {
   if (Array.isArray(value)) return value.join(', ')
   if (value === null || value === undefined) return ''
-  return String(value)
+  return String(value).trim()
+}
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 export async function POST(req: NextRequest) {
@@ -14,6 +18,7 @@ export async function POST(req: NextRequest) {
 
     const name = toText(data.name)
     const phone = toText(data.phone)
+    const email = toText(data.email)
     const age = toText(data.age)
     const topic = toText(data.topic)
     const duration = toText(data.duration)
@@ -23,32 +28,46 @@ export async function POST(req: NextRequest) {
     const availability = toText(data.availability)
     const note = toText(data.note) || '-'
 
-    if (!name.trim()) {
+    if (!name) {
       return NextResponse.json(
         { ok: false, error: 'Ad soyad zorunlu.' },
         { status: 400 }
       )
     }
 
+    if (!phone) {
+      return NextResponse.json(
+        { ok: false, error: 'Telefon zorunlu.' },
+        { status: 400 }
+      )
+    }
+
+    if (!email || !isValidEmail(email)) {
+      return NextResponse.json(
+        { ok: false, error: 'Geçerli bir e-posta adresi gir.' },
+        { status: 400 }
+      )
+    }
+
     const supabase = getSupabaseAdmin()
 
-    const { error: dbError } = await supabase
-      .from('client_applications')
-      .insert({
-        name,
-        phone,
-        age,
-        topic,
-        duration,
-        previous_support: previousSupport,
-        start_time: startTime,
-        preference,
-        availability,
-        note,
-      })
+    const { error: dbError } = await supabase.from('client_applications').insert({
+      name,
+      phone,
+      email,
+      age,
+      topic,
+      duration,
+      previous_support: previousSupport,
+      start_time: startTime,
+      preference,
+      availability,
+      note,
+    })
 
     if (dbError) {
       console.error('ESLESME DB ERROR:', dbError)
+
       return NextResponse.json(
         { ok: false, error: 'Danışan başvurusu kaydedilemedi.' },
         { status: 500 }
@@ -65,11 +84,12 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    const text = `
+    const adminText = `
 Mindora Danışan Başvurusu
 
 Ad Soyad: ${name}
 Telefon: ${phone}
+E-posta: ${email}
 Yaş: ${age}
 Konu: ${topic}
 Süre: ${duration}
@@ -80,16 +100,42 @@ Müsaitlik: ${availability}
 Not: ${note}
 `
 
+    const clientText = `
+Merhaba ${name},
+
+Mindora başvurun bize ulaştı.
+
+Başvurunu inceleyip sana uygun psikolog eşleşmesi için en kısa sürede seninle iletişime geçeceğiz.
+
+Başvuru Özeti:
+Konu: ${topic || '-'}
+Başlama: ${startTime || '-'}
+Müsaitlik: ${availability || '-'}
+
+Mindora
+`
+
     await transporter.sendMail({
       from: `"Mindora Danışan" <${process.env.SMTP_USER}>`,
       to: process.env.CONTACT_TO,
       subject: 'Mindora Danışan Başvurusu',
-      text,
+      text: adminText,
+    })
+
+    await transporter.sendMail({
+      from: `"Mindora" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: 'Mindora Başvurun Alındı',
+      text: clientText,
     })
 
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('ESLESME ERROR:', err)
-    return NextResponse.json({ ok: false }, { status: 500 })
+
+    return NextResponse.json(
+      { ok: false, error: 'Sunucu hatası oluştu.' },
+      { status: 500 }
+    )
   }
 }

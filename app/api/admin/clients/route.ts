@@ -13,6 +13,7 @@ type ClientRow = {
   id: string
   name: string | null
   phone: string | null
+  email: string | null
   age: string | null
   topic: string | null
   duration: string | null
@@ -26,6 +27,26 @@ type ClientRow = {
   created_at: string
 }
 
+function normalizeClient(client: any): ClientRow {
+  return {
+    id: client.id,
+    name: client.name ?? null,
+    phone: client.phone ?? null,
+    email: client.email ?? null,
+    age: client.age ?? null,
+    topic: client.topic ?? null,
+    duration: client.duration ?? null,
+    previous_support: client.previous_support ?? null,
+    start_time: client.start_time ?? null,
+    preference: client.preference ?? null,
+    availability: client.availability ?? null,
+    note: client.note ?? null,
+    status: client.status,
+    matched_expert_id: client.matched_expert_id ?? null,
+    created_at: client.created_at,
+  }
+}
+
 export async function GET() {
   try {
     const supabase = getSupabaseAdmin()
@@ -37,6 +58,7 @@ export async function GET() {
         id,
         name,
         phone,
+        email,
         age,
         topic,
         duration,
@@ -56,30 +78,12 @@ export async function GET() {
       console.error('ADMIN CLIENTS DB ERROR:', error)
 
       return NextResponse.json(
-        {
-          ok: false,
-          error: 'Danışan başvuruları alınamadı.',
-        },
+        { ok: false, error: 'Danışan başvuruları alınamadı.' },
         { status: 500 }
       )
     }
 
-    const clients: ClientRow[] = (data ?? []).map((client) => ({
-      id: client.id,
-      name: client.name ?? null,
-      phone: client.phone ?? null,
-      age: client.age ?? null,
-      topic: client.topic ?? null,
-      duration: client.duration ?? null,
-      previous_support: client.previous_support ?? null,
-      start_time: client.start_time ?? null,
-      preference: client.preference ?? null,
-      availability: client.availability ?? null,
-      note: client.note ?? null,
-      status: client.status,
-      matched_expert_id: client.matched_expert_id ?? null,
-      created_at: client.created_at,
-    }))
+    const clients = (data ?? []).map(normalizeClient)
 
     return NextResponse.json(
       {
@@ -97,10 +101,7 @@ export async function GET() {
     console.error('ADMIN CLIENTS SERVER ERROR:', err)
 
     return NextResponse.json(
-      {
-        ok: false,
-        error: 'Sunucu hatası oluştu.',
-      },
+      { ok: false, error: 'Sunucu hatası oluştu.' },
       { status: 500 }
     )
   }

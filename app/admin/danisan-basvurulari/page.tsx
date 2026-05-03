@@ -15,6 +15,7 @@ type Client = {
   id: string
   name: string | null
   phone: string | null
+  email: string | null
   age: string | null
   topic: string | null
   duration: string | null
@@ -91,38 +92,56 @@ function safeText(value: string | null | undefined) {
 export default function DanisanBasvurulariPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [experts, setExperts] = useState<Expert[]>([])
-  const [selectedExperts, setSelectedExperts] = useState<Record<string, string>>(
-    {}
-  )
+  const [selectedExperts, setSelectedExperts] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | ClientStatus>('all')
+  const [search, setSearch] = useState('')
   const [error, setError] = useState('')
 
-  const approvedExperts = useMemo(() => {
-    return experts.filter((expert) => expert.status === 'approved')
-  }, [experts])
+  const approvedExperts = useMemo(
+    () => experts.filter((expert) => expert.status === 'approved'),
+    [experts]
+  )
 
   const counts = useMemo(() => {
     return {
       all: clients.length,
       new: clients.filter((client) => client.status === 'new').length,
-      reviewing: clients.filter((client) => client.status === 'reviewing')
-        .length,
+      reviewing: clients.filter((client) => client.status === 'reviewing').length,
       matched: clients.filter((client) => client.status === 'matched').length,
-      contacted: clients.filter((client) => client.status === 'contacted')
-        .length,
-      completed: clients.filter((client) => client.status === 'completed')
-        .length,
-      cancelled: clients.filter((client) => client.status === 'cancelled')
-        .length,
+      contacted: clients.filter((client) => client.status === 'contacted').length,
+      completed: clients.filter((client) => client.status === 'completed').length,
+      cancelled: clients.filter((client) => client.status === 'cancelled').length,
     }
   }, [clients])
 
   const filteredClients = useMemo(() => {
-    if (filter === 'all') return clients
-    return clients.filter((client) => client.status === filter)
-  }, [clients, filter])
+    const keyword = search.trim().toLowerCase()
+
+    return clients.filter((client) => {
+      const statusMatch = filter === 'all' || client.status === filter
+
+      const text = [
+        client.name,
+        client.phone,
+        client.email,
+        client.age,
+        client.topic,
+        client.duration,
+        client.preference,
+        client.availability,
+        client.note,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      const searchMatch = !keyword || text.includes(keyword)
+
+      return statusMatch && searchMatch
+    })
+  }, [clients, filter, search])
 
   function getExpertName(expertId: string | null) {
     if (!expertId) return '-'
@@ -207,7 +226,7 @@ export default function DanisanBasvurulariPage() {
       const data = await res.json()
 
       if (!res.ok || !data.ok) {
-        alert('Eşleştirme başarısız.')
+        alert(data.error || 'Eşleştirme başarısız.')
         return
       }
 
@@ -229,19 +248,29 @@ export default function DanisanBasvurulariPage() {
         <AdminHeader />
 
         <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/70 p-6 shadow-sm">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
-              Operasyon Yönetimi
-            </p>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
+                Operasyon Yönetimi
+              </p>
 
-            <h2 className="mt-2 text-3xl font-black text-[#2b2118]">
-              Danışan Başvuruları
-            </h2>
+              <h2 className="mt-2 text-3xl font-black text-[#2b2118]">
+                Danışan Başvuruları
+              </h2>
 
-            <p className="mt-2 max-w-2xl text-[#6b5c4d]">
-              Gelen danışan başvurularını incele, süreci takip et ve uygun
-              uzmanla eşleştir.
-            </p>
+              <p className="mt-2 max-w-2xl text-[#6b5c4d]">
+                Gelen danışan başvurularını incele, süreci takip et, uygun uzmanla
+                eşleştir ve bildirim sürecini yönet.
+              </p>
+            </div>
+
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Yenile
+            </button>
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -256,28 +285,30 @@ export default function DanisanBasvurulariPage() {
               Tümü ({counts.all})
             </button>
 
-            {(
-              [
-                'new',
-                'reviewing',
-                'matched',
-                'contacted',
-                'completed',
-                'cancelled',
-              ] as ClientStatus[]
-            ).map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
-                  filter === status
-                    ? 'bg-black text-white'
-                    : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
-                }`}
-              >
-                {getStatusLabel(status)} ({counts[status]})
-              </button>
-            ))}
+            {(['new', 'reviewing', 'matched', 'contacted', 'completed', 'cancelled'] as ClientStatus[]).map(
+              (status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
+                    filter === status
+                      ? 'bg-black text-white'
+                      : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
+                  }`}
+                >
+                  {getStatusLabel(status)} ({counts[status]})
+                </button>
+              )
+            )}
+          </div>
+
+          <div className="mt-5">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="İsim, telefon, e-posta, konu veya not ara..."
+              className="h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
+            />
           </div>
         </section>
 
@@ -294,7 +325,7 @@ export default function DanisanBasvurulariPage() {
         ) : filteredClients.length === 0 ? (
           <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
             <p className="font-bold text-[#6b5c4d]">
-              Bu filtrede danışan başvurusu bulunmuyor.
+              Bu filtre veya arama için danışan başvurusu bulunmuyor.
             </p>
           </div>
         ) : (
@@ -369,6 +400,9 @@ export default function DanisanBasvurulariPage() {
                     <b>Telefon:</b> {safeText(client.phone)}
                   </p>
                   <p>
+                    <b>E-posta:</b> {safeText(client.email)}
+                  </p>
+                  <p>
                     <b>Yaş:</b> {safeText(client.age)}
                   </p>
                   <p>
@@ -378,8 +412,7 @@ export default function DanisanBasvurulariPage() {
                     <b>Süre:</b> {safeText(client.duration)}
                   </p>
                   <p>
-                    <b>Daha Önce Destek:</b>{' '}
-                    {safeText(client.previous_support)}
+                    <b>Daha Önce Destek:</b> {safeText(client.previous_support)}
                   </p>
                   <p>
                     <b>Başlama Zamanı:</b> {safeText(client.start_time)}
@@ -391,8 +424,7 @@ export default function DanisanBasvurulariPage() {
                     <b>Müsaitlik:</b> {safeText(client.availability)}
                   </p>
                   <p className="md:col-span-2">
-                    <b>Eşleşen Uzman:</b>{' '}
-                    {getExpertName(client.matched_expert_id)}
+                    <b>Eşleşen Uzman:</b> {getExpertName(client.matched_expert_id)}
                   </p>
                   <p className="md:col-span-2">
                     <b>Ek Not:</b> {safeText(client.note)}
