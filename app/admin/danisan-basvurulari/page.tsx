@@ -28,6 +28,14 @@ type Client = {
   created_at: string
 }
 
+type Expert = {
+  id: string
+  name: string
+  title: string | null
+  areas: string | null
+  status: 'pending' | 'approved' | 'rejected' | 'passive'
+}
+
 function getStatusLabel(status: ClientStatus) {
   switch (status) {
     case 'new':
@@ -82,20 +90,32 @@ function safeText(value: string | null | undefined) {
 
 export default function DanisanBasvurulariPage() {
   const [clients, setClients] = useState<Client[]>([])
+  const [experts, setExperts] = useState<Expert[]>([])
+  const [selectedExperts, setSelectedExperts] = useState<Record<string, string>>(
+    {}
+  )
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | ClientStatus>('all')
   const [error, setError] = useState('')
 
+  const approvedExperts = useMemo(() => {
+    return experts.filter((expert) => expert.status === 'approved')
+  }, [experts])
+
   const counts = useMemo(() => {
     return {
       all: clients.length,
       new: clients.filter((client) => client.status === 'new').length,
-      reviewing: clients.filter((client) => client.status === 'reviewing').length,
+      reviewing: clients.filter((client) => client.status === 'reviewing')
+        .length,
       matched: clients.filter((client) => client.status === 'matched').length,
-      contacted: clients.filter((client) => client.status === 'contacted').length,
-      completed: clients.filter((client) => client.status === 'completed').length,
-      cancelled: clients.filter((client) => client.status === 'cancelled').length,
+      contacted: clients.filter((client) => client.status === 'contacted')
+        .length,
+      completed: clients.filter((client) => client.status === 'completed')
+        .length,
+      cancelled: clients.filter((client) => client.status === 'cancelled')
+        .length,
     }
   }, [clients])
 
@@ -104,23 +124,37 @@ export default function DanisanBasvurulariPage() {
     return clients.filter((client) => client.status === filter)
   }, [clients, filter])
 
-  async function fetchClients() {
+  function getExpertName(expertId: string | null) {
+    if (!expertId) return '-'
+    const expert = experts.find((item) => item.id === expertId)
+    return expert ? expert.name : expertId
+  }
+
+  async function fetchData() {
     try {
       setLoading(true)
       setError('')
 
-      const res = await fetch('/api/admin/clients', {
-        cache: 'no-store',
-      })
+      const [clientsRes, expertsRes] = await Promise.all([
+        fetch('/api/admin/clients', { cache: 'no-store' }),
+        fetch('/api/admin/experts', { cache: 'no-store' }),
+      ])
 
-      const data = await res.json()
+      const clientsData = await clientsRes.json()
+      const expertsData = await expertsRes.json()
 
-      if (!res.ok || !data.ok) {
+      if (!clientsRes.ok || !clientsData.ok) {
         setError('Danışan başvuruları alınamadı.')
         return
       }
 
-      setClients(data.clients || [])
+      if (!expertsRes.ok || !expertsData.ok) {
+        setError('Uzman listesi alınamadı.')
+        return
+      }
+
+      setClients(clientsData.clients || [])
+      setExperts(expertsData.experts || [])
     } catch {
       setError('Sunucuya bağlanırken hata oluştu.')
     } finally {
@@ -145,7 +179,7 @@ export default function DanisanBasvurulariPage() {
         return
       }
 
-      await fetchClients()
+      await fetchData()
     } catch {
       alert('Durum güncellenirken hata oluştu.')
     } finally {
@@ -153,8 +187,40 @@ export default function DanisanBasvurulariPage() {
     }
   }
 
+  async function matchClient(clientId: string) {
+    const expertId = selectedExperts[clientId]
+
+    if (!expertId) {
+      alert('Lütfen önce bir uzman seç.')
+      return
+    }
+
+    try {
+      setUpdatingId(clientId)
+
+      const res = await fetch('/api/admin/clients/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, expertId }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.ok) {
+        alert('Eşleştirme başarısız.')
+        return
+      }
+
+      await fetchData()
+    } catch {
+      alert('Eşleştirme sırasında hata oluştu.')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   useEffect(() => {
-    fetchClients()
+    fetchData()
   }, [])
 
   return (
@@ -174,7 +240,7 @@ export default function DanisanBasvurulariPage() {
 
             <p className="mt-2 max-w-2xl text-[#6b5c4d]">
               Gelen danışan başvurularını incele, süreci takip et ve uygun
-              uzmanla eşleştirmeye hazır hale getir.
+              uzmanla eşleştir.
             </p>
           </div>
 
@@ -190,21 +256,28 @@ export default function DanisanBasvurulariPage() {
               Tümü ({counts.all})
             </button>
 
-            {(['new', 'reviewing', 'matched', 'contacted', 'completed', 'cancelled'] as ClientStatus[]).map(
-              (status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilter(status)}
-                  className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
-                    filter === status
-                      ? 'bg-black text-white'
-                      : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
-                  }`}
-                >
-                  {getStatusLabel(status)} ({counts[status]})
-                </button>
-              )
-            )}
+            {(
+              [
+                'new',
+                'reviewing',
+                'matched',
+                'contacted',
+                'completed',
+                'cancelled',
+              ] as ClientStatus[]
+            ).map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
+                  filter === status
+                    ? 'bg-black text-white'
+                    : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
+                }`}
+              >
+                {getStatusLabel(status)} ({counts[status]})
+              </button>
+            ))}
           </div>
         </section>
 
@@ -318,12 +391,60 @@ export default function DanisanBasvurulariPage() {
                     <b>Müsaitlik:</b> {safeText(client.availability)}
                   </p>
                   <p className="md:col-span-2">
-                    <b>Eşleşen Uzman ID:</b>{' '}
-                    {safeText(client.matched_expert_id)}
+                    <b>Eşleşen Uzman:</b>{' '}
+                    {getExpertName(client.matched_expert_id)}
                   </p>
                   <p className="md:col-span-2">
                     <b>Ek Not:</b> {safeText(client.note)}
                   </p>
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-[#e5d9cc] bg-white p-4">
+                  <p className="mb-3 text-sm font-black text-[#2b2118]">
+                    Uzman Eşleştirme
+                  </p>
+
+                  <div className="flex flex-col gap-3 md:flex-row">
+                    <select
+                      value={selectedExperts[client.id] || ''}
+                      onChange={(event) =>
+                        setSelectedExperts((prev) => ({
+                          ...prev,
+                          [client.id]: event.target.value,
+                        }))
+                      }
+                      className="min-h-11 flex-1 rounded-full border border-black/10 bg-[#faf7f2] px-4 text-sm font-semibold outline-none"
+                    >
+                      <option value="">Onaylı uzman seç</option>
+
+                      {approvedExperts.map((expert) => (
+                        <option key={expert.id} value={expert.id}>
+                          {expert.name}
+                          {expert.title ? ` • ${expert.title}` : ''}
+                          {expert.areas ? ` • ${expert.areas}` : ''}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      disabled={
+                        updatingId === client.id ||
+                        !selectedExperts[client.id] ||
+                        approvedExperts.length === 0
+                      }
+                      onClick={() => matchClient(client.id)}
+                      className="rounded-full bg-purple-700 px-5 py-3 text-sm font-black text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Uzman Ata
+                    </button>
+                  </div>
+
+                  {approvedExperts.length === 0 && (
+                    <p className="mt-3 text-sm font-semibold text-red-700">
+                      Onaylı uzman yok. Önce Uzman Başvuruları sayfasından bir
+                      uzmanı onayla.
+                    </p>
+                  )}
                 </div>
               </article>
             ))}

@@ -71,6 +71,7 @@ export default function UzmanBasvurulariPage() {
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | ExpertStatus>('all')
+  const [search, setSearch] = useState('')
   const [error, setError] = useState('')
 
   const counts = useMemo(() => {
@@ -84,9 +85,30 @@ export default function UzmanBasvurulariPage() {
   }, [experts])
 
   const filteredExperts = useMemo(() => {
-    if (filter === 'all') return experts
-    return experts.filter((expert) => expert.status === filter)
-  }, [experts, filter])
+    const keyword = search.trim().toLowerCase()
+
+    return experts.filter((expert) => {
+      const matchesStatus = filter === 'all' || expert.status === filter
+
+      const searchableText = [
+        expert.name,
+        expert.email,
+        expert.phone,
+        expert.title,
+        expert.areas,
+        expert.experience,
+        expert.online,
+        expert.availability,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      const matchesSearch = !keyword || searchableText.includes(keyword)
+
+      return matchesStatus && matchesSearch
+    })
+  }, [experts, filter, search])
 
   async function fetchExperts() {
     try {
@@ -100,7 +122,7 @@ export default function UzmanBasvurulariPage() {
       const data = await res.json()
 
       if (!res.ok || !data.ok) {
-        setError('Başvurular alınamadı.')
+        setError('Uzman başvuruları alınamadı.')
         return
       }
 
@@ -113,6 +135,15 @@ export default function UzmanBasvurulariPage() {
   }
 
   async function updateStatus(id: string, status: ExpertStatus) {
+    const confirmText =
+      status === 'approved'
+        ? 'Bu uzmanı onaylamak istiyor musun?'
+        : status === 'rejected'
+          ? 'Bu başvuruyu reddetmek istiyor musun?'
+          : 'Bu uzmanı pasife almak istiyor musun?'
+
+    if (!window.confirm(confirmText)) return
+
     try {
       setUpdatingId(id)
 
@@ -125,7 +156,7 @@ export default function UzmanBasvurulariPage() {
       const data = await res.json()
 
       if (!res.ok || !data.ok) {
-        alert('Durum güncellenemedi.')
+        alert('Uzman durumu güncellenemedi.')
         return
       }
 
@@ -147,19 +178,30 @@ export default function UzmanBasvurulariPage() {
         <AdminHeader />
 
         <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/70 p-6 shadow-sm">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
-              Başvuru Yönetimi
-            </p>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
+                Başvuru Yönetimi
+              </p>
 
-            <h2 className="mt-2 text-3xl font-black text-[#2b2118]">
-              Uzman Başvuruları
-            </h2>
+              <h2 className="mt-2 text-3xl font-black text-[#2b2118]">
+                Uzman Başvuruları
+              </h2>
 
-            <p className="mt-2 max-w-2xl text-[#6b5c4d]">
-              Gelen uzman başvurularını incele, onayla, reddet veya pasife al.
-              Onaylanan uzmanlar otomatik olarak uzmanlar sayfasında görünür.
-            </p>
+              <p className="mt-2 max-w-2xl text-[#6b5c4d]">
+                Gelen uzman başvurularını incele, onayla, reddet veya pasife al.
+                Onaylanan uzmanlar otomatik olarak uzmanlar sayfasında görünür
+                ve danışan eşleştirmesinde kullanılabilir.
+              </p>
+            </div>
+
+            <button
+              onClick={fetchExperts}
+              disabled={loading}
+              className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Yenile
+            </button>
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -190,11 +232,22 @@ export default function UzmanBasvurulariPage() {
               )
             )}
           </div>
+
+          <div className="mt-5">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="İsim, e-posta, telefon, ünvan veya uzmanlık alanı ara..."
+              className="h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
+            />
+          </div>
         </section>
 
         {loading ? (
           <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-[#6b5c4d]">Başvurular yükleniyor...</p>
+            <p className="font-bold text-[#6b5c4d]">
+              Uzman başvuruları yükleniyor...
+            </p>
           </div>
         ) : error ? (
           <div className="mt-8 rounded-3xl bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
@@ -203,7 +256,7 @@ export default function UzmanBasvurulariPage() {
         ) : filteredExperts.length === 0 ? (
           <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
             <p className="font-bold text-[#6b5c4d]">
-              Bu filtrede başvuru bulunmuyor.
+              Bu filtre veya arama için uzman başvurusu bulunmuyor.
             </p>
           </div>
         ) : (
@@ -273,6 +326,12 @@ export default function UzmanBasvurulariPage() {
                     <b>E-posta:</b> {safeText(expert.email)}
                   </p>
                   <p>
+                    <b>Ünvan:</b> {safeText(expert.title)}
+                  </p>
+                  <p>
+                    <b>Uzmanlık Alanları:</b> {safeText(expert.areas)}
+                  </p>
+                  <p>
                     <b>Deneyim:</b> {safeText(expert.experience)}
                   </p>
                   <p>
@@ -289,6 +348,9 @@ export default function UzmanBasvurulariPage() {
                   </p>
                   <p className="md:col-span-2">
                     <b>Ek Not:</b> {safeText(expert.note)}
+                  </p>
+                  <p className="md:col-span-2 break-all text-xs text-[#8a7662]">
+                    <b>Uzman ID:</b> {expert.id}
                   </p>
                 </div>
               </article>
