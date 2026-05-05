@@ -50,6 +50,11 @@ function money(value: number) {
   return Number(value).toFixed(2)
 }
 
+function normalizeAmount(value: unknown) {
+  const amount = Number(value)
+  return Number.isFinite(amount) && amount > 0 ? amount : null
+}
+
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.IYZICO_API_KEY
@@ -64,7 +69,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { clientId } = await req.json()
+    const bodyJson = await req.json().catch(() => null)
+    const clientId = bodyJson?.clientId
 
     if (!clientId || typeof clientId !== 'string') {
       return NextResponse.json(
@@ -83,7 +89,11 @@ export async function POST(req: NextRequest) {
 
     if (clientError || !client) {
       return NextResponse.json(
-        { ok: false, error: 'Danışan başvurusu bulunamadı.' },
+        {
+          ok: false,
+          error: 'Danışan başvurusu bulunamadı.',
+          detail: clientError?.message || null,
+        },
         { status: 404 }
       )
     }
@@ -95,6 +105,48 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const { data: existingPayment, error: existingPaymentError } = await supabase
+      .from('payments')
+      .select(
+        'id, client_id, expert_id, amount, commission_amount, expert_amount, iyzico_token, iyzico_conversation_id, payment_page_url, status'
+      )
+      .eq('client_id', client.id)
+      .in('status', ['pending', 'paid'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingPaymentError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Mevcut ödeme kontrolü yapılamadı.',
+          detail: existingPaymentError.message,
+        },
+        { status: 500 }
+      )
+    }
+
+    if (existingPayment) {
+      return NextResponse.json({
+        ok: true,
+        reused: true,
+        message:
+          existingPayment.status === 'paid'
+            ? 'Bu danışanın ödemesi zaten tamamlanmış.'
+            : 'Bu danışan için zaten aktif bir ödeme linki var.',
+        paymentId: existingPayment.id,
+        clientId: existingPayment.client_id,
+        expertId: existingPayment.expert_id,
+        amount: existingPayment.amount,
+        commissionAmount: existingPayment.commission_amount,
+        expertAmount: existingPayment.expert_amount,
+        token: existingPayment.iyzico_token,
+        paymentPageUrl: existingPayment.payment_page_url,
+        status: existingPayment.status,
+      })
+    }
+
     const { data: expert, error: expertError } = await supabase
       .from('experts')
       .select('id, name, email, session_price, status')
@@ -103,7 +155,11 @@ export async function POST(req: NextRequest) {
 
     if (expertError || !expert) {
       return NextResponse.json(
-        { ok: false, error: 'Eşleşen psikolog bulunamadı.' },
+        {
+          ok: false,
+          error: 'Eşleşen psikolog bulunamadı.',
+          detail: expertError?.message || null,
+        },
         { status: 404 }
       )
     }
@@ -115,9 +171,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const amount = Number(expert.session_price)
+    const amount = normalizeAmount(expert.session_price)
 
-    if (!Number.isFinite(amount) || amount <= 0) {
+    if (!amount) {
       return NextResponse.json(
         { ok: false, error: 'Psikolog seans ücreti bulunamadı veya geçersiz.' },
         { status: 400 }
@@ -150,7 +206,7 @@ export async function POST(req: NextRequest) {
       req.headers.get('x-real-ip') ||
       '85.34.78.112'
 
-    const body = {
+    const iyzicoBody = {
       locale: 'tr',
       conversationId,
       price: money(amount),
@@ -197,7 +253,7 @@ export async function POST(req: NextRequest) {
       ],
     }
 
-    const bodyStr = JSON.stringify(body)
+    const bodyStr = JSON.stringify(iyzicoBody)
     const auth = createAuthHeader(apiKey, secretKey, randomKey, uri, bodyStr)
 
     const iyzicoRes = await fetch(`${baseUrl}${uri}`, {
@@ -217,8 +273,18 @@ export async function POST(req: NextRequest) {
         {
           ok: false,
           error:
-            iyzicoData?.errorMessage ||
-            'iyzico ödeme linki oluşturulamadı.',
+            iyzicoData?.errorMessage || 'iyzico ödeme linki oluşturulamadı.',
+          iyzico: iyzicoData,
+        },
+        { status: 400 }
+      )
+    }
+
+    if (!iyzicoData.token || !iyzicoData.paymentPageUrl) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'iyzico token veya ödeme linki dönmedi.',
           iyzico: iyzicoData,
         },
         { status: 400 }
@@ -235,7 +301,9 @@ export async function POST(req: NextRequest) {
         expert_amount: expertAmount,
         iyzico_token: iyzicoData.token,
         iyzico_conversation_id: conversationId,
+        payment_page_url: iyzicoData.paymentPageUrl,
         status: 'pending',
+        expert_payout_status: 'unpaid',
       })
       .select('id')
       .single()
@@ -255,6 +323,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
+      reused: false,
       paymentId: payment.id,
       clientId: client.id,
       expertId: expert.id,
@@ -263,6 +332,7 @@ export async function POST(req: NextRequest) {
       expertAmount,
       token: iyzicoData.token,
       paymentPageUrl: iyzicoData.paymentPageUrl,
+      status: 'pending',
     })
   } catch (err: any) {
     return NextResponse.json(
