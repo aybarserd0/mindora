@@ -11,6 +11,21 @@ type ClientStatus =
   | 'completed'
   | 'cancelled'
 
+type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
+
+type LatestPayment = {
+  id: string
+  status: PaymentStatus
+  amount: number
+  commission_amount: number
+  expert_amount: number
+  payment_page_url: string | null
+  iyzico_payment_id: string | null
+  expert_payout_status: string | null
+  expert_payout_paid_at: string | null
+  created_at: string
+}
+
 type Client = {
   id: string
   name: string | null
@@ -27,6 +42,7 @@ type Client = {
   status: ClientStatus
   matched_expert_id: string | null
   created_at: string
+  latest_payment: LatestPayment | null
 }
 
 type Expert = {
@@ -35,17 +51,6 @@ type Expert = {
   title: string | null
   areas: string | null
   status: 'pending' | 'approved' | 'rejected' | 'passive'
-}
-
-type CreatedPayment = {
-  paymentId: string
-  clientId: string
-  expertId: string
-  amount: number
-  commissionAmount: number
-  expertAmount: number
-  token: string
-  paymentPageUrl: string
 }
 
 function getStatusLabel(status: ClientStatus) {
@@ -82,7 +87,39 @@ function getStatusStyle(status: ClientStatus) {
   }
 }
 
-function formatDate(date: string) {
+function getPaymentLabel(status: PaymentStatus) {
+  switch (status) {
+    case 'pending':
+      return 'Ödeme Bekliyor'
+    case 'paid':
+      return 'Ödendi'
+    case 'failed':
+      return 'Başarısız'
+    case 'cancelled':
+      return 'İptal'
+    case 'refunded':
+      return 'İade'
+  }
+}
+
+function getPaymentStyle(status: PaymentStatus) {
+  switch (status) {
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800 ring-yellow-200'
+    case 'paid':
+      return 'bg-green-100 text-green-800 ring-green-200'
+    case 'failed':
+      return 'bg-red-100 text-red-800 ring-red-200'
+    case 'cancelled':
+      return 'bg-gray-100 text-gray-700 ring-gray-200'
+    case 'refunded':
+      return 'bg-blue-100 text-blue-800 ring-blue-200'
+  }
+}
+
+function formatDate(date: string | null | undefined) {
+  if (!date) return '-'
+
   try {
     return new Intl.DateTimeFormat('tr-TR', {
       day: '2-digit',
@@ -116,7 +153,6 @@ export default function DanisanBasvurulariPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [experts, setExperts] = useState<Expert[]>([])
   const [selectedExperts, setSelectedExperts] = useState<Record<string, string>>({})
-  const [createdPayments, setCreatedPayments] = useState<Record<string, CreatedPayment>>({})
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [paymentLoadingId, setPaymentLoadingId] = useState<string | null>(null)
@@ -143,15 +179,34 @@ export default function DanisanBasvurulariPage() {
   }, [clients])
 
   const paymentSummary = useMemo(() => {
-    const payments = Object.values(createdPayments)
+    const payments = clients
+      .map((client) => client.latest_payment)
+      .filter(Boolean) as LatestPayment[]
+
+    const paidPayments = payments.filter((payment) => payment.status === 'paid')
+    const pendingPayments = payments.filter((payment) => payment.status === 'pending')
 
     return {
       count: payments.length,
-      amount: payments.reduce((sum, payment) => sum + payment.amount, 0),
-      commission: payments.reduce((sum, payment) => sum + payment.commissionAmount, 0),
-      expertAmount: payments.reduce((sum, payment) => sum + payment.expertAmount, 0),
+      paidCount: paidPayments.length,
+      pendingCount: pendingPayments.length,
+      paidAmount: paidPayments.reduce((sum, payment) => sum + payment.amount, 0),
+      paidCommission: paidPayments.reduce(
+        (sum, payment) => sum + payment.commission_amount,
+        0
+      ),
+      paidExpertAmount: paidPayments.reduce(
+        (sum, payment) => sum + payment.expert_amount,
+        0
+      ),
     }
-  }, [createdPayments])
+  }, [clients])
+
+  function getExpertName(expertId: string | null) {
+    if (!expertId) return '-'
+    const expert = experts.find((item) => item.id === expertId)
+    return expert ? expert.name : expertId
+  }
 
   const filteredClients = useMemo(() => {
     const keyword = search.trim().toLowerCase()
@@ -170,6 +225,8 @@ export default function DanisanBasvurulariPage() {
         client.availability,
         client.note,
         getExpertName(client.matched_expert_id),
+        client.latest_payment?.status,
+        client.latest_payment?.iyzico_payment_id,
       ]
         .filter(Boolean)
         .join(' ')
@@ -180,12 +237,6 @@ export default function DanisanBasvurulariPage() {
       return statusMatch && searchMatch
     })
   }, [clients, filter, search, experts])
-
-  function getExpertName(expertId: string | null) {
-    if (!expertId) return '-'
-    const expert = experts.find((item) => item.id === expertId)
-    return expert ? expert.name : expertId
-  }
 
   async function fetchData() {
     try {
@@ -288,6 +339,11 @@ export default function DanisanBasvurulariPage() {
       return
     }
 
+    if (client.latest_payment?.status === 'paid') {
+      alert('Bu danışanın ödemesi zaten tamamlanmış.')
+      return
+    }
+
     try {
       setPaymentLoadingId(client.id)
 
@@ -304,27 +360,14 @@ export default function DanisanBasvurulariPage() {
         return
       }
 
-      const payment: CreatedPayment = {
-        paymentId: data.paymentId,
-        clientId: data.clientId,
-        expertId: data.expertId,
-        amount: data.amount,
-        commissionAmount: data.commissionAmount,
-        expertAmount: data.expertAmount,
-        token: data.token,
-        paymentPageUrl: data.paymentPageUrl,
+      if (data.paymentPageUrl) {
+        await navigator.clipboard.writeText(data.paymentPageUrl)
+        setCopiedClientId(client.id)
+        setTimeout(() => setCopiedClientId(null), 2500)
+        window.open(data.paymentPageUrl, '_blank', 'noopener,noreferrer')
       }
 
-      setCreatedPayments((prev) => ({
-        ...prev,
-        [client.id]: payment,
-      }))
-
-      await navigator.clipboard.writeText(payment.paymentPageUrl)
-      setCopiedClientId(client.id)
-      setTimeout(() => setCopiedClientId(null), 2500)
-
-      window.open(payment.paymentPageUrl, '_blank', 'noopener,noreferrer')
+      await fetchData()
     } catch {
       alert('Ödeme linki oluşturulurken hata oluştu.')
     } finally {
@@ -332,13 +375,13 @@ export default function DanisanBasvurulariPage() {
     }
   }
 
-  async function copyPaymentLink(clientId: string) {
-    const payment = createdPayments[clientId]
+  async function copyPaymentLink(client: Client) {
+    const link = client.latest_payment?.payment_page_url
 
-    if (!payment?.paymentPageUrl) return
+    if (!link) return
 
-    await navigator.clipboard.writeText(payment.paymentPageUrl)
-    setCopiedClientId(clientId)
+    await navigator.clipboard.writeText(link)
+    setCopiedClientId(client.id)
     setTimeout(() => setCopiedClientId(null), 2500)
   }
 
@@ -364,7 +407,7 @@ export default function DanisanBasvurulariPage() {
 
               <p className="mt-2 max-w-2xl text-[#6b5c4d]">
                 Gelen danışan başvurularını incele, uygun uzmanla eşleştir,
-                ödeme linki oluştur ve süreci tek panelden yönet.
+                ödeme durumunu takip et ve süreci tek panelden yönet.
               </p>
             </div>
 
@@ -380,25 +423,25 @@ export default function DanisanBasvurulariPage() {
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Link
+                Ödeme Kaydı
               </p>
               <p className="mt-2 text-2xl font-black text-[#2b2118]">
                 {paymentSummary.count}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Bu oturumda oluşturulan ödeme linki
+                DB’de görünen son ödeme kayıtları
               </p>
             </div>
 
             <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Toplam
+                Ödenen Toplam
               </p>
               <p className="mt-2 text-2xl font-black text-[#2b2118]">
-                {formatMoney(paymentSummary.amount)}
+                {formatMoney(paymentSummary.paidAmount)}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Oluşturulan ödeme tutarı
+                Paid ödeme sayısı: {paymentSummary.paidCount}
               </p>
             </div>
 
@@ -407,7 +450,7 @@ export default function DanisanBasvurulariPage() {
                 Komisyon
               </p>
               <p className="mt-2 text-2xl font-black text-green-700">
-                {formatMoney(paymentSummary.commission)}
+                {formatMoney(paymentSummary.paidCommission)}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
                 Mindora payı
@@ -419,10 +462,10 @@ export default function DanisanBasvurulariPage() {
                 Uzman Payı
               </p>
               <p className="mt-2 text-2xl font-black text-purple-700">
-                {formatMoney(paymentSummary.expertAmount)}
+                {formatMoney(paymentSummary.paidExpertAmount)}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Uzmanlara aktarılacak tutar
+                Pending: {paymentSummary.pendingCount}
               </p>
             </div>
           </div>
@@ -460,7 +503,7 @@ export default function DanisanBasvurulariPage() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="İsim, telefon, e-posta, konu, uzman veya not ara..."
+              placeholder="İsim, telefon, e-posta, konu, uzman, payment id veya not ara..."
               className="h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
             />
           </div>
@@ -485,8 +528,10 @@ export default function DanisanBasvurulariPage() {
         ) : (
           <div className="mt-8 grid gap-5">
             {filteredClients.map((client) => {
-              const payment = createdPayments[client.id]
+              const payment = client.latest_payment
               const canCreatePayment = Boolean(client.matched_expert_id)
+              const canOpenPaymentLink =
+                payment?.status === 'pending' && Boolean(payment.payment_page_url)
 
               return (
                 <article
@@ -509,12 +554,16 @@ export default function DanisanBasvurulariPage() {
                         </span>
 
                         {payment ? (
-                          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 ring-1 ring-green-200">
-                            Ödeme Linki Hazır
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getPaymentStyle(
+                              payment.status
+                            )}`}
+                          >
+                            {getPaymentLabel(payment.status)}
                           </span>
                         ) : canCreatePayment ? (
                           <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700 ring-1 ring-orange-200">
-                            Ödeme Bekliyor
+                            Ödeme Linki Yok
                           </span>
                         ) : (
                           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 ring-1 ring-gray-200">
@@ -659,12 +708,12 @@ export default function DanisanBasvurulariPage() {
                             Ödeme Yönetimi
                           </p>
                           <p className="mt-1 text-xs font-semibold text-green-800">
-                            Eşleşmiş danışan için iyzico ödeme linki oluştur.
+                            Ödeme linki ve ödeme durumu DB’den takip edilir.
                           </p>
                         </div>
 
                         <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-green-700 ring-1 ring-green-200">
-                          {payment ? 'Hazır' : canCreatePayment ? 'Bekliyor' : 'Kapalı'}
+                          {payment ? getPaymentLabel(payment.status) : canCreatePayment ? 'Link Yok' : 'Kapalı'}
                         </span>
                       </div>
 
@@ -679,37 +728,62 @@ export default function DanisanBasvurulariPage() {
                             <p>
                               <b>Komisyon:</b>
                               <br />
-                              {formatMoney(payment.commissionAmount)}
+                              {formatMoney(payment.commission_amount)}
                             </p>
                             <p>
                               <b>Uzman Payı:</b>
                               <br />
-                              {formatMoney(payment.expertAmount)}
+                              {formatMoney(payment.expert_amount)}
                             </p>
                           </div>
 
                           <div className="rounded-xl bg-white p-3 text-xs font-semibold text-green-900 ring-1 ring-green-100">
-                            <p className="break-all">
-                              <b>Link:</b> {payment.paymentPageUrl}
+                            <p>
+                              <b>Durum:</b> {getPaymentLabel(payment.status)}
                             </p>
+                            <p className="mt-1">
+                              <b>Tarih:</b> {formatDate(payment.created_at)}
+                            </p>
+                            <p className="mt-1 break-all">
+                              <b>iyzico:</b> {safeText(payment.iyzico_payment_id)}
+                            </p>
+                            {payment.payment_page_url && (
+                              <p className="mt-1 break-all">
+                                <b>Link:</b> {payment.payment_page_url}
+                              </p>
+                            )}
                           </div>
 
                           <div className="flex flex-col gap-2 sm:flex-row">
-                            <button
-                              onClick={() => copyPaymentLink(client.id)}
-                              className="rounded-full bg-green-700 px-4 py-2 text-sm font-black text-white transition hover:bg-green-800"
-                            >
-                              {copiedClientId === client.id ? 'Kopyalandı' : 'Linki Kopyala'}
-                            </button>
+                            {canOpenPaymentLink && (
+                              <>
+                                <button
+                                  onClick={() => copyPaymentLink(client)}
+                                  className="rounded-full bg-green-700 px-4 py-2 text-sm font-black text-white transition hover:bg-green-800"
+                                >
+                                  {copiedClientId === client.id ? 'Kopyalandı' : 'Linki Kopyala'}
+                                </button>
 
-                            <a
-                              href={payment.paymentPageUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="rounded-full border border-green-200 bg-white px-4 py-2 text-center text-sm font-black text-green-800 transition hover:bg-green-100"
-                            >
-                              Linki Aç
-                            </a>
+                                <a
+                                  href={payment.payment_page_url || '#'}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="rounded-full border border-green-200 bg-white px-4 py-2 text-center text-sm font-black text-green-800 transition hover:bg-green-100"
+                                >
+                                  Linki Aç
+                                </a>
+                              </>
+                            )}
+
+                            {payment.status !== 'paid' && !canOpenPaymentLink && (
+                              <button
+                                disabled={!canCreatePayment || paymentLoadingId === client.id}
+                                onClick={() => createPaymentLink(client)}
+                                className="rounded-full bg-green-700 px-4 py-2 text-sm font-black text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                Yeni Link Oluştur
+                              </button>
+                            )}
                           </div>
                         </div>
                       ) : (
