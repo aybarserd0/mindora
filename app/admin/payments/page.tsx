@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AdminHeader from '@/components/AdminHeader'
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
+type PayoutStatus = 'unpaid' | 'scheduled' | 'paid' | 'blocked'
 
 type Payment = {
   id: string
@@ -15,7 +16,10 @@ type Payment = {
   iyzico_token: string | null
   iyzico_payment_id: string | null
   iyzico_conversation_id: string | null
+  payment_page_url?: string | null
   status: PaymentStatus
+  expert_payout_status: PayoutStatus | null
+  expert_payout_paid_at: string | null
   created_at: string
   client_applications?: {
     id: string
@@ -92,6 +96,34 @@ function getStatusStyle(status: PaymentStatus) {
   }
 }
 
+function getPayoutLabel(status: PayoutStatus | null) {
+  switch (status) {
+    case 'paid':
+      return 'Uzmana Ödendi'
+    case 'scheduled':
+      return 'Planlandı'
+    case 'blocked':
+      return 'Blokeli'
+    case 'unpaid':
+    default:
+      return 'Ödenmedi'
+  }
+}
+
+function getPayoutStyle(status: PayoutStatus | null) {
+  switch (status) {
+    case 'paid':
+      return 'bg-green-100 text-green-800 ring-green-200'
+    case 'scheduled':
+      return 'bg-blue-100 text-blue-800 ring-blue-200'
+    case 'blocked':
+      return 'bg-red-100 text-red-800 ring-red-200'
+    case 'unpaid':
+    default:
+      return 'bg-purple-100 text-purple-800 ring-purple-200'
+  }
+}
+
 function safeText(value: string | null | undefined) {
   return value && value.trim() ? value : '-'
 }
@@ -102,6 +134,7 @@ export default function PaymentsPage() {
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<'all' | PaymentStatus>('all')
   const [search, setSearch] = useState('')
+  const [payoutLoadingId, setPayoutLoadingId] = useState<string | null>(null)
 
   const filteredPayments = useMemo(() => {
     const keyword = search.trim().toLowerCase()
@@ -119,6 +152,7 @@ export default function PaymentsPage() {
         payment.experts?.name,
         payment.experts?.email,
         payment.status,
+        payment.expert_payout_status,
       ]
         .filter(Boolean)
         .join(' ')
@@ -134,6 +168,12 @@ export default function PaymentsPage() {
     const paidPayments = payments.filter((payment) => payment.status === 'paid')
     const pendingPayments = payments.filter((payment) => payment.status === 'pending')
     const failedPayments = payments.filter((payment) => payment.status === 'failed')
+    const unpaidPayouts = paidPayments.filter(
+      (payment) => payment.expert_payout_status !== 'paid'
+    )
+    const paidPayouts = paidPayments.filter(
+      (payment) => payment.expert_payout_status === 'paid'
+    )
 
     return {
       totalCount: payments.length,
@@ -151,6 +191,14 @@ export default function PaymentsPage() {
       ),
       pendingAmount: pendingPayments.reduce(
         (sum, payment) => sum + Number(payment.amount || 0),
+        0
+      ),
+      unpaidPayoutAmount: unpaidPayouts.reduce(
+        (sum, payment) => sum + Number(payment.expert_amount || 0),
+        0
+      ),
+      paidPayoutAmount: paidPayouts.reduce(
+        (sum, payment) => sum + Number(payment.expert_amount || 0),
         0
       ),
     }
@@ -177,13 +225,44 @@ export default function PaymentsPage() {
     }
   }
 
+  async function markPayoutPaid(paymentId: string) {
+    const confirmed = window.confirm(
+      'Bu uzman payını ödendi olarak işaretlemek istiyor musun?'
+    )
+
+    if (!confirmed) return
+
+    try {
+      setPayoutLoadingId(paymentId)
+
+      const res = await fetch('/api/admin/payments/payout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.ok) {
+        alert(data.error || 'Uzman payout güncellenemedi.')
+        return
+      }
+
+      await fetchPayments()
+    } catch {
+      alert('Uzman payout işlemi sırasında hata oluştu.')
+    } finally {
+      setPayoutLoadingId(null)
+    }
+  }
+
   useEffect(() => {
     fetchPayments()
   }, [])
 
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-6 py-10 text-[#171717]">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <AdminHeader />
 
         <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/70 p-6 shadow-sm">
@@ -199,7 +278,7 @@ export default function PaymentsPage() {
 
               <p className="mt-2 max-w-2xl text-[#6b5c4d]">
                 Danışan ödemelerini, Mindora komisyonunu, uzman paylarını ve
-                ödeme durumlarını tek panelden takip et.
+                payout durumlarını tek panelden takip et.
               </p>
             </div>
 
@@ -212,7 +291,7 @@ export default function PaymentsPage() {
             </button>
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
                 Ödenen Toplam
@@ -221,7 +300,7 @@ export default function PaymentsPage() {
                 {formatMoney(summary.paidAmount)}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Başarılı ödeme sayısı: {summary.paidCount}
+                Başarılı ödeme: {summary.paidCount}
               </p>
             </div>
 
@@ -245,19 +324,31 @@ export default function PaymentsPage() {
                 {formatMoney(summary.paidExpertAmount)}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Aktarılması gereken toplam
+                Toplam uzman hakkı
               </p>
             </div>
 
             <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Bekleyen
+                Uzmana Ödenecek
+              </p>
+              <p className="mt-2 text-2xl font-black text-orange-700">
+                {formatMoney(summary.unpaidPayoutAmount)}
+              </p>
+              <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
+                Payout bekleyen
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
+                Bekleyen Ödeme
               </p>
               <p className="mt-2 text-2xl font-black text-yellow-700">
                 {formatMoney(summary.pendingAmount)}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Pending ödeme sayısı: {summary.pendingCount}
+                Pending: {summary.pendingCount}
               </p>
             </div>
           </div>
@@ -284,7 +375,7 @@ export default function PaymentsPage() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Danışan, uzman, e-posta, payment id veya iyzico id ara..."
+              placeholder="Danışan, uzman, e-posta, payment id, payout veya iyzico id ara..."
               className="h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
             />
           </div>
@@ -311,6 +402,7 @@ export default function PaymentsPage() {
                 <thead className="bg-[#faf7f2] text-xs uppercase tracking-[0.16em] text-[#8a7662]">
                   <tr>
                     <th className="px-5 py-4">Durum</th>
+                    <th className="px-5 py-4">Payout</th>
                     <th className="px-5 py-4">Danışan</th>
                     <th className="px-5 py-4">Uzman</th>
                     <th className="px-5 py-4">Tutar</th>
@@ -332,6 +424,35 @@ export default function PaymentsPage() {
                         >
                           {getStatusLabel(payment.status)}
                         </span>
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${getPayoutStyle(
+                            payment.expert_payout_status
+                          )}`}
+                        >
+                          {getPayoutLabel(payment.expert_payout_status)}
+                        </span>
+
+                        {payment.expert_payout_paid_at && (
+                          <p className="mt-2 text-xs font-semibold text-[#6b5c4d]">
+                            {formatDate(payment.expert_payout_paid_at)}
+                          </p>
+                        )}
+
+                        {payment.status === 'paid' &&
+                          payment.expert_payout_status !== 'paid' && (
+                            <button
+                              disabled={payoutLoadingId === payment.id}
+                              onClick={() => markPayoutPaid(payment.id)}
+                              className="mt-3 rounded-full bg-purple-700 px-3 py-2 text-xs font-black text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {payoutLoadingId === payment.id
+                                ? 'İşleniyor...'
+                                : 'Uzmana Ödendi'}
+                            </button>
+                          )}
                       </td>
 
                       <td className="px-5 py-4">
@@ -396,7 +517,8 @@ export default function PaymentsPage() {
 
         <div className="mt-6 rounded-2xl bg-white/70 p-4 text-xs font-semibold text-[#6b5c4d] ring-1 ring-black/5">
           Toplam kayıt: {summary.totalCount} • Başarılı: {summary.paidCount} •
-          Bekleyen: {summary.pendingCount} • Başarısız: {summary.failedCount}
+          Bekleyen: {summary.pendingCount} • Başarısız: {summary.failedCount} •
+          Uzmana ödenecek: {formatMoney(summary.unpaidPayoutAmount)}
         </div>
       </div>
     </main>
