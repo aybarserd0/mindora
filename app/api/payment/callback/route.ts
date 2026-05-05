@@ -85,10 +85,7 @@ async function sendPaymentEmails({
     host,
     port,
     secure: port === 465,
-    auth: {
-      user,
-      pass,
-    },
+    auth: { user, pass },
   })
 
   const clientName =
@@ -252,21 +249,12 @@ export async function POST(req: NextRequest) {
 
     const iyzicoData = await iyzicoRes.json().catch(() => null)
 
-    if (!iyzicoData) {
-      await supabase
-        .from('payments')
-        .update({ status: 'failed' })
-        .eq('id', payment.id)
-
-      return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
-    }
-
-    if (!iyzicoRes.ok || iyzicoData.status !== 'success') {
+    if (!iyzicoData || !iyzicoRes.ok || iyzicoData.status !== 'success') {
       await supabase
         .from('payments')
         .update({
           status: 'failed',
-          iyzico_payment_id: iyzicoData.paymentId || null,
+          iyzico_payment_id: iyzicoData?.paymentId || null,
         })
         .eq('id', payment.id)
 
@@ -307,33 +295,46 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const [{ data: client }, { data: expert }] = await Promise.all([
-      supabase
-        .from('client_applications')
-        .select('*')
-        .eq('id', updatedPayment.client_id)
-        .maybeSingle(),
+    const shouldSendNotification = !updatedPayment.paid_notified_at
 
-      supabase
-        .from('experts')
-        .select('*')
-        .eq('id', updatedPayment.expert_id)
-        .maybeSingle(),
-    ])
+    if (shouldSendNotification) {
+      const [{ data: client }, { data: expert }] = await Promise.all([
+        supabase
+          .from('client_applications')
+          .select('*')
+          .eq('id', updatedPayment.client_id)
+          .maybeSingle(),
 
-    if (client && expert) {
-      await sendPaymentEmails({
-        client,
-        expert,
-        payment: updatedPayment,
-      })
+        supabase
+          .from('experts')
+          .select('*')
+          .eq('id', updatedPayment.expert_id)
+          .maybeSingle(),
+      ])
 
-      await supabase
-        .from('client_applications')
-        .update({
-          status: 'completed',
+      if (client && expert) {
+        await sendPaymentEmails({
+          client,
+          expert,
+          payment: updatedPayment,
         })
-        .eq('id', client.id)
+
+        await Promise.all([
+          supabase
+            .from('payments')
+            .update({
+              paid_notified_at: new Date().toISOString(),
+            })
+            .eq('id', updatedPayment.id),
+
+          supabase
+            .from('client_applications')
+            .update({
+              status: 'contacted',
+            })
+            .eq('id', client.id),
+        ])
+      }
     }
 
     return NextResponse.redirect(`${siteUrl}/odeme-basarili`, 303)
