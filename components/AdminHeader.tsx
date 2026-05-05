@@ -15,8 +15,20 @@ export default function AdminHeader() {
     router.push('/admin/login')
   }
 
-  const isExperts = pathname === '/admin/uzman-basvurulari'
-  const isClients = pathname === '/admin/danisan-basvurulari'
+  const navItems = [
+    {
+      href: '/admin/uzman-basvurulari',
+      label: 'Uzman Başvuruları',
+    },
+    {
+      href: '/admin/danisan-basvurulari',
+      label: 'Danışan Başvuruları',
+    },
+    {
+      href: '/admin/payments',
+      label: 'Ödemeler',
+    },
+  ]
 
   return (
     <div style={{ marginBottom: 32 }}>
@@ -27,6 +39,7 @@ export default function AdminHeader() {
           gap: 16,
           alignItems: 'center',
           marginBottom: 24,
+          flexWrap: 'wrap',
         }}
       >
         <div>
@@ -47,7 +60,7 @@ export default function AdminHeader() {
           </h1>
         </div>
 
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <Link
             href="/"
             style={{
@@ -83,41 +96,32 @@ export default function AdminHeader() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: 16,
         }}
       >
-        <Link
-          href="/admin/uzman-basvurulari"
-          style={{
-            padding: '16px 20px',
-            borderRadius: 16,
-            textAlign: 'center',
-            textDecoration: 'none',
-            fontWeight: 900,
-            background: isExperts ? '#000' : '#fff',
-            color: isExperts ? '#fff' : '#111',
-            border: '1px solid #ddd',
-          }}
-        >
-          Uzman Başvuruları
-        </Link>
+        {navItems.map((item) => {
+          const isActive = pathname === item.href
 
-        <Link
-          href="/admin/danisan-basvurulari"
-          style={{
-            padding: '16px 20px',
-            borderRadius: 16,
-            textAlign: 'center',
-            textDecoration: 'none',
-            fontWeight: 900,
-            background: isClients ? '#000' : '#fff',
-            color: isClients ? '#fff' : '#111',
-            border: '1px solid #ddd',
-          }}
-        >
-          Danışan Başvuruları
-        </Link>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={{
+                padding: '16px 20px',
+                borderRadius: 16,
+                textAlign: 'center',
+                textDecoration: 'none',
+                fontWeight: 900,
+                background: isActive ? '#000' : '#fff',
+                color: isActive ? '#fff' : '#111',
+                border: '1px solid #ddd',
+              }}
+            >
+              {item.label}
+            </Link>
+          )
+        })}
       </div>
     </div>
   )
