@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
@@ -22,170 +21,42 @@ function createAuthHeader(
   return `IYZWSv2 ${Buffer.from(authString).toString('base64')}`
 }
 
-function cleanUrl(url?: string) {
+function cleanSiteUrl(url?: string) {
   return (url || '').replace(/\/+$/, '')
 }
 
-async function getTokenFromRequest(req: NextRequest) {
-  const contentType = req.headers.get('content-type') || ''
+function cleanPhone(phone?: string | null) {
+  if (!phone) return '+905350000000'
 
-  if (contentType.includes('application/json')) {
-    const body = await req.json().catch(() => null)
-    return body?.token || null
-  }
+  let value = phone.replace(/\s/g, '').replace(/[()-]/g, '')
 
-  if (
-    contentType.includes('application/x-www-form-urlencoded') ||
-    contentType.includes('multipart/form-data')
-  ) {
-    const formData = await req.formData().catch(() => null)
-    return formData?.get('token')?.toString() || null
-  }
+  if (value.startsWith('0')) value = '+9' + value
+  if (value.startsWith('90')) value = '+' + value
 
-  const text = await req.text().catch(() => '')
-  const params = new URLSearchParams(text)
-
-  return params.get('token')
+  return value.startsWith('+90') ? value : '+905350000000'
 }
 
-function formatMoney(value?: number | null) {
-  if (!value || !Number.isFinite(Number(value))) return '0 TL'
+function splitName(fullName?: string | null) {
+  const value = (fullName || 'Mindora Danışan').trim()
+  const parts = value.split(/\s+/)
 
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    maximumFractionDigits: 0,
-  }).format(Number(value))
+  return {
+    name: parts[0] || 'Mindora',
+    surname: parts.slice(1).join(' ') || 'Danışan',
+  }
 }
 
-async function sendPaymentEmails({
-  client,
-  expert,
-  payment,
-}: {
-  client: any
-  expert: any
-  payment: any
-}) {
-  const host = process.env.SMTP_HOST
-  const port = Number(process.env.SMTP_PORT || 587)
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
-  const from = process.env.SMTP_FROM || user
-  const adminMail = process.env.ADMIN_EMAIL || user
-
-  if (!host || !user || !pass || !from) {
-    console.warn('SMTP env eksik. Mail gönderimi atlandı.')
-    return
-  }
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: {
-      user,
-      pass,
-    },
-  })
-
-  const clientName =
-    client?.full_name ||
-    client?.name ||
-    client?.client_name ||
-    client?.fullName ||
-    'Danışan'
-
-  const expertName = expert?.name || 'Uzman Psikolog'
-  const amount = formatMoney(payment?.amount)
-  const commissionAmount = formatMoney(payment?.commission_amount)
-  const expertAmount = formatMoney(payment?.expert_amount)
-
-  const tasks: Promise<any>[] = []
-
-  if (client?.email) {
-    tasks.push(
-      transporter.sendMail({
-        from,
-        to: client.email,
-        subject: 'Mindora ödemeniz başarıyla alındı',
-        html: `
-          <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-            <h2>Ödemeniz başarıyla alındı</h2>
-            <p>Merhaba ${clientName},</p>
-            <p>Mindora üzerinden oluşturulan seans ödemeniz başarıyla tamamlandı.</p>
-            <p><strong>Ödeme tutarı:</strong> ${amount}</p>
-            <p><strong>Eşleştiğiniz uzman:</strong> ${expertName}</p>
-            <p>Seans süreci için uzmanınız veya Mindora ekibi sizinle iletişime geçecektir.</p>
-            <br />
-            <p>Sevgiler,<br />Mindora Ekibi</p>
-          </div>
-        `,
-      })
-    )
-  }
-
-  if (expert?.email) {
-    tasks.push(
-      transporter.sendMail({
-        from,
-        to: expert.email,
-        subject: 'Yeni danışan ödemeyi tamamladı',
-        html: `
-          <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-            <h2>Danışan ödemeyi tamamladı</h2>
-            <p>Merhaba ${expertName},</p>
-            <p>Size eşleştirilen danışan ödeme işlemini başarıyla tamamladı.</p>
-            <p><strong>Danışan:</strong> ${clientName}</p>
-            <p><strong>Toplam ödeme:</strong> ${amount}</p>
-            <p><strong>Uzman payı:</strong> ${expertAmount}</p>
-            <p>Seans sürecini başlatabilirsiniz.</p>
-            <br />
-            <p>Mindora Ekibi</p>
-          </div>
-        `,
-      })
-    )
-  }
-
-  if (adminMail) {
-    tasks.push(
-      transporter.sendMail({
-        from,
-        to: adminMail,
-        subject: 'Mindora yeni ödeme aldı',
-        html: `
-          <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-            <h2>Yeni ödeme alındı</h2>
-            <p><strong>Danışan:</strong> ${clientName}</p>
-            <p><strong>Psikolog:</strong> ${expertName}</p>
-            <p><strong>Toplam ödeme:</strong> ${amount}</p>
-            <p><strong>Mindora komisyonu:</strong> ${commissionAmount}</p>
-            <p><strong>Uzman payı:</strong> ${expertAmount}</p>
-            <p><strong>Payment ID:</strong> ${payment?.id}</p>
-            <p><strong>iyzico Payment ID:</strong> ${payment?.iyzico_payment_id || '-'}</p>
-          </div>
-        `,
-      })
-    )
-  }
-
-  const results = await Promise.allSettled(tasks)
-
-  const failed = results.filter((result) => result.status === 'rejected')
-
-  if (failed.length > 0) {
-    console.error('Bazı ödeme mailleri gönderilemedi:', failed)
-  }
+function money(value: number) {
+  return Number(value).toFixed(2)
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.IYZICO_API_KEY
-  const secretKey = process.env.IYZICO_SECRET_KEY
-  const baseUrl = cleanUrl(process.env.IYZICO_BASE_URL)
-  const siteUrl = cleanUrl(process.env.NEXT_PUBLIC_SITE_URL)
-
   try {
+    const apiKey = process.env.IYZICO_API_KEY
+    const secretKey = process.env.IYZICO_SECRET_KEY
+    const baseUrl = cleanSiteUrl(process.env.IYZICO_BASE_URL)
+    const siteUrl = cleanSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)
+
     if (!apiKey || !secretKey || !baseUrl || !siteUrl) {
       return NextResponse.json(
         { ok: false, error: 'Iyzico veya site env bilgileri eksik.' },
@@ -193,48 +64,140 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const token = await getTokenFromRequest(req)
+    const { clientId } = await req.json()
 
-    if (!token) {
+    if (!clientId || typeof clientId !== 'string') {
       return NextResponse.json(
-        { ok: false, error: 'Callback token bulunamadı.' },
+        { ok: false, error: 'Geçerli clientId gerekli.' },
         { status: 400 }
       )
     }
 
     const supabase = getSupabaseAdmin()
 
-    const { data: payment, error: paymentError } = await supabase
-      .from('payments')
+    const { data: client, error: clientError } = await supabase
+      .from('client_applications')
       .select('*')
-      .eq('iyzico_token', token)
+      .eq('id', clientId)
       .maybeSingle()
 
-    if (paymentError || !payment) {
+    if (clientError || !client) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: 'Bu token ile eşleşen ödeme kaydı bulunamadı.',
-          detail: paymentError?.message || null,
-        },
+        { ok: false, error: 'Danışan başvurusu bulunamadı.' },
         { status: 404 }
       )
     }
 
-    if (payment.status === 'paid') {
-      return NextResponse.redirect(`${siteUrl}/odeme-basarili`, 303)
+    if (!client.matched_expert_id) {
+      return NextResponse.json(
+        { ok: false, error: 'Bu danışan henüz bir psikologla eşleştirilmemiş.' },
+        { status: 400 }
+      )
     }
 
-    const uri = '/payment/iyzipos/checkoutform/auth/ecom/detail'
-    const randomKey = `${Date.now()}${Math.floor(Math.random() * 100000)}`
+    const { data: expert, error: expertError } = await supabase
+      .from('experts')
+      .select('id, name, email, session_price, status')
+      .eq('id', client.matched_expert_id)
+      .maybeSingle()
 
-    const requestBody = {
+    if (expertError || !expert) {
+      return NextResponse.json(
+        { ok: false, error: 'Eşleşen psikolog bulunamadı.' },
+        { status: 404 }
+      )
+    }
+
+    if (expert.status !== 'approved') {
+      return NextResponse.json(
+        { ok: false, error: 'Eşleşen psikolog aktif/onaylı değil.' },
+        { status: 400 }
+      )
+    }
+
+    const amount = Number(expert.session_price)
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return NextResponse.json(
+        { ok: false, error: 'Psikolog seans ücreti bulunamadı veya geçersiz.' },
+        { status: 400 }
+      )
+    }
+
+    const commissionAmount = Math.round(amount * 0.3)
+    const expertAmount = amount - commissionAmount
+
+    const now = Date.now()
+    const randomKey = `${now}${Math.floor(Math.random() * 100000)}`
+    const conversationId = `payment_${client.id}_${now}`
+    const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
+
+    const clientFullName =
+      client.full_name ||
+      client.name ||
+      client.client_name ||
+      client.fullName ||
+      'Mindora Danışan'
+
+    const { name, surname } = splitName(clientFullName)
+
+    const clientEmail = client.email || 'test@test.com'
+    const clientPhone = cleanPhone(client.phone || client.phone_number)
+    const clientCity = client.city || 'Ankara'
+    const clientAddress = client.address || clientCity || 'Türkiye'
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      '85.34.78.112'
+
+    const body = {
       locale: 'tr',
-      conversationId: payment.iyzico_conversation_id,
-      token,
+      conversationId,
+      price: money(amount),
+      paidPrice: money(amount),
+      currency: 'TRY',
+      basketId: `mindora_${client.id}`,
+      paymentGroup: 'PRODUCT',
+      callbackUrl: `${siteUrl}/api/payment/callback`,
+      buyer: {
+        id: client.id,
+        name,
+        surname,
+        gsmNumber: clientPhone,
+        email: clientEmail,
+        identityNumber: '11111111111',
+        registrationAddress: clientAddress,
+        ip,
+        city: clientCity,
+        country: 'Turkey',
+        zipCode: '06000',
+      },
+      shippingAddress: {
+        contactName: `${name} ${surname}`,
+        city: clientCity,
+        country: 'Turkey',
+        address: clientAddress,
+        zipCode: '06000',
+      },
+      billingAddress: {
+        contactName: `${name} ${surname}`,
+        city: clientCity,
+        country: 'Turkey',
+        address: clientAddress,
+        zipCode: '06000',
+      },
+      basketItems: [
+        {
+          id: `session_${expert.id}`,
+          name: `Mindora Psikolojik Danışmanlık - ${expert.name || 'Uzman'}`,
+          category1: 'Psikolojik Danışmanlık',
+          itemType: 'VIRTUAL',
+          price: money(amount),
+        },
+      ],
     }
 
-    const bodyStr = JSON.stringify(requestBody)
+    const bodyStr = JSON.stringify(body)
     const auth = createAuthHeader(apiKey, secretKey, randomKey, uri, bodyStr)
 
     const iyzicoRes = await fetch(`${baseUrl}${uri}`, {
@@ -247,92 +210,63 @@ export async function POST(req: NextRequest) {
       body: bodyStr,
     })
 
-    const iyzicoData = await iyzicoRes.json()
+    const iyzicoData = await iyzicoRes.json().catch(() => null)
 
-    if (!iyzicoRes.ok || iyzicoData.status !== 'success') {
-      await supabase
-        .from('payments')
-        .update({
-          status: 'failed',
-          iyzico_payment_id: iyzicoData.paymentId || null,
-        })
-        .eq('id', payment.id)
-
-      return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
-    }
-
-    if (iyzicoData.paymentStatus !== 'SUCCESS') {
-      await supabase
-        .from('payments')
-        .update({
-          status: 'failed',
-          iyzico_payment_id: iyzicoData.paymentId || null,
-        })
-        .eq('id', payment.id)
-
-      return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
-    }
-
-    const { data: updatedPayment, error: updateError } = await supabase
-      .from('payments')
-      .update({
-        status: 'paid',
-        iyzico_payment_id: iyzicoData.paymentId || null,
-      })
-      .eq('id', payment.id)
-      .select('*')
-      .single()
-
-    if (updateError || !updatedPayment) {
+    if (!iyzicoData || !iyzicoRes.ok || iyzicoData.status !== 'success') {
       return NextResponse.json(
         {
           ok: false,
-          error: 'Ödeme başarılı ama DB güncellenemedi.',
-          detail: updateError?.message || null,
+          error:
+            iyzicoData?.errorMessage ||
+            'iyzico ödeme linki oluşturulamadı.',
           iyzico: iyzicoData,
+        },
+        { status: 400 }
+      )
+    }
+
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .insert({
+        client_id: client.id,
+        expert_id: expert.id,
+        amount,
+        commission_amount: commissionAmount,
+        expert_amount: expertAmount,
+        iyzico_token: iyzicoData.token,
+        iyzico_conversation_id: conversationId,
+        status: 'pending',
+      })
+      .select('id')
+      .single()
+
+    if (paymentError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Ödeme linki oluştu ama payments tablosuna kaydedilemedi.',
+          detail: paymentError.message,
+          token: iyzicoData.token,
+          paymentPageUrl: iyzicoData.paymentPageUrl,
         },
         { status: 500 }
       )
     }
 
-    const [{ data: client }, { data: expert }] = await Promise.all([
-      supabase
-        .from('client_applications')
-        .select('*')
-        .eq('id', updatedPayment.client_id)
-        .maybeSingle(),
-
-      supabase
-        .from('experts')
-        .select('*')
-        .eq('id', updatedPayment.expert_id)
-        .maybeSingle(),
-    ])
-
-    if (client && expert) {
-      await sendPaymentEmails({
-        client,
-        expert,
-        payment: updatedPayment,
-      })
-
-      await supabase
-        .from('client_applications')
-        .update({
-          status: 'completed',
-        })
-        .eq('id', client.id)
-    }
-
-    return NextResponse.redirect(`${siteUrl}/odeme-basarili`, 303)
+    return NextResponse.json({
+      ok: true,
+      paymentId: payment.id,
+      clientId: client.id,
+      expertId: expert.id,
+      amount,
+      commissionAmount,
+      expertAmount,
+      token: iyzicoData.token,
+      paymentPageUrl: iyzicoData.paymentPageUrl,
+    })
   } catch (err: any) {
     return NextResponse.json(
-      {
-        ok: false,
-        error:
-          err?.message ||
-          'Payment callback sırasında beklenmeyen hata oluştu.',
-      },
+      { ok: false, error: err?.message || 'Beklenmeyen hata oluştu.' },
       { status: 500 }
     )
   }
