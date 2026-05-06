@@ -266,7 +266,7 @@ export default function AdminConversationPage({
       const supabase = createMindoraRealtimeClient()
 
       const channel = supabase
-        .channel(`admin-conversation-${conversationId}`, {
+        .channel(`mindora-conversation-${conversationId}`, {
           config: {
             broadcast: {
               self: false,

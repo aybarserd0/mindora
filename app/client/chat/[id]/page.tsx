@@ -234,7 +234,7 @@ export default function ClientChatPage({
       const supabase = createMindoraRealtimeClient()
 
       const channel = supabase
-        .channel(`client-chat-${conversationId}`, {
+        .channel(`mindora-conversation-${conversationId}`, {
           config: {
             broadcast: {
               self: false,

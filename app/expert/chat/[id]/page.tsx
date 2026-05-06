@@ -234,7 +234,7 @@ export default function ExpertChatPage({
       const supabase = createMindoraRealtimeClient()
 
       const channel = supabase
-        .channel(`expert-chat-${conversationId}`, {
+        .channel(`mindora-conversation-${conversationId}`, {
           config: {
             broadcast: {
               self: false,
