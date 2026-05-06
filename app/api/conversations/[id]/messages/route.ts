@@ -5,6 +5,12 @@ export const runtime = 'nodejs'
 
 type SenderType = 'client' | 'expert' | 'admin'
 
+type RouteContext = {
+  params: Promise<{
+    id: string
+  }>
+}
+
 function toText(value: unknown) {
   if (value === null || value === undefined) return ''
   return String(value).trim()
@@ -14,13 +20,36 @@ function detectContactLeak(message: string) {
   const text = message.toLowerCase()
 
   const rules = [
-    { key: 'email', pattern: /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i },
-    { key: 'phone_tr', pattern: /(\+90|0090|0)?\s?5\d{2}[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}/ },
-    { key: 'whatsapp', pattern: /(whatsapp|watsap|wp|wa\.me)/i },
-    { key: 'instagram', pattern: /(instagram|insta|ig|@[\w.]{3,})/i },
-    { key: 'telegram', pattern: /(telegram|t\.me)/i },
-    { key: 'iban', pattern: /tr\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{2}/i },
-    { key: 'external_payment', pattern: /(iban|havale|eft|papara|payfix|elden ödeme|nakit)/i },
+    {
+      key: 'email',
+      pattern: /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
+    },
+    {
+      key: 'phone_tr',
+      pattern:
+        /(\+90|0090|0)?\s?5\d{2}[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}/,
+    },
+    {
+      key: 'whatsapp',
+      pattern: /(whatsapp|watsap|wp|wa\.me)/i,
+    },
+    {
+      key: 'instagram',
+      pattern: /(instagram|insta|ig|@[\w.]{3,})/i,
+    },
+    {
+      key: 'telegram',
+      pattern: /(telegram|t\.me)/i,
+    },
+    {
+      key: 'iban',
+      pattern:
+        /tr\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{2}/i,
+    },
+    {
+      key: 'external_payment',
+      pattern: /(iban|havale|eft|papara|payfix|elden ödeme|nakit)/i,
+    },
   ]
 
   const matched = rules.filter((rule) => rule.pattern.test(text))
@@ -35,12 +64,10 @@ function isValidSenderType(value: unknown): value is SenderType {
   return value === 'client' || value === 'expert' || value === 'admin'
 }
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: NextRequest, context: RouteContext) {
   try {
-    const conversationId = toText(params.id)
+    const { id } = await context.params
+    const conversationId = toText(id)
 
     if (!conversationId) {
       return NextResponse.json(
@@ -120,12 +147,11 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const conversationId = toText(params.id)
+    const { id } = await context.params
+    const conversationId = toText(id)
+
     const body = await req.json().catch(() => null)
 
     const senderType = body?.senderType
@@ -181,7 +207,8 @@ export async function POST(
 
     if (
       senderType !== 'admin' &&
-      (conversation.status !== 'active' || conversation.payment_status !== 'paid')
+      (conversation.status !== 'active' ||
+        conversation.payment_status !== 'paid')
     ) {
       return NextResponse.json(
         {

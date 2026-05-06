@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
+type Conversation = {
+  id: string
+  status: string
+  payment_status: string
+}
+
 function toText(value: unknown) {
   if (value === null || value === undefined) return ''
   return String(value).trim()
@@ -165,9 +171,39 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    let conversation = existingConversation
+    let conversation: Conversation | null = null
 
-    if (!conversation) {
+    if (existingConversation) {
+      const currentPaymentStatus = existingConversation.payment_status
+      const nextConversationStatus =
+        currentPaymentStatus === 'paid' ? 'active' : 'locked'
+
+      const { data: updatedConversation, error: conversationUpdateError } =
+        await supabase
+          .from('conversations')
+          .update({
+            expert_id: expertId,
+            status: nextConversationStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingConversation.id)
+          .select('id, status, payment_status')
+          .single()
+
+      if (conversationUpdateError || !updatedConversation) {
+        console.error(
+          'MATCH CONVERSATION UPDATE ERROR:',
+          conversationUpdateError
+        )
+
+        return NextResponse.json(
+          { ok: false, error: 'Konuşma güncellenemedi.' },
+          { status: 500 }
+        )
+      }
+
+      conversation = updatedConversation
+    } else {
       const { data: createdConversation, error: conversationError } =
         await supabase
           .from('conversations')
@@ -190,35 +226,6 @@ export async function POST(req: NextRequest) {
       }
 
       conversation = createdConversation
-    } else {
-      const { data: updatedConversation, error: conversationUpdateError } =
-        await supabase
-          .from('conversations')
-          .update({
-            expert_id: expertId,
-            status:
-              existingConversation.payment_status === 'paid'
-                ? 'active'
-                : 'locked',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existingConversation.id)
-          .select('id, status, payment_status')
-          .single()
-
-      if (conversationUpdateError || !updatedConversation) {
-        console.error(
-          'MATCH CONVERSATION UPDATE ERROR:',
-          conversationUpdateError
-        )
-
-        return NextResponse.json(
-          { ok: false, error: 'Konuşma güncellenemedi.' },
-          { status: 500 }
-        )
-      }
-
-      conversation = updatedConversation
     }
 
     const transporter = createTransporter()
