@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import AdminHeader from '@/components/AdminHeader'
 import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
@@ -26,6 +26,24 @@ type Message = {
   is_flagged: boolean
   flag_reason: string | null
   created_at: string
+}
+
+type TypingPayload = {
+  senderType: SenderType
+  senderName: string
+  isTyping: boolean
+}
+
+type PresenceMeta = {
+  userType?: SenderType
+  userName?: string
+  onlineAt?: string
+  conversationId?: string
+}
+
+type OnlineUsers = {
+  client: boolean
+  expert: boolean
 }
 
 function formatDate(date?: string | null) {
@@ -65,9 +83,22 @@ function getSenderLabel(sender: SenderType) {
   return 'Admin'
 }
 
+function getSenderName(sender: SenderType) {
+  if (sender === 'admin') return 'Mindora Admin'
+  if (sender === 'expert') return 'Uzman'
+  return 'Danışan'
+}
+
+function getTypingText(senderType: SenderType) {
+  if (senderType === 'client') return 'Danışan yazıyor...'
+  if (senderType === 'expert') return 'Uzman yazıyor...'
+  return 'Mindora yazıyor...'
+}
+
 function getSenderStyle(sender: SenderType) {
   if (sender === 'admin') return 'ml-auto bg-black text-white'
-  if (sender === 'expert') return 'mr-auto bg-purple-50 text-purple-950 ring-1 ring-purple-100'
+  if (sender === 'expert')
+    return 'mr-auto bg-purple-50 text-purple-950 ring-1 ring-purple-100'
   return 'mr-auto bg-white text-[#2b2118] ring-1 ring-black/10'
 }
 
@@ -85,11 +116,30 @@ export default function AdminConversationPage({
   const [realtimeReady, setRealtimeReady] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+  const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUsers>({
+    client: false,
+    expert: false,
+  })
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const localTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const channelRef = useRef<ReturnType<
+    ReturnType<typeof createMindoraRealtimeClient>['channel']
+  > | null>(null)
 
   const flaggedMessages = useMemo(
     () => messages.filter((item) => item.is_flagged),
     [messages]
   )
+
+  function scrollToBottom() {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+    })
+  }
 
   async function loadMessages(id: string, showLoading = true) {
     try {
@@ -116,6 +166,39 @@ export default function AdminConversationPage({
     }
   }
 
+  async function broadcastTyping(activeSenderType: SenderType, isTyping: boolean) {
+    if (!channelRef.current) return
+    if (!conversationId) return
+
+    try {
+      await channelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {
+          senderType: activeSenderType,
+          senderName: getSenderName(activeSenderType),
+          isTyping,
+        } satisfies TypingPayload,
+      })
+    } catch (err) {
+      console.error('ADMIN TYPING BROADCAST ERROR:', err)
+    }
+  }
+
+  function handleMessageChange(value: string) {
+    setMessage(value)
+
+    broadcastTyping(senderType, true)
+
+    if (localTypingTimeoutRef.current) {
+      clearTimeout(localTypingTimeoutRef.current)
+    }
+
+    localTypingTimeoutRef.current = setTimeout(() => {
+      broadcastTyping(senderType, false)
+    }, 1200)
+  }
+
   async function sendMessage() {
     const cleanMessage = message.trim()
 
@@ -131,18 +214,14 @@ export default function AdminConversationPage({
 
     try {
       setSending(true)
+      await broadcastTyping(senderType, false)
 
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           senderType,
-          senderName:
-            senderType === 'admin'
-              ? 'Mindora Admin'
-              : senderType === 'expert'
-              ? 'Uzman'
-              : 'Danışan',
+          senderName: getSenderName(senderType),
           message: cleanMessage,
         }),
       })
@@ -175,6 +254,10 @@ export default function AdminConversationPage({
   }, [params])
 
   useEffect(() => {
+    scrollToBottom()
+  }, [messages, typingUser])
+
+  useEffect(() => {
     if (!conversationId) return
 
     let isMounted = true
@@ -183,7 +266,67 @@ export default function AdminConversationPage({
       const supabase = createMindoraRealtimeClient()
 
       const channel = supabase
-        .channel(`admin-conversation-${conversationId}`)
+        .channel(`admin-conversation-${conversationId}`, {
+          config: {
+            broadcast: {
+              self: false,
+            },
+            presence: {
+              key: `admin-${conversationId}`,
+            },
+          },
+        })
+        .on('presence', { event: 'sync' }, () => {
+          if (!isMounted) return
+
+          const presenceState = channel.presenceState()
+          let clientOnline = false
+          let expertOnline = false
+
+          Object.values(presenceState).forEach((presences) => {
+            presences.forEach((presence) => {
+              const meta = presence as PresenceMeta
+
+              if (meta.userType === 'client') {
+                clientOnline = true
+              }
+
+              if (meta.userType === 'expert') {
+                expertOnline = true
+              }
+            })
+          })
+
+          setOnlineUsers({
+            client: clientOnline,
+            expert: expertOnline,
+          })
+        })
+        .on(
+          'broadcast',
+          {
+            event: 'typing',
+          },
+          ({ payload }: { payload: TypingPayload }) => {
+            if (!isMounted) return
+            if (!payload) return
+            if (payload.senderType === 'admin') return
+
+            if (typingTimeoutRef.current) {
+              clearTimeout(typingTimeoutRef.current)
+            }
+
+            if (payload.isTyping) {
+              setTypingUser(payload)
+
+              typingTimeoutRef.current = setTimeout(() => {
+                setTypingUser(null)
+              }, 1800)
+            } else {
+              setTypingUser(null)
+            }
+          }
+        )
         .on(
           'postgres_changes',
           {
@@ -194,6 +337,7 @@ export default function AdminConversationPage({
           },
           async () => {
             if (!isMounted) return
+            setTypingUser(null)
             await loadMessages(conversationId, false)
           }
         )
@@ -210,20 +354,63 @@ export default function AdminConversationPage({
             await loadMessages(conversationId, false)
           }
         )
-        .subscribe((status) => {
-          if (isMounted && status === 'SUBSCRIBED') {
+        .subscribe(async (status) => {
+          if (!isMounted) return
+
+          if (status === 'SUBSCRIBED') {
             setRealtimeReady(true)
+
+            await channel.track({
+              userType: 'admin',
+              userName: 'Mindora Admin',
+              onlineAt: new Date().toISOString(),
+              conversationId,
+            } satisfies PresenceMeta)
+          }
+
+          if (
+            status === 'CHANNEL_ERROR' ||
+            status === 'TIMED_OUT' ||
+            status === 'CLOSED'
+          ) {
+            setRealtimeReady(false)
+            setOnlineUsers({
+              client: false,
+              expert: false,
+            })
           }
         })
+
+      channelRef.current = channel
 
       return () => {
         isMounted = false
         setRealtimeReady(false)
+        setTypingUser(null)
+        setOnlineUsers({
+          client: false,
+          expert: false,
+        })
+        channelRef.current = null
+
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current)
+        }
+
+        if (localTypingTimeoutRef.current) {
+          clearTimeout(localTypingTimeoutRef.current)
+        }
+
+        channel.untrack()
         supabase.removeChannel(channel)
       }
     } catch (err) {
       console.error('ADMIN REALTIME ERROR:', err)
       setRealtimeReady(false)
+      setOnlineUsers({
+        client: false,
+        expert: false,
+      })
     }
   }, [conversationId])
 
@@ -256,16 +443,45 @@ export default function AdminConversationPage({
                 Conversation ID: {conversationId || '-'}
               </p>
 
-              <p className="mt-2 text-xs font-black text-[#8a7662]">
-                Realtime:{' '}
+              <div className="mt-3 flex flex-wrap gap-2">
                 <span
-                  className={
-                    realtimeReady ? 'text-emerald-700' : 'text-orange-700'
-                  }
+                  className={`rounded-full px-3 py-1 text-xs font-black ${
+                    realtimeReady
+                      ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
+                      : 'bg-orange-50 text-orange-700 ring-1 ring-orange-100'
+                  }`}
                 >
-                  {realtimeReady ? 'Aktif' : 'Bağlanıyor / Pasif'}
+                  Realtime: {realtimeReady ? 'Aktif' : 'Bağlanıyor'}
                 </span>
-              </p>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    onlineUsers.client
+                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                  }`}
+                >
+                  {onlineUsers.client
+                    ? 'Danışan çevrimiçi'
+                    : 'Danışan çevrimdışı'}
+                </span>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    onlineUsers.expert
+                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                  }`}
+                >
+                  {onlineUsers.expert
+                    ? 'Uzman çevrimiçi'
+                    : 'Uzman çevrimdışı'}
+                </span>
+
+                <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
+                  Mindora Aktif
+                </span>
+              </div>
             </div>
 
             <button
@@ -348,47 +564,66 @@ export default function AdminConversationPage({
                     </p>
                   </div>
                 ) : (
-                  messages.map((item) => (
-                    <div key={item.id} className="flex">
-                      <div
-                        className={`max-w-[82%] rounded-2xl p-4 text-sm shadow-sm ${getSenderStyle(
-                          item.sender_type
-                        )}`}
-                      >
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-black uppercase tracking-[0.15em] opacity-80">
-                            {getSenderLabel(item.sender_type)}
-                          </span>
-
-                          {item.sender_name && (
-                            <span className="text-xs font-bold opacity-70">
-                              {item.sender_name}
+                  <>
+                    {messages.map((item) => (
+                      <div key={item.id} className="flex">
+                        <div
+                          className={`max-w-[82%] rounded-2xl p-4 text-sm shadow-sm ${getSenderStyle(
+                            item.sender_type
+                          )}`}
+                        >
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-black uppercase tracking-[0.15em] opacity-80">
+                              {getSenderLabel(item.sender_type)}
                             </span>
-                          )}
+
+                            {item.sender_name && (
+                              <span className="text-xs font-bold opacity-70">
+                                {item.sender_name}
+                              </span>
+                            )}
+
+                            {item.is_flagged && (
+                              <span className="rounded-full bg-red-600 px-2 py-1 text-[10px] font-black text-white">
+                                🚨 FLAGGED
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="whitespace-pre-wrap break-words leading-6">
+                            {item.message}
+                          </p>
 
                           {item.is_flagged && (
-                            <span className="rounded-full bg-red-600 px-2 py-1 text-[10px] font-black text-white">
-                              🚨 FLAGGED
-                            </span>
+                            <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700 ring-1 ring-red-100">
+                              Sebep: {item.flag_reason || 'contact_leak'}
+                            </div>
                           )}
+
+                          <p className="mt-3 text-[11px] font-semibold opacity-60">
+                            {formatDate(item.created_at)}
+                          </p>
                         </div>
-
-                        <p className="whitespace-pre-wrap break-words leading-6">
-                          {item.message}
-                        </p>
-
-                        {item.is_flagged && (
-                          <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700 ring-1 ring-red-100">
-                            Sebep: {item.flag_reason || 'contact_leak'}
-                          </div>
-                        )}
-
-                        <p className="mt-3 text-[11px] font-semibold opacity-60">
-                          {formatDate(item.created_at)}
-                        </p>
                       </div>
-                    </div>
-                  ))
+                    ))}
+
+                    {typingUser && (
+                      <div className="flex">
+                        <div className="mr-auto rounded-2xl bg-white px-4 py-3 text-sm font-black text-[#6b5c4d] shadow-sm ring-1 ring-black/10">
+                          <span className="inline-flex items-center gap-1">
+                            {getTypingText(typingUser.senderType)}
+                            <span className="ml-1 inline-flex gap-1">
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662]" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662] [animation-delay:120ms]" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662] [animation-delay:240ms]" />
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </>
                 )}
               </div>
 
@@ -396,9 +631,10 @@ export default function AdminConversationPage({
                 <div className="mb-3 flex flex-col gap-3 md:flex-row">
                   <select
                     value={senderType}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      broadcastTyping(senderType, false)
                       setSenderType(event.target.value as SenderType)
-                    }
+                    }}
                     className="h-11 rounded-full border border-black/10 bg-[#faf7f2] px-4 text-sm font-black outline-none"
                   >
                     <option value="admin">Admin olarak gönder</option>
@@ -417,7 +653,8 @@ export default function AdminConversationPage({
 
                 <textarea
                   value={message}
-                  onChange={(event) => setMessage(event.target.value)}
+                  onChange={(event) => handleMessageChange(event.target.value)}
+                  onBlur={() => broadcastTyping(senderType, false)}
                   placeholder="Admin mesajı yaz... Telefon, e-posta, WhatsApp, IBAN gibi bilgiler client/expert testinde flaglenir."
                   rows={4}
                   maxLength={2000}
@@ -486,6 +723,9 @@ export default function AdminConversationPage({
                   </p>
                   <p>
                     ⚡ Realtime aktifse yeni mesajlar refresh yapmadan düşer.
+                  </p>
+                  <p>
+                    🟢 Presence ile online/offline durumu anlık takip edilir.
                   </p>
                 </div>
               </div>
