@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import AdminHeader from '@/components/AdminHeader'
+import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
 type SenderType = 'client' | 'expert' | 'admin'
 
@@ -81,6 +82,7 @@ export default function AdminConversationPage({
   const [message, setMessage] = useState('')
   const [senderType, setSenderType] = useState<SenderType>('admin')
   const [loading, setLoading] = useState(true)
+  const [realtimeReady, setRealtimeReady] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
@@ -89,9 +91,9 @@ export default function AdminConversationPage({
     [messages]
   )
 
-  async function loadMessages(id: string) {
+  async function loadMessages(id: string, showLoading = true) {
     try {
-      setLoading(true)
+      if (showLoading) setLoading(true)
       setError('')
 
       const res = await fetch(`/api/conversations/${id}/messages`, {
@@ -110,7 +112,7 @@ export default function AdminConversationPage({
     } catch {
       setError('Sunucuya bağlanırken hata oluştu.')
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }
 
@@ -149,12 +151,12 @@ export default function AdminConversationPage({
 
       if (!res.ok || !data.ok) {
         alert(data.error || 'Mesaj gönderilemedi.')
-        await loadMessages(conversationId)
+        await loadMessages(conversationId, false)
         return
       }
 
       setMessage('')
-      await loadMessages(conversationId)
+      await loadMessages(conversationId, false)
     } catch {
       alert('Mesaj gönderilirken hata oluştu.')
     } finally {
@@ -171,6 +173,59 @@ export default function AdminConversationPage({
 
     init()
   }, [params])
+
+  useEffect(() => {
+    if (!conversationId) return
+
+    let isMounted = true
+
+    try {
+      const supabase = createMindoraRealtimeClient()
+
+      const channel = supabase
+        .channel(`admin-conversation-${conversationId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          async () => {
+            if (!isMounted) return
+            await loadMessages(conversationId, false)
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'conversations',
+            filter: `id=eq.${conversationId}`,
+          },
+          async () => {
+            if (!isMounted) return
+            await loadMessages(conversationId, false)
+          }
+        )
+        .subscribe((status) => {
+          if (isMounted && status === 'SUBSCRIBED') {
+            setRealtimeReady(true)
+          }
+        })
+
+      return () => {
+        isMounted = false
+        setRealtimeReady(false)
+        supabase.removeChannel(channel)
+      }
+    } catch (err) {
+      console.error('ADMIN REALTIME ERROR:', err)
+      setRealtimeReady(false)
+    }
+  }, [conversationId])
 
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-6 py-10 text-[#171717]">
@@ -197,8 +252,19 @@ export default function AdminConversationPage({
                 Konuşma Detayı
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm font-semibold text-[#6b5c4d] break-all">
+              <p className="mt-2 max-w-2xl break-all text-sm font-semibold text-[#6b5c4d]">
                 Conversation ID: {conversationId || '-'}
+              </p>
+
+              <p className="mt-2 text-xs font-black text-[#8a7662]">
+                Realtime:{' '}
+                <span
+                  className={
+                    realtimeReady ? 'text-emerald-700' : 'text-orange-700'
+                  }
+                >
+                  {realtimeReady ? 'Aktif' : 'Bağlanıyor / Pasif'}
+                </span>
               </p>
             </div>
 
@@ -410,8 +476,17 @@ export default function AdminConversationPage({
                 <div className="mt-4 space-y-3 text-sm font-semibold text-[#6b5c4d]">
                   <p>✅ Admin her zaman mesaj gönderebilir.</p>
                   <p>🔒 Danışan/uzman mesajı için ödeme paid olmalı.</p>
-                  <p>🚨 Telefon, e-posta, WhatsApp, Instagram, Telegram, IBAN flaglenir.</p>
-                  <p>🛡️ Flagged mesaj DB’ye kaydedilir ama kullanıcıya hata döner.</p>
+                  <p>
+                    🚨 Telefon, e-posta, WhatsApp, Instagram, Telegram, IBAN
+                    flaglenir.
+                  </p>
+                  <p>
+                    🛡️ Flagged mesaj DB’ye kaydedilir ama kullanıcıya hata
+                    döner.
+                  </p>
+                  <p>
+                    ⚡ Realtime aktifse yeni mesajlar refresh yapmadan düşer.
+                  </p>
                 </div>
               </div>
 

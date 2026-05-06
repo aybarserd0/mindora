@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
 type Conversation = {
   id: string
@@ -61,6 +62,7 @@ export default function ClientChatPage({
   const [messages, setMessages] = useState<Message[]>([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [realtimeReady, setRealtimeReady] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [blockedError, setBlockedError] = useState('')
@@ -68,8 +70,9 @@ export default function ClientChatPage({
   const isActive =
     conversation?.status === 'active' && conversation?.payment_status === 'paid'
 
-  async function loadMessages(id: string) {
+  async function loadMessages(id: string, showLoading = false) {
     try {
+      if (showLoading) setLoading(true)
       setError('')
 
       const res = await fetch(`/api/conversations/${id}/messages`, {
@@ -88,7 +91,7 @@ export default function ClientChatPage({
     } catch {
       setError('Sunucuya bağlanırken hata oluştu.')
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }
 
@@ -116,12 +119,12 @@ export default function ClientChatPage({
 
       if (!res.ok || !data.ok) {
         setBlockedError(data.error || 'Mesaj gönderilemedi.')
-        await loadMessages(conversationId)
+        await loadMessages(conversationId, false)
         return
       }
 
       setMessage('')
-      await loadMessages(conversationId)
+      await loadMessages(conversationId, false)
     } catch {
       setBlockedError('Mesaj gönderilirken hata oluştu.')
     } finally {
@@ -133,11 +136,64 @@ export default function ClientChatPage({
     async function init() {
       const resolved = await params
       setConversationId(resolved.id)
-      await loadMessages(resolved.id)
+      await loadMessages(resolved.id, true)
     }
 
     init()
   }, [params])
+
+  useEffect(() => {
+    if (!conversationId) return
+
+    let isMounted = true
+
+    try {
+      const supabase = createMindoraRealtimeClient()
+
+      const channel = supabase
+        .channel(`client-chat-${conversationId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          async () => {
+            if (!isMounted) return
+            await loadMessages(conversationId, false)
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'conversations',
+            filter: `id=eq.${conversationId}`,
+          },
+          async () => {
+            if (!isMounted) return
+            await loadMessages(conversationId, false)
+          }
+        )
+        .subscribe((status) => {
+          if (isMounted && status === 'SUBSCRIBED') {
+            setRealtimeReady(true)
+          }
+        })
+
+      return () => {
+        isMounted = false
+        setRealtimeReady(false)
+        supabase.removeChannel(channel)
+      }
+    } catch (err) {
+      console.error('CLIENT REALTIME ERROR:', err)
+      setRealtimeReady(false)
+    }
+  }, [conversationId])
 
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-4 py-6 text-[#171717] md:px-6 md:py-10">
@@ -155,6 +211,17 @@ export default function ClientChatPage({
 
               <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
                 Uzmanınızla iletişim yalnızca Mindora üzerinden yürütülür.
+              </p>
+
+              <p className="mt-2 text-xs font-black text-[#8a7662]">
+                Realtime:{' '}
+                <span
+                  className={
+                    realtimeReady ? 'text-emerald-700' : 'text-orange-700'
+                  }
+                >
+                  {realtimeReady ? 'Aktif' : 'Bağlanıyor / Pasif'}
+                </span>
               </p>
             </div>
 
@@ -248,7 +315,9 @@ export default function ClientChatPage({
                     return (
                       <div
                         key={item.id}
-                        className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${
+                          isMine ? 'justify-end' : 'justify-start'
+                        }`}
                       >
                         <div
                           className={`max-w-[82%] rounded-2xl p-4 text-sm shadow-sm ${
@@ -280,7 +349,9 @@ export default function ClientChatPage({
 
             {blockedError && (
               <div className="border-t border-red-100 bg-red-50 p-4">
-                <p className="text-sm font-bold text-red-700">{blockedError}</p>
+                <p className="text-sm font-bold text-red-700">
+                  {blockedError}
+                </p>
               </div>
             )}
 
