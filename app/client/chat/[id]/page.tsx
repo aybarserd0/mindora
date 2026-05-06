@@ -162,7 +162,7 @@ export default function ClientChatPage({
 
     if (!isActive) return
 
-    broadcastTyping(true)
+    broadcastTyping(value.trim().length > 0)
 
     if (localTypingTimeoutRef.current) {
       clearTimeout(localTypingTimeoutRef.current)
@@ -170,7 +170,7 @@ export default function ClientChatPage({
 
     localTypingTimeoutRef.current = setTimeout(() => {
       broadcastTyping(false)
-    }, 1200)
+    }, 2500)
   }
 
   async function sendMessage() {
@@ -255,13 +255,8 @@ export default function ClientChatPage({
             presences.forEach((presence) => {
               const meta = presence as PresenceMeta
 
-              if (meta.userType === 'expert') {
-                expertOnline = true
-              }
-
-              if (meta.userType === 'admin') {
-                adminOnline = true
-              }
+              if (meta.userType === 'expert') expertOnline = true
+              if (meta.userType === 'admin') adminOnline = true
             })
           })
 
@@ -272,9 +267,7 @@ export default function ClientChatPage({
         })
         .on(
           'broadcast',
-          {
-            event: 'typing',
-          },
+          { event: 'typing' },
           ({ payload }: { payload: TypingPayload }) => {
             if (!isMounted) return
             if (!payload) return
@@ -289,7 +282,7 @@ export default function ClientChatPage({
 
               typingTimeoutRef.current = setTimeout(() => {
                 setTypingUser(null)
-              }, 1800)
+              }, 3500)
             } else {
               setTypingUser(null)
             }
@@ -505,7 +498,7 @@ export default function ClientChatPage({
               </div>
             )}
 
-            <div className="h-[520px] overflow-y-auto bg-[#faf7f2] p-4 md:p-6">
+            <div className="flex h-[520px] flex-col overflow-y-auto bg-[#faf7f2] p-4 md:p-6">
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="max-w-md rounded-3xl bg-white p-6 text-center ring-1 ring-black/5">
@@ -519,7 +512,7 @@ export default function ClientChatPage({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="mt-auto space-y-4">
                   {messages.map((item) => {
                     const isMine = item.sender_type === 'client'
                     const isAdmin = item.sender_type === 'admin'
@@ -594,7 +587,6 @@ export default function ClientChatPage({
                 <textarea
                   value={message}
                   onChange={(event) => handleMessageChange(event.target.value)}
-                  onBlur={() => broadcastTyping(false)}
                   disabled={!isActive || sending}
                   rows={3}
                   maxLength={2000}

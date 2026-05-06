@@ -188,7 +188,7 @@ export default function AdminConversationPage({
   function handleMessageChange(value: string) {
     setMessage(value)
 
-    broadcastTyping(senderType, true)
+    broadcastTyping(senderType, value.trim().length > 0)
 
     if (localTypingTimeoutRef.current) {
       clearTimeout(localTypingTimeoutRef.current)
@@ -196,7 +196,7 @@ export default function AdminConversationPage({
 
     localTypingTimeoutRef.current = setTimeout(() => {
       broadcastTyping(senderType, false)
-    }, 1200)
+    }, 2500)
   }
 
   async function sendMessage() {
@@ -287,13 +287,8 @@ export default function AdminConversationPage({
             presences.forEach((presence) => {
               const meta = presence as PresenceMeta
 
-              if (meta.userType === 'client') {
-                clientOnline = true
-              }
-
-              if (meta.userType === 'expert') {
-                expertOnline = true
-              }
+              if (meta.userType === 'client') clientOnline = true
+              if (meta.userType === 'expert') expertOnline = true
             })
           })
 
@@ -304,9 +299,7 @@ export default function AdminConversationPage({
         })
         .on(
           'broadcast',
-          {
-            event: 'typing',
-          },
+          { event: 'typing' },
           ({ payload }: { payload: TypingPayload }) => {
             if (!isMounted) return
             if (!payload) return
@@ -321,7 +314,7 @@ export default function AdminConversationPage({
 
               typingTimeoutRef.current = setTimeout(() => {
                 setTypingUser(null)
-              }, 1800)
+              }, 3500)
             } else {
               setTypingUser(null)
             }
@@ -556,7 +549,7 @@ export default function AdminConversationPage({
                 </div>
               </div>
 
-              <div className="mt-5 max-h-[560px] space-y-4 overflow-y-auto rounded-2xl bg-[#faf7f2] p-4">
+              <div className="mt-5 flex max-h-[560px] min-h-[420px] flex-col overflow-y-auto rounded-2xl bg-[#faf7f2] p-4">
                 {messages.length === 0 ? (
                   <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-black/5">
                     <p className="font-bold text-[#6b5c4d]">
@@ -564,7 +557,7 @@ export default function AdminConversationPage({
                     </p>
                   </div>
                 ) : (
-                  <>
+                  <div className="mt-auto space-y-4">
                     {messages.map((item) => (
                       <div key={item.id} className="flex">
                         <div
@@ -623,7 +616,7 @@ export default function AdminConversationPage({
                     )}
 
                     <div ref={messagesEndRef} />
-                  </>
+                  </div>
                 )}
               </div>
 
@@ -654,7 +647,6 @@ export default function AdminConversationPage({
                 <textarea
                   value={message}
                   onChange={(event) => handleMessageChange(event.target.value)}
-                  onBlur={() => broadcastTyping(senderType, false)}
                   placeholder="Admin mesajı yaz... Telefon, e-posta, WhatsApp, IBAN gibi bilgiler client/expert testinde flaglenir."
                   rows={4}
                   maxLength={2000}
