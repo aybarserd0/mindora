@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
@@ -21,6 +21,12 @@ type Message = {
   is_flagged: boolean
   flag_reason: string | null
   created_at: string
+}
+
+type TypingPayload = {
+  senderType: 'client' | 'expert' | 'admin'
+  senderName: string
+  isTyping: boolean
 }
 
 function formatDate(date?: string | null) {
@@ -52,6 +58,12 @@ function getPaymentText(status?: string) {
   return '-'
 }
 
+function getTypingText(senderType: TypingPayload['senderType']) {
+  if (senderType === 'expert') return 'Uzman yazıyor...'
+  if (senderType === 'admin') return 'Mindora yazıyor...'
+  return 'Danışan yazıyor...'
+}
+
 export default function ClientChatPage({
   params,
 }: {
@@ -66,9 +78,24 @@ export default function ClientChatPage({
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [blockedError, setBlockedError] = useState('')
+  const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const localTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const channelRef = useRef<ReturnType<
+    ReturnType<typeof createMindoraRealtimeClient>['channel']
+  > | null>(null)
 
   const isActive =
     conversation?.status === 'active' && conversation?.payment_status === 'paid'
+
+  function scrollToBottom() {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+    })
+  }
 
   async function loadMessages(id: string, showLoading = false) {
     try {
@@ -95,6 +122,41 @@ export default function ClientChatPage({
     }
   }
 
+  async function broadcastTyping(isTyping: boolean) {
+    if (!channelRef.current) return
+    if (!conversationId) return
+
+    try {
+      await channelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {
+          senderType: 'client',
+          senderName: 'Danışan',
+          isTyping,
+        } satisfies TypingPayload,
+      })
+    } catch (err) {
+      console.error('CLIENT TYPING BROADCAST ERROR:', err)
+    }
+  }
+
+  function handleMessageChange(value: string) {
+    setMessage(value)
+
+    if (!isActive) return
+
+    broadcastTyping(true)
+
+    if (localTypingTimeoutRef.current) {
+      clearTimeout(localTypingTimeoutRef.current)
+    }
+
+    localTypingTimeoutRef.current = setTimeout(() => {
+      broadcastTyping(false)
+    }, 1200)
+  }
+
   async function sendMessage() {
     const cleanMessage = message.trim()
 
@@ -104,6 +166,7 @@ export default function ClientChatPage({
     try {
       setSending(true)
       setBlockedError('')
+      await broadcastTyping(false)
 
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: 'POST',
@@ -143,6 +206,10 @@ export default function ClientChatPage({
   }, [params])
 
   useEffect(() => {
+    scrollToBottom()
+  }, [messages, typingUser])
+
+  useEffect(() => {
     if (!conversationId) return
 
     let isMounted = true
@@ -151,7 +218,38 @@ export default function ClientChatPage({
       const supabase = createMindoraRealtimeClient()
 
       const channel = supabase
-        .channel(`client-chat-${conversationId}`)
+        .channel(`client-chat-${conversationId}`, {
+          config: {
+            broadcast: {
+              self: false,
+            },
+          },
+        })
+        .on(
+          'broadcast',
+          {
+            event: 'typing',
+          },
+          ({ payload }: { payload: TypingPayload }) => {
+            if (!isMounted) return
+            if (!payload) return
+            if (payload.senderType === 'client') return
+
+            if (typingTimeoutRef.current) {
+              clearTimeout(typingTimeoutRef.current)
+            }
+
+            if (payload.isTyping) {
+              setTypingUser(payload)
+
+              typingTimeoutRef.current = setTimeout(() => {
+                setTypingUser(null)
+              }, 1800)
+            } else {
+              setTypingUser(null)
+            }
+          }
+        )
         .on(
           'postgres_changes',
           {
@@ -162,6 +260,7 @@ export default function ClientChatPage({
           },
           async () => {
             if (!isMounted) return
+            setTypingUser(null)
             await loadMessages(conversationId, false)
           }
         )
@@ -184,9 +283,22 @@ export default function ClientChatPage({
           }
         })
 
+      channelRef.current = channel
+
       return () => {
         isMounted = false
         setRealtimeReady(false)
+        setTypingUser(null)
+        channelRef.current = null
+
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current)
+        }
+
+        if (localTypingTimeoutRef.current) {
+          clearTimeout(localTypingTimeoutRef.current)
+        }
+
         supabase.removeChannel(channel)
       }
     } catch (err) {
@@ -213,16 +325,21 @@ export default function ClientChatPage({
                 Uzmanınızla iletişim yalnızca Mindora üzerinden yürütülür.
               </p>
 
-              <p className="mt-2 text-xs font-black text-[#8a7662]">
-                Realtime:{' '}
+              <div className="mt-3 flex flex-wrap gap-2">
                 <span
-                  className={
-                    realtimeReady ? 'text-emerald-700' : 'text-orange-700'
-                  }
+                  className={`rounded-full px-3 py-1 text-xs font-black ${
+                    realtimeReady
+                      ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
+                      : 'bg-orange-50 text-orange-700 ring-1 ring-orange-100'
+                  }`}
                 >
-                  {realtimeReady ? 'Aktif' : 'Bağlanıyor / Pasif'}
+                  Realtime: {realtimeReady ? 'Aktif' : 'Bağlanıyor'}
                 </span>
-              </p>
+
+                <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
+                  No-Leak Aktif
+                </span>
+              </div>
             </div>
 
             <Link
@@ -262,7 +379,7 @@ export default function ClientChatPage({
                   Güvenlik
                 </p>
                 <p className="mt-2 text-lg font-black text-purple-700">
-                  No-Leak Aktif
+                  Korumalı
                 </p>
               </div>
             </div>
@@ -343,6 +460,23 @@ export default function ClientChatPage({
                       </div>
                     )
                   })}
+
+                  {typingUser && (
+                    <div className="flex justify-start">
+                      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-[#6b5c4d] shadow-sm ring-1 ring-black/10">
+                        <span className="inline-flex items-center gap-1">
+                          {getTypingText(typingUser.senderType)}
+                          <span className="ml-1 inline-flex gap-1">
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662]" />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662] [animation-delay:120ms]" />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662] [animation-delay:240ms]" />
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
                 </div>
               )}
             </div>
@@ -364,7 +498,8 @@ export default function ClientChatPage({
               <div className="flex flex-col gap-3 md:flex-row">
                 <textarea
                   value={message}
-                  onChange={(event) => setMessage(event.target.value)}
+                  onChange={(event) => handleMessageChange(event.target.value)}
+                  onBlur={() => broadcastTyping(false)}
                   disabled={!isActive || sending}
                   rows={3}
                   maxLength={2000}
