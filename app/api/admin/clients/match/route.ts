@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
 
     if (clientError || !client) {
       console.error('MATCH CLIENT ERROR:', clientError)
+
       return NextResponse.json(
         { ok: false, error: 'Danışan bulunamadı.' },
         { status: 404 }
@@ -121,6 +122,7 @@ export async function POST(req: NextRequest) {
 
     if (expertError || !expert) {
       console.error('MATCH EXPERT ERROR:', expertError)
+
       return NextResponse.json(
         { ok: false, error: 'Onaylı uzman bulunamadı.' },
         { status: 404 }
@@ -137,10 +139,86 @@ export async function POST(req: NextRequest) {
 
     if (updateError) {
       console.error('MATCH UPDATE ERROR:', updateError)
+
       return NextResponse.json(
         { ok: false, error: 'Eşleştirme kaydedilemedi.' },
         { status: 500 }
       )
+    }
+
+    const { data: existingConversation, error: existingConversationError } =
+      await supabase
+        .from('conversations')
+        .select('id, status, payment_status')
+        .eq('client_application_id', clientId)
+        .maybeSingle()
+
+    if (existingConversationError) {
+      console.error(
+        'MATCH EXISTING CONVERSATION ERROR:',
+        existingConversationError
+      )
+
+      return NextResponse.json(
+        { ok: false, error: 'Mevcut konuşma kontrol edilemedi.' },
+        { status: 500 }
+      )
+    }
+
+    let conversation = existingConversation
+
+    if (!conversation) {
+      const { data: createdConversation, error: conversationError } =
+        await supabase
+          .from('conversations')
+          .insert({
+            client_application_id: clientId,
+            expert_id: expertId,
+            status: 'locked',
+            payment_status: 'pending',
+          })
+          .select('id, status, payment_status')
+          .single()
+
+      if (conversationError || !createdConversation) {
+        console.error('MATCH CONVERSATION CREATE ERROR:', conversationError)
+
+        return NextResponse.json(
+          { ok: false, error: 'Konuşma oluşturulamadı.' },
+          { status: 500 }
+        )
+      }
+
+      conversation = createdConversation
+    } else {
+      const { data: updatedConversation, error: conversationUpdateError } =
+        await supabase
+          .from('conversations')
+          .update({
+            expert_id: expertId,
+            status:
+              existingConversation.payment_status === 'paid'
+                ? 'active'
+                : 'locked',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingConversation.id)
+          .select('id, status, payment_status')
+          .single()
+
+      if (conversationUpdateError || !updatedConversation) {
+        console.error(
+          'MATCH CONVERSATION UPDATE ERROR:',
+          conversationUpdateError
+        )
+
+        return NextResponse.json(
+          { ok: false, error: 'Konuşma güncellenemedi.' },
+          { status: 500 }
+        )
+      }
+
+      conversation = updatedConversation
     }
 
     const transporter = createTransporter()
@@ -170,44 +248,70 @@ Alanlar: ${toText(expert.areas)}
 Deneyim: ${toText(expert.experience)}
 Online: ${toText(expert.online)}
 Müsaitlik: ${toText(expert.availability)}
+
+Konuşma:
+Conversation ID: ${toText(conversation?.id)}
+Durum: ${toText(conversation?.status)}
+Ödeme Durumu: ${toText(conversation?.payment_status)}
+
+Not:
+Danışan ve uzman tarafına gönderilen mailler no-leak formatındadır.
+Tarafların telefon/e-posta bilgileri birbirleriyle paylaşılmamıştır.
+Konuşma ödeme tamamlanana kadar kilitli kalacaktır.
 `
 
     const expertText = `
 Merhaba ${toText(expert.name)},
 
-Mindora üzerinden sana yeni bir danışan eşleştirildi.
+Mindora üzerinden size yeni bir danışan eşleştirildi.
 
-Danışan Bilgileri:
-Ad Soyad: ${toText(client.name)}
-Telefon: ${toText(client.phone)}
-E-posta: ${toText(client.email)}
-Yaş: ${toText(client.age)}
+Danışan:
+${toText(client.name)}
+
+Başvuru Özeti:
 Konu: ${toText(client.topic)}
 Süre: ${toText(client.duration)}
 Daha Önce Destek: ${toText(client.previous_support)}
-Başlama: ${toText(client.start_time)}
-Tercih: ${toText(client.preference)}
+Başlama Tercihi: ${toText(client.start_time)}
+Görüşme Tercihi: ${toText(client.preference)}
 Müsaitlik: ${toText(client.availability)}
 Not: ${toText(client.note) || '-'}
 
-Lütfen danışanla en kısa sürede iletişime geç.
+Gizlilik ve güvenlik politikamız gereği danışanın telefon ve e-posta bilgileri paylaşılmamaktadır.
 
-Mindora
+Danışanla iletişim yalnızca Mindora platformu üzerinden yürütülecektir.
+
+Ödeme tamamlandıktan sonra konuşma alanı aktif hale gelecektir.
+
+Platform dışı iletişim; ödeme, güvenlik ve takip süreçlerini etkileyebilir.
+
+Mindora Ekibi
 `
 
     const clientText = `
 Merhaba ${toText(client.name)},
 
-Mindora başvurun incelendi ve sana uygun bir uzmanla eşleştirildin.
+Mindora başvurunuz incelendi ve size uygun bir uzmanla eşleştirildiniz.
 
 Eşleşen Uzman:
-Ad Soyad: ${toText(expert.name)}
+${toText(expert.name)}
+
+Uzmanlık Bilgileri:
 Ünvan: ${toText(expert.title)}
 Alanlar: ${toText(expert.areas)}
+Deneyim: ${toText(expert.experience)}
 
-Uzmanımız veya Mindora ekibi en kısa sürede seninle iletişime geçecektir.
+Güvenliğiniz ve sürecin sağlıklı ilerlemesi için iletişim Mindora platformu üzerinden yürütülecektir.
 
-Mindora
+Uzmanınızın telefon ve e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.
+
+Ödeme tamamlandıktan sonra platform içi iletişim alanınız aktif hale gelecektir.
+
+Lütfen platform dışı iletişim kurmayınız.
+
+Görüşme ve ödeme adımları Mindora güvencesiyle ilerleyecektir.
+
+Mindora Ekibi
 `
 
     const adminMail = await safeSendMail({
@@ -236,6 +340,8 @@ Mindora
 
     return NextResponse.json({
       ok: true,
+      message: 'Eşleştirme başarıyla yapıldı.',
+      conversation,
       mail: {
         admin: adminMail,
         expert: expertMail,

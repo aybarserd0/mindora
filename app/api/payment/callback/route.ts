@@ -48,6 +48,11 @@ async function getTokenFromRequest(req: NextRequest) {
   return params.get('token')
 }
 
+function toText(value: unknown) {
+  if (value === null || value === undefined) return ''
+  return String(value).trim()
+}
+
 function formatMoney(value?: number | null) {
   const numberValue = Number(value)
 
@@ -64,17 +69,19 @@ async function sendPaymentEmails({
   client,
   expert,
   payment,
+  conversation,
 }: {
   client: any
   expert: any
   payment: any
+  conversation?: any
 }) {
   const host = process.env.SMTP_HOST
   const port = Number(process.env.SMTP_PORT || 587)
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
   const from = process.env.SMTP_FROM || user
-  const adminMail = process.env.ADMIN_EMAIL || user
+  const adminMail = process.env.ADMIN_EMAIL || process.env.CONTACT_TO || user
 
   if (!host || !user || !pass || !from) {
     console.warn('SMTP env eksik. Ödeme mail gönderimi atlandı.')
@@ -115,7 +122,9 @@ async function sendPaymentEmails({
             <p>Mindora üzerinden oluşturulan seans ödemeniz başarıyla tamamlandı.</p>
             <p><strong>Ödeme tutarı:</strong> ${amount}</p>
             <p><strong>Eşleştiğiniz uzman:</strong> ${expertName}</p>
-            <p>Seans süreci için uzmanınız veya Mindora ekibi sizinle iletişime geçecektir.</p>
+            <p>Platform içi iletişim alanınız artık aktif hale getirilmiştir.</p>
+            <p>Güvenliğiniz ve sürecin sağlıklı ilerlemesi için tüm iletişim Mindora üzerinden yürütülmelidir.</p>
+            <p>Uzmanınızın telefon veya e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.</p>
             <br />
             <p>Sevgiler,<br />Mindora Ekibi</p>
           </div>
@@ -138,7 +147,9 @@ async function sendPaymentEmails({
             <p><strong>Danışan:</strong> ${clientName}</p>
             <p><strong>Toplam ödeme:</strong> ${amount}</p>
             <p><strong>Uzman payı:</strong> ${expertAmount}</p>
-            <p>Seans sürecini başlatabilirsiniz.</p>
+            <p>Platform içi iletişim alanı aktif hale getirilmiştir.</p>
+            <p>Danışanla iletişim yalnızca Mindora üzerinden yürütülmelidir.</p>
+            <p>Danışanın telefon veya e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.</p>
             <br />
             <p>Mindora Ekibi</p>
           </div>
@@ -164,6 +175,13 @@ async function sendPaymentEmails({
             <p><strong>Payment ID:</strong> ${payment?.id || '-'}</p>
             <p><strong>iyzico Payment ID:</strong> ${
               payment?.iyzico_payment_id || '-'
+            }</p>
+            <p><strong>Conversation ID:</strong> ${conversation?.id || '-'}</p>
+            <p><strong>Conversation Status:</strong> ${
+              conversation?.status || '-'
+            }</p>
+            <p><strong>Conversation Payment Status:</strong> ${
+              conversation?.payment_status || '-'
             }</p>
           </div>
         `,
@@ -222,6 +240,15 @@ export async function POST(req: NextRequest) {
     }
 
     if (payment.status === 'paid') {
+      await supabase
+        .from('conversations')
+        .update({
+          status: 'active',
+          payment_status: 'paid',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('client_application_id', payment.client_id)
+
       return NextResponse.redirect(`${siteUrl}/odeme-basarili`, 303)
     }
 
@@ -258,6 +285,15 @@ export async function POST(req: NextRequest) {
         })
         .eq('id', payment.id)
 
+      await supabase
+        .from('conversations')
+        .update({
+          status: 'locked',
+          payment_status: 'failed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('client_application_id', payment.client_id)
+
       return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
     }
 
@@ -269,6 +305,15 @@ export async function POST(req: NextRequest) {
           iyzico_payment_id: iyzicoData.paymentId || null,
         })
         .eq('id', payment.id)
+
+      await supabase
+        .from('conversations')
+        .update({
+          status: 'locked',
+          payment_status: 'failed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('client_application_id', payment.client_id)
 
       return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
     }
@@ -295,6 +340,67 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const { data: existingConversation, error: existingConversationError } =
+      await supabase
+        .from('conversations')
+        .select('*')
+        .eq('client_application_id', updatedPayment.client_id)
+        .maybeSingle()
+
+    if (existingConversationError) {
+      console.error(
+        'PAYMENT CALLBACK CONVERSATION CHECK ERROR:',
+        existingConversationError
+      )
+    }
+
+    let conversation = existingConversation
+
+    if (conversation) {
+      const { data: activatedConversation, error: activateConversationError } =
+        await supabase
+          .from('conversations')
+          .update({
+            expert_id: updatedPayment.expert_id,
+            status: 'active',
+            payment_status: 'paid',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', conversation.id)
+          .select('*')
+          .single()
+
+      if (activateConversationError) {
+        console.error(
+          'PAYMENT CALLBACK CONVERSATION ACTIVATE ERROR:',
+          activateConversationError
+        )
+      } else {
+        conversation = activatedConversation
+      }
+    } else {
+      const { data: createdConversation, error: createConversationError } =
+        await supabase
+          .from('conversations')
+          .insert({
+            client_application_id: updatedPayment.client_id,
+            expert_id: updatedPayment.expert_id,
+            status: 'active',
+            payment_status: 'paid',
+          })
+          .select('*')
+          .single()
+
+      if (createConversationError) {
+        console.error(
+          'PAYMENT CALLBACK CONVERSATION CREATE ERROR:',
+          createConversationError
+        )
+      } else {
+        conversation = createdConversation
+      }
+    }
+
     const shouldSendNotification = !updatedPayment.paid_notified_at
 
     if (shouldSendNotification) {
@@ -317,6 +423,7 @@ export async function POST(req: NextRequest) {
           client,
           expert,
           payment: updatedPayment,
+          conversation,
         })
 
         await Promise.all([
@@ -339,6 +446,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.redirect(`${siteUrl}/odeme-basarili`, 303)
   } catch (err: any) {
+    console.error('PAYMENT CALLBACK SERVER ERROR:', err)
+
     return NextResponse.json(
       {
         ok: false,

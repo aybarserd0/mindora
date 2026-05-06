@@ -12,6 +12,8 @@ type ClientStatus =
   | 'cancelled'
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
+type ConversationStatus = 'locked' | 'active' | 'closed'
+type ConversationPaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 
 type LatestPayment = {
   id: string
@@ -24,6 +26,14 @@ type LatestPayment = {
   expert_payout_status: string | null
   expert_payout_paid_at: string | null
   created_at: string
+}
+
+type LatestConversation = {
+  id: string
+  status: ConversationStatus
+  payment_status: ConversationPaymentStatus
+  created_at: string
+  updated_at: string
 }
 
 type Client = {
@@ -43,6 +53,8 @@ type Client = {
   matched_expert_id: string | null
   created_at: string
   latest_payment: LatestPayment | null
+  latest_conversation?: LatestConversation | null
+  conversation?: LatestConversation | null
 }
 
 type Expert = {
@@ -117,6 +129,32 @@ function getPaymentStyle(status: PaymentStatus) {
   }
 }
 
+function getConversationLabel(status?: ConversationStatus | null) {
+  switch (status) {
+    case 'locked':
+      return 'Chat Kilitli'
+    case 'active':
+      return 'Chat Aktif'
+    case 'closed':
+      return 'Chat Kapalı'
+    default:
+      return 'Chat Yok'
+  }
+}
+
+function getConversationStyle(status?: ConversationStatus | null) {
+  switch (status) {
+    case 'locked':
+      return 'bg-orange-100 text-orange-800 ring-orange-200'
+    case 'active':
+      return 'bg-emerald-100 text-emerald-800 ring-emerald-200'
+    case 'closed':
+      return 'bg-gray-100 text-gray-700 ring-gray-200'
+    default:
+      return 'bg-slate-100 text-slate-700 ring-slate-200'
+  }
+}
+
 function formatDate(date: string | null | undefined) {
   if (!date) return '-'
 
@@ -149,6 +187,10 @@ function formatMoney(value: number | null | undefined) {
   }).format(numberValue)
 }
 
+function getClientConversation(client: Client) {
+  return client.latest_conversation || client.conversation || null
+}
+
 export default function DanisanBasvurulariPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [experts, setExperts] = useState<Expert[]>([])
@@ -175,6 +217,19 @@ export default function DanisanBasvurulariPage() {
       contacted: clients.filter((client) => client.status === 'contacted').length,
       completed: clients.filter((client) => client.status === 'completed').length,
       cancelled: clients.filter((client) => client.status === 'cancelled').length,
+    }
+  }, [clients])
+
+  const chatSummary = useMemo(() => {
+    const conversations = clients
+      .map((client) => getClientConversation(client))
+      .filter(Boolean) as LatestConversation[]
+
+    return {
+      total: conversations.length,
+      active: conversations.filter((item) => item.status === 'active').length,
+      locked: conversations.filter((item) => item.status === 'locked').length,
+      closed: conversations.filter((item) => item.status === 'closed').length,
     }
   }, [clients])
 
@@ -213,6 +268,7 @@ export default function DanisanBasvurulariPage() {
 
     return clients.filter((client) => {
       const statusMatch = filter === 'all' || client.status === filter
+      const conversation = getClientConversation(client)
 
       const text = [
         client.name,
@@ -227,6 +283,9 @@ export default function DanisanBasvurulariPage() {
         getExpertName(client.matched_expert_id),
         client.latest_payment?.status,
         client.latest_payment?.iyzico_payment_id,
+        conversation?.id,
+        conversation?.status,
+        conversation?.payment_status,
       ]
         .filter(Boolean)
         .join(' ')
@@ -406,8 +465,8 @@ export default function DanisanBasvurulariPage() {
               </h2>
 
               <p className="mt-2 max-w-2xl text-[#6b5c4d]">
-                Gelen danışan başvurularını incele, uygun uzmanla eşleştir,
-                ödeme durumunu takip et ve süreci tek panelden yönet.
+                Başvuruları incele, uzman eşleştir, ödeme ve platform içi chat
+                kilidini tek panelden takip et.
               </p>
             </div>
 
@@ -459,13 +518,13 @@ export default function DanisanBasvurulariPage() {
 
             <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Uzman Payı
+                Chat Aktif
               </p>
-              <p className="mt-2 text-2xl font-black text-purple-700">
-                {formatMoney(paymentSummary.paidExpertAmount)}
+              <p className="mt-2 text-2xl font-black text-emerald-700">
+                {chatSummary.active}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Pending: {paymentSummary.pendingCount}
+                Kilitli: {chatSummary.locked} • Toplam: {chatSummary.total}
               </p>
             </div>
           </div>
@@ -503,7 +562,7 @@ export default function DanisanBasvurulariPage() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="İsim, telefon, e-posta, konu, uzman, payment id veya not ara..."
+              placeholder="İsim, telefon, e-posta, konu, uzman, payment id, conversation id veya not ara..."
               className="h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
             />
           </div>
@@ -529,9 +588,12 @@ export default function DanisanBasvurulariPage() {
           <div className="mt-8 grid gap-5">
             {filteredClients.map((client) => {
               const payment = client.latest_payment
+              const conversation = getClientConversation(client)
               const canCreatePayment = Boolean(client.matched_expert_id)
               const canOpenPaymentLink =
                 payment?.status === 'pending' && Boolean(payment.payment_page_url)
+              const chatShouldBeActive =
+                payment?.status === 'paid' || conversation?.payment_status === 'paid'
 
               return (
                 <article
@@ -570,6 +632,14 @@ export default function DanisanBasvurulariPage() {
                             Önce Uzman Ata
                           </span>
                         )}
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getConversationStyle(
+                            conversation?.status
+                          )}`}
+                        >
+                          {getConversationLabel(conversation?.status)}
+                        </span>
                       </div>
 
                       <p className="mt-1 text-sm text-[#6b5c4d]">
@@ -652,13 +722,13 @@ export default function DanisanBasvurulariPage() {
                     </p>
                   </div>
 
-                  <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                  <div className="mt-5 grid gap-5 lg:grid-cols-3">
                     <div className="rounded-2xl border border-[#e5d9cc] bg-white p-4">
                       <p className="mb-3 text-sm font-black text-[#2b2118]">
                         Uzman Eşleştirme
                       </p>
 
-                      <div className="flex flex-col gap-3 md:flex-row">
+                      <div className="flex flex-col gap-3">
                         <select
                           value={selectedExperts[client.id] || ''}
                           onChange={(event) =>
@@ -708,7 +778,7 @@ export default function DanisanBasvurulariPage() {
                             Ödeme Yönetimi
                           </p>
                           <p className="mt-1 text-xs font-semibold text-green-800">
-                            Ödeme linki ve ödeme durumu DB’den takip edilir.
+                            Ödeme linki ve durum DB’den takip edilir.
                           </p>
                         </div>
 
@@ -804,6 +874,83 @@ export default function DanisanBasvurulariPage() {
                             </p>
                           )}
                         </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black text-emerald-950">
+                            Platform İçi Chat
+                          </p>
+                          <p className="mt-1 text-xs font-semibold text-emerald-800">
+                            Ödeme sonrası iletişim alanı aktif olur.
+                          </p>
+                        </div>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getConversationStyle(
+                            conversation?.status
+                          )}`}
+                        >
+                          {getConversationLabel(conversation?.status)}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 rounded-xl bg-white p-3 text-xs font-semibold text-emerald-950 ring-1 ring-emerald-100">
+                        <p className="break-all">
+                          <b>Conversation ID:</b> {conversation?.id || '-'}
+                        </p>
+                        <p className="mt-1">
+                          <b>Chat Durumu:</b> {getConversationLabel(conversation?.status)}
+                        </p>
+                        <p className="mt-1">
+                          <b>Ödeme Kilidi:</b>{' '}
+                          {conversation?.payment_status === 'paid'
+                            ? 'Ödeme tamamlandı'
+                            : conversation?.payment_status === 'failed'
+                            ? 'Ödeme başarısız'
+                            : 'Ödeme bekleniyor'}
+                        </p>
+                        <p className="mt-1">
+                          <b>Son Güncelleme:</b> {formatDate(conversation?.updated_at)}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 rounded-xl bg-white/70 p-3 text-xs font-semibold text-emerald-900 ring-1 ring-emerald-100">
+                        {conversation ? (
+                          chatShouldBeActive && conversation.status === 'active' ? (
+                            <p>
+                              ✅ Chat aktif. Danışan ve uzman platform içinden
+                              görüşmeye hazır.
+                            </p>
+                          ) : conversation.status === 'locked' ? (
+                            <p>
+                              🔒 Chat kilitli. Ödeme tamamlanınca otomatik aktif olur.
+                            </p>
+                          ) : (
+                            <p>⚠️ Chat kapalı veya manuel inceleme gerektiriyor.</p>
+                          )
+                        ) : client.matched_expert_id ? (
+                          <p>
+                            ⚠️ Eşleşme var ama conversation görünmüyor. Match endpoint
+                            veya /api/admin/clients response kontrol edilmeli.
+                          </p>
+                        ) : (
+                          <p>
+                            Önce uzman atanmalı. Uzman atanırken conversation otomatik
+                            oluşturulur.
+                          </p>
+                        )}
+                      </div>
+
+                      {conversation?.id && (
+                        <a
+                          href={`/admin/conversations/${conversation.id}`}
+                          className="mt-4 block rounded-full bg-emerald-700 px-4 py-2 text-center text-sm font-black text-white transition hover:bg-emerald-800"
+                        >
+                          Konuşmayı Aç
+                        </a>
                       )}
                     </div>
                   </div>

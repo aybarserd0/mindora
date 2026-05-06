@@ -12,6 +12,8 @@ type ClientStatus =
   | 'cancelled'
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
+type ConversationStatus = 'locked' | 'active' | 'closed'
+type ConversationPaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 
 type LatestPayment = {
   id: string
@@ -24,6 +26,14 @@ type LatestPayment = {
   expert_payout_status: string | null
   expert_payout_paid_at: string | null
   created_at: string
+}
+
+type LatestConversation = {
+  id: string
+  status: ConversationStatus
+  payment_status: ConversationPaymentStatus
+  created_at: string
+  updated_at: string
 }
 
 type ClientRow = {
@@ -43,6 +53,7 @@ type ClientRow = {
   matched_expert_id: string | null
   created_at: string
   latest_payment: LatestPayment | null
+  latest_conversation: LatestConversation | null
 }
 
 function normalizePayment(payment: any): LatestPayment | null {
@@ -62,7 +73,27 @@ function normalizePayment(payment: any): LatestPayment | null {
   }
 }
 
-function normalizeClient(client: any, latestPayment: LatestPayment | null): ClientRow {
+function normalizeConversation(conversation: any): LatestConversation | null {
+  if (!conversation) return null
+
+  return {
+    id: conversation.id,
+    status: conversation.status,
+    payment_status: conversation.payment_status,
+    created_at: conversation.created_at,
+    updated_at: conversation.updated_at,
+  }
+}
+
+function normalizeClient({
+  client,
+  latestPayment,
+  latestConversation,
+}: {
+  client: any
+  latestPayment: LatestPayment | null
+  latestConversation: LatestConversation | null
+}): ClientRow {
   return {
     id: client.id,
     name: client.name ?? null,
@@ -80,6 +111,7 @@ function normalizeClient(client: any, latestPayment: LatestPayment | null): Clie
     matched_expert_id: client.matched_expert_id ?? null,
     created_at: client.created_at,
     latest_payment: latestPayment,
+    latest_conversation: latestConversation,
   }
 }
 
@@ -126,43 +158,77 @@ export async function GET() {
     const clientsRaw = clientsData || []
     const clientIds = clientsRaw.map((client) => client.id)
 
-    let latestPaymentsByClientId: Record<string, LatestPayment> = {}
+    const latestPaymentsByClientId: Record<string, LatestPayment> = {}
+    const latestConversationsByClientId: Record<string, LatestConversation> = {}
 
     if (clientIds.length > 0) {
-      const { data: paymentsData, error: paymentsError } = await supabase
-        .from('payments')
-        .select(
+      const [paymentsResult, conversationsResult] = await Promise.all([
+        supabase
+          .from('payments')
+          .select(
+            `
+            id,
+            client_id,
+            status,
+            amount,
+            commission_amount,
+            expert_amount,
+            payment_page_url,
+            iyzico_payment_id,
+            expert_payout_status,
+            expert_payout_paid_at,
+            created_at
           `
-          id,
-          client_id,
-          status,
-          amount,
-          commission_amount,
-          expert_amount,
-          payment_page_url,
-          iyzico_payment_id,
-          expert_payout_status,
-          expert_payout_paid_at,
-          created_at
-        `
-        )
-        .in('client_id', clientIds)
-        .order('created_at', { ascending: false })
+          )
+          .in('client_id', clientIds)
+          .order('created_at', { ascending: false }),
 
-      if (paymentsError) {
-        console.error('ADMIN CLIENTS PAYMENTS DB ERROR:', paymentsError)
+        supabase
+          .from('conversations')
+          .select(
+            `
+            id,
+            client_application_id,
+            status,
+            payment_status,
+            created_at,
+            updated_at
+          `
+          )
+          .in('client_application_id', clientIds)
+          .order('updated_at', { ascending: false }),
+      ])
+
+      if (paymentsResult.error) {
+        console.error('ADMIN CLIENTS PAYMENTS DB ERROR:', paymentsResult.error)
 
         return NextResponse.json(
           {
             ok: false,
             error: 'Danışan ödeme bilgileri alınamadı.',
-            detail: paymentsError.message,
+            detail: paymentsResult.error.message,
           },
           { status: 500 }
         )
       }
 
-      for (const payment of paymentsData || []) {
+      if (conversationsResult.error) {
+        console.error(
+          'ADMIN CLIENTS CONVERSATIONS DB ERROR:',
+          conversationsResult.error
+        )
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error: 'Danışan chat bilgileri alınamadı.',
+            detail: conversationsResult.error.message,
+          },
+          { status: 500 }
+        )
+      }
+
+      for (const payment of paymentsResult.data || []) {
         const clientId = payment.client_id
 
         if (!clientId) continue
@@ -174,10 +240,27 @@ export async function GET() {
           latestPaymentsByClientId[clientId] = normalized
         }
       }
+
+      for (const conversation of conversationsResult.data || []) {
+        const clientId = conversation.client_application_id
+
+        if (!clientId) continue
+        if (latestConversationsByClientId[clientId]) continue
+
+        const normalized = normalizeConversation(conversation)
+
+        if (normalized) {
+          latestConversationsByClientId[clientId] = normalized
+        }
+      }
     }
 
     const clients = clientsRaw.map((client) =>
-      normalizeClient(client, latestPaymentsByClientId[client.id] || null)
+      normalizeClient({
+        client,
+        latestPayment: latestPaymentsByClientId[client.id] || null,
+        latestConversation: latestConversationsByClientId[client.id] || null,
+      })
     )
 
     return NextResponse.json(
