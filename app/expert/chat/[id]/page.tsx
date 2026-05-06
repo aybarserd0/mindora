@@ -91,6 +91,7 @@ export default function ExpertChatPage({
   const [error, setError] = useState('')
   const [blockedError, setBlockedError] = useState('')
   const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
+  const [readSynced, setReadSynced] = useState(false)
   const [onlineUsers, setOnlineUsers] = useState<OnlineUsers>({
     client: false,
     admin: false,
@@ -113,6 +114,29 @@ export default function ExpertChatPage({
     })
   }
 
+  async function markConversationAsRead(id: string) {
+    try {
+      setReadSynced(false)
+
+      const res = await fetch(`/api/conversations/${id}/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userType: 'expert' }),
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok || !data?.ok) {
+        console.error('EXPERT READ SYNC ERROR:', data?.error || 'Read sync failed')
+        return
+      }
+
+      setReadSynced(true)
+    } catch (err) {
+      console.error('EXPERT READ SYNC ERROR:', err)
+    }
+  }
+
   async function loadMessages(id: string, showLoading = false) {
     try {
       if (showLoading) setLoading(true)
@@ -131,6 +155,8 @@ export default function ExpertChatPage({
 
       setConversation(data.conversation)
       setMessages(data.messages || [])
+
+      await markConversationAsRead(id)
     } catch {
       setError('Sunucuya bağlanırken hata oluştu.')
     } finally {
@@ -348,6 +374,7 @@ export default function ExpertChatPage({
         isMounted = false
         setRealtimeReady(false)
         setTypingUser(null)
+        setReadSynced(false)
         setOnlineUsers({
           client: false,
           admin: false,
@@ -429,6 +456,16 @@ export default function ExpertChatPage({
 
                 <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
                   No-Leak Aktif
+                </span>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    readSynced
+                      ? 'bg-blue-50 text-blue-700 ring-blue-100'
+                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                  }`}
+                >
+                  {readSynced ? 'Okundu senkron' : 'Okundu bekliyor'}
                 </span>
               </div>
             </div>
