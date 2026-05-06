@@ -117,6 +117,7 @@ export default function AdminConversationPage({
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
+  const [readSynced, setReadSynced] = useState(false)
   const [onlineUsers, setOnlineUsers] = useState<OnlineUsers>({
     client: false,
     expert: false,
@@ -141,6 +142,29 @@ export default function AdminConversationPage({
     })
   }
 
+  async function markConversationAsRead(id: string) {
+    try {
+      setReadSynced(false)
+
+      const res = await fetch(`/api/conversations/${id}/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userType: 'admin' }),
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok || !data?.ok) {
+        console.error('ADMIN READ SYNC ERROR:', data?.error || 'Read sync failed')
+        return
+      }
+
+      setReadSynced(true)
+    } catch (err) {
+      console.error('ADMIN READ SYNC ERROR:', err)
+    }
+  }
+
   async function loadMessages(id: string, showLoading = true) {
     try {
       if (showLoading) setLoading(true)
@@ -159,6 +183,8 @@ export default function AdminConversationPage({
 
       setConversation(data.conversation)
       setMessages(data.messages || [])
+
+      await markConversationAsRead(id)
     } catch {
       setError('Sunucuya bağlanırken hata oluştu.')
     } finally {
@@ -380,6 +406,7 @@ export default function AdminConversationPage({
         isMounted = false
         setRealtimeReady(false)
         setTypingUser(null)
+        setReadSynced(false)
         setOnlineUsers({
           client: false,
           expert: false,
@@ -473,6 +500,16 @@ export default function AdminConversationPage({
 
                 <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
                   Mindora Aktif
+                </span>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    readSynced
+                      ? 'bg-blue-50 text-blue-700 ring-blue-100'
+                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                  }`}
+                >
+                  {readSynced ? 'Okundu senkron' : 'Okundu bekliyor'}
                 </span>
               </div>
             </div>
@@ -718,6 +755,10 @@ export default function AdminConversationPage({
                   </p>
                   <p>
                     🟢 Presence ile online/offline durumu anlık takip edilir.
+                  </p>
+                  <p>
+                    👁️ Admin ekranı açıldığında mesajlar admin için okundu
+                    işaretlenir.
                   </p>
                 </div>
               </div>
