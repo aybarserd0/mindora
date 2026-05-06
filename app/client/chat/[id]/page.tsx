@@ -29,6 +29,18 @@ type TypingPayload = {
   isTyping: boolean
 }
 
+type PresenceMeta = {
+  userType?: 'client' | 'expert' | 'admin'
+  userName?: string
+  onlineAt?: string
+  conversationId?: string
+}
+
+type OnlineUsers = {
+  expert: boolean
+  admin: boolean
+}
+
 function formatDate(date?: string | null) {
   if (!date) return '-'
 
@@ -79,6 +91,10 @@ export default function ClientChatPage({
   const [error, setError] = useState('')
   const [blockedError, setBlockedError] = useState('')
   const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUsers>({
+    expert: false,
+    admin: false,
+  })
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -223,7 +239,36 @@ export default function ClientChatPage({
             broadcast: {
               self: false,
             },
+            presence: {
+              key: `client-${conversationId}`,
+            },
           },
+        })
+        .on('presence', { event: 'sync' }, () => {
+          if (!isMounted) return
+
+          const presenceState = channel.presenceState()
+          let expertOnline = false
+          let adminOnline = false
+
+          Object.values(presenceState).forEach((presences) => {
+            presences.forEach((presence) => {
+              const meta = presence as PresenceMeta
+
+              if (meta.userType === 'expert') {
+                expertOnline = true
+              }
+
+              if (meta.userType === 'admin') {
+                adminOnline = true
+              }
+            })
+          })
+
+          setOnlineUsers({
+            expert: expertOnline,
+            admin: adminOnline,
+          })
         })
         .on(
           'broadcast',
@@ -277,9 +322,30 @@ export default function ClientChatPage({
             await loadMessages(conversationId, false)
           }
         )
-        .subscribe((status) => {
-          if (isMounted && status === 'SUBSCRIBED') {
+        .subscribe(async (status) => {
+          if (!isMounted) return
+
+          if (status === 'SUBSCRIBED') {
             setRealtimeReady(true)
+
+            await channel.track({
+              userType: 'client',
+              userName: 'Danışan',
+              onlineAt: new Date().toISOString(),
+              conversationId,
+            } satisfies PresenceMeta)
+          }
+
+          if (
+            status === 'CHANNEL_ERROR' ||
+            status === 'TIMED_OUT' ||
+            status === 'CLOSED'
+          ) {
+            setRealtimeReady(false)
+            setOnlineUsers({
+              expert: false,
+              admin: false,
+            })
           }
         })
 
@@ -289,6 +355,10 @@ export default function ClientChatPage({
         isMounted = false
         setRealtimeReady(false)
         setTypingUser(null)
+        setOnlineUsers({
+          expert: false,
+          admin: false,
+        })
         channelRef.current = null
 
         if (typingTimeoutRef.current) {
@@ -299,11 +369,16 @@ export default function ClientChatPage({
           clearTimeout(localTypingTimeoutRef.current)
         }
 
+        channel.untrack()
         supabase.removeChannel(channel)
       }
     } catch (err) {
       console.error('CLIENT REALTIME ERROR:', err)
       setRealtimeReady(false)
+      setOnlineUsers({
+        expert: false,
+        admin: false,
+      })
     }
   }, [conversationId])
 
@@ -334,6 +409,26 @@ export default function ClientChatPage({
                   }`}
                 >
                   Realtime: {realtimeReady ? 'Aktif' : 'Bağlanıyor'}
+                </span>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    onlineUsers.expert
+                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                  }`}
+                >
+                  {onlineUsers.expert ? 'Uzman çevrimiçi' : 'Uzman çevrimdışı'}
+                </span>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    onlineUsers.admin
+                      ? 'bg-purple-50 text-purple-700 ring-purple-100'
+                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                  }`}
+                >
+                  {onlineUsers.admin ? 'Mindora aktif' : 'Mindora çevrimdışı'}
                 </span>
 
                 <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
