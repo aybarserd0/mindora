@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export function middleware(req: NextRequest) {
-  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin')
-  const isLoginPage = req.nextUrl.pathname === '/admin/login'
+export function proxy(req: NextRequest) {
+  const pathname = req.nextUrl.pathname
+
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isLoginPage = pathname === '/admin/login'
 
   if (!isAdminRoute || isLoginPage) {
     return NextResponse.next()
@@ -11,7 +13,9 @@ export function middleware(req: NextRequest) {
   const isAdmin = req.cookies.get('mindora_admin')?.value === 'true'
 
   if (!isAdmin) {
-    const loginUrl = new URL('/admin/login', req.url)
+    const loginUrl = req.nextUrl.clone()
+    loginUrl.pathname = '/admin/login'
+    loginUrl.search = ''
     return NextResponse.redirect(loginUrl)
   }
 
