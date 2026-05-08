@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const amount = normalizeAmount(expert.session_price)
+    const amount = normalizeAmount((expert as any).session_price)
 
     if (!amount) {
       return NextResponse.json(
@@ -188,19 +188,16 @@ export async function POST(req: NextRequest) {
     const conversationId = `payment_${client.id}_${now}`
     const uri = '/payment/iyzipos/checkoutform/initialize/auth/ecom'
 
-    const clientFullName =
-      client.full_name ||
-      client.name ||
-      client.client_name ||
-      client.fullName ||
-      'Mindora Danışan'
+    const clientFullName = client.name || 'Mindora Danışan'
+
+    
 
     const { name, surname } = splitName(clientFullName)
 
     const clientEmail = client.email || 'test@test.com'
-    const clientPhone = cleanPhone(client.phone || client.phone_number)
-    const clientCity = client.city || 'Ankara'
-    const clientAddress = client.address || clientCity || 'Türkiye'
+    const clientPhone = cleanPhone(client.phone)
+    const clientCity = 'Ankara'
+    const clientAddress = 'Türkiye'
     const ip =
       req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       req.headers.get('x-real-ip') ||

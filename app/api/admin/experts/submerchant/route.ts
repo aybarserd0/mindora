@@ -4,16 +4,49 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 
+type ExpertRecord = {
+  id: string
+  name?: string | null
+  full_name?: string | null
+  expert_name?: string | null
+  title?: string | null
+  email?: string | null
+  phone?: string | null
+  phone_number?: string | null
+  iyzico_submerchant_key?: string | null
+}
+
+type IyzicoSubmerchantResponse = {
+  status?: string
+  errorMessage?: string
+  subMerchantKey?: string
+  [key: string]: unknown
+}
+
+function toText(value: unknown) {
+  if (value === null || value === undefined) return ''
+  return String(value).trim()
+}
+
 function cleanPhone(phone?: string | null) {
-  if (!phone) return '+905350000000'
-  let value = phone.replace(/\s/g, '')
-  if (value.startsWith('0')) value = '+9' + value
+  const raw = toText(phone).replace(/\s/g, '')
+
+  if (!raw) return '+905350000000'
+
+  let value = raw
+
+  if (value.startsWith('0')) value = `+9${value}`
+
   if (!value.startsWith('+90')) return '+905350000000'
+
   return value
 }
 
 function splitName(fullName?: string | null) {
-  const parts = (fullName || 'Mindora Uzman').trim().split(' ')
+  const parts = toText(fullName || 'Mindora Uzman')
+    .split(' ')
+    .filter(Boolean)
+
   return {
     contactName: parts[0] || 'Mindora',
     contactSurname: parts.slice(1).join(' ') || 'Uzman',
@@ -58,13 +91,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const {
-      expertId,
-      iban,
-      identityNumber,
-      address,
-      city,
-    } = await req.json()
+    const body = await req.json().catch(() => null)
+
+    const expertId = toText(body?.expertId)
+    const iban = toText(body?.iban).replace(/\s/g, '').toUpperCase()
+    const identityNumber = toText(body?.identityNumber)
+    const address = toText(body?.address)
+    const city = toText(body?.city)
 
     if (!expertId || !iban || !identityNumber || !address || !city) {
       return NextResponse.json(
@@ -76,20 +109,29 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseAdmin()
+    if (!iban.startsWith('TR') || iban.length < 24) {
+      return NextResponse.json(
+        { ok: false, error: 'Geçerli bir TR IBAN giriniz.' },
+        { status: 400 }
+      )
+    }
 
-    const { data: expert, error: expertError } = await supabase
+    const supabase = getSupabaseAdmin() as any
+
+    const { data: expertData, error: expertError } = await supabase
       .from('experts')
       .select('*')
       .eq('id', expertId)
-      .single()
+      .maybeSingle()
 
-    if (expertError || !expert) {
+    if (expertError || !expertData) {
       return NextResponse.json(
         { ok: false, error: 'Uzman bulunamadı.' },
         { status: 404 }
       )
     }
+
+    const expert = expertData as ExpertRecord
 
     if (expert.iyzico_submerchant_key) {
       return NextResponse.json({
@@ -100,10 +142,10 @@ export async function POST(req: NextRequest) {
     }
 
     const fullName =
-      expert.full_name ||
-      expert.name ||
-      expert.expert_name ||
-      expert.title ||
+      toText(expert.full_name) ||
+      toText(expert.name) ||
+      toText(expert.expert_name) ||
+      toText(expert.title) ||
       'Mindora Uzman'
 
     const { contactName, contactSurname } = splitName(fullName)
@@ -119,7 +161,7 @@ export async function POST(req: NextRequest) {
       address: `${address}, ${city}`,
       contactName,
       contactSurname,
-      email: expert.email,
+      email: toText(expert.email),
       gsmNumber: cleanPhone(expert.phone || expert.phone_number),
       name: fullName,
       iban,
@@ -148,13 +190,14 @@ export async function POST(req: NextRequest) {
       body: bodyString,
     })
 
-    const result = await iyzicoRes.json()
+    const result =
+      (await iyzicoRes.json().catch(() => null)) as IyzicoSubmerchantResponse | null
 
-    if (!iyzicoRes.ok || result.status !== 'success') {
+    if (!iyzicoRes.ok || result?.status !== 'success' || !result.subMerchantKey) {
       return NextResponse.json(
         {
           ok: false,
-          error: result.errorMessage || 'iyzico alt üye oluşturulamadı.',
+          error: result?.errorMessage || 'iyzico alt üye oluşturulamadı.',
           iyzico: result,
         },
         { status: 400 }

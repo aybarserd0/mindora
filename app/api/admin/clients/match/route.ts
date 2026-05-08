@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
+export const runtime = 'nodejs'
+
 type Conversation = {
   id: string
   status: string
   payment_status: string
+}
+
+type MailResult = {
+  ok: boolean
+  skipped: boolean
 }
 
 function toText(value: unknown) {
@@ -13,14 +20,28 @@ function toText(value: unknown) {
   return String(value).trim()
 }
 
+function getBaseUrl() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return 'http://localhost:3000'
+}
+
 function createTransporter() {
+  const host = process.env.SMTP_HOST
+  const port = Number(process.env.SMTP_PORT || 465)
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASS
+
+  if (!host || !user || !pass) return null
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: true,
+    host,
+    port,
+    secure: port === 465,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user,
+      pass,
     },
   })
 }
@@ -32,30 +53,27 @@ async function safeSendMail({
   text,
   logName,
 }: {
-  transporter: nodemailer.Transporter
+  transporter: nodemailer.Transporter | null
   to: string | null | undefined
   subject: string
   text: string
   logName: string
-}) {
+}): Promise<MailResult> {
   const receiver = toText(to)
 
-  if (!receiver) {
-    console.log(`${logName} EMAIL EMPTY`)
+  if (!transporter || !receiver) {
+    console.log(`${logName} EMAIL SKIPPED`)
     return { ok: false, skipped: true }
   }
 
   try {
-    console.log(`${logName} EMAIL:`, receiver)
-
     await transporter.sendMail({
-      from: `"Mindora" <${process.env.SMTP_USER}>`,
+      from: process.env.SMTP_FROM || `"Mindora" <${process.env.SMTP_USER}>`,
       to: receiver,
       subject,
       text,
     })
 
-    console.log(`${logName} MAIL SENT`)
     return { ok: true, skipped: false }
   } catch (err) {
     console.error(`${logName} MAIL ERROR:`, err)
@@ -65,7 +83,9 @@ async function safeSendMail({
 
 export async function POST(req: NextRequest) {
   try {
-    const { clientId, expertId } = await req.json()
+    const body = await req.json().catch(() => null)
+    const clientId = toText(body?.clientId)
+    const expertId = toText(body?.expertId)
 
     if (!clientId || !expertId) {
       return NextResponse.json(
@@ -74,7 +94,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
+    const baseUrl = getBaseUrl()
 
     const { data: client, error: clientError } = await supabase
       .from('client_applications')
@@ -174,7 +195,7 @@ export async function POST(req: NextRequest) {
     let conversation: Conversation | null = null
 
     if (existingConversation) {
-      const currentPaymentStatus = existingConversation.payment_status
+      const currentPaymentStatus = toText(existingConversation.payment_status)
       const nextConversationStatus =
         currentPaymentStatus === 'paid' ? 'active' : 'locked'
 
@@ -202,7 +223,7 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      conversation = updatedConversation
+      conversation = updatedConversation as Conversation
     } else {
       const { data: createdConversation, error: conversationError } =
         await supabase
@@ -225,8 +246,12 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      conversation = createdConversation
+      conversation = createdConversation as Conversation
     }
+
+    const clientChatLink = `${baseUrl}/client/chat/${conversation.id}`
+    const expertChatLink = `${baseUrl}/expert/chat/${conversation.id}`
+    const adminConversationLink = `${baseUrl}/admin/conversations/${conversation.id}`
 
     const transporter = createTransporter()
 
@@ -257,9 +282,10 @@ Online: ${toText(expert.online)}
 Müsaitlik: ${toText(expert.availability)}
 
 Konuşma:
-Conversation ID: ${toText(conversation?.id)}
-Durum: ${toText(conversation?.status)}
-Ödeme Durumu: ${toText(conversation?.payment_status)}
+Conversation ID: ${toText(conversation.id)}
+Durum: ${toText(conversation.status)}
+Ödeme Durumu: ${toText(conversation.payment_status)}
+Admin Link: ${adminConversationLink}
 
 Not:
 Danışan ve uzman tarafına gönderilen mailler no-leak formatındadır.
@@ -283,6 +309,9 @@ Başlama Tercihi: ${toText(client.start_time)}
 Görüşme Tercihi: ${toText(client.preference)}
 Müsaitlik: ${toText(client.availability)}
 Not: ${toText(client.note) || '-'}
+
+Güvenli Uzman Chat Linki:
+${expertChatLink}
 
 Gizlilik ve güvenlik politikamız gereği danışanın telefon ve e-posta bilgileri paylaşılmamaktadır.
 
@@ -308,6 +337,9 @@ Uzmanlık Bilgileri:
 Alanlar: ${toText(expert.areas)}
 Deneyim: ${toText(expert.experience)}
 
+Güvenli Danışan Chat Linkiniz:
+${clientChatLink}
+
 Güvenliğiniz ve sürecin sağlıklı ilerlemesi için iletişim Mindora platformu üzerinden yürütülecektir.
 
 Uzmanınızın telefon ve e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.
@@ -323,7 +355,7 @@ Mindora Ekibi
 
     const adminMail = await safeSendMail({
       transporter,
-      to: process.env.CONTACT_TO,
+      to: process.env.CONTACT_TO || process.env.ADMIN_NOTIFICATION_EMAIL,
       subject: 'Mindora Yeni Eşleştirme',
       text: adminText,
       logName: 'ADMIN MATCH',
@@ -349,6 +381,11 @@ Mindora Ekibi
       ok: true,
       message: 'Eşleştirme başarıyla yapıldı.',
       conversation,
+      links: {
+        client: clientChatLink,
+        expert: expertChatLink,
+        admin: adminConversationLink,
+      },
       mail: {
         admin: adminMail,
         expert: expertMail,

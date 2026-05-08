@@ -11,6 +11,11 @@ type ClientStatus =
   | 'completed'
   | 'cancelled'
 
+type ClientStatusResponse = {
+  id: string
+  status: ClientStatus
+}
+
 const STATUS_MAP: Record<string, ClientStatus> = {
   new: 'new',
   reviewing: 'reviewing',
@@ -20,25 +25,34 @@ const STATUS_MAP: Record<string, ClientStatus> = {
   cancelled: 'cancelled',
 
   in_review: 'reviewing',
+  review: 'reviewing',
   contact: 'contacted',
   done: 'completed',
+  complete: 'completed',
   canceled: 'cancelled',
   cancel: 'cancelled',
 }
 
+function toText(value: unknown) {
+  if (value === null || value === undefined) return ''
+  return String(value).trim()
+}
+
 function normalizeStatus(value: unknown): ClientStatus | null {
-  if (typeof value !== 'string') return null
-  return STATUS_MAP[value.trim().toLowerCase()] ?? null
+  const clean = toText(value).toLowerCase()
+  if (!clean) return null
+
+  return STATUS_MAP[clean] ?? null
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
 
-    const clientId = body.clientId || body.id
-    const status = normalizeStatus(body.status)
+    const clientId = toText(body?.clientId || body?.id)
+    const status = normalizeStatus(body?.status)
 
-    if (!clientId || typeof clientId !== 'string') {
+    if (!clientId) {
       return NextResponse.json(
         { ok: false, error: 'Geçerli clientId gerekli.' },
         { status: 400 }
@@ -52,11 +66,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
 
     const { data, error } = await supabase
       .from('client_applications')
-      .update({ status })
+      .update({
+        status,
+      })
       .eq('id', clientId)
       .select('id, status')
       .maybeSingle()
@@ -84,9 +100,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const client = data as ClientStatusResponse
+
     return NextResponse.json({
       ok: true,
-      client: data,
+      client,
     })
   } catch (err: any) {
     console.error('CLIENT STATUS SERVER ERROR:', err)

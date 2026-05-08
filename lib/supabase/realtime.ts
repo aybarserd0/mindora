@@ -1,12 +1,45 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from './database.types'
 
-export function createMindoraRealtimeClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+let realtimeClient: ReturnType<typeof createClient<Database>> | null = null
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase realtime env bilgileri eksik.')
+function getRequiredEnv(name: string) {
+  const value = process.env[name]
+
+  if (!value) {
+    throw new Error(`${name} env bilgisi eksik.`)
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey)
+  return value
+}
+
+export function createMindoraRealtimeClient() {
+  if (realtimeClient) return realtimeClient
+
+  const supabaseUrl = getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL')
+  const supabaseAnonKey = getRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+
+  realtimeClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
+    global: {
+      headers: {
+        'x-client-info': 'mindora-realtime-client',
+      },
+    },
+  })
+
+  return realtimeClient
+}
+
+export function resetMindoraRealtimeClient() {
+  realtimeClient = null
 }

@@ -15,6 +15,47 @@ type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
 type ConversationStatus = 'locked' | 'active' | 'closed'
 type ConversationPaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 
+type ClientApplicationRecord = {
+  id: string
+  name: string | null
+  phone: string | null
+  email: string | null
+  age: string | null
+  topic: string | null
+  duration: string | null
+  previous_support: string | null
+  start_time: string | null
+  preference: string | null
+  availability: string | null
+  note: string | null
+  status: ClientStatus
+  matched_expert_id: string | null
+  created_at: string
+}
+
+type PaymentRecord = {
+  id: string
+  client_id: string | null
+  status: PaymentStatus
+  amount: number | string | null
+  commission_amount: number | string | null
+  expert_amount: number | string | null
+  payment_page_url: string | null
+  iyzico_payment_id: string | null
+  expert_payout_status: string | null
+  expert_payout_paid_at: string | null
+  created_at: string
+}
+
+type ConversationRecord = {
+  id: string
+  client_application_id: string | null
+  status: ConversationStatus
+  payment_status: ConversationPaymentStatus
+  created_at: string
+  updated_at: string
+}
+
 type LatestPayment = {
   id: string
   status: PaymentStatus
@@ -36,27 +77,12 @@ type LatestConversation = {
   updated_at: string
 }
 
-type ClientRow = {
-  id: string
-  name: string | null
-  phone: string | null
-  email: string | null
-  age: string | null
-  topic: string | null
-  duration: string | null
-  previous_support: string | null
-  start_time: string | null
-  preference: string | null
-  availability: string | null
-  note: string | null
-  status: ClientStatus
-  matched_expert_id: string | null
-  created_at: string
+type ClientRow = ClientApplicationRecord & {
   latest_payment: LatestPayment | null
   latest_conversation: LatestConversation | null
 }
 
-function normalizePayment(payment: any): LatestPayment | null {
+function normalizePayment(payment: PaymentRecord | null): LatestPayment | null {
   if (!payment) return null
 
   return {
@@ -73,7 +99,9 @@ function normalizePayment(payment: any): LatestPayment | null {
   }
 }
 
-function normalizeConversation(conversation: any): LatestConversation | null {
+function normalizeConversation(
+  conversation: ConversationRecord | null
+): LatestConversation | null {
   if (!conversation) return null
 
   return {
@@ -90,7 +118,7 @@ function normalizeClient({
   latestPayment,
   latestConversation,
 }: {
-  client: any
+  client: ClientApplicationRecord
   latestPayment: LatestPayment | null
   latestConversation: LatestConversation | null
 }): ClientRow {
@@ -117,7 +145,7 @@ function normalizeClient({
 
 export async function GET() {
   try {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
 
     const { data: clientsData, error: clientsError } = await supabase
       .from('client_applications')
@@ -155,8 +183,8 @@ export async function GET() {
       )
     }
 
-    const clientsRaw = clientsData || []
-    const clientIds = clientsRaw.map((client) => client.id)
+    const clientsRaw = (clientsData || []) as ClientApplicationRecord[]
+    const clientIds = clientsRaw.map((client: ClientApplicationRecord) => client.id)
 
     const latestPaymentsByClientId: Record<string, LatestPayment> = {}
     const latestConversationsByClientId: Record<string, LatestConversation> = {}
@@ -228,7 +256,10 @@ export async function GET() {
         )
       }
 
-      for (const payment of paymentsResult.data || []) {
+      const payments = (paymentsResult.data || []) as PaymentRecord[]
+      const conversations = (conversationsResult.data || []) as ConversationRecord[]
+
+      for (const payment of payments) {
         const clientId = payment.client_id
 
         if (!clientId) continue
@@ -241,7 +272,7 @@ export async function GET() {
         }
       }
 
-      for (const conversation of conversationsResult.data || []) {
+      for (const conversation of conversations) {
         const clientId = conversation.client_application_id
 
         if (!clientId) continue
@@ -255,7 +286,7 @@ export async function GET() {
       }
     }
 
-    const clients = clientsRaw.map((client) =>
+    const clients = clientsRaw.map((client: ClientApplicationRecord) =>
       normalizeClient({
         client,
         latestPayment: latestPaymentsByClientId[client.id] || null,

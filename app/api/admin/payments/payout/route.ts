@@ -3,27 +3,41 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 
+type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
+type ExpertPayoutStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | null
+
+type PaymentRecord = {
+  id: string
+  status: PaymentStatus
+  expert_payout_status: ExpertPayoutStatus
+}
+
+function toText(value: unknown) {
+  if (value === null || value === undefined) return ''
+  return String(value).trim()
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null)
-    const paymentId = body?.paymentId
+    const paymentId = toText(body?.paymentId)
 
-    if (!paymentId || typeof paymentId !== 'string') {
+    if (!paymentId) {
       return NextResponse.json(
         { ok: false, error: 'Geçerli paymentId gerekli.' },
         { status: 400 }
       )
     }
 
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
 
-    const { data: payment, error: readError } = await supabase
+    const { data: paymentData, error: readError } = await supabase
       .from('payments')
       .select('id, status, expert_payout_status')
       .eq('id', paymentId)
       .maybeSingle()
 
-    if (readError || !payment) {
+    if (readError || !paymentData) {
       return NextResponse.json(
         {
           ok: false,
@@ -34,9 +48,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const payment = paymentData as PaymentRecord
+
     if (payment.status !== 'paid') {
       return NextResponse.json(
-        { ok: false, error: 'Sadece başarılı ödemeler için uzman payout yapılabilir.' },
+        {
+          ok: false,
+          error: 'Sadece başarılı ödemeler için uzman payout yapılabilir.',
+        },
         { status: 400 }
       )
     }
@@ -50,7 +69,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { data: updatedPayment, error: updateError } = await supabase
+    const { data: updatedPaymentData, error: updateError } = await supabase
       .from('payments')
       .update({
         expert_payout_status: 'paid',
@@ -60,7 +79,7 @@ export async function POST(req: NextRequest) {
       .select('*')
       .single()
 
-    if (updateError || !updatedPayment) {
+    if (updateError || !updatedPaymentData) {
       return NextResponse.json(
         {
           ok: false,
@@ -73,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      payment: updatedPayment,
+      payment: updatedPaymentData,
     })
   } catch (err: any) {
     return NextResponse.json(

@@ -3,11 +3,45 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 
+type PaymentRow = {
+  id: string
+  client_id: string | null
+  expert_id: string | null
+  amount: number | string | null
+  commission_amount: number | string | null
+  expert_amount: number | string | null
+  iyzico_token: string | null
+  iyzico_payment_id: string | null
+  iyzico_conversation_id: string | null
+  payment_page_url: string | null
+  status: string | null
+  created_at: string
+  paid_notified_at: string | null
+  expert_payout_status: string | null
+  expert_payout_paid_at: string | null
+  expert_payout_note: string | null
+  refunded_at: string | null
+  admin_note: string | null
+}
+
+type ClientRow = {
+  id: string
+  name: string | null
+  email: string | null
+  phone: string | null
+}
+
+type ExpertRow = {
+  id: string
+  name: string | null
+  email: string | null
+}
+
 export async function GET() {
   try {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
 
-    const { data: payments, error: paymentsError } = await supabase
+    const { data: paymentsData, error: paymentsError } = await supabase
       .from('payments')
       .select(
         `
@@ -44,61 +78,71 @@ export async function GET() {
       )
     }
 
-    const paymentRows = payments || []
+    const paymentRows = (paymentsData || []) as PaymentRow[]
 
     const clientIds = Array.from(
-      new Set(paymentRows.map((p) => p.client_id).filter(Boolean))
+      new Set(
+        paymentRows
+          .map((payment: PaymentRow) => payment.client_id)
+          .filter((id): id is string => Boolean(id))
+      )
     )
 
     const expertIds = Array.from(
-      new Set(paymentRows.map((p) => p.expert_id).filter(Boolean))
+      new Set(
+        paymentRows
+          .map((payment: PaymentRow) => payment.expert_id)
+          .filter((id): id is string => Boolean(id))
+      )
     )
 
-    const [{ data: clientsData, error: clientsError }, { data: expertsData, error: expertsError }] =
-      await Promise.all([
-        clientIds.length > 0
-          ? supabase
-              .from('client_applications')
-              .select('id, name, email, phone')
-              .in('id', clientIds)
-          : Promise.resolve({ data: [], error: null }),
+    const [clientsResult, expertsResult] = await Promise.all([
+      clientIds.length > 0
+        ? supabase
+            .from('client_applications')
+            .select('id, name, email, phone')
+            .in('id', clientIds)
+        : Promise.resolve({ data: [], error: null }),
 
-        expertIds.length > 0
-          ? supabase.from('experts').select('id, name, email').in('id', expertIds)
-          : Promise.resolve({ data: [], error: null }),
-      ])
+      expertIds.length > 0
+        ? supabase.from('experts').select('id, name, email').in('id', expertIds)
+        : Promise.resolve({ data: [], error: null }),
+    ])
 
-    if (clientsError) {
+    if (clientsResult.error) {
       return NextResponse.json(
         {
           ok: false,
           error: 'Danışan bilgileri alınamadı.',
-          detail: clientsError.message,
+          detail: clientsResult.error.message,
         },
         { status: 500 }
       )
     }
 
-    if (expertsError) {
+    if (expertsResult.error) {
       return NextResponse.json(
         {
           ok: false,
           error: 'Uzman bilgileri alınamadı.',
-          detail: expertsError.message,
+          detail: expertsResult.error.message,
         },
         { status: 500 }
       )
     }
 
-    const clientsById = new Map(
-      (clientsData || []).map((client) => [client.id, client])
+    const clients = (clientsResult.data || []) as ClientRow[]
+    const experts = (expertsResult.data || []) as ExpertRow[]
+
+    const clientsById = new Map<string, ClientRow>(
+      clients.map((client: ClientRow) => [client.id, client])
     )
 
-    const expertsById = new Map(
-      (expertsData || []).map((expert) => [expert.id, expert])
+    const expertsById = new Map<string, ExpertRow>(
+      experts.map((expert: ExpertRow) => [expert.id, expert])
     )
 
-    const enrichedPayments = paymentRows.map((payment) => ({
+    const enrichedPayments = paymentRows.map((payment: PaymentRow) => ({
       ...payment,
       amount: Number(payment.amount || 0),
       commission_amount: Number(payment.commission_amount || 0),

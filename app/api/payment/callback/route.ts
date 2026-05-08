@@ -22,8 +22,13 @@ function createAuthHeader(
   return `IYZWSv2 ${Buffer.from(authString).toString('base64')}`
 }
 
-function cleanUrl(url?: string) {
+function cleanUrl(url?: string | null) {
   return (url || '').replace(/\/+$/, '')
+}
+
+function toText(value: unknown) {
+  if (value === null || value === undefined) return ''
+  return String(value).trim()
 }
 
 async function getTokenFromRequest(req: NextRequest) {
@@ -31,7 +36,7 @@ async function getTokenFromRequest(req: NextRequest) {
 
   if (contentType.includes('application/json')) {
     const body = await req.json().catch(() => null)
-    return body?.token?.toString() || null
+    return toText(body?.token) || null
   }
 
   if (
@@ -48,12 +53,7 @@ async function getTokenFromRequest(req: NextRequest) {
   return params.get('token')
 }
 
-function toText(value: unknown) {
-  if (value === null || value === undefined) return ''
-  return String(value).trim()
-}
-
-function formatMoney(value?: number | null) {
+function formatMoney(value?: number | string | null) {
   const numberValue = Number(value)
 
   if (!Number.isFinite(numberValue)) return '0 TL'
@@ -70,11 +70,13 @@ async function sendPaymentEmails({
   expert,
   payment,
   conversation,
+  siteUrl,
 }: {
   client: any
   expert: any
   payment: any
   conversation?: any
+  siteUrl: string
 }) {
   const host = process.env.SMTP_HOST
   const port = Number(process.env.SMTP_PORT || 587)
@@ -107,6 +109,17 @@ async function sendPaymentEmails({
   const commissionAmount = formatMoney(payment?.commission_amount)
   const expertAmount = formatMoney(payment?.expert_amount)
 
+  const conversationId = toText(conversation?.id)
+  const clientChatLink = conversationId
+    ? `${siteUrl}/client/chat/${conversationId}`
+    : siteUrl
+  const expertChatLink = conversationId
+    ? `${siteUrl}/expert/chat/${conversationId}`
+    : siteUrl
+  const adminConversationLink = conversationId
+    ? `${siteUrl}/admin/conversations/${conversationId}`
+    : siteUrl
+
   const tasks: Promise<any>[] = []
 
   if (client?.email) {
@@ -123,6 +136,11 @@ async function sendPaymentEmails({
             <p><strong>Ödeme tutarı:</strong> ${amount}</p>
             <p><strong>Eşleştiğiniz uzman:</strong> ${expertName}</p>
             <p>Platform içi iletişim alanınız artık aktif hale getirilmiştir.</p>
+            <p>
+              <a href="${clientChatLink}" style="display:inline-block;background:#000;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700">
+                Güvenli Chat Alanını Aç
+              </a>
+            </p>
             <p>Güvenliğiniz ve sürecin sağlıklı ilerlemesi için tüm iletişim Mindora üzerinden yürütülmelidir.</p>
             <p>Uzmanınızın telefon veya e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.</p>
             <br />
@@ -148,6 +166,11 @@ async function sendPaymentEmails({
             <p><strong>Toplam ödeme:</strong> ${amount}</p>
             <p><strong>Uzman payı:</strong> ${expertAmount}</p>
             <p>Platform içi iletişim alanı aktif hale getirilmiştir.</p>
+            <p>
+              <a href="${expertChatLink}" style="display:inline-block;background:#000;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700">
+                Uzman Chat Alanını Aç
+              </a>
+            </p>
             <p>Danışanla iletişim yalnızca Mindora üzerinden yürütülmelidir.</p>
             <p>Danışanın telefon veya e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.</p>
             <br />
@@ -173,16 +196,11 @@ async function sendPaymentEmails({
             <p><strong>Mindora komisyonu:</strong> ${commissionAmount}</p>
             <p><strong>Uzman payı:</strong> ${expertAmount}</p>
             <p><strong>Payment ID:</strong> ${payment?.id || '-'}</p>
-            <p><strong>iyzico Payment ID:</strong> ${
-              payment?.iyzico_payment_id || '-'
-            }</p>
+            <p><strong>iyzico Payment ID:</strong> ${payment?.iyzico_payment_id || '-'}</p>
             <p><strong>Conversation ID:</strong> ${conversation?.id || '-'}</p>
-            <p><strong>Conversation Status:</strong> ${
-              conversation?.status || '-'
-            }</p>
-            <p><strong>Conversation Payment Status:</strong> ${
-              conversation?.payment_status || '-'
-            }</p>
+            <p><strong>Conversation Status:</strong> ${conversation?.status || '-'}</p>
+            <p><strong>Conversation Payment Status:</strong> ${conversation?.payment_status || '-'}</p>
+            <p><strong>Admin Link:</strong> ${adminConversationLink}</p>
           </div>
         `,
       })
@@ -222,13 +240,13 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdmin()
 
-    const { data: payment, error: paymentError } = await supabase
+    const { data: paymentData, error: paymentError } = await supabase
       .from('payments')
       .select('*')
       .eq('iyzico_token', token)
       .maybeSingle()
 
-    if (paymentError || !payment) {
+    if (paymentError || !paymentData) {
       return NextResponse.json(
         {
           ok: false,
@@ -237,6 +255,13 @@ export async function POST(req: NextRequest) {
         },
         { status: 404 }
       )
+    }
+
+    const payment = paymentData
+
+    if (!payment.client_id) {
+      console.error('PAYMENT CALLBACK MISSING CLIENT ID:', payment.id)
+      return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
     }
 
     if (payment.status === 'paid') {
@@ -254,7 +279,6 @@ export async function POST(req: NextRequest) {
 
     const uri = '/payment/iyzipos/checkoutform/auth/ecom/detail'
     const randomKey = `${Date.now()}${Math.floor(Math.random() * 100000)}`
-
     const requestBody = {
       locale: 'tr',
       conversationId: payment.iyzico_conversation_id,
@@ -318,7 +342,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
     }
 
-    const { data: updatedPayment, error: updateError } = await supabase
+    const { data: updatedPaymentData, error: updateError } = await supabase
       .from('payments')
       .update({
         status: 'paid',
@@ -328,7 +352,7 @@ export async function POST(req: NextRequest) {
       .select('*')
       .single()
 
-    if (updateError || !updatedPayment) {
+    if (updateError || !updatedPaymentData) {
       return NextResponse.json(
         {
           ok: false,
@@ -338,6 +362,18 @@ export async function POST(req: NextRequest) {
         },
         { status: 500 }
       )
+    }
+
+    const updatedPayment = updatedPaymentData
+
+    if (!updatedPayment.client_id || !updatedPayment.expert_id) {
+      console.error('PAYMENT CALLBACK UPDATED PAYMENT MISSING IDS:', {
+         paymentId: updatedPayment.id,
+         clientId: updatedPayment.client_id,
+         expertId: updatedPayment.expert_id,
+     })
+
+      return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
     }
 
     const { data: existingConversation, error: existingConversationError } =
@@ -403,7 +439,7 @@ export async function POST(req: NextRequest) {
 
     const shouldSendNotification = !updatedPayment.paid_notified_at
 
-    if (shouldSendNotification) {
+    if (shouldSendNotification && updatedPayment.client_id && updatedPayment.expert_id) {
       const [{ data: client }, { data: expert }] = await Promise.all([
         supabase
           .from('client_applications')
@@ -424,6 +460,7 @@ export async function POST(req: NextRequest) {
           expert,
           payment: updatedPayment,
           conversation,
+          siteUrl,
         })
 
         await Promise.all([

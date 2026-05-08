@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import AdminHeader from '@/components/AdminHeader'
 import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
 type SenderType = 'client' | 'expert' | 'admin'
+type UserPresenceType = 'client' | 'expert' | 'admin'
 
 type Conversation = {
   id: string
@@ -18,6 +19,11 @@ type Conversation = {
   last_message_sender?: SenderType | null
   last_message_sender_name?: string | null
   last_message_at?: string | null
+}
+
+type PresenceState = {
+  client: boolean
+  expert: boolean
 }
 
 function formatDate(date?: string | null) {
@@ -42,12 +48,27 @@ function getStatusText(status?: string) {
   return '-'
 }
 
+function getStatusClass(status?: string) {
+  if (status === 'active') return 'bg-emerald-600 text-white'
+  if (status === 'locked') return 'bg-zinc-900 text-white'
+  if (status === 'closed') return 'bg-zinc-200 text-zinc-700'
+  return 'bg-zinc-100 text-zinc-600'
+}
+
 function getPaymentText(status?: string) {
   if (status === 'paid') return 'Ödendi'
   if (status === 'pending') return 'Bekliyor'
   if (status === 'failed') return 'Başarısız'
   if (status === 'refunded') return 'İade'
   return '-'
+}
+
+function getPaymentClass(status?: string) {
+  if (status === 'paid') return 'bg-green-50 text-green-700 ring-green-100'
+  if (status === 'pending') return 'bg-orange-50 text-orange-700 ring-orange-100'
+  if (status === 'failed') return 'bg-red-50 text-red-700 ring-red-100'
+  if (status === 'refunded') return 'bg-blue-50 text-blue-700 ring-blue-100'
+  return 'bg-zinc-100 text-zinc-600 ring-zinc-200'
 }
 
 function getSenderText(sender?: SenderType | null) {
@@ -68,83 +89,271 @@ function getPreviewText(message?: string | null) {
   if (!message) return 'Henüz mesaj yok.'
 
   const clean = message.replace(/\s+/g, ' ').trim()
-
   if (clean.length <= 120) return clean
 
   return `${clean.slice(0, 120)}...`
 }
 
+function parsePresenceState(rawState: Record<string, unknown[]>): PresenceState {
+  const next: PresenceState = {
+    client: false,
+    expert: false,
+  }
+
+  Object.values(rawState).forEach((items) => {
+    items.forEach((item) => {
+      const presence = item as {
+        user_type?: UserPresenceType
+        role?: UserPresenceType
+      }
+
+      const userType = presence.user_type || presence.role
+
+      if (userType === 'client') next.client = true
+      if (userType === 'expert') next.expert = true
+    })
+  })
+
+  return next
+}
+
+function PresencePill({
+  label,
+  online,
+}: {
+  label: string
+  online: boolean
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-black ring-1 ${
+        online
+          ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+          : 'bg-zinc-100 text-zinc-500 ring-zinc-200'
+      }`}
+    >
+      <span
+        className={`h-2 w-2 rounded-full ${
+          online ? 'bg-emerald-500' : 'bg-zinc-400'
+        }`}
+      />
+      {label} {online ? 'online' : 'offline'}
+    </span>
+  )
+}
+
 export default function AdminConversationsPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [presenceMap, setPresenceMap] = useState<Record<string, PresenceState>>(
+    {}
+  )
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
 
-  const channelRef = useRef<ReturnType<
+  const isMountedRef = useRef(true)
+  const conversationsRef = useRef<Conversation[]>([])
+  const hubChannelRef = useRef<ReturnType<
     ReturnType<typeof createMindoraRealtimeClient>['channel']
   > | null>(null)
 
-  async function loadConversations(showLoading = false) {
-    try {
-      if (showLoading) setLoading(true)
-      setRefreshing(true)
-      setError('')
+  const presenceChannelsRef = useRef<
+    Record<
+      string,
+      ReturnType<ReturnType<typeof createMindoraRealtimeClient>['channel']>
+    >
+  >({})
 
-      const res = await fetch('/api/admin/conversations', {
-        cache: 'no-store',
+  const supabaseRef = useRef<ReturnType<
+    typeof createMindoraRealtimeClient
+  > | null>(null)
+
+  const totalUnread = useMemo(() => {
+    return conversations.reduce((total, conversation) => {
+      return total + (conversation.unreadCount || 0)
+    }, 0)
+  }, [conversations])
+
+  const onlineSummary = useMemo(() => {
+    return conversations.reduce(
+      (total, conversation) => {
+        const state = presenceMap[conversation.id]
+
+        if (state?.client) total.clients += 1
+        if (state?.expert) total.experts += 1
+
+        return total
+      },
+      { clients: 0, experts: 0 }
+    )
+  }, [conversations, presenceMap])
+
+  const cleanupPresenceChannels = useCallback((idsToKeep: string[] = []) => {
+    const supabase = supabaseRef.current
+    if (!supabase) return
+
+    const keepSet = new Set(idsToKeep)
+
+    Object.entries(presenceChannelsRef.current).forEach(
+      ([conversationId, channel]) => {
+        if (keepSet.has(conversationId)) return
+
+        try {
+          channel.untrack()
+          supabase.removeChannel(channel)
+        } catch (err) {
+          console.error('ADMIN HUB PRESENCE CLEANUP ERROR:', err)
+        }
+
+        delete presenceChannelsRef.current[conversationId]
+      }
+    )
+
+    setPresenceMap((current) => {
+      const next = { ...current }
+
+      Object.keys(next).forEach((conversationId) => {
+        if (!keepSet.has(conversationId)) {
+          delete next[conversationId]
+        }
       })
 
-      const data = await res.json()
-
-      if (!res.ok || !data.ok) {
-        setError(data.error || 'Konuşmalar alınamadı.')
-        return
-      }
-
-      const list: Conversation[] = data.conversations || []
-
-      const withUnread = await Promise.all(
-        list.map(async (conversation) => {
-          try {
-            const unreadRes = await fetch(
-              `/api/conversations/${conversation.id}/unread?userType=admin`,
-              { cache: 'no-store' }
-            )
-
-            const unreadData = await unreadRes.json().catch(() => null)
-
-            return {
-              ...conversation,
-              unreadCount: unreadData?.unreadCount || 0,
-            }
-          } catch {
-            return {
-              ...conversation,
-              unreadCount: 0,
-            }
-          }
-        })
-      )
-
-      setConversations(withUnread)
-    } catch {
-      setError('Sunucu bağlantı hatası.')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
-
-  useEffect(() => {
-    loadConversations(true)
+      return next
+    })
   }, [])
 
+  const setupPresenceChannels = useCallback((list: Conversation[]) => {
+    const supabase = supabaseRef.current
+    if (!supabase) return
+
+    const conversationIds = list.map((conversation) => conversation.id)
+
+    cleanupPresenceChannels(conversationIds)
+
+    conversationIds.forEach((conversationId) => {
+      if (presenceChannelsRef.current[conversationId]) return
+
+      const channelName = `mindora-conversation-${conversationId}`
+
+      const channel = supabase.channel(channelName, {
+        config: {
+          presence: {
+            key: `admin-hub-${conversationId}`,
+          },
+        },
+      })
+
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          if (!isMountedRef.current) return
+
+          const rawState = channel.presenceState()
+          const nextState = parsePresenceState(rawState)
+
+          setPresenceMap((current) => ({
+            ...current,
+            [conversationId]: nextState,
+          }))
+        })
+        .subscribe(async (status) => {
+          if (status !== 'SUBSCRIBED') return
+
+          try {
+            await channel.track({
+              user_type: 'admin',
+              role: 'admin',
+              page: 'admin_conversations_hub',
+              conversation_id: conversationId,
+              online_at: new Date().toISOString(),
+            })
+          } catch (err) {
+            console.error('ADMIN HUB PRESENCE TRACK ERROR:', err)
+          }
+        })
+
+      presenceChannelsRef.current[conversationId] = channel
+    })
+  }, [cleanupPresenceChannels])
+
+  const loadConversations = useCallback(
+    async (showLoading = false) => {
+      try {
+        if (showLoading) setLoading(true)
+
+        setRefreshing(true)
+        setError('')
+
+        const res = await fetch('/api/admin/conversations', {
+          cache: 'no-store',
+        })
+
+        const data = await res.json().catch(() => null)
+
+        if (!res.ok || !data?.ok) {
+          setError(data?.error || 'Konuşmalar alınamadı.')
+          return
+        }
+
+        const list: Conversation[] = data.conversations || []
+
+        const withUnread = await Promise.all(
+          list.map(async (conversation) => {
+            try {
+              const unreadRes = await fetch(
+                `/api/conversations/${conversation.id}/unread?userType=admin`,
+                { cache: 'no-store' }
+              )
+
+              const unreadData = await unreadRes.json().catch(() => null)
+
+              return {
+                ...conversation,
+                unreadCount: Number(unreadData?.unreadCount || 0),
+              }
+            } catch {
+              return {
+                ...conversation,
+                unreadCount: 0,
+              }
+            }
+          })
+        )
+
+        if (!isMountedRef.current) return
+
+        conversationsRef.current = withUnread
+        setConversations(withUnread)
+        setupPresenceChannels(withUnread)
+      } catch {
+        if (isMountedRef.current) {
+          setError('Sunucu bağlantı hatası.')
+        }
+      } finally {
+        if (isMountedRef.current) {
+          setLoading(false)
+          setRefreshing(false)
+        }
+      }
+    },
+    [setupPresenceChannels]
+  )
+
   useEffect(() => {
-    let isMounted = true
+    isMountedRef.current = true
+    supabaseRef.current = createMindoraRealtimeClient()
+
+    loadConversations(true)
+
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [loadConversations])
+
+  useEffect(() => {
+    const supabase = supabaseRef.current
+    if (!supabase) return
 
     try {
-      const supabase = createMindoraRealtimeClient()
-
       const channel = supabase
         .channel('admin-conversations-hub')
         .on(
@@ -155,7 +364,7 @@ export default function AdminConversationsPage() {
             table: 'messages',
           },
           async () => {
-            if (!isMounted) return
+            if (!isMountedRef.current) return
             await loadConversations(false)
           }
         )
@@ -167,25 +376,48 @@ export default function AdminConversationsPage() {
             table: 'conversations',
           },
           async () => {
-            if (!isMounted) return
+            if (!isMountedRef.current) return
             await loadConversations(false)
           }
         )
         .subscribe()
 
-      channelRef.current = channel
+      hubChannelRef.current = channel
 
       return () => {
-        isMounted = false
-
-        if (channelRef.current) {
-          supabase.removeChannel(channelRef.current)
+        if (hubChannelRef.current) {
+          supabase.removeChannel(hubChannelRef.current)
         }
 
-        channelRef.current = null
+        hubChannelRef.current = null
       }
     } catch (err) {
       console.error('ADMIN HUB REALTIME ERROR:', err)
+    }
+  }, [loadConversations])
+
+  useEffect(() => {
+    return () => {
+      const supabase = supabaseRef.current
+
+      if (supabase && hubChannelRef.current) {
+        try {
+          supabase.removeChannel(hubChannelRef.current)
+        } catch {}
+      }
+
+      if (supabase) {
+        Object.values(presenceChannelsRef.current).forEach((channel) => {
+          try {
+            channel.untrack()
+            supabase.removeChannel(channel)
+          } catch {}
+        })
+      }
+
+      hubChannelRef.current = null
+      presenceChannelsRef.current = {}
+      supabaseRef.current = null
     }
   }, [])
 
@@ -206,7 +438,8 @@ export default function AdminConversationsPage() {
               </h1>
 
               <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
-                Son mesaj preview, unread badge ve canlı moderasyon takibi.
+                Son mesaj, okunmamış mesaj, ödeme durumu ve online kullanıcı
+                takibi.
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -226,6 +459,26 @@ export default function AdminConversationsPage() {
 
                 <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
                   {conversations.length} konuşma
+                </span>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    totalUnread > 0
+                      ? 'bg-red-50 text-red-700 ring-red-100'
+                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                  }`}
+                >
+                  {totalUnread > 0
+                    ? `${totalUnread} toplam okunmamış`
+                    : 'Tüm mesajlar okundu'}
+                </span>
+
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                  {onlineSummary.clients} danışan online
+                </span>
+
+                <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
+                  {onlineSummary.experts} uzman online
                 </span>
               </div>
             </div>
@@ -267,6 +520,11 @@ export default function AdminConversationsPage() {
                 typeof conversation.unreadCount === 'number' &&
                 conversation.unreadCount > 0
 
+              const presence = presenceMap[conversation.id] || {
+                client: false,
+                expert: false,
+              }
+
               return (
                 <Link
                   key={conversation.id}
@@ -280,11 +538,19 @@ export default function AdminConversationsPage() {
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-black px-3 py-1 text-xs font-black text-white">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-black ${getStatusClass(
+                            conversation.status
+                          )}`}
+                        >
                           {getStatusText(conversation.status)}
                         </span>
 
-                        <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700 ring-1 ring-green-100">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getPaymentClass(
+                            conversation.payment_status
+                          )}`}
+                        >
                           {getPaymentText(conversation.payment_status)}
                         </span>
 
@@ -305,6 +571,13 @@ export default function AdminConversationsPage() {
                             Okundu
                           </span>
                         )}
+
+                        <PresencePill
+                          label="Danışan"
+                          online={presence.client}
+                        />
+
+                        <PresencePill label="Uzman" online={presence.expert} />
                       </div>
 
                       <p className="mt-4 break-all text-sm font-black text-[#2b2118]">

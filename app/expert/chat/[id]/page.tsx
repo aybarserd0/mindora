@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
+type UserType = 'client' | 'expert' | 'admin'
+
 type Conversation = {
   id: string
   status: 'locked' | 'active' | 'closed'
@@ -15,7 +17,7 @@ type Conversation = {
 type Message = {
   id: string
   conversation_id: string
-  sender_type: 'client' | 'expert' | 'admin'
+  sender_type: UserType
   sender_name: string | null
   message: string
   is_flagged: boolean
@@ -24,13 +26,13 @@ type Message = {
 }
 
 type TypingPayload = {
-  senderType: 'client' | 'expert' | 'admin'
+  senderType: UserType
   senderName: string
   isTyping: boolean
 }
 
 type PresenceMeta = {
-  userType?: 'client' | 'expert' | 'admin'
+  userType?: UserType
   userName?: string
   onlineAt?: string
   conversationId?: string
@@ -40,6 +42,8 @@ type OnlineUsers = {
   client: boolean
   admin: boolean
 }
+
+type ReadState = Record<UserType, string | null>
 
 function formatDate(date?: string | null) {
   if (!date) return '-'
@@ -70,10 +74,27 @@ function getPaymentText(status?: string) {
   return '-'
 }
 
-function getTypingText(senderType: TypingPayload['senderType']) {
+function getTypingText(senderType: UserType) {
   if (senderType === 'client') return 'Danışan yazıyor...'
   if (senderType === 'admin') return 'Mindora yazıyor...'
   return 'Uzman yazıyor...'
+}
+
+function isAfter(readAt?: string | null, messageAt?: string | null) {
+  if (!readAt || !messageAt) return false
+  return new Date(readAt).getTime() > new Date(messageAt).getTime()
+}
+
+function getMessageStatus(item: Message, reads: ReadState) {
+  if (item.sender_type !== 'expert') return null
+
+  const clientSeen = isAfter(reads.client, item.created_at)
+  const adminSeen = isAfter(reads.admin, item.created_at)
+
+  if (clientSeen) return 'Görüldü'
+  if (adminSeen) return 'Mindora gördü'
+
+  return 'Gönderildi'
 }
 
 export default function ExpertChatPage({
@@ -92,6 +113,11 @@ export default function ExpertChatPage({
   const [blockedError, setBlockedError] = useState('')
   const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
   const [readSynced, setReadSynced] = useState(false)
+  const [reads, setReads] = useState<ReadState>({
+    client: null,
+    expert: null,
+    admin: null,
+  })
   const [onlineUsers, setOnlineUsers] = useState<OnlineUsers>({
     client: false,
     admin: false,
@@ -114,6 +140,26 @@ export default function ExpertChatPage({
     })
   }
 
+  async function loadReadState(id: string) {
+    try {
+      const res = await fetch(`/api/conversations/${id}/reads`, {
+        cache: 'no-store',
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (res.ok && data?.ok && data.reads) {
+        setReads({
+          client: data.reads.client || null,
+          expert: data.reads.expert || null,
+          admin: data.reads.admin || null,
+        })
+      }
+    } catch (err) {
+      console.error('EXPERT READ STATE ERROR:', err)
+    }
+  }
+
   async function markConversationAsRead(id: string) {
     try {
       setReadSynced(false)
@@ -131,6 +177,7 @@ export default function ExpertChatPage({
         return
       }
 
+      await loadReadState(id)
       setReadSynced(true)
     } catch (err) {
       console.error('EXPERT READ SYNC ERROR:', err)
@@ -146,10 +193,10 @@ export default function ExpertChatPage({
         cache: 'no-store',
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
 
-      if (!res.ok || !data.ok) {
-        setError(data.error || 'Konuşma alınamadı.')
+      if (!res.ok || !data?.ok) {
+        setError(data?.error || 'Konuşma alınamadı.')
         return
       }
 
@@ -220,10 +267,10 @@ export default function ExpertChatPage({
         }),
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
 
-      if (!res.ok || !data.ok) {
-        setBlockedError(data.error || 'Mesaj gönderilemedi.')
+      if (!res.ok || !data?.ok) {
+        setBlockedError(data?.error || 'Mesaj gönderilemedi.')
         await loadMessages(conversationId, false)
         return
       }
@@ -341,6 +388,19 @@ export default function ExpertChatPage({
             await loadMessages(conversationId, false)
           }
         )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversation_reads',
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          async () => {
+            if (!isMounted) return
+            await loadReadState(conversationId)
+          }
+        )
         .subscribe(async (status) => {
           if (!isMounted) return
 
@@ -353,6 +413,8 @@ export default function ExpertChatPage({
               onlineAt: new Date().toISOString(),
               conversationId,
             } satisfies PresenceMeta)
+
+            await loadReadState(conversationId)
           }
 
           if (
@@ -488,8 +550,8 @@ export default function ExpertChatPage({
                   {conversation.status === 'active'
                     ? 'Aktif'
                     : conversation.status === 'locked'
-                    ? 'Kilitli'
-                    : 'Kapalı'}
+                      ? 'Kilitli'
+                      : 'Kapalı'}
                 </p>
               </div>
 
@@ -555,6 +617,7 @@ export default function ExpertChatPage({
                   {messages.map((item) => {
                     const isMine = item.sender_type === 'expert'
                     const isAdmin = item.sender_type === 'admin'
+                    const messageStatus = getMessageStatus(item, reads)
 
                     return (
                       <div
@@ -568,8 +631,8 @@ export default function ExpertChatPage({
                             isMine
                               ? 'bg-black text-white'
                               : isAdmin
-                              ? 'bg-purple-50 text-purple-950 ring-1 ring-purple-100'
-                              : 'bg-white text-[#2b2118] ring-1 ring-black/10'
+                                ? 'bg-purple-50 text-purple-950 ring-1 ring-purple-100'
+                                : 'bg-white text-[#2b2118] ring-1 ring-black/10'
                           }`}
                         >
                           <p className="mb-2 text-xs font-black uppercase tracking-[0.15em] opacity-70">
@@ -580,9 +643,21 @@ export default function ExpertChatPage({
                             {item.message}
                           </p>
 
-                          <p className="mt-3 text-[11px] font-semibold opacity-60">
-                            {formatDate(item.created_at)}
-                          </p>
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold opacity-70">
+                            <span>{formatDate(item.created_at)}</span>
+
+                            {messageStatus && (
+                              <span
+                                className={`font-black ${
+                                  messageStatus === 'Görüldü'
+                                    ? 'text-emerald-300'
+                                    : 'text-white/70'
+                                }`}
+                              >
+                                {messageStatus}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )
