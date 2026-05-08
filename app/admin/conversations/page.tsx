@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import AdminHeader from '@/components/AdminHeader'
+import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
 type Conversation = {
   id: string
@@ -47,6 +48,10 @@ export default function AdminConversationsPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  const channelRef = useRef<ReturnType<
+  ReturnType<typeof createMindoraRealtimeClient>['channel']
+> | null>(null)
 
   async function loadConversations() {
     try {
@@ -100,6 +105,44 @@ export default function AdminConversationsPage() {
   useEffect(() => {
     loadConversations()
   }, [])
+  
+  useEffect(() => {
+  let isMounted = true
+
+  try {
+    const supabase = createMindoraRealtimeClient()
+
+    const channel = supabase
+      .channel('admin-conversations-hub')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        async () => {
+          if (!isMounted) return
+          await loadConversations()
+        }
+      )
+      .subscribe()
+
+    channelRef.current = channel
+
+    return () => {
+      isMounted = false
+
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+      }
+
+      channelRef.current = null
+    }
+  } catch (err) {
+    console.error('ADMIN HUB REALTIME ERROR:', err)
+  }
+}, [])
 
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-4 py-6 text-[#171717] md:px-6 md:py-10">
