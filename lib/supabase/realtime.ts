@@ -3,21 +3,19 @@ import type { Database } from './database.types'
 
 let realtimeClient: ReturnType<typeof createClient<Database>> | null = null
 
-function getRequiredEnv(name: string) {
-  const value = process.env[name]
-
-  if (!value) {
-    throw new Error(`${name} env bilgisi eksik.`)
-  }
-
-  return value
-}
-
 export function createMindoraRealtimeClient() {
   if (realtimeClient) return realtimeClient
 
-  const supabaseUrl = getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL')
-  const supabaseAnonKey = getRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL env bilgisi eksik.')
+  }
+
+  if (!supabaseAnonKey) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY env bilgisi eksik.')
+  }
 
   realtimeClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
