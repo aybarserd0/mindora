@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useToast } from '@/components/ToastProvider'
 import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
 type UserType = 'client' | 'expert' | 'admin'
@@ -103,6 +104,14 @@ export default function ExpertChatPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const {
+    showToast,
+    requestNotificationPermission,
+    notificationPermission,
+    notificationsSupported,
+    notificationsEnabled,
+  } = useToast()
+
   const searchParams = useSearchParams()
 
   const [conversationId, setConversationId] = useState('')
@@ -118,6 +127,7 @@ export default function ExpertChatPage({
   const [blockedError, setBlockedError] = useState('')
   const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
   const [readSynced, setReadSynced] = useState(false)
+  const [notificationLoading, setNotificationLoading] = useState(false)
 
   const [reads, setReads] = useState<ReadState>({
     client: null,
@@ -139,6 +149,14 @@ export default function ExpertChatPage({
 
   const isActive =
     conversation?.status === 'active' && conversation?.payment_status === 'paid'
+
+  const notificationStatusText = !notificationsSupported
+    ? 'Bildirim desteklenmiyor'
+    : notificationsEnabled
+      ? 'Bildirim açık'
+      : notificationPermission === 'denied'
+        ? 'Bildirim engelli'
+        : 'Bildirim kapalı'
 
   function scrollToBottom() {
     messagesEndRef.current?.scrollIntoView({
@@ -165,6 +183,55 @@ export default function ExpertChatPage({
 
   function getReadsUrl(id: string) {
     return `/api/conversations/${id}/reads?role=expert&token=${getEncodedAccessToken()}`
+  }
+
+  async function handleEnableNotifications() {
+    try {
+      setNotificationLoading(true)
+
+      const permission = await requestNotificationPermission()
+
+      if (permission === 'granted') {
+        showToast(
+          'Bildirimler açıldı',
+          'Yeni danışan mesajlarında tarayıcı bildirimi alabileceksiniz.',
+          'success'
+        )
+        return
+      }
+
+      if (permission === 'denied') {
+        showToast(
+          'Bildirim izni engelli',
+          'Tarayıcı ayarlarından Mindora için bildirim iznini açabilirsiniz.',
+          'warning'
+        )
+        return
+      }
+
+      if (permission === 'unsupported') {
+        showToast(
+          'Bildirim desteklenmiyor',
+          'Bu tarayıcı browser notification özelliğini desteklemiyor.',
+          'warning'
+        )
+        return
+      }
+
+      showToast(
+        'Bildirim izni verilmedi',
+        'İsterseniz daha sonra tekrar açabilirsiniz.',
+        'info'
+      )
+    } catch {
+      showToast(
+        'Bildirim izni alınamadı',
+        'Tarayıcı bildirim izni sırasında hata oluştu.',
+        'error'
+      )
+    } finally {
+      setNotificationLoading(false)
+    }
   }
 
   async function verifyAccess(id: string) {
@@ -497,9 +564,28 @@ export default function ExpertChatPage({
             table: 'messages',
             filter: `conversation_id=eq.${conversationId}`,
           },
-          async () => {
+          async (payload) => {
             if (!isMounted) return
+
+            const newMessage = payload.new as Message
+
             setTypingUser(null)
+
+            if (newMessage.sender_type !== 'expert') {
+              const title =
+                newMessage.sender_type === 'client'
+                  ? 'Danışandan yeni mesaj'
+                  : 'Mindora’dan yeni mesaj'
+
+              const description = 'Güvenli görüşmede yeni bir mesaj var.'
+
+              showToast(title, description, 'info', {
+                browserNotification: true,
+                notificationTitle: title,
+                notificationBody: description,
+              })
+            }
+
             await loadMessages(conversationId, false)
           }
         )
@@ -588,7 +674,7 @@ export default function ExpertChatPage({
         admin: false,
       })
     }
-  }, [conversationId, accessVerified])
+  }, [conversationId, accessVerified, showToast])
 
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-4 py-6 text-[#171717] md:px-6 md:py-10">
@@ -665,7 +751,42 @@ export default function ExpertChatPage({
                 >
                   {readSynced ? 'Okundu senkron' : 'Okundu bekliyor'}
                 </span>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    notificationsEnabled
+                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      : notificationPermission === 'denied'
+                        ? 'bg-red-50 text-red-700 ring-red-100'
+                        : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                  }`}
+                >
+                  {notificationStatusText}
+                </span>
               </div>
+
+              {notificationsSupported &&
+                !notificationsEnabled &&
+                notificationPermission !== 'denied' && (
+                  <button
+                    type="button"
+                    onClick={handleEnableNotifications}
+                    disabled={notificationLoading}
+                    className="mt-4 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {notificationLoading
+                      ? 'Bildirim izni alınıyor...'
+                      : '🔔 Bildirimleri Aç'}
+                  </button>
+                )}
+
+              {notificationPermission === 'denied' && (
+                <p className="mt-3 max-w-xl text-xs font-semibold leading-5 text-red-600">
+                  Bildirim izni tarayıcı tarafından engellenmiş. Bildirim almak
+                  için tarayıcı site ayarlarından Mindora bildirim iznini açmanız
+                  gerekir.
+                </p>
+              )}
             </div>
 
             <Link
