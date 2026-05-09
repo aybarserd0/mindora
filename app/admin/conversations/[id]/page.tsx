@@ -149,7 +149,10 @@ export default function AdminConversationPage({
       const res = await fetch(`/api/conversations/${id}/read`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userType: 'admin' }),
+        body: JSON.stringify({
+          userType: 'admin',
+          role: 'admin',
+       }),
       })
 
       const data = await res.json().catch(() => null)
@@ -242,7 +245,7 @@ export default function AdminConversationPage({
       setSending(true)
       await broadcastTyping(senderType, false)
 
-      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
+      const res = await fetch(`/api/conversations/${conversationId}/messages?role=admin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
