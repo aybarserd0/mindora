@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
-import { verifyConversationAccessToken } from '@/lib/chat-access-tokens'
+import {
+  createConversationAccessToken,
+  verifyConversationAccessToken,
+} from '@/lib/chat-access-tokens'
 
 export const runtime = 'nodejs'
 
@@ -114,13 +117,35 @@ function getRecipientTypes(senderType: SenderType): RecipientType[] {
   return ['client', 'expert']
 }
 
-function getChatLink(conversationId: string, recipientType: RecipientType) {
+async function getChatLink({
+  conversationId,
+  recipientType,
+}: {
+  conversationId: string
+  recipientType: RecipientType
+}) {
   const baseUrl = getBaseUrl()
 
-  if (recipientType === 'client') return `${baseUrl}/client/chat/${conversationId}`
-  if (recipientType === 'expert') return `${baseUrl}/expert/chat/${conversationId}`
+  if (recipientType === 'admin') {
+    return `${baseUrl}/admin/conversations/${conversationId}`
+  }
 
-  return `${baseUrl}/admin/conversations/${conversationId}`
+  const tokenResult = await createConversationAccessToken({
+    conversationId,
+    role: recipientType,
+  })
+
+  if (!tokenResult.token) {
+    throw new Error('Secure chat token oluşturulamadı.')
+  }
+
+  const encodedToken = encodeURIComponent(tokenResult.token)
+
+  if (recipientType === 'client') {
+    return `${baseUrl}/client/chat/${conversationId}?token=${encodedToken}`
+  }
+
+  return `${baseUrl}/expert/chat/${conversationId}?token=${encodedToken}`
 }
 
 function getMailSubject(senderType: SenderType) {
@@ -173,6 +198,10 @@ function getMailHtml({
         </a>
 
         <p style="margin-top:22px;color:#8a7662;font-size:12px;line-height:1.6">
+          Bu link güvenli erişim token’ı içerir. Linki başkalarıyla paylaşmayınız.
+        </p>
+
+        <p style="margin-top:10px;color:#8a7662;font-size:12px;line-height:1.6">
           Güvenliğiniz için telefon, e-posta, sosyal medya, IBAN veya platform dışı ödeme bilgisi paylaşmayınız.
         </p>
       </div>
@@ -251,7 +280,10 @@ async function shouldSendEmailNotification({
     .eq('recipient_type', recipientType)
     .maybeSingle()
 
-  if (error) return false
+  if (error) {
+    console.error('EMAIL NOTIFICATION THROTTLE READ ERROR:', error.message)
+    return false
+  }
 
   const notificationData = data as NotificationThrottleRow | null
 
@@ -273,7 +305,7 @@ async function markEmailNotificationSent({
   conversationId: string
   recipientType: RecipientType
 }) {
-  await supabase.from('conversation_email_notifications').upsert(
+  const { error } = await supabase.from('conversation_email_notifications').upsert(
     {
       conversation_id: conversationId,
       recipient_type: recipientType,
@@ -283,6 +315,10 @@ async function markEmailNotificationSent({
       onConflict: 'conversation_id,recipient_type',
     }
   )
+
+  if (error) {
+    console.error('EMAIL NOTIFICATION THROTTLE WRITE ERROR:', error.message)
+  }
 }
 
 async function sendSmartEmailNotifications({
@@ -315,7 +351,10 @@ async function sendSmartEmailNotifications({
 
         if (!canSend) return
 
-        const chatLink = getChatLink(conversationId, recipientType)
+        const chatLink = await getChatLink({
+          conversationId,
+          recipientType,
+        })
 
         await transporter.sendMail({
           from:
