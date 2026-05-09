@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/ToastProvider'
 import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
@@ -104,23 +105,28 @@ export default function ClientChatPage({
   params: Promise<{ id: string }>
 }) {
   const { showToast } = useToast()
+  const searchParams = useSearchParams()
 
   const [conversationId, setConversationId] = useState('')
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [accessLoading, setAccessLoading] = useState(true)
+  const [accessVerified, setAccessVerified] = useState(false)
   const [realtimeReady, setRealtimeReady] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [blockedError, setBlockedError] = useState('')
   const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
   const [readSynced, setReadSynced] = useState(false)
+
   const [reads, setReads] = useState<ReadState>({
     client: null,
     expert: null,
     admin: null,
   })
+
   const [onlineUsers, setOnlineUsers] = useState<OnlineUsers>({
     expert: false,
     admin: false,
@@ -141,6 +147,46 @@ export default function ClientChatPage({
       behavior: 'smooth',
       block: 'end',
     })
+  }
+
+  async function verifyAccess(id: string) {
+    try {
+      setAccessLoading(true)
+      setAccessVerified(false)
+      setError('')
+
+      const token = searchParams.get('token')
+
+      const res = await fetch('/api/chat-access/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({
+          conversationId: id,
+          role: 'client',
+          token,
+        }),
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok || !data?.ok) {
+        setError(
+          data?.error ||
+            'Bu güvenli görüşmeye erişim yetkiniz bulunmuyor. Link süresi dolmuş veya geçersiz olabilir.'
+        )
+        return false
+      }
+
+      setAccessVerified(true)
+      return true
+    } catch (err) {
+      console.error('CLIENT ACCESS VERIFY ERROR:', err)
+      setError('Erişim doğrulanırken hata oluştu.')
+      return false
+    } finally {
+      setAccessLoading(false)
+    }
   }
 
   async function loadReadState(id: string) {
@@ -176,10 +222,7 @@ export default function ClientChatPage({
       const data = await res.json().catch(() => null)
 
       if (!res.ok || !data?.ok) {
-        console.error(
-          'CLIENT READ SYNC ERROR:',
-          data?.error || 'Read sync failed'
-        )
+        console.error('CLIENT READ SYNC ERROR:', data?.error || 'Read sync failed')
         return
       }
 
@@ -220,6 +263,7 @@ export default function ClientChatPage({
   async function broadcastTyping(isTyping: boolean) {
     if (!channelRef.current) return
     if (!conversationId) return
+    if (!accessVerified) return
 
     try {
       await channelRef.current.send({
@@ -239,7 +283,7 @@ export default function ClientChatPage({
   function handleMessageChange(value: string) {
     setMessage(value)
 
-    if (!isActive) return
+    if (!isActive || !accessVerified) return
 
     broadcastTyping(value.trim().length > 0)
 
@@ -257,6 +301,10 @@ export default function ClientChatPage({
 
     if (!cleanMessage) return
     if (!conversationId) return
+    if (!accessVerified) {
+      setBlockedError('Bu görüşmeye erişim doğrulanamadı.')
+      return
+    }
 
     try {
       setSending(true)
@@ -291,14 +339,34 @@ export default function ClientChatPage({
   }
 
   useEffect(() => {
+    let cancelled = false
+
     async function init() {
       const resolved = await params
-      setConversationId(resolved.id)
-      await loadMessages(resolved.id, true)
+      const id = resolved.id
+
+      if (cancelled) return
+
+      setConversationId(id)
+
+      const verified = await verifyAccess(id)
+
+      if (cancelled) return
+
+      if (!verified) {
+        setLoading(false)
+        return
+      }
+
+      await loadMessages(id, true)
     }
 
     init()
-  }, [params])
+
+    return () => {
+      cancelled = true
+    }
+  }, [params, searchParams])
 
   useEffect(() => {
     scrollToBottom()
@@ -306,6 +374,7 @@ export default function ClientChatPage({
 
   useEffect(() => {
     if (!conversationId) return
+    if (!accessVerified) return
 
     let isMounted = true
 
@@ -482,7 +551,7 @@ export default function ClientChatPage({
         admin: false,
       })
     }
-  }, [conversationId, showToast])
+  }, [conversationId, accessVerified, showToast])
 
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-4 py-6 text-[#171717] md:px-6 md:py-10">
@@ -503,6 +572,16 @@ export default function ClientChatPage({
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                    accessVerified
+                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      : 'bg-orange-50 text-orange-700 ring-orange-100'
+                  }`}
+                >
+                  Erişim: {accessVerified ? 'Doğrulandı' : 'Kontrol ediliyor'}
+                </span>
+
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-black ${
                     realtimeReady
@@ -534,7 +613,7 @@ export default function ClientChatPage({
                 </span>
 
                 <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
-                  No-Leak Aktif
+                  Secure Token Aktif
                 </span>
 
                 <span
@@ -586,20 +665,23 @@ export default function ClientChatPage({
                   Güvenlik
                 </p>
                 <p className="mt-2 text-lg font-black text-purple-700">
-                  Korumalı
+                  Token Korumalı
                 </p>
               </div>
             </div>
           )}
         </header>
 
-        {loading ? (
+        {loading || accessLoading ? (
           <section className="rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-[#6b5c4d]">Chat yükleniyor...</p>
+            <p className="font-bold text-[#6b5c4d]">
+              Güvenli erişim doğrulanıyor...
+            </p>
           </section>
         ) : error ? (
           <section className="rounded-[2rem] bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
-            <p className="font-bold text-red-700">{error}</p>
+            <p className="text-lg font-black text-red-700">Erişim reddedildi</p>
+            <p className="mt-2 text-sm font-bold text-red-600">{error}</p>
           </section>
         ) : (
           <section className="overflow-hidden rounded-[2rem] border border-[#e5d9cc] bg-white shadow-sm">
@@ -717,7 +799,7 @@ export default function ClientChatPage({
                 <textarea
                   value={message}
                   onChange={(event) => handleMessageChange(event.target.value)}
-                  disabled={!isActive || sending}
+                  disabled={!isActive || !accessVerified || sending}
                   rows={3}
                   maxLength={2000}
                   placeholder={
@@ -730,7 +812,9 @@ export default function ClientChatPage({
 
                 <button
                   onClick={sendMessage}
-                  disabled={!isActive || sending || !message.trim()}
+                  disabled={
+                    !isActive || !accessVerified || sending || !message.trim()
+                  }
                   className="rounded-2xl bg-black px-6 py-4 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50 md:w-40"
                 >
                   {sending ? 'Gönderiliyor...' : 'Gönder'}
