@@ -246,9 +246,10 @@ export default function AdminConversationPage({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          senderType,
-          senderName: getSenderName(senderType),
+          senderType: 'admin',
+          senderName: 'Mindora Admin',
           message: cleanMessage,
+          role: 'admin',
         }),
       })
 
