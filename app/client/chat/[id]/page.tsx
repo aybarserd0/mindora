@@ -153,9 +153,20 @@ export default function ClientChatPage({
     return searchParams.get('token') || ''
   }
 
+  function getEncodedAccessToken() {
+    return encodeURIComponent(getAccessToken())
+  }
+
   function getMessagesUrl(id: string) {
-    const token = encodeURIComponent(getAccessToken())
-    return `/api/conversations/${id}/messages?role=client&token=${token}`
+    return `/api/conversations/${id}/messages?role=client&token=${getEncodedAccessToken()}`
+  }
+
+  function getReadsUrl(id: string) {
+    return `/api/conversations/${id}/reads?role=client&token=${getEncodedAccessToken()}`
+  }
+
+  function hasValidAccessToken() {
+    return getAccessToken().trim().length > 0
   }
 
   async function verifyAccess(id: string) {
@@ -165,6 +176,13 @@ export default function ClientChatPage({
       setError('')
 
       const token = getAccessToken()
+
+      if (!token) {
+        setError(
+          'Bu güvenli görüşmeye erişim için geçerli bir token gerekiyor. Link eksik veya bozulmuş olabilir.'
+        )
+        return false
+      }
 
       const res = await fetch('/api/chat-access/verify', {
         method: 'POST',
@@ -200,13 +218,25 @@ export default function ClientChatPage({
 
   async function loadReadState(id: string) {
     try {
-      const res = await fetch(`/api/conversations/${id}/reads`, {
+      if (!id) return
+      if (!accessVerified) return
+      if (!hasValidAccessToken()) return
+
+      const res = await fetch(getReadsUrl(id), {
         cache: 'no-store',
       })
 
       const data = await res.json().catch(() => null)
 
-      if (res.ok && data?.ok && data.reads) {
+      if (!res.ok || !data?.ok) {
+        console.error(
+          'CLIENT READ STATE ERROR:',
+          data?.error || 'Read state could not be loaded'
+        )
+        return
+      }
+
+      if (data.reads) {
         setReads({
           client: data.reads.client || null,
           expert: data.reads.expert || null,
@@ -220,12 +250,20 @@ export default function ClientChatPage({
 
   async function markConversationAsRead(id: string) {
     try {
+      if (!id) return
+      if (!accessVerified) return
+      if (!hasValidAccessToken()) return
+
       setReadSynced(false)
 
       const res = await fetch(`/api/conversations/${id}/read`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userType: 'client' }),
+        cache: 'no-store',
+        body: JSON.stringify({
+          userType: 'client',
+          token: getAccessToken(),
+        }),
       })
 
       const data = await res.json().catch(() => null)
@@ -244,6 +282,10 @@ export default function ClientChatPage({
 
   async function loadMessages(id: string, showLoading = false) {
     try {
+      if (!id) return
+      if (!accessVerified) return
+      if (!hasValidAccessToken()) return
+
       if (showLoading) setLoading(true)
       setError('')
 
@@ -311,7 +353,7 @@ export default function ClientChatPage({
     if (!cleanMessage) return
     if (!conversationId) return
 
-    if (!accessVerified) {
+    if (!accessVerified || !hasValidAccessToken()) {
       setBlockedError('Bu görüşmeye erişim doğrulanamadı.')
       return
     }
@@ -324,6 +366,7 @@ export default function ClientChatPage({
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
         body: JSON.stringify({
           senderType: 'client',
           senderName: 'Danışan',

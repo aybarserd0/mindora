@@ -1,9 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { verifyConversationAccessToken } from '@/lib/chat-access-tokens'
 
 type UserType = 'client' | 'expert' | 'admin'
 
 const VALID_USER_TYPES: UserType[] = ['client', 'expert', 'admin']
+
+function toText(value: unknown) {
+  if (value === null || value === undefined) return ''
+  return String(value).trim()
+}
+
+async function verifyUnreadAccess({
+  req,
+  conversationId,
+  userType,
+}: {
+  req: NextRequest
+  conversationId: string
+  userType: UserType
+}) {
+  if (userType === 'admin') return { ok: true }
+
+  const token =
+    toText(req.nextUrl.searchParams.get('token')) ||
+    toText(req.headers.get('x-chat-access-token'))
+
+  const result = await verifyConversationAccessToken({
+    conversationId,
+    role: userType,
+    token,
+  })
+
+  if (!result.ok) {
+    return {
+      ok: false,
+      error: 'Okunmamış mesaj bilgisine erişim yetkiniz yok.',
+    }
+  }
+
+  return { ok: true }
+}
 
 export async function GET(
   req: NextRequest,
@@ -11,7 +48,7 @@ export async function GET(
 ) {
   try {
     const resolved = await params
-    const conversationId = resolved.id
+    const conversationId = toText(resolved.id)
 
     const searchParams = req.nextUrl.searchParams
     const userType = searchParams.get('userType') as UserType | null
@@ -27,6 +64,19 @@ export async function GET(
       return NextResponse.json(
         { ok: false, error: 'Geçersiz kullanıcı tipi.' },
         { status: 400 }
+      )
+    }
+
+    const access = await verifyUnreadAccess({
+      req,
+      conversationId,
+      userType,
+    })
+
+    if (!access.ok) {
+      return NextResponse.json(
+        { ok: false, error: access.error },
+        { status: 403 }
       )
     }
 
@@ -63,11 +113,18 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({
-      ok: true,
-      unreadCount: count || 0,
-      lastReadAt,
-    })
+    return NextResponse.json(
+      {
+        ok: true,
+        unreadCount: count || 0,
+        lastReadAt,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }
+    )
   } catch (err) {
     console.error('UNREAD COUNT ERROR:', err)
 
