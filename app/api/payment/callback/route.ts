@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { createConversationAccessToken } from '@/lib/chat-access-tokens'
 
 export const runtime = 'nodejs'
 
@@ -71,12 +72,16 @@ async function sendPaymentEmails({
   payment,
   conversation,
   siteUrl,
+  clientChatLink,
+  expertChatLink,
 }: {
   client: any
   expert: any
   payment: any
   conversation?: any
   siteUrl: string
+  clientChatLink: string
+  expertChatLink: string
 }) {
   const host = process.env.SMTP_HOST
   const port = Number(process.env.SMTP_PORT || 587)
@@ -110,12 +115,7 @@ async function sendPaymentEmails({
   const expertAmount = formatMoney(payment?.expert_amount)
 
   const conversationId = toText(conversation?.id)
-  const clientChatLink = conversationId
-    ? `${siteUrl}/client/chat/${conversationId}`
-    : siteUrl
-  const expertChatLink = conversationId
-    ? `${siteUrl}/expert/chat/${conversationId}`
-    : siteUrl
+
   const adminConversationLink = conversationId
     ? `${siteUrl}/admin/conversations/${conversationId}`
     : siteUrl
@@ -141,6 +141,7 @@ async function sendPaymentEmails({
                 Güvenli Chat Alanını Aç
               </a>
             </p>
+            <p>Bu bağlantı size özel güvenli erişim bağlantısıdır. Lütfen başkalarıyla paylaşmayınız.</p>
             <p>Güvenliğiniz ve sürecin sağlıklı ilerlemesi için tüm iletişim Mindora üzerinden yürütülmelidir.</p>
             <p>Uzmanınızın telefon veya e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.</p>
             <br />
@@ -171,6 +172,7 @@ async function sendPaymentEmails({
                 Uzman Chat Alanını Aç
               </a>
             </p>
+            <p>Bu bağlantı size özel güvenli uzman erişim bağlantısıdır. Lütfen başkalarıyla paylaşmayınız.</p>
             <p>Danışanla iletişim yalnızca Mindora üzerinden yürütülmelidir.</p>
             <p>Danışanın telefon veya e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.</p>
             <br />
@@ -368,10 +370,10 @@ export async function POST(req: NextRequest) {
 
     if (!updatedPayment.client_id || !updatedPayment.expert_id) {
       console.error('PAYMENT CALLBACK UPDATED PAYMENT MISSING IDS:', {
-         paymentId: updatedPayment.id,
-         clientId: updatedPayment.client_id,
-         expertId: updatedPayment.expert_id,
-     })
+        paymentId: updatedPayment.id,
+        clientId: updatedPayment.client_id,
+        expertId: updatedPayment.expert_id,
+      })
 
       return NextResponse.redirect(`${siteUrl}/odeme-basarisiz`, 303)
     }
@@ -439,7 +441,12 @@ export async function POST(req: NextRequest) {
 
     const shouldSendNotification = !updatedPayment.paid_notified_at
 
-    if (shouldSendNotification && updatedPayment.client_id && updatedPayment.expert_id) {
+    if (
+      shouldSendNotification &&
+      updatedPayment.client_id &&
+      updatedPayment.expert_id &&
+      conversation?.id
+    ) {
       const [{ data: client }, { data: expert }] = await Promise.all([
         supabase
           .from('client_applications')
@@ -455,12 +462,30 @@ export async function POST(req: NextRequest) {
       ])
 
       if (client && expert) {
+        const [clientAccess, expertAccess] = await Promise.all([
+          createConversationAccessToken({
+            conversationId: conversation.id,
+            role: 'client',
+            expiresInHours: 24 * 7,
+          }),
+          createConversationAccessToken({
+            conversationId: conversation.id,
+            role: 'expert',
+            expiresInHours: 24 * 7,
+          }),
+        ])
+
+        const clientChatLink = `${siteUrl}/client/chat/${conversation.id}?token=${clientAccess.token}`
+        const expertChatLink = `${siteUrl}/expert/chat/${conversation.id}?token=${expertAccess.token}`
+
         await sendPaymentEmails({
           client,
           expert,
           payment: updatedPayment,
           conversation,
           siteUrl,
+          clientChatLink,
+          expertChatLink,
         })
 
         await Promise.all([
