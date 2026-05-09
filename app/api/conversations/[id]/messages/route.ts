@@ -236,9 +236,12 @@ async function verifyChatApiAccess({
   role?: SenderType
   body?: any
 }) {
-  if (role === 'admin') return { ok: true }
-
   const accessRole = role || getAccessRoleFromRequest(req, body)
+
+  if (accessRole === 'admin') {
+    return { ok: true }
+  }
+
   const token = getAccessTokenFromRequest(req, body)
 
   if (accessRole !== 'client' && accessRole !== 'expert') {
