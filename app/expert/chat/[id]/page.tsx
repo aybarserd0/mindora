@@ -147,13 +147,22 @@ export default function ExpertChatPage({
     })
   }
 
+  function getAccessToken() {
+    return searchParams.get('token') || ''
+  }
+
+  function getMessagesUrl(id: string) {
+    const token = encodeURIComponent(getAccessToken())
+    return `/api/conversations/${id}/messages?role=expert&token=${token}`
+  }
+
   async function verifyAccess(id: string) {
     try {
       setAccessLoading(true)
       setAccessVerified(false)
       setError('')
 
-      const token = searchParams.get('token')
+      const token = getAccessToken()
 
       const res = await fetch('/api/chat-access/verify', {
         method: 'POST',
@@ -236,7 +245,7 @@ export default function ExpertChatPage({
       if (showLoading) setLoading(true)
       setError('')
 
-      const res = await fetch(`/api/conversations/${id}/messages`, {
+      const res = await fetch(getMessagesUrl(id), {
         cache: 'no-store',
       })
 
@@ -317,6 +326,8 @@ export default function ExpertChatPage({
           senderType: 'expert',
           senderName: 'Uzman',
           message: cleanMessage,
+          role: 'expert',
+          token: getAccessToken(),
         }),
       })
 
@@ -518,6 +529,7 @@ export default function ExpertChatPage({
         channelRef.current = null
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+
         if (localTypingTimeoutRef.current) {
           clearTimeout(localTypingTimeoutRef.current)
         }

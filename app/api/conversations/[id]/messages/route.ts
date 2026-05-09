@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { verifyConversationAccessToken } from '@/lib/chat-access-tokens'
 
 export const runtime = 'nodejs'
 
@@ -8,9 +9,7 @@ type SenderType = 'client' | 'expert' | 'admin'
 type RecipientType = 'client' | 'expert' | 'admin'
 
 type RouteContext = {
-  params: Promise<{
-    id: string
-  }>
+  params: Promise<{ id: string }>
 }
 
 type NotificationThrottleRow = {
@@ -81,10 +80,7 @@ function getSmtpTransporter() {
     host,
     port,
     secure: port === 465,
-    auth: {
-      user,
-      pass,
-    },
+    auth: { user, pass },
   })
 }
 
@@ -121,13 +117,8 @@ function getRecipientTypes(senderType: SenderType): RecipientType[] {
 function getChatLink(conversationId: string, recipientType: RecipientType) {
   const baseUrl = getBaseUrl()
 
-  if (recipientType === 'client') {
-    return `${baseUrl}/client/chat/${conversationId}`
-  }
-
-  if (recipientType === 'expert') {
-    return `${baseUrl}/expert/chat/${conversationId}`
-  }
+  if (recipientType === 'client') return `${baseUrl}/client/chat/${conversationId}`
+  if (recipientType === 'expert') return `${baseUrl}/expert/chat/${conversationId}`
 
   return `${baseUrl}/admin/conversations/${conversationId}`
 }
@@ -187,6 +178,61 @@ function getMailHtml({
       </div>
     </div>
   `
+}
+
+function getAccessTokenFromRequest(req: NextRequest, body?: any) {
+  return (
+    toText(req.nextUrl.searchParams.get('token')) ||
+    toText(req.headers.get('x-chat-access-token')) ||
+    toText(body?.token)
+  )
+}
+
+function getAccessRoleFromRequest(req: NextRequest, body?: any) {
+  return (
+    toText(req.nextUrl.searchParams.get('role')) ||
+    toText(req.headers.get('x-chat-access-role')) ||
+    toText(body?.role)
+  )
+}
+
+async function verifyChatApiAccess({
+  req,
+  conversationId,
+  role,
+  body,
+}: {
+  req: NextRequest
+  conversationId: string
+  role?: SenderType
+  body?: any
+}) {
+  if (role === 'admin') return { ok: true }
+
+  const accessRole = role || getAccessRoleFromRequest(req, body)
+  const token = getAccessTokenFromRequest(req, body)
+
+  if (accessRole !== 'client' && accessRole !== 'expert') {
+    return {
+      ok: false,
+      error: 'Erişim tipi geçersiz.',
+    }
+  }
+
+  const result = await verifyConversationAccessToken({
+    conversationId,
+    role: accessRole,
+    token,
+  })
+
+  if (!result.ok) {
+    return {
+      ok: false,
+      error: 'Bu konuşmaya erişim yetkiniz yok veya güvenli link süresi dolmuş.',
+    }
+  }
+
+  return { ok: true }
 }
 
 async function shouldSendEmailNotification({
@@ -297,7 +343,7 @@ async function sendSmartEmailNotifications({
   )
 }
 
-export async function GET(_req: NextRequest, context: RouteContext) {
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params
     const conversationId = toText(id)
@@ -306,6 +352,18 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       return NextResponse.json(
         { ok: false, error: 'Conversation ID zorunlu.' },
         { status: 400 }
+      )
+    }
+
+    const access = await verifyChatApiAccess({
+      req,
+      conversationId,
+    })
+
+    if (!access.ok) {
+      return NextResponse.json(
+        { ok: false, error: access.error },
+        { status: 403 }
       )
     }
 
@@ -401,6 +459,20 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json(
         { ok: false, error: 'Gönderici tipi geçersiz.' },
         { status: 400 }
+      )
+    }
+
+    const access = await verifyChatApiAccess({
+      req,
+      conversationId,
+      role: senderType,
+      body,
+    })
+
+    if (!access.ok) {
+      return NextResponse.json(
+        { ok: false, error: access.error },
+        { status: 403 }
       )
     }
 

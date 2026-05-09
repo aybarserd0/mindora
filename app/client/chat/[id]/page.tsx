@@ -149,13 +149,22 @@ export default function ClientChatPage({
     })
   }
 
+  function getAccessToken() {
+    return searchParams.get('token') || ''
+  }
+
+  function getMessagesUrl(id: string) {
+    const token = encodeURIComponent(getAccessToken())
+    return `/api/conversations/${id}/messages?role=client&token=${token}`
+  }
+
   async function verifyAccess(id: string) {
     try {
       setAccessLoading(true)
       setAccessVerified(false)
       setError('')
 
-      const token = searchParams.get('token')
+      const token = getAccessToken()
 
       const res = await fetch('/api/chat-access/verify', {
         method: 'POST',
@@ -238,7 +247,7 @@ export default function ClientChatPage({
       if (showLoading) setLoading(true)
       setError('')
 
-      const res = await fetch(`/api/conversations/${id}/messages`, {
+      const res = await fetch(getMessagesUrl(id), {
         cache: 'no-store',
       })
 
@@ -301,6 +310,7 @@ export default function ClientChatPage({
 
     if (!cleanMessage) return
     if (!conversationId) return
+
     if (!accessVerified) {
       setBlockedError('Bu görüşmeye erişim doğrulanamadı.')
       return
@@ -318,6 +328,8 @@ export default function ClientChatPage({
           senderType: 'client',
           senderName: 'Danışan',
           message: cleanMessage,
+          role: 'client',
+          token: getAccessToken(),
         }),
       })
 
