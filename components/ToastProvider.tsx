@@ -12,6 +12,10 @@ import {
 } from 'react'
 
 type ToastType = 'success' | 'error' | 'info' | 'warning'
+type MindoraNotificationPermission =
+  | NotificationPermission
+  | 'unsupported'
+  | 'unknown'
 
 type ToastItem = {
   id: string
@@ -26,6 +30,7 @@ type ShowToastOptions = {
   notificationTitle?: string
   notificationBody?: string
   durationMs?: number
+  requirePermissionFirst?: boolean
 }
 
 type ToastContextType = {
@@ -35,8 +40,12 @@ type ToastContextType = {
     type?: ToastType,
     options?: ShowToastOptions
   ) => void
-  requestNotificationPermission: () => Promise<NotificationPermission | 'unsupported'>
-  notificationPermission: NotificationPermission | 'unsupported'
+  requestNotificationPermission: () => Promise<
+    NotificationPermission | 'unsupported'
+  >
+  notificationPermission: MindoraNotificationPermission
+  notificationsSupported: boolean
+  notificationsEnabled: boolean
 }
 
 const ToastContext = createContext<ToastContextType | null>(null)
@@ -89,17 +98,15 @@ function canUseNotifications() {
   return typeof window !== 'undefined' && 'Notification' in window
 }
 
-export default function ToastProvider({
-  children,
-}: {
-  children: ReactNode
-}) {
+export default function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
-  const [notificationPermission, setNotificationPermission] = useState<
-    NotificationPermission | 'unsupported'
-  >('unsupported')
+  const [notificationPermission, setNotificationPermission] =
+    useState<MindoraNotificationPermission>('unknown')
 
   const timeoutMap = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+
+  const notificationsSupported = canUseNotifications()
+  const notificationsEnabled = notificationPermission === 'granted'
 
   useEffect(() => {
     if (!canUseNotifications()) {
@@ -125,38 +132,57 @@ export default function ToastProvider({
       return 'unsupported'
     }
 
-    const permission = await Notification.requestPermission()
-    setNotificationPermission(permission)
-
-    return permission
+    try {
+      const permission = await Notification.requestPermission()
+      setNotificationPermission(permission)
+      return permission
+    } catch (err) {
+      console.error('NOTIFICATION PERMISSION ERROR:', err)
+      setNotificationPermission(Notification.permission)
+      return Notification.permission
+    }
   }, [])
 
   const sendBrowserNotification = useCallback(
-    async ({
+    ({
       title,
       body,
+      requirePermissionFirst,
     }: {
       title: string
       body?: string
+      requirePermissionFirst?: boolean
     }) => {
-      if (!canUseNotifications()) return
-
-      let permission = Notification.permission
-
-      if (permission === 'default') {
-        permission = await Notification.requestPermission()
-        setNotificationPermission(permission)
+      if (!canUseNotifications()) {
+        setNotificationPermission('unsupported')
+        return
       }
 
-      if (permission !== 'granted') return
+      const permission = Notification.permission
+      setNotificationPermission(permission)
+
+      if (permission !== 'granted') {
+        if (!requirePermissionFirst) return
+        return
+      }
 
       try {
-        new Notification(title, {
+        const notification = new Notification(title, {
           body,
           icon: '/favicon.ico',
           badge: '/favicon.ico',
-          tag: 'mindora-notification',
+          tag: 'mindora-chat-notification',
+          silent: false,
         })
+
+        notification.onclick = () => {
+          try {
+            window.focus()
+            notification.close()
+          } catch {
+            notification.close()
+          }
+        }
       } catch (err) {
         console.error('BROWSER NOTIFICATION ERROR:', err)
       }
@@ -194,6 +220,7 @@ export default function ToastProvider({
         sendBrowserNotification({
           title: options.notificationTitle || title,
           body: options.notificationBody || description,
+          requirePermissionFirst: options.requirePermissionFirst,
         })
       }
     },
@@ -212,8 +239,16 @@ export default function ToastProvider({
       showToast,
       requestNotificationPermission,
       notificationPermission,
+      notificationsSupported,
+      notificationsEnabled,
     }),
-    [showToast, requestNotificationPermission, notificationPermission]
+    [
+      showToast,
+      requestNotificationPermission,
+      notificationPermission,
+      notificationsSupported,
+      notificationsEnabled,
+    ]
   )
 
   return (
