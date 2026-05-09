@@ -170,7 +170,7 @@ export default function AdminConversationPage({
       if (showLoading) setLoading(true)
       setError('')
 
-      const res = await fetch(`/api/conversations/${id}/messages`, {
+      const res = await fetch(`/api/conversations/${id}/messages?role=admin`, {
         cache: 'no-store',
       })
 
