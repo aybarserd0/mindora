@@ -7,6 +7,7 @@ import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
 type SenderType = 'client' | 'expert' | 'admin'
 type UserPresenceType = 'client' | 'expert' | 'admin'
+type FilterType = 'all' | 'unread' | 'active' | 'locked' | 'paid' | 'online'
 
 type Conversation = {
   id: string
@@ -39,6 +40,12 @@ function formatDate(date?: string | null) {
   } catch {
     return '-'
   }
+}
+
+function getTimeValue(date?: string | null) {
+  if (!date) return 0
+  const value = new Date(date).getTime()
+  return Number.isNaN(value) ? 0 : value
 }
 
 function getStatusText(status?: string) {
@@ -103,11 +110,12 @@ function parsePresenceState(rawState: Record<string, unknown[]>): PresenceState 
   Object.values(rawState).forEach((items) => {
     items.forEach((item) => {
       const presence = item as {
+        userType?: UserPresenceType
         user_type?: UserPresenceType
         role?: UserPresenceType
       }
 
-      const userType = presence.user_type || presence.role
+      const userType = presence.userType || presence.user_type || presence.role
 
       if (userType === 'client') next.client = true
       if (userType === 'expert') next.expert = true
@@ -150,9 +158,13 @@ export default function AdminConversationsPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
+  const [filter, setFilter] = useState<FilterType>('all')
+  const [search, setSearch] = useState('')
 
   const isMountedRef = useRef(true)
   const conversationsRef = useRef<Conversation[]>([])
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const hubChannelRef = useRef<ReturnType<
     ReturnType<typeof createMindoraRealtimeClient>['channel']
   > | null>(null)
@@ -174,6 +186,14 @@ export default function AdminConversationsPage() {
     }, 0)
   }, [conversations])
 
+  const activeCount = useMemo(() => {
+    return conversations.filter((item) => item.status === 'active').length
+  }, [conversations])
+
+  const paidCount = useMemo(() => {
+    return conversations.filter((item) => item.payment_status === 'paid').length
+  }, [conversations])
+
   const onlineSummary = useMemo(() => {
     return conversations.reduce(
       (total, conversation) => {
@@ -187,6 +207,49 @@ export default function AdminConversationsPage() {
       { clients: 0, experts: 0 }
     )
   }, [conversations, presenceMap])
+
+  const filteredConversations = useMemo(() => {
+    const searchText = search.trim().toLowerCase()
+
+    return conversations
+      .filter((conversation) => {
+        const presence = presenceMap[conversation.id]
+        const hasUnread = (conversation.unreadCount || 0) > 0
+
+        if (filter === 'unread' && !hasUnread) return false
+        if (filter === 'active' && conversation.status !== 'active') return false
+        if (filter === 'locked' && conversation.status !== 'locked') return false
+        if (filter === 'paid' && conversation.payment_status !== 'paid') return false
+        if (filter === 'online' && !presence?.client && !presence?.expert) {
+          return false
+        }
+
+        if (!searchText) return true
+
+        const haystack = [
+          conversation.id,
+          conversation.last_message,
+          conversation.last_message_sender,
+          conversation.last_message_sender_name,
+          conversation.status,
+          conversation.payment_status,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+
+        return haystack.includes(searchText)
+      })
+      .sort((a, b) => {
+        const unreadDiff = (b.unreadCount || 0) - (a.unreadCount || 0)
+        if (unreadDiff !== 0) return unreadDiff
+
+        const bTime = getTimeValue(b.last_message_at || b.updated_at)
+        const aTime = getTimeValue(a.last_message_at || a.updated_at)
+
+        return bTime - aTime
+      })
+  }, [conversations, filter, presenceMap, search])
 
   const cleanupPresenceChannels = useCallback((idsToKeep: string[] = []) => {
     const supabase = supabaseRef.current
@@ -222,58 +285,64 @@ export default function AdminConversationsPage() {
     })
   }, [])
 
-  const setupPresenceChannels = useCallback((list: Conversation[]) => {
-    const supabase = supabaseRef.current
-    if (!supabase) return
+  const setupPresenceChannels = useCallback(
+    (list: Conversation[]) => {
+      const supabase = supabaseRef.current
+      if (!supabase) return
 
-    const conversationIds = list.map((conversation) => conversation.id)
+      const conversationIds = list.map((conversation) => conversation.id)
 
-    cleanupPresenceChannels(conversationIds)
+      cleanupPresenceChannels(conversationIds)
 
-    conversationIds.forEach((conversationId) => {
-      if (presenceChannelsRef.current[conversationId]) return
+      conversationIds.forEach((conversationId) => {
+        if (presenceChannelsRef.current[conversationId]) return
 
-      const channelName = `mindora-conversation-${conversationId}`
+        const channelName = `mindora-conversation-${conversationId}`
 
-      const channel = supabase.channel(channelName, {
-        config: {
-          presence: {
-            key: `admin-hub-${conversationId}`,
+        const channel = supabase.channel(channelName, {
+          config: {
+            presence: {
+              key: `admin-hub-${conversationId}`,
+            },
           },
-        },
+        })
+
+        channel
+          .on('presence', { event: 'sync' }, () => {
+            if (!isMountedRef.current) return
+
+            const rawState = channel.presenceState()
+            const nextState = parsePresenceState(rawState)
+
+            setPresenceMap((current) => ({
+              ...current,
+              [conversationId]: nextState,
+            }))
+          })
+          .subscribe(async (status) => {
+            if (status !== 'SUBSCRIBED') return
+
+            try {
+              await channel.track({
+                userType: 'admin',
+                user_type: 'admin',
+                role: 'admin',
+                page: 'admin_conversations_hub',
+                conversationId,
+                conversation_id: conversationId,
+                onlineAt: new Date().toISOString(),
+                online_at: new Date().toISOString(),
+              })
+            } catch (err) {
+              console.error('ADMIN HUB PRESENCE TRACK ERROR:', err)
+            }
+          })
+
+        presenceChannelsRef.current[conversationId] = channel
       })
-
-      channel
-        .on('presence', { event: 'sync' }, () => {
-          if (!isMountedRef.current) return
-
-          const rawState = channel.presenceState()
-          const nextState = parsePresenceState(rawState)
-
-          setPresenceMap((current) => ({
-            ...current,
-            [conversationId]: nextState,
-          }))
-        })
-        .subscribe(async (status) => {
-          if (status !== 'SUBSCRIBED') return
-
-          try {
-            await channel.track({
-              user_type: 'admin',
-              role: 'admin',
-              page: 'admin_conversations_hub',
-              conversation_id: conversationId,
-              online_at: new Date().toISOString(),
-            })
-          } catch (err) {
-            console.error('ADMIN HUB PRESENCE TRACK ERROR:', err)
-          }
-        })
-
-      presenceChannelsRef.current[conversationId] = channel
-    })
-  }, [cleanupPresenceChannels])
+    },
+    [cleanupPresenceChannels]
+  )
 
   const loadConversations = useCallback(
     async (showLoading = false) => {
@@ -338,6 +407,17 @@ export default function AdminConversationsPage() {
     [setupPresenceChannels]
   )
 
+  const scheduleRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current)
+    }
+
+    refreshTimeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return
+      loadConversations(false)
+    }, 350)
+  }, [loadConversations])
+
   useEffect(() => {
     isMountedRef.current = true
     supabaseRef.current = createMindoraRealtimeClient()
@@ -363,9 +443,9 @@ export default function AdminConversationsPage() {
             schema: 'public',
             table: 'messages',
           },
-          async () => {
+          () => {
             if (!isMountedRef.current) return
-            await loadConversations(false)
+            scheduleRefresh()
           }
         )
         .on(
@@ -375,9 +455,21 @@ export default function AdminConversationsPage() {
             schema: 'public',
             table: 'conversations',
           },
-          async () => {
+          () => {
             if (!isMountedRef.current) return
-            await loadConversations(false)
+            scheduleRefresh()
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversation_reads',
+          },
+          () => {
+            if (!isMountedRef.current) return
+            scheduleRefresh()
           }
         )
         .subscribe()
@@ -394,11 +486,16 @@ export default function AdminConversationsPage() {
     } catch (err) {
       console.error('ADMIN HUB REALTIME ERROR:', err)
     }
-  }, [loadConversations])
+  }, [scheduleRefresh])
 
   useEffect(() => {
     return () => {
       const supabase = supabaseRef.current
+
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current)
+        refreshTimeoutRef.current = null
+      }
 
       if (supabase && hubChannelRef.current) {
         try {
@@ -427,7 +524,7 @@ export default function AdminConversationsPage() {
         <AdminHeader />
 
         <header className="mb-6 mt-6 rounded-[2rem] border border-[#e5d9cc] bg-white/80 p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.25em] text-[#8a7662]">
                 Mindora Moderasyon
@@ -438,8 +535,8 @@ export default function AdminConversationsPage() {
               </h1>
 
               <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
-                Son mesaj, okunmamış mesaj, ödeme durumu ve online kullanıcı
-                takibi.
+                Son mesaj, okunmamış mesaj, ödeme durumu, filtreleme ve online
+                kullanıcı takibi.
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -459,6 +556,14 @@ export default function AdminConversationsPage() {
 
                 <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
                   {conversations.length} konuşma
+                </span>
+
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                  {activeCount} aktif
+                </span>
+
+                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700 ring-1 ring-green-100">
+                  {paidCount} ödenmiş
                 </span>
 
                 <span
@@ -491,6 +596,39 @@ export default function AdminConversationsPage() {
               {refreshing ? 'Yenileniyor...' : 'Yenile'}
             </button>
           </div>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto]">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Konuşma ID, mesaj, durum veya gönderen ara..."
+              className="rounded-2xl border border-black/10 bg-[#faf7f2] px-4 py-3 text-sm font-bold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
+            />
+
+            <div className="flex flex-wrap gap-2">
+              {[
+                ['all', 'Tümü'],
+                ['unread', 'Okunmamış'],
+                ['active', 'Aktif'],
+                ['locked', 'Kilitli'],
+                ['paid', 'Ödenmiş'],
+                ['online', 'Online'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFilter(value as FilterType)}
+                  className={`rounded-full px-4 py-2 text-xs font-black ring-1 transition ${
+                    filter === value
+                      ? 'bg-black text-white ring-black'
+                      : 'bg-white text-[#6b5c4d] ring-black/10 hover:bg-[#f0e8df]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </header>
 
         {loading ? (
@@ -503,19 +641,19 @@ export default function AdminConversationsPage() {
           <section className="rounded-[2rem] bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
             <p className="font-bold text-red-700">{error}</p>
           </section>
-        ) : conversations.length === 0 ? (
+        ) : filteredConversations.length === 0 ? (
           <section className="rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
             <p className="text-lg font-black text-[#2b2118]">
-              Henüz konuşma yok
+              Sonuç bulunamadı
             </p>
 
             <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
-              Aktif görüşmeler burada listelenecek.
+              Filtreyi veya arama kelimesini değiştirerek tekrar deneyin.
             </p>
           </section>
         ) : (
           <div className="grid gap-4">
-            {conversations.map((conversation) => {
+            {filteredConversations.map((conversation) => {
               const hasUnread =
                 typeof conversation.unreadCount === 'number' &&
                 conversation.unreadCount > 0
