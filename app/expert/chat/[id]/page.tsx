@@ -1,12 +1,23 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/ToastProvider'
 import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
 type UserType = 'client' | 'expert' | 'admin'
+
+type Attachment = {
+  id: string
+  conversation_id: string
+  message_id: string | null
+  uploaded_by_type: 'client' | 'expert'
+  file_name: string
+  mime_type: string
+  file_size: number
+  created_at: string
+}
 
 type Conversation = {
   id: string
@@ -25,6 +36,7 @@ type Message = {
   is_flagged: boolean
   flag_reason: string | null
   created_at: string
+  attachments?: Attachment[]
 }
 
 type TypingPayload = {
@@ -47,6 +59,23 @@ type OnlineUsers = {
 
 type ReadState = Record<UserType, string | null>
 
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024
+const MAX_RECORDING_SECONDS = 180
+
+const ALLOWED_ATTACHMENT_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'audio/webm',
+  'audio/mp4',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/x-wav',
+])
+
 function formatDate(date?: string | null) {
   if (!date) return '-'
 
@@ -60,6 +89,19 @@ function formatDate(date?: string | null) {
   } catch {
     return '-'
   }
+}
+
+function formatFileSize(size: number) {
+  if (!Number.isFinite(size) || size <= 0) return '-'
+  if (size < 1024 * 1024) return `${Math.ceil(size / 1024)} KB`
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function formatDuration(seconds: number) {
+  const safeSeconds = Math.max(0, Math.floor(seconds))
+  const mins = Math.floor(safeSeconds / 60)
+  const secs = safeSeconds % 60
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
 function getSenderName(message: Message) {
@@ -99,6 +141,48 @@ function getMessageStatus(item: Message, reads: ReadState) {
   return 'Gönderildi'
 }
 
+function getFileIcon(fileType?: string) {
+  if (!fileType) return '📎'
+  if (fileType.startsWith('audio/')) return '🎤'
+  if (fileType.startsWith('image/')) return '🖼️'
+  if (fileType === 'application/pdf') return '📄'
+  if (fileType.includes('wordprocessingml') || fileType === 'application/msword') {
+    return '📝'
+  }
+  return '📎'
+}
+
+function getCleanMessageText(item: Message) {
+  const attachmentNames = item.attachments?.map((attachment) => attachment.file_name) || []
+  let text = item.message || ''
+
+  attachmentNames.forEach((fileName) => {
+    const attachment = item.attachments?.find((item) => item.file_name === fileName)
+    text = text
+      .replace(
+        `\n\n📎 ${fileName} (${formatFileSize(attachment?.file_size || 0)})`,
+        ''
+      )
+      .replace(`📎 Dosya paylaşıldı: ${fileName}`, '')
+      .replace(`🎤 Sesli mesaj: ${fileName}`, '')
+      .replace(`🎤 Sesli mesaj gönderildi`, '')
+      .trim()
+  })
+
+  return text
+}
+
+function getBestAudioMimeType() {
+  if (typeof MediaRecorder === 'undefined') return 'audio/webm'
+
+  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+
+  return (
+    candidates.find((type) => MediaRecorder.isTypeSupported(type)) ||
+    'audio/webm'
+  )
+}
+
 export default function ExpertChatPage({
   params,
 }: {
@@ -123,11 +207,19 @@ export default function ExpertChatPage({
   const [accessVerified, setAccessVerified] = useState(false)
   const [realtimeReady, setRealtimeReady] = useState(false)
   const [sending, setSending] = useState(false)
+  const [uploadingAttachment, setUploadingAttachment] = useState(false)
+  const [openingAttachmentId, setOpeningAttachmentId] = useState<string | null>(null)
+  const [selectedAttachment, setSelectedAttachment] = useState<File | null>(null)
+  const [signedAudioUrls, setSignedAudioUrls] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
   const [blockedError, setBlockedError] = useState('')
   const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
   const [readSynced, setReadSynced] = useState(false)
   const [notificationLoading, setNotificationLoading] = useState(false)
+
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null)
 
   const [reads, setReads] = useState<ReadState>({
     client: null,
@@ -141,8 +233,13 @@ export default function ExpertChatPage({
   })
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const localTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordingStreamRef = useRef<MediaStream | null>(null)
+  const audioChunksRef = useRef<BlobPart[]>([])
   const channelRef = useRef<ReturnType<
     ReturnType<typeof createMindoraRealtimeClient>['channel']
   > | null>(null)
@@ -183,6 +280,291 @@ export default function ExpertChatPage({
 
   function getReadsUrl(id: string) {
     return `/api/conversations/${id}/reads?role=expert&token=${getEncodedAccessToken()}`
+  }
+
+  function getAttachmentUploadUrl(id: string) {
+    return `/api/conversations/${id}/attachments/upload?role=expert&token=${getEncodedAccessToken()}`
+  }
+
+  function getAttachmentSignedUrl(id: string, attachmentId: string) {
+    return `/api/conversations/${id}/attachments/${attachmentId}/signed-url?role=expert&token=${getEncodedAccessToken()}`
+  }
+
+  function stopRecordingStream() {
+    recordingStreamRef.current?.getTracks().forEach((track) => track.stop())
+    recordingStreamRef.current = null
+  }
+
+  function stopRecordingTimer() {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+  }
+
+  function clearSelectedAttachment() {
+    setSelectedAttachment(null)
+
+    if (audioPreviewUrl) {
+      URL.revokeObjectURL(audioPreviewUrl)
+      setAudioPreviewUrl(null)
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  function validateAttachment(file: File) {
+    if (!ALLOWED_ATTACHMENT_TYPES.has(file.type)) {
+      return 'Bu dosya türü desteklenmiyor. Sadece görsel, PDF, DOC, DOCX ve ses dosyaları yüklenebilir.'
+    }
+
+    if (file.size <= 0) {
+      return 'Boş dosya yüklenemez.'
+    }
+
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      return 'Dosya boyutu 10 MB sınırını aşamaz.'
+    }
+
+    return ''
+  }
+
+  function handleAttachmentChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] || null
+
+    if (!file) {
+      setSelectedAttachment(null)
+      return
+    }
+
+    const validationError = validateAttachment(file)
+
+    if (validationError) {
+      clearSelectedAttachment()
+      setBlockedError(validationError)
+      showToast('Dosya seçilemedi', validationError, 'warning')
+      return
+    }
+
+    clearSelectedAttachment()
+    setBlockedError('')
+    setSelectedAttachment(file)
+  }
+
+  async function getSignedAttachmentUrl(attachment: Attachment) {
+    if (!conversationId) return ''
+
+    const res = await fetch(getAttachmentSignedUrl(conversationId, attachment.id), {
+      cache: 'no-store',
+    })
+
+    const data = await res.json().catch(() => null)
+
+    if (!res.ok || !data?.ok || !data?.signedUrl) {
+      throw new Error(data?.error || 'Güvenli dosya bağlantısı oluşturulamadı.')
+    }
+
+    return String(data.signedUrl)
+  }
+
+  async function openAttachment(attachment: Attachment) {
+    if (!conversationId) return
+
+    if (!accessVerified || !hasValidAccessToken()) {
+      showToast('Erişim doğrulanamadı', 'Dosya açmak için güvenli erişim gerekir.', 'error')
+      return
+    }
+
+    try {
+      setOpeningAttachmentId(attachment.id)
+
+      const signedUrl = await getSignedAttachmentUrl(attachment)
+
+      if (attachment.mime_type.startsWith('audio/')) {
+        setSignedAudioUrls((current) => ({
+          ...current,
+          [attachment.id]: signedUrl,
+        }))
+        return
+      }
+
+      window.open(signedUrl, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      console.error('EXPERT ATTACHMENT OPEN ERROR:', err)
+      showToast(
+        'Dosya açılamadı',
+        err instanceof Error ? err.message : 'Dosya açılırken hata oluştu.',
+        'error'
+      )
+    } finally {
+      setOpeningAttachmentId(null)
+    }
+  }
+
+  async function startVoiceRecording() {
+    if (!isActive || !accessVerified || sending || uploadingAttachment) return
+
+    if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      showToast('Mikrofon desteklenmiyor', 'Bu tarayıcı ses kaydını desteklemiyor.', 'warning')
+      return
+    }
+
+    if (selectedAttachment) {
+      showToast(
+        'Dosya zaten seçili',
+        'Ses kaydı almak için önce seçili dosyayı kaldırın.',
+        'warning'
+      )
+      return
+    }
+
+    try {
+      setBlockedError('')
+      setRecordingSeconds(0)
+      audioChunksRef.current = []
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      recordingStreamRef.current = stream
+
+      const mimeType = getBestAudioMimeType()
+      const recorder = new MediaRecorder(stream, { mimeType })
+
+      mediaRecorderRef.current = recorder
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      recorder.onstop = () => {
+        const type = recorder.mimeType || 'audio/webm'
+        const blob = new Blob(audioChunksRef.current, { type })
+
+        stopRecordingTimer()
+        stopRecordingStream()
+        setIsRecording(false)
+
+        if (!blob.size) {
+          showToast('Ses kaydı oluşturulamadı', 'Boş ses kaydı gönderilemez.', 'warning')
+          return
+        }
+
+        if (blob.size > MAX_ATTACHMENT_SIZE) {
+          showToast('Ses kaydı çok büyük', 'Ses kaydı 10 MB sınırını aşamaz.', 'warning')
+          return
+        }
+
+        const extension = type.includes('mp4') ? 'mp4' : 'webm'
+        const file = new File(
+          [blob],
+          `mindora-uzman-sesli-mesaj-${Date.now()}.${extension}`,
+          { type }
+        )
+
+        const previewUrl = URL.createObjectURL(blob)
+        setAudioPreviewUrl(previewUrl)
+        setSelectedAttachment(file)
+      }
+
+      recorder.start()
+      setIsRecording(true)
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds((current) => {
+          const next = current + 1
+
+          if (next >= MAX_RECORDING_SECONDS) {
+            stopVoiceRecording()
+          }
+
+          return next
+        })
+      }, 1000)
+    } catch (err) {
+      console.error('EXPERT VOICE RECORDING START ERROR:', err)
+      stopRecordingTimer()
+      stopRecordingStream()
+      setIsRecording(false)
+
+      showToast(
+        'Mikrofon izni alınamadı',
+        'Sesli mesaj göndermek için mikrofon izni vermeniz gerekir.',
+        'error'
+      )
+    }
+  }
+
+  function stopVoiceRecording() {
+    const recorder = mediaRecorderRef.current
+
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop()
+    }
+
+    mediaRecorderRef.current = null
+    stopRecordingTimer()
+  }
+
+  function cancelVoiceRecording() {
+    const recorder = mediaRecorderRef.current
+
+    audioChunksRef.current = []
+
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop()
+    }
+
+    mediaRecorderRef.current = null
+    stopRecordingTimer()
+    stopRecordingStream()
+    setIsRecording(false)
+    setRecordingSeconds(0)
+  }
+
+  async function uploadSelectedAttachment(id: string) {
+    if (!selectedAttachment) return null
+
+    const validationError = validateAttachment(selectedAttachment)
+
+    if (validationError) {
+      setBlockedError(validationError)
+      showToast('Dosya yüklenemedi', validationError, 'warning')
+      return null
+    }
+
+    const formData = new FormData()
+    formData.append('file', selectedAttachment)
+
+    setUploadingAttachment(true)
+
+    try {
+      const res = await fetch(getAttachmentUploadUrl(id), {
+        method: 'POST',
+        body: formData,
+        cache: 'no-store',
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok || !data?.ok || !data?.attachment) {
+        const errorMessage = data?.error || 'Dosya yüklenemedi.'
+        setBlockedError(errorMessage)
+        showToast('Dosya yüklenemedi', errorMessage, 'error')
+        return null
+      }
+
+      return data.attachment as Attachment
+    } catch (err) {
+      console.error('EXPERT ATTACHMENT UPLOAD ERROR:', err)
+      setBlockedError('Dosya yüklenirken hata oluştu.')
+      showToast('Dosya yüklenemedi', 'Dosya yüklenirken hata oluştu.', 'error')
+      return null
+    } finally {
+      setUploadingAttachment(false)
+    }
   }
 
   async function handleEnableNotifications() {
@@ -415,7 +797,7 @@ export default function ExpertChatPage({
   async function sendMessage() {
     const cleanMessage = message.trim()
 
-    if (!cleanMessage) return
+    if (!cleanMessage && !selectedAttachment) return
     if (!conversationId) return
 
     if (!accessVerified || !hasValidAccessToken()) {
@@ -428,6 +810,22 @@ export default function ExpertChatPage({
       setBlockedError('')
       await broadcastTyping(false)
 
+      const uploadedAttachment = selectedAttachment
+        ? await uploadSelectedAttachment(conversationId)
+        : null
+
+      if (selectedAttachment && !uploadedAttachment) {
+        return
+      }
+
+      const finalMessage =
+        cleanMessage ||
+        (uploadedAttachment?.mime_type.startsWith('audio/')
+          ? '🎤 Sesli mesaj gönderildi'
+          : uploadedAttachment
+            ? `📎 Dosya paylaşıldı: ${uploadedAttachment.file_name}`
+            : '')
+
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -435,7 +833,8 @@ export default function ExpertChatPage({
         body: JSON.stringify({
           senderType: 'expert',
           senderName: 'Uzman',
-          message: cleanMessage,
+          message: finalMessage,
+          attachmentId: uploadedAttachment?.id || null,
           role: 'expert',
           token: getAccessToken(),
         }),
@@ -450,6 +849,20 @@ export default function ExpertChatPage({
       }
 
       setMessage('')
+      clearSelectedAttachment()
+
+      if (uploadedAttachment) {
+        showToast(
+          uploadedAttachment.mime_type.startsWith('audio/')
+            ? 'Sesli mesaj gönderildi'
+            : 'Dosya yüklendi',
+          uploadedAttachment.mime_type.startsWith('audio/')
+            ? 'Sesli mesaj güvenli şekilde görüşmeye eklendi.'
+            : 'Dosya güvenli şekilde görüşmeye eklendi.',
+          'success'
+        )
+      }
+
       await loadMessages(conversationId, false)
     } catch {
       setBlockedError('Mesaj gönderilirken hata oluştu.')
@@ -491,6 +904,17 @@ export default function ExpertChatPage({
   useEffect(() => {
     scrollToBottom()
   }, [messages, typingUser])
+
+  useEffect(() => {
+    return () => {
+      stopRecordingTimer()
+      stopRecordingStream()
+
+      if (audioPreviewUrl) {
+        URL.revokeObjectURL(audioPreviewUrl)
+      }
+    }
+  }, [audioPreviewUrl])
 
   useEffect(() => {
     if (!conversationId) return
@@ -878,6 +1302,8 @@ export default function ExpertChatPage({
                     const isMine = item.sender_type === 'expert'
                     const isAdmin = item.sender_type === 'admin'
                     const messageStatus = getMessageStatus(item, reads)
+                    const cleanMessageText = getCleanMessageText(item)
+                    const attachments = item.attachments || []
 
                     return (
                       <div
@@ -899,9 +1325,81 @@ export default function ExpertChatPage({
                             {getSenderName(item)}
                           </p>
 
-                          <p className="whitespace-pre-wrap break-words leading-6">
-                            {item.message}
-                          </p>
+                          {cleanMessageText && (
+                            <p className="whitespace-pre-wrap break-words leading-6">
+                              {cleanMessageText}
+                            </p>
+                          )}
+
+                          {attachments.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              {attachments.map((attachment) => {
+                                const audioUrl = signedAudioUrls[attachment.id]
+                                const isAudio = attachment.mime_type.startsWith('audio/')
+
+                                return (
+                                  <div
+                                    key={attachment.id}
+                                    className={`rounded-2xl p-3 ring-1 ${
+                                      isMine
+                                        ? 'bg-white/10 ring-white/15'
+                                        : 'bg-[#faf7f2] ring-black/5'
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div
+                                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
+                                          isMine ? 'bg-white/15' : 'bg-white'
+                                        }`}
+                                      >
+                                        {getFileIcon(attachment.mime_type)}
+                                      </div>
+
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm font-black">
+                                          {isAudio ? 'Sesli mesaj' : attachment.file_name}
+                                        </p>
+                                        <p className="mt-1 text-[11px] font-bold opacity-70">
+                                          {formatFileSize(attachment.file_size)} ·
+                                          Güvenli dosya
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {isAudio && audioUrl && (
+                                      <audio
+                                        controls
+                                        preload="metadata"
+                                        src={audioUrl}
+                                        className="mt-3 w-full"
+                                      />
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={() => openAttachment(attachment)}
+                                      disabled={openingAttachmentId === attachment.id}
+                                      className={`mt-3 w-full rounded-xl px-3 py-2 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                        isMine
+                                          ? 'bg-white text-black hover:bg-white/90'
+                                          : 'bg-black text-white hover:bg-[#2b2118]'
+                                      }`}
+                                    >
+                                      {openingAttachmentId === attachment.id
+                                        ? 'Açılıyor...'
+                                        : isAudio
+                                          ? audioUrl
+                                            ? 'Bağlantıyı Yenile'
+                                            : 'Sesli Mesajı Dinle'
+                                          : attachment.mime_type.startsWith('image/')
+                                            ? 'Görseli Aç'
+                                            : 'Dosyayı Aç'}
+                                    </button>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
 
                           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold opacity-70">
                             <span>{formatDate(item.created_at)}</span>
@@ -957,11 +1455,83 @@ export default function ExpertChatPage({
                 platform dışı ödeme bilgisi paylaşmayınız.
               </div>
 
+              {isRecording && (
+                <div className="mb-3 flex flex-col gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-red-700">
+                      🎙️ Ses kaydediliyor
+                    </p>
+                    <p className="mt-1 text-xs font-bold text-red-600">
+                      Süre: {formatDuration(recordingSeconds)} /{' '}
+                      {formatDuration(MAX_RECORDING_SECONDS)}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={cancelVoiceRecording}
+                      className="rounded-full bg-white px-4 py-2 text-xs font-black text-red-600 ring-1 ring-red-100 transition hover:bg-red-50"
+                    >
+                      İptal
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={stopVoiceRecording}
+                      className="rounded-full bg-black px-4 py-2 text-xs font-black text-white transition hover:bg-[#2b2118]"
+                    >
+                      Kaydı Bitir
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {selectedAttachment && (
+                <div className="mb-3 flex flex-col gap-3 rounded-2xl border border-dashed border-black/15 bg-[#faf7f2] p-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl ring-1 ring-black/5">
+                      {getFileIcon(selectedAttachment.type)}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black text-[#2b2118]">
+                        {selectedAttachment.type.startsWith('audio/')
+                          ? 'Sesli mesaj hazır'
+                          : selectedAttachment.name}
+                      </p>
+                      <p className="mt-1 text-xs font-bold text-[#8a7662]">
+                        {formatFileSize(selectedAttachment.size)} · Güvenli
+                        yükleme için hazır
+                      </p>
+
+                      {audioPreviewUrl && (
+                        <audio
+                          controls
+                          preload="metadata"
+                          src={audioPreviewUrl}
+                          className="mt-3 w-full"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={clearSelectedAttachment}
+                    disabled={sending || uploadingAttachment}
+                    className="rounded-full bg-white px-4 py-2 text-xs font-black text-red-600 ring-1 ring-red-100 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Kaldır
+                  </button>
+                </div>
+              )}
+
               <div className="flex flex-col gap-3 md:flex-row">
                 <textarea
                   value={message}
                   onChange={(event) => handleMessageChange(event.target.value)}
-                  disabled={!isActive || !accessVerified || sending}
+                  disabled={!isActive || !accessVerified || sending || isRecording}
                   rows={3}
                   maxLength={2000}
                   placeholder={
@@ -972,20 +1542,69 @@ export default function ExpertChatPage({
                   className="min-h-24 flex-1 resize-none rounded-2xl border border-black/10 bg-[#faf7f2] p-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30 disabled:cursor-not-allowed disabled:opacity-60"
                 />
 
-                <button
-                  onClick={sendMessage}
-                  disabled={
-                    !isActive || !accessVerified || sending || !message.trim()
-                  }
-                  className="rounded-2xl bg-black px-6 py-4 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50 md:w-40"
-                >
-                  {sending ? 'Gönderiliyor...' : 'Gönder'}
-                </button>
+                <div className="flex gap-2 md:w-56 md:flex-col">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,audio/webm,audio/mp4,audio/mpeg,audio/wav,audio/x-wav"
+                    onChange={handleAttachmentChange}
+                    className="hidden"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!isActive || !accessVerified || sending || isRecording}
+                    className="flex-1 rounded-2xl border border-black/10 bg-white px-4 py-4 text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    📎 Dosya
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                    disabled={
+                      !isActive ||
+                      !accessVerified ||
+                      sending ||
+                      uploadingAttachment ||
+                      Boolean(selectedAttachment && !isRecording)
+                    }
+                    className={`flex-1 rounded-2xl px-4 py-4 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                      isRecording
+                        ? 'bg-red-600 text-white hover:bg-red-700'
+                        : 'border border-black/10 bg-white text-[#2b2118] hover:bg-[#f0e8df]'
+                    }`}
+                  >
+                    {isRecording ? '⏹️ Bitir' : '🎤 Ses'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={sendMessage}
+                    disabled={
+                      !isActive ||
+                      !accessVerified ||
+                      sending ||
+                      uploadingAttachment ||
+                      isRecording ||
+                      (!message.trim() && !selectedAttachment)
+                    }
+                    className="flex-1 rounded-2xl bg-black px-6 py-4 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {uploadingAttachment
+                      ? 'Yükleniyor...'
+                      : sending
+                        ? 'Gönderiliyor...'
+                        : 'Gönder'}
+                  </button>
+                </div>
               </div>
 
-              <p className="mt-2 text-xs font-semibold text-[#8a7662]">
-                {message.length}/2000 karakter
-              </p>
+              <div className="mt-2 flex flex-col gap-1 text-xs font-semibold text-[#8a7662] md:flex-row md:items-center md:justify-between">
+                <p>{message.length}/2000 karakter</p>
+                <p>PDF, DOC, DOCX, görsel veya ses · Maksimum 10 MB</p>
+              </div>
             </div>
           </section>
         )}
