@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/ToastProvider'
 import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
 
@@ -158,6 +158,7 @@ function getCleanMessageText(item: Message) {
 
   attachmentNames.forEach((fileName) => {
     const attachment = item.attachments?.find((item) => item.file_name === fileName)
+
     text = text
       .replace(
         `\n\n📎 ${fileName} (${formatFileSize(attachment?.file_size || 0)})`,
@@ -197,6 +198,7 @@ export default function ExpertChatPage({
   } = useToast()
 
   const searchParams = useSearchParams()
+  const router = useRouter()
 
   const [conversationId, setConversationId] = useState('')
   const [conversation, setConversation] = useState<Conversation | null>(null)
@@ -216,6 +218,7 @@ export default function ExpertChatPage({
   const [typingUser, setTypingUser] = useState<TypingPayload | null>(null)
   const [readSynced, setReadSynced] = useState(false)
   const [notificationLoading, setNotificationLoading] = useState(false)
+  const [videoSessionLoading, setVideoSessionLoading] = useState(false)
 
   const [isRecording, setIsRecording] = useState(false)
   const [recordingSeconds, setRecordingSeconds] = useState(0)
@@ -613,6 +616,75 @@ export default function ExpertChatPage({
       )
     } finally {
       setNotificationLoading(false)
+    }
+  }
+
+  async function handleStartVideoSession() {
+    if (!conversationId) {
+      showToast(
+        'Video görüşme başlatılamadı',
+        'Konuşma bilgisi henüz hazır değil.',
+        'warning'
+      )
+      return
+    }
+
+    if (!isActive) {
+      showToast(
+        'Video görüşme başlatılamaz',
+        'Video görüşme için chat aktif ve ödeme tamamlanmış olmalıdır.',
+        'warning'
+      )
+      return
+    }
+
+    if (!accessVerified || !hasValidAccessToken()) {
+      showToast(
+        'Erişim doğrulanamadı',
+        'Video görüşmeye katılmak için güvenli erişim gerekir.',
+        'error'
+      )
+      return
+    }
+
+    try {
+      setVideoSessionLoading(true)
+
+      const res = await fetch('/api/sessions/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({
+          conversationId,
+          createdBy: 'expert',
+        }),
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok || !data?.ok || !data?.session?.id) {
+        throw new Error(data?.error || 'Video görüşme oluşturulamadı.')
+      }
+
+      showToast(
+        data.reused ? 'Mevcut seansa yönlendiriliyorsunuz' : 'Video görüşme hazır',
+        'Güvenli video görüşme odasına yönlendiriliyorsunuz.',
+        'success'
+      )
+
+      router.push(`/expert/session/${data.session.id}?token=${getEncodedAccessToken()}`)
+    } catch (err) {
+      console.error('EXPERT VIDEO SESSION START ERROR:', err)
+
+      showToast(
+        'Video görüşme başlatılamadı',
+        err instanceof Error
+          ? err.message
+          : 'Video görüşme başlatılırken hata oluştu.',
+        'error'
+      )
+    } finally {
+      setVideoSessionLoading(false)
     }
   }
 
@@ -1213,12 +1285,25 @@ export default function ExpertChatPage({
               )}
             </div>
 
-            <Link
-              href="/"
-              className="rounded-full border border-black/10 bg-white px-5 py-3 text-center text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df]"
-            >
-              Ana Sayfa
-            </Link>
+            <div className="flex flex-col gap-2 md:items-end">
+              <button
+                type="button"
+                onClick={handleStartVideoSession}
+                disabled={!isActive || !accessVerified || videoSessionLoading}
+                className="rounded-full bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {videoSessionLoading
+                  ? 'Seans hazırlanıyor...'
+                  : '🎥 Video Görüşmeye Katıl'}
+              </button>
+
+              <Link
+                href="/"
+                className="rounded-full border border-black/10 bg-white px-5 py-3 text-center text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df]"
+              >
+                Ana Sayfa
+              </Link>
+            </div>
           </div>
 
           {conversation && (
