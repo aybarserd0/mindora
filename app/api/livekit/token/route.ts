@@ -13,6 +13,26 @@ type SessionStatus =
   | 'cancelled'
   | 'no_show'
 
+type ConversationRecord = {
+  id: string
+  client_application_id: string | null
+  expert_id: string | null
+  status: string
+  payment_status: string | null
+}
+
+type SessionRecord = {
+  id: string
+  conversation_id: string
+  client_application_id: string | null
+  expert_id: string | null
+  status: SessionStatus | string
+  room_name: string | null
+  scheduled_at: string | null
+  started_at?: string | null
+  conversations: ConversationRecord | ConversationRecord[] | null
+}
+
 function toText(value: unknown) {
   if (value === null || value === undefined) return ''
   return String(value).trim()
@@ -26,16 +46,70 @@ function isJoinableSessionStatus(status: SessionStatus | string) {
   return status === 'scheduled' || status === 'waiting' || status === 'active'
 }
 
-function createSafeIdentity(userType: UserType, participantName: string, sessionId: string) {
+function createSafeIdentity(
+  userType: UserType,
+  participantName: string,
+  sessionId: string
+) {
   const safeName =
     participantName
       .toLowerCase()
-      .replace(/[^a-z0-9ğüşöçıİĞÜŞÖÇ-]/gi, '-')
+      .replace(/[^a-z0-9-]/gi, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 40) || 'user'
 
   return `${userType}-${safeName}-${sessionId.slice(0, 8)}`
+}
+
+function normalizeConversation(
+  value: ConversationRecord | ConversationRecord[] | null
+) {
+  if (Array.isArray(value)) return value[0] || null
+  return value
+}
+
+function getPublicLivekitUrl(rawUrl: string) {
+  const url = rawUrl.trim()
+
+  if (!url) return ''
+
+  return url
+}
+
+async function markSessionWaitingIfNeeded(sessionId: string) {
+  const supabase = getSupabaseAdmin()
+
+  const { error } = await supabase
+    .from('sessions')
+    .update({
+      status: 'waiting',
+    })
+    .eq('id', sessionId)
+    .eq('status', 'scheduled')
+
+  if (error) {
+    console.error('LIVEKIT_SESSION_WAITING_UPDATE_ERROR', error)
+  }
+}
+
+async function markSessionActiveIfNeeded(sessionId: string) {
+  const supabase = getSupabaseAdmin()
+  const now = new Date().toISOString()
+
+  const { error } = await supabase
+    .from('sessions')
+    .update({
+      status: 'active',
+      started_at: now,
+    })
+    .eq('id', sessionId)
+    .in('status', ['scheduled', 'waiting'])
+    .is('started_at', null)
+
+  if (error) {
+    console.error('LIVEKIT_SESSION_ACTIVE_UPDATE_ERROR', error)
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -49,10 +123,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const sessionId = toText((body as Record<string, unknown>).sessionId)
-    const participantName = toText((body as Record<string, unknown>).participantName)
-    const userTypeRaw = toText((body as Record<string, unknown>).userType)
-    const accessToken = toText((body as Record<string, unknown>).token)
+    const bodyRecord = body as Record<string, unknown>
+
+    const sessionId = toText(bodyRecord.sessionId)
+    const participantName = toText(bodyRecord.participantName)
+    const userTypeRaw = toText(bodyRecord.userType)
+    const accessToken = toText(bodyRecord.token)
 
     if (!sessionId) {
       return NextResponse.json(
@@ -84,7 +160,7 @@ export async function POST(req: NextRequest) {
 
     const apiKey = process.env.LIVEKIT_API_KEY
     const apiSecret = process.env.LIVEKIT_API_SECRET
-    const livekitUrl = process.env.LIVEKIT_URL
+    const livekitUrl = getPublicLivekitUrl(process.env.LIVEKIT_URL || '')
 
     if (!apiKey || !apiSecret || !livekitUrl) {
       console.error('LIVEKIT_ENV_MISSING', {
@@ -101,7 +177,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdmin()
 
-    const { data: session, error: sessionError } = await supabase
+    const { data, error: sessionError } = await supabase
       .from('sessions')
       .select(
         `
@@ -112,6 +188,7 @@ export async function POST(req: NextRequest) {
         status,
         room_name,
         scheduled_at,
+        started_at,
         conversations (
           id,
           client_application_id,
@@ -122,11 +199,20 @@ export async function POST(req: NextRequest) {
       `
       )
       .eq('id', sessionId)
-      .single()
+      .maybeSingle()
 
-    if (sessionError || !session) {
-      console.error('LIVEKIT_SESSION_NOT_FOUND', sessionError)
+    const session = data as SessionRecord | null
 
+    if (sessionError) {
+      console.error('LIVEKIT_SESSION_QUERY_ERROR', sessionError)
+
+      return NextResponse.json(
+        { ok: false, error: 'Session could not be checked.' },
+        { status: 500 }
+      )
+    }
+
+    if (!session) {
       return NextResponse.json(
         { ok: false, error: 'Session not found.' },
         { status: 404 }
@@ -143,9 +229,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const conversation = Array.isArray(session.conversations)
-      ? session.conversations[0]
-      : session.conversations
+    const conversation = normalizeConversation(session.conversations)
 
     if (!conversation) {
       return NextResponse.json(
@@ -168,6 +252,42 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (!session.room_name) {
+      return NextResponse.json(
+        { ok: false, error: 'Session room is not configured.' },
+        { status: 500 }
+      )
+    }
+
+    if (session.conversation_id !== conversation.id) {
+      return NextResponse.json(
+        { ok: false, error: 'Session conversation mismatch.' },
+        { status: 409 }
+      )
+    }
+
+    if (
+      session.client_application_id &&
+      conversation.client_application_id &&
+      session.client_application_id !== conversation.client_application_id
+    ) {
+      return NextResponse.json(
+        { ok: false, error: 'Session client mismatch.' },
+        { status: 409 }
+      )
+    }
+
+    if (
+      session.expert_id &&
+      conversation.expert_id &&
+      session.expert_id !== conversation.expert_id
+    ) {
+      return NextResponse.json(
+        { ok: false, error: 'Session expert mismatch.' },
+        { status: 409 }
+      )
+    }
+
     const verified = await verifyConversationAccessToken({
       token: accessToken,
       conversationId: session.conversation_id,
@@ -181,32 +301,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!session.room_name) {
-      return NextResponse.json(
-        { ok: false, error: 'Session room is not configured.' },
-        { status: 500 }
-      )
+    if (session.status === 'scheduled') {
+      await markSessionWaitingIfNeeded(session.id)
     }
 
-    if (session.status === 'scheduled') {
-      const { error: updateError } = await supabase
-        .from('sessions')
-        .update({
-          status: 'waiting',
-        })
-        .eq('id', session.id)
-        .eq('status', 'scheduled')
-
-      if (updateError) {
-        console.error('LIVEKIT_SESSION_WAITING_UPDATE_ERROR', updateError)
-      }
+    if (session.status === 'waiting') {
+      await markSessionActiveIfNeeded(session.id)
     }
 
     const identity = createSafeIdentity(userTypeRaw, participantName, session.id)
 
     const livekitToken = new AccessToken(apiKey, apiSecret, {
       identity,
-      name: participantName,
+      name: participantName.slice(0, 80),
       ttl: '2h',
       metadata: JSON.stringify({
         sessionId: session.id,
@@ -233,8 +340,14 @@ export async function POST(req: NextRequest) {
       identity,
       session: {
         id: session.id,
-        status: session.status,
+        status:
+          session.status === 'scheduled'
+            ? 'waiting'
+            : session.status === 'waiting'
+              ? 'active'
+              : session.status,
         scheduledAt: session.scheduled_at,
+        startedAt: session.started_at,
       },
     })
   } catch (error) {
