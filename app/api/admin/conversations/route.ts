@@ -7,6 +7,8 @@ type Conversation = {
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
   created_at: string
   updated_at: string
+  client_access_token?: string | null
+  expert_access_token?: string | null
 }
 
 type Message = {
@@ -23,7 +25,17 @@ export async function GET() {
 
     const { data: conversations, error: conversationsError } = await supabase
       .from('conversations')
-      .select('id,status,payment_status,created_at,updated_at')
+      .select(
+        [
+          'id',
+          'status',
+          'payment_status',
+          'created_at',
+          'updated_at',
+          'client_access_token',
+          'expert_access_token',
+        ].join(',')
+      )
       .order('updated_at', { ascending: false })
 
     if (conversationsError) {
@@ -33,7 +45,7 @@ export async function GET() {
       )
     }
 
-    const conversationList = (conversations || []) as Conversation[]
+    const conversationList = ((conversations || []) as unknown) as Conversation[]
 
     if (conversationList.length === 0) {
       return NextResponse.json({
@@ -71,6 +83,8 @@ export async function GET() {
 
         return {
           ...conversation,
+          clientAccessToken: conversation.client_access_token || null,
+          expertAccessToken: conversation.expert_access_token || null,
           last_message: lastMessage?.message || null,
           last_message_sender: lastMessage?.sender_type || null,
           last_message_sender_name: lastMessage?.sender_name || null,
