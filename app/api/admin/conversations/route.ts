@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { generateSecureToken } from '@/lib/chat-access-tokens'
 
 type Conversation = {
   id: string
@@ -17,6 +18,8 @@ type Message = {
   created_at: string
 }
 
+type AccessRole = 'client' | 'expert'
+
 type AccessTokenRow = {
   id?: string
   conversation_id?: string | null
@@ -30,9 +33,18 @@ type AccessTokenRow = {
   type?: string | null
   access_type?: string | null
   participant_type?: string | null
+  revoked?: boolean | null
+  expires_at?: string | null
 }
 
-function normalizeRole(row: AccessTokenRow): 'client' | 'expert' | null {
+type TokenPair = {
+  client?: string
+  expert?: string
+}
+
+const TOKEN_TTL_HOURS = 24 * 7
+
+function normalizeRole(row: AccessTokenRow): AccessRole | null {
   const rawRole =
     row.user_type ||
     row.userType ||
@@ -48,7 +60,12 @@ function normalizeRole(row: AccessTokenRow): 'client' | 'expert' | null {
     return 'client'
   }
 
-  if (role === 'expert' || role === 'uzman' || role === 'psychologist') {
+  if (
+    role === 'expert' ||
+    role === 'uzman' ||
+    role === 'psychologist' ||
+    role === 'therapist'
+  ) {
     return 'expert'
   }
 
@@ -68,6 +85,58 @@ function getSafeTime(value?: string | null) {
 
   const time = new Date(value).getTime()
   return Number.isNaN(time) ? 0 : time
+}
+
+function isTokenUsable(row: AccessTokenRow) {
+  if (row.revoked === true) return false
+
+  if (!row.expires_at) return true
+
+  const expiresAt = new Date(row.expires_at).getTime()
+  if (Number.isNaN(expiresAt)) return true
+
+  return expiresAt > Date.now()
+}
+
+function createExpiresAt() {
+  return new Date(Date.now() + TOKEN_TTL_HOURS * 60 * 60 * 1000).toISOString()
+}
+
+async function ensureConversationAccessToken({
+  supabase,
+  conversationId,
+  role,
+}: {
+  supabase: any
+  conversationId: string
+  role: AccessRole
+}) {
+  const token = generateSecureToken()
+  const expiresAt = createExpiresAt()
+
+  const { data, error } = await supabase
+    .from('conversation_access_tokens')
+    .insert({
+      conversation_id: conversationId,
+      role,
+      token,
+      expires_at: expiresAt,
+      revoked: false,
+    })
+    .select('token')
+    .single()
+
+  if (error) {
+    console.error('ADMIN AUTO TOKEN CREATE ERROR:', {
+      conversationId,
+      role,
+      error,
+    })
+
+    return null
+  }
+
+  return data?.token || token
 }
 
 export async function GET() {
@@ -132,15 +201,11 @@ export async function GET() {
       }
     })
 
-    const tokenMap = new Map<
-      string,
-      {
-        client?: string
-        expert?: string
-      }
-    >()
+    const tokenMap = new Map<string, TokenPair>()
 
     ;(((accessTokens || []) as unknown) as AccessTokenRow[]).forEach((row) => {
+      if (!isTokenUsable(row)) return
+
       const conversationId = getConversationIdValue(row)
       const role = normalizeRole(row)
       const token = getTokenValue(row)
@@ -159,6 +224,36 @@ export async function GET() {
 
       tokenMap.set(conversationId, existing)
     })
+
+    for (const conversation of conversationList) {
+      const existing = tokenMap.get(conversation.id) || {}
+
+      if (!existing.client) {
+        const clientToken = await ensureConversationAccessToken({
+          supabase,
+          conversationId: conversation.id,
+          role: 'client',
+        })
+
+        if (clientToken) {
+          existing.client = clientToken
+        }
+      }
+
+      if (!existing.expert) {
+        const expertToken = await ensureConversationAccessToken({
+          supabase,
+          conversationId: conversation.id,
+          role: 'expert',
+        })
+
+        if (expertToken) {
+          existing.expert = expertToken
+        }
+      }
+
+      tokenMap.set(conversation.id, existing)
+    }
 
     const conversationsWithPreview = conversationList
       .map((conversation) => {
