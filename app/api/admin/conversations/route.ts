@@ -17,10 +17,57 @@ type Message = {
   created_at: string
 }
 
-type AccessToken = {
-  conversation_id: string
-  user_type: 'client' | 'expert'
-  token: string
+type AccessTokenRow = {
+  id?: string
+  conversation_id?: string | null
+  conversationId?: string | null
+  token?: string | null
+  access_token?: string | null
+  accessToken?: string | null
+  user_type?: string | null
+  userType?: string | null
+  role?: string | null
+  type?: string | null
+  access_type?: string | null
+  participant_type?: string | null
+}
+
+function normalizeRole(row: AccessTokenRow): 'client' | 'expert' | null {
+  const rawRole =
+    row.user_type ||
+    row.userType ||
+    row.role ||
+    row.type ||
+    row.access_type ||
+    row.participant_type ||
+    ''
+
+  const role = String(rawRole).toLowerCase().trim()
+
+  if (role === 'client' || role === 'danisan' || role === 'danışan') {
+    return 'client'
+  }
+
+  if (role === 'expert' || role === 'uzman' || role === 'psychologist') {
+    return 'expert'
+  }
+
+  return null
+}
+
+function getTokenValue(row: AccessTokenRow) {
+  return row.token || row.access_token || row.accessToken || ''
+}
+
+function getConversationIdValue(row: AccessTokenRow) {
+  return row.conversation_id || row.conversationId || ''
+}
+
+function getSafeTime(value?: string | null) {
+  if (!value) return 0
+
+  const time = new Date(value).getTime()
+  return Number.isNaN(time) ? 0 : time
 }
 
 export async function GET() {
@@ -67,7 +114,7 @@ export async function GET() {
       supabase as any
     )
       .from('conversation_access_tokens')
-      .select('conversation_id,user_type,token')
+      .select('*')
       .in('conversation_id', conversationIds)
 
     if (accessTokensError) {
@@ -93,18 +140,24 @@ export async function GET() {
       }
     >()
 
-    ;(((accessTokens || []) as unknown) as AccessToken[]).forEach((item) => {
-      const existing = tokenMap.get(item.conversation_id) || {}
+    ;(((accessTokens || []) as unknown) as AccessTokenRow[]).forEach((row) => {
+      const conversationId = getConversationIdValue(row)
+      const role = normalizeRole(row)
+      const token = getTokenValue(row)
 
-      if (item.user_type === 'client') {
-        existing.client = item.token
+      if (!conversationId || !role || !token) return
+
+      const existing = tokenMap.get(conversationId) || {}
+
+      if (role === 'client') {
+        existing.client = token
       }
 
-      if (item.user_type === 'expert') {
-        existing.expert = item.token
+      if (role === 'expert') {
+        existing.expert = token
       }
 
-      tokenMap.set(item.conversation_id, existing)
+      tokenMap.set(conversationId, existing)
     })
 
     const conversationsWithPreview = conversationList
@@ -125,8 +178,8 @@ export async function GET() {
         }
       })
       .sort((a, b) => {
-        const aTime = new Date(a.last_message_at || a.updated_at).getTime()
-        const bTime = new Date(b.last_message_at || b.updated_at).getTime()
+        const aTime = getSafeTime(a.last_message_at || a.updated_at)
+        const bTime = getSafeTime(b.last_message_at || b.updated_at)
 
         return bTime - aTime
       })
