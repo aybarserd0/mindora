@@ -7,8 +7,6 @@ type Conversation = {
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
   created_at: string
   updated_at: string
-  client_access_token?: string | null
-  expert_access_token?: string | null
 }
 
 type Message = {
@@ -19,23 +17,19 @@ type Message = {
   created_at: string
 }
 
+type AccessToken = {
+  conversation_id: string
+  user_type: 'client' | 'expert'
+  token: string
+}
+
 export async function GET() {
   try {
     const supabase = getSupabaseAdmin()
 
     const { data: conversations, error: conversationsError } = await supabase
       .from('conversations')
-      .select(
-        [
-          'id',
-          'status',
-          'payment_status',
-          'created_at',
-          'updated_at',
-          'client_access_token',
-          'expert_access_token',
-        ].join(',')
-      )
+      .select('id,status,payment_status,created_at,updated_at')
       .order('updated_at', { ascending: false })
 
     if (conversationsError) {
@@ -69,22 +63,61 @@ export async function GET() {
       )
     }
 
+    const { data: accessTokens, error: accessTokensError } = await (
+      supabase as any
+    )
+      .from('conversation_access_tokens')
+      .select('conversation_id,user_type,token')
+      .in('conversation_id', conversationIds)
+
+    if (accessTokensError) {
+      return NextResponse.json(
+        { ok: false, error: accessTokensError.message },
+        { status: 500 }
+      )
+    }
+
     const lastMessageMap = new Map<string, Message>()
 
-    ;((messages || []) as Message[]).forEach((message) => {
+    ;(((messages || []) as unknown) as Message[]).forEach((message) => {
       if (!lastMessageMap.has(message.conversation_id)) {
         lastMessageMap.set(message.conversation_id, message)
       }
     })
 
+    const tokenMap = new Map<
+      string,
+      {
+        client?: string
+        expert?: string
+      }
+    >()
+
+    ;(((accessTokens || []) as unknown) as AccessToken[]).forEach((item) => {
+      const existing = tokenMap.get(item.conversation_id) || {}
+
+      if (item.user_type === 'client') {
+        existing.client = item.token
+      }
+
+      if (item.user_type === 'expert') {
+        existing.expert = item.token
+      }
+
+      tokenMap.set(item.conversation_id, existing)
+    })
+
     const conversationsWithPreview = conversationList
       .map((conversation) => {
         const lastMessage = lastMessageMap.get(conversation.id)
+        const tokens = tokenMap.get(conversation.id)
 
         return {
           ...conversation,
-          clientAccessToken: conversation.client_access_token || null,
-          expertAccessToken: conversation.expert_access_token || null,
+
+          clientAccessToken: tokens?.client || null,
+          expertAccessToken: tokens?.expert || null,
+
           last_message: lastMessage?.message || null,
           last_message_sender: lastMessage?.sender_type || null,
           last_message_sender_name: lastMessage?.sender_name || null,
