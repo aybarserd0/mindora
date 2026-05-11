@@ -20,6 +20,13 @@ type Conversation = {
   last_message_sender?: SenderType | null
   last_message_sender_name?: string | null
   last_message_at?: string | null
+
+  client_access_token?: string | null
+  expert_access_token?: string | null
+  clientAccessToken?: string | null
+  expertAccessToken?: string | null
+  client_token?: string | null
+  expert_token?: string | null
 }
 
 type PresenceState = {
@@ -99,6 +106,39 @@ function getPreviewText(message?: string | null) {
   if (clean.length <= 120) return clean
 
   return `${clean.slice(0, 120)}...`
+}
+
+function getClientToken(conversation: Conversation) {
+  return (
+    conversation.client_access_token ||
+    conversation.clientAccessToken ||
+    conversation.client_token ||
+    ''
+  )
+}
+
+function getExpertToken(conversation: Conversation) {
+  return (
+    conversation.expert_access_token ||
+    conversation.expertAccessToken ||
+    conversation.expert_token ||
+    ''
+  )
+}
+
+function buildChatUrl(
+  userType: 'client' | 'expert',
+  conversationId: string,
+  token: string
+) {
+  const basePath =
+    userType === 'client'
+      ? `/client/chat/${conversationId}`
+      : `/expert/chat/${conversationId}`
+
+  if (!token) return basePath
+
+  return `${basePath}?token=${encodeURIComponent(token)}`
 }
 
 function parsePresenceState(rawState: Record<string, unknown[]>): PresenceState {
@@ -192,6 +232,12 @@ export default function AdminConversationsPage() {
 
   const paidCount = useMemo(() => {
     return conversations.filter((item) => item.payment_status === 'paid').length
+  }, [conversations])
+
+  const secureLinkReadyCount = useMemo(() => {
+    return conversations.filter((item) => {
+      return Boolean(getClientToken(item) && getExpertToken(item))
+    }).length
   }, [conversations])
 
   const onlineSummary = useMemo(() => {
@@ -535,8 +581,8 @@ export default function AdminConversationsPage() {
               </h1>
 
               <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
-                Son mesaj, okunmamış mesaj, ödeme durumu, filtreleme ve online
-                kullanıcı takibi.
+                Son mesaj, okunmamış mesaj, ödeme durumu, filtreleme, online
+                kullanıcı takibi ve secure test linkleri.
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -564,6 +610,10 @@ export default function AdminConversationsPage() {
 
                 <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700 ring-1 ring-green-100">
                   {paidCount} ödenmiş
+                </span>
+
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100">
+                  {secureLinkReadyCount} secure link hazır
                 </span>
 
                 <span
@@ -663,17 +713,32 @@ export default function AdminConversationsPage() {
                 expert: false,
               }
 
+              const clientToken = getClientToken(conversation)
+              const expertToken = getExpertToken(conversation)
+              const clientUrl = buildChatUrl(
+                'client',
+                conversation.id,
+                clientToken
+              )
+              const expertUrl = buildChatUrl(
+                'expert',
+                conversation.id,
+                expertToken
+              )
+
+              const hasClientLink = Boolean(clientToken)
+              const hasExpertLink = Boolean(expertToken)
+
               return (
-                <Link
+                <article
                   key={conversation.id}
-                  href={`/admin/conversations/${conversation.id}`}
-                  className={`group rounded-[2rem] border bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${
+                  className={`rounded-[2rem] border bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${
                     hasUnread
                       ? 'border-red-200 ring-2 ring-red-50'
                       : 'border-[#e5d9cc]'
                   }`}
                 >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
@@ -716,6 +781,18 @@ export default function AdminConversationsPage() {
                         />
 
                         <PresencePill label="Uzman" online={presence.expert} />
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                            hasClientLink && hasExpertLink
+                              ? 'bg-blue-50 text-blue-700 ring-blue-100'
+                              : 'bg-orange-50 text-orange-700 ring-orange-100'
+                          }`}
+                        >
+                          {hasClientLink && hasExpertLink
+                            ? 'Secure link hazır'
+                            : 'Secure link eksik'}
+                        </span>
                       </div>
 
                       <p className="mt-4 break-all text-sm font-black text-[#2b2118]">
@@ -766,13 +843,56 @@ export default function AdminConversationsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end">
-                      <div className="rounded-2xl bg-[#faf7f2] px-5 py-3 text-sm font-black text-[#2b2118] ring-1 ring-black/5 transition group-hover:bg-black group-hover:text-white">
+                    <div className="flex w-full flex-col gap-2 lg:w-56">
+                      <Link
+                        href={`/admin/conversations/${conversation.id}`}
+                        className="rounded-2xl bg-[#faf7f2] px-5 py-3 text-center text-sm font-black text-[#2b2118] ring-1 ring-black/5 transition hover:bg-black hover:text-white"
+                      >
                         Konuşmayı Aç →
-                      </div>
+                      </Link>
+
+                      <a
+                        href={hasClientLink ? clientUrl : undefined}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-disabled={!hasClientLink}
+                        onClick={(event) => {
+                          if (!hasClientLink) event.preventDefault()
+                        }}
+                        className={`rounded-2xl px-5 py-3 text-center text-xs font-black transition ${
+                          hasClientLink
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'cursor-not-allowed bg-blue-100 text-blue-400'
+                        }`}
+                      >
+                        Client Secure Test
+                      </a>
+
+                      <a
+                        href={hasExpertLink ? expertUrl : undefined}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-disabled={!hasExpertLink}
+                        onClick={(event) => {
+                          if (!hasExpertLink) event.preventDefault()
+                        }}
+                        className={`rounded-2xl px-5 py-3 text-center text-xs font-black transition ${
+                          hasExpertLink
+                            ? 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'cursor-not-allowed bg-purple-100 text-purple-400'
+                        }`}
+                      >
+                        Expert Secure Test
+                      </a>
+
+                      {(!hasClientLink || !hasExpertLink) && (
+                        <p className="rounded-2xl bg-orange-50 px-4 py-3 text-xs font-bold leading-5 text-orange-700 ring-1 ring-orange-100">
+                          API token alanlarını döndürmüyor olabilir.
+                        </p>
+                      )}
                     </div>
                   </div>
-                </Link>
+                </article>
               )
             })}
           </div>
