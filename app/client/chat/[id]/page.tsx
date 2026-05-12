@@ -244,35 +244,28 @@ export default function ClientChatPage({
     ReturnType<typeof createMindoraRealtimeClient>['channel']
   > | null>(null)
 
-  const paymentCompleted = conversation?.payment_status === 'paid'
-  const chatActive = conversation?.status === 'active'
-  const conversationClosed = conversation?.status === 'closed'
-  
+  const conversationStatus = conversation?.status?.toString() || ''
+  const conversationPaymentStatus = conversation?.payment_status?.toString() || ''
 
-  const isActive = chatActive && paymentCompleted
+  const isConversationReady = Boolean(conversation)
+  const paymentCompleted = conversationPaymentStatus === 'paid'
+  const chatActive = conversationStatus === 'active'
+  const conversationClosed = conversationStatus === 'closed'
+
+  const isActive = isConversationReady && chatActive && paymentCompleted
 
   const canStartVideoSession =
+    isConversationReady &&
     accessVerified &&
     hasValidAccessToken() &&
     paymentCompleted &&
     !conversationClosed
 
-    console.log(
-  'CLIENT CONVERSATION DEBUG',
-  JSON.stringify({
-    status: conversation?.status,
-    payment_status: conversation?.payment_status,
-    paymentCompleted,
-    chatActive,
-    conversationClosed,
-    accessVerified,
-    hasToken: hasValidAccessToken(),
-    canStartVideoSession,
-    isActive,
-  })
-)
+  const showChatLockedBanner = isConversationReady && !isActive
 
-  const videoButtonTitle = !accessVerified
+  const videoButtonTitle = !isConversationReady
+    ? 'Görüşme bilgileri yükleniyor'
+    : !accessVerified
     ? 'Güvenli erişim doğrulanmalı'
     : !hasValidAccessToken()
       ? 'Güvenli token eksik'
@@ -1325,6 +1318,7 @@ export default function ClientChatPage({
                 onClick={handleStartVideoSession}
                 disabled={!canStartVideoSession || videoSessionLoading}
                 title={videoButtonTitle}
+                data-ready={String(isConversationReady)}
                 className="rounded-full bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {videoSessionLoading ? 'Seans hazırlanıyor...' : '🎥 Video Görüşmeye Katıl'}
@@ -1396,7 +1390,7 @@ export default function ClientChatPage({
           </section>
         ) : (
           <section className="overflow-hidden rounded-[2rem] border border-[#e5d9cc] bg-white shadow-sm">
-            {!isActive && (
+            {showChatLockedBanner && (
               <div className="border-b border-orange-100 bg-orange-50 p-5">
                 <p className="text-lg font-black text-orange-800">
                   🔒 Chat şu anda kilitli
