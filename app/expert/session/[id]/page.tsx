@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  useLocalParticipant,
   useParticipants,
   VideoConference,
 } from '@livekit/components-react'
@@ -95,6 +96,8 @@ export default function ExpertSessionPage() {
   const [remoteParticipantCount, setRemoteParticipantCount] = useState(0)
   const [participantState, setParticipantState] = useState<ParticipantState>('waiting')
   const [remoteParticipantSeen, setRemoteParticipantSeen] = useState(false)
+  const [liveAudioEnabled, setLiveAudioEnabled] = useState(true)
+  const [liveVideoEnabled, setLiveVideoEnabled] = useState(true)
 
   const previewVideoRef = useRef<HTMLVideoElement | null>(null)
   const previewStreamRef = useRef<MediaStream | null>(null)
@@ -366,6 +369,8 @@ export default function ExpertSessionPage() {
     stopPreviewStream()
     clearRecoveryTimers()
 
+    setLiveAudioEnabled(deviceState.audioEnabled)
+    setLiveVideoEnabled(deviceState.videoEnabled)
     setJoining(true)
     setRecoveryState('idle')
     setRetryCount(0)
@@ -640,7 +645,7 @@ export default function ExpertSessionPage() {
                     : 'bg-red-500 text-white hover:bg-red-600'
                 }`}
               >
-                {deviceState.audioEnabled ? 'Mikrofon Açık' : 'Mikrofon Kapalı'}
+                {deviceState.audioEnabled ? '🎤 Mikrofon Açık' : '🔇 Mikrofon Kapalı'}
               </button>
 
               <button
@@ -655,7 +660,7 @@ export default function ExpertSessionPage() {
                     : 'bg-red-500 text-white hover:bg-red-600'
                 }`}
               >
-                {deviceState.videoEnabled ? 'Kamera Açık' : 'Kamera Kapalı'}
+                {deviceState.videoEnabled ? '📷 Kamera Açık' : '🚫 Kamera Kapalı'}
               </button>
             </div>
           </div>
@@ -724,7 +729,7 @@ export default function ExpertSessionPage() {
 
               {permissionState === 'denied' && (
                 <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-sm leading-6 text-yellow-100">
-                  Kamera veya mikrofon izni verilmedi. Tarayıcı izinlerinden Mindora için kamera/mikrofon erişimini açıp tekrar dene.
+                  Kamera veya mikrofon izni verilmedi. Tarayıcı izinlerinden Mindora için kamera/mikrofon erişimini açabilir ya da kamerayı/mikrofonu kapalı başlatabilirsin.
                 </div>
               )}
 
@@ -849,9 +854,134 @@ export default function ExpertSessionPage() {
         }}
       >
         <ParticipantPresenceBridge onChange={handleRemoteParticipantCountChange} />
+        <InCallControls
+          audioEnabled={liveAudioEnabled}
+          videoEnabled={liveVideoEnabled}
+          recoveryState={recoveryState}
+          endingSession={endingSession}
+          onAudioChange={setLiveAudioEnabled}
+          onVideoChange={setLiveVideoEnabled}
+          onLeave={handleLeaveSession}
+          onEndSession={handleEndSession}
+        />
         <VideoConference />
         <RoomAudioRenderer />
       </LiveKitRoom>
+    </div>
+  )
+}
+
+
+function InCallControls({
+  audioEnabled,
+  videoEnabled,
+  recoveryState,
+  endingSession,
+  onAudioChange,
+  onVideoChange,
+  onLeave,
+  onEndSession,
+}: {
+  audioEnabled: boolean
+  videoEnabled: boolean
+  recoveryState: RecoveryState
+  endingSession: boolean
+  onAudioChange: (enabled: boolean) => void
+  onVideoChange: (enabled: boolean) => void
+  onLeave: () => void
+  onEndSession: () => void
+}) {
+  const { localParticipant } = useLocalParticipant()
+  const [audioBusy, setAudioBusy] = useState(false)
+  const [videoBusy, setVideoBusy] = useState(false)
+
+  async function toggleMicrophone() {
+    if (!localParticipant || audioBusy) return
+
+    const nextValue = !audioEnabled
+
+    try {
+      setAudioBusy(true)
+      await localParticipant.setMicrophoneEnabled(nextValue)
+      onAudioChange(nextValue)
+    } catch (err) {
+      console.error('Expert microphone toggle error:', err)
+    } finally {
+      setAudioBusy(false)
+    }
+  }
+
+  async function toggleCamera() {
+    if (!localParticipant || videoBusy) return
+
+    const nextValue = !videoEnabled
+
+    try {
+      setVideoBusy(true)
+      await localParticipant.setCameraEnabled(nextValue)
+      onVideoChange(nextValue)
+    } catch (err) {
+      console.error('Expert camera toggle error:', err)
+    } finally {
+      setVideoBusy(false)
+    }
+  }
+
+  return (
+    <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4 sm:bottom-6">
+      <div className="pointer-events-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 rounded-3xl border border-white/10 bg-black/75 p-3 shadow-2xl backdrop-blur">
+        <button
+          type="button"
+          onClick={toggleMicrophone}
+          disabled={audioBusy || recoveryState !== 'idle' || endingSession}
+          className={`min-w-[132px] rounded-2xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            audioEnabled
+              ? 'bg-white text-black hover:bg-zinc-200'
+              : 'bg-red-500 text-white hover:bg-red-600'
+          }`}
+        >
+          {audioBusy
+            ? 'Mikrofon...'
+            : audioEnabled
+              ? '🎤 Mikrofon Açık'
+              : '🔇 Mikrofon Kapalı'}
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleCamera}
+          disabled={videoBusy || recoveryState !== 'idle' || endingSession}
+          className={`min-w-[132px] rounded-2xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            videoEnabled
+              ? 'bg-white text-black hover:bg-zinc-200'
+              : 'bg-red-500 text-white hover:bg-red-600'
+          }`}
+        >
+          {videoBusy
+            ? 'Kamera...'
+            : videoEnabled
+              ? '📷 Kamera Açık'
+              : '🚫 Kamera Kapalı'}
+        </button>
+
+        <button
+          type="button"
+          onClick={onLeave}
+          disabled={endingSession}
+          className="min-w-[112px] rounded-2xl border border-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Ayrıl
+        </button>
+
+        <button
+          type="button"
+          onClick={onEndSession}
+          disabled={endingSession}
+          className="min-w-[132px] rounded-2xl bg-red-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {endingSession ? 'Bitiriliyor...' : 'Seansı Bitir'}
+        </button>
+      </div>
     </div>
   )
 }

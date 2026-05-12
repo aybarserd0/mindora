@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  useLocalParticipant,
   useParticipants,
   VideoConference,
 } from '@livekit/components-react'
@@ -79,6 +80,8 @@ export default function ClientSessionPage() {
   const [remoteParticipantCount, setRemoteParticipantCount] = useState(0)
   const [participantState, setParticipantState] = useState<ParticipantState>('waiting')
   const [remoteParticipantSeen, setRemoteParticipantSeen] = useState(false)
+  const [liveAudioEnabled, setLiveAudioEnabled] = useState(true)
+  const [liveVideoEnabled, setLiveVideoEnabled] = useState(true)
 
   const previewVideoRef = useRef<HTMLVideoElement | null>(null)
   const previewStreamRef = useRef<MediaStream | null>(null)
@@ -350,6 +353,8 @@ export default function ClientSessionPage() {
     stopPreviewStream()
     clearRecoveryTimers()
 
+    setLiveAudioEnabled(deviceState.audioEnabled)
+    setLiveVideoEnabled(deviceState.videoEnabled)
     setJoining(true)
     setRecoveryState('idle')
     setRetryCount(0)
@@ -568,7 +573,7 @@ export default function ClientSessionPage() {
                     : 'bg-red-500 text-white hover:bg-red-600'
                 }`}
               >
-                {deviceState.audioEnabled ? 'Mikrofon Açık' : 'Mikrofon Kapalı'}
+                {deviceState.audioEnabled ? '🎤 Mikrofon Açık' : '🔇 Mikrofon Kapalı'}
               </button>
 
               <button
@@ -583,7 +588,7 @@ export default function ClientSessionPage() {
                     : 'bg-red-500 text-white hover:bg-red-600'
                 }`}
               >
-                {deviceState.videoEnabled ? 'Kamera Açık' : 'Kamera Kapalı'}
+                {deviceState.videoEnabled ? '📷 Kamera Açık' : '🚫 Kamera Kapalı'}
               </button>
             </div>
           </div>
@@ -652,7 +657,7 @@ export default function ClientSessionPage() {
 
               {permissionState === 'denied' && (
                 <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-sm leading-6 text-yellow-100">
-                  Kamera veya mikrofon izni verilmedi. Tarayıcı izinlerinden Mindora için kamera/mikrofon erişimini açıp tekrar dene.
+                  Kamera veya mikrofon izni verilmedi. Tarayıcı izinlerinden Mindora için kamera/mikrofon erişimini açabilir ya da kamerayı/mikrofonu kapalı başlatabilirsin.
                 </div>
               )}
 
@@ -769,9 +774,118 @@ export default function ClientSessionPage() {
         }}
       >
         <ParticipantPresenceBridge onChange={handleRemoteParticipantCountChange} />
+        <InCallControls
+          audioEnabled={liveAudioEnabled}
+          videoEnabled={liveVideoEnabled}
+          recoveryState={recoveryState}
+          onAudioChange={setLiveAudioEnabled}
+          onVideoChange={setLiveVideoEnabled}
+          onLeave={handleLeaveSession}
+        />
         <VideoConference />
         <RoomAudioRenderer />
       </LiveKitRoom>
+    </div>
+  )
+}
+
+
+function InCallControls({
+  audioEnabled,
+  videoEnabled,
+  recoveryState,
+  onAudioChange,
+  onVideoChange,
+  onLeave,
+}: {
+  audioEnabled: boolean
+  videoEnabled: boolean
+  recoveryState: RecoveryState
+  onAudioChange: (enabled: boolean) => void
+  onVideoChange: (enabled: boolean) => void
+  onLeave: () => void
+}) {
+  const { localParticipant } = useLocalParticipant()
+  const [audioBusy, setAudioBusy] = useState(false)
+  const [videoBusy, setVideoBusy] = useState(false)
+
+  async function toggleMicrophone() {
+    if (!localParticipant || audioBusy) return
+
+    const nextValue = !audioEnabled
+
+    try {
+      setAudioBusy(true)
+      await localParticipant.setMicrophoneEnabled(nextValue)
+      onAudioChange(nextValue)
+    } catch (err) {
+      console.error('Client microphone toggle error:', err)
+    } finally {
+      setAudioBusy(false)
+    }
+  }
+
+  async function toggleCamera() {
+    if (!localParticipant || videoBusy) return
+
+    const nextValue = !videoEnabled
+
+    try {
+      setVideoBusy(true)
+      await localParticipant.setCameraEnabled(nextValue)
+      onVideoChange(nextValue)
+    } catch (err) {
+      console.error('Client camera toggle error:', err)
+    } finally {
+      setVideoBusy(false)
+    }
+  }
+
+  return (
+    <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4 sm:bottom-6">
+      <div className="pointer-events-auto flex w-full max-w-xl flex-wrap items-center justify-center gap-3 rounded-3xl border border-white/10 bg-black/75 p-3 shadow-2xl backdrop-blur">
+        <button
+          type="button"
+          onClick={toggleMicrophone}
+          disabled={audioBusy || recoveryState !== 'idle'}
+          className={`min-w-[132px] rounded-2xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            audioEnabled
+              ? 'bg-white text-black hover:bg-zinc-200'
+              : 'bg-red-500 text-white hover:bg-red-600'
+          }`}
+        >
+          {audioBusy
+            ? 'Mikrofon...'
+            : audioEnabled
+              ? '🎤 Mikrofon Açık'
+              : '🔇 Mikrofon Kapalı'}
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleCamera}
+          disabled={videoBusy || recoveryState !== 'idle'}
+          className={`min-w-[132px] rounded-2xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            videoEnabled
+              ? 'bg-white text-black hover:bg-zinc-200'
+              : 'bg-red-500 text-white hover:bg-red-600'
+          }`}
+        >
+          {videoBusy
+            ? 'Kamera...'
+            : videoEnabled
+              ? '📷 Kamera Açık'
+              : '🚫 Kamera Kapalı'}
+        </button>
+
+        <button
+          type="button"
+          onClick={onLeave}
+          className="min-w-[132px] rounded-2xl border border-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+        >
+          Chat’e Dön
+        </button>
+      </div>
     </div>
   )
 }
