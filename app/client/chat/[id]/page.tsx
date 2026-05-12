@@ -247,14 +247,7 @@ export default function ClientChatPage({
   const paymentCompleted = conversation?.payment_status === 'paid'
   const chatActive = conversation?.status === 'active'
   const conversationClosed = conversation?.status === 'closed'
-  console.log('CLIENT CONVERSATION DEBUG', {
-  conversation,
-  payment_status: conversation?.payment_status,
-  status: conversation?.status,
-  paymentCompleted,
-  chatActive,
-  conversationClosed,
-})
+  
 
   const isActive = chatActive && paymentCompleted
 
@@ -263,6 +256,21 @@ export default function ClientChatPage({
     hasValidAccessToken() &&
     paymentCompleted &&
     !conversationClosed
+
+    console.log(
+  'CLIENT CONVERSATION DEBUG',
+  JSON.stringify({
+    status: conversation?.status,
+    payment_status: conversation?.payment_status,
+    paymentCompleted,
+    chatActive,
+    conversationClosed,
+    accessVerified,
+    hasToken: hasValidAccessToken(),
+    canStartVideoSession,
+    isActive,
+  })
+)
 
   const videoButtonTitle = !accessVerified
     ? 'Güvenli erişim doğrulanmalı'
