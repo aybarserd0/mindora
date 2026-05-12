@@ -388,9 +388,13 @@ export default function ClientSessionPage() {
 
       if (count > 0) {
         setRemoteParticipantSeen(true)
+
+        setTimeout(() => {
         setParticipantState('active')
-        return
-      }
+       }, 300)
+
+       return
+     }
 
       setParticipantState(remoteParticipantSeen ? 'remote-left' : 'waiting')
     },
@@ -1113,8 +1117,10 @@ function ParticipantPresenceBridge({
 
   useEffect(() => {
     const remoteParticipants = participants.filter(
-      (participant) => !participant.isLocal
-    )
+  (participant) =>
+    !participant.isLocal &&
+    participant.connectionQuality !== 'unknown'
+)
 
     onChange(remoteParticipants.length)
   }, [onChange, participants])
