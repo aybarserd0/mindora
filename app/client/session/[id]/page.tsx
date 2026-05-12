@@ -689,7 +689,7 @@ export default function ClientSessionPage() {
   }
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-black">
+    <div className="relative h-dvh w-full overflow-hidden bg-black [&_.lk-root]:h-full [&_.lk-video-conference]:h-full [&_.lk-focus-layout]:h-full [&_.lk-grid-layout]:h-full">
       <SessionTopBar
         connectionStatus={connected ? 'Bağlandı' : connectionStatus}
         elapsedSeconds={elapsedSeconds}
@@ -782,7 +782,9 @@ export default function ClientSessionPage() {
           onVideoChange={setLiveVideoEnabled}
           onLeave={handleLeaveSession}
         />
-        <VideoConference />
+        <div className="h-full w-full [&_.lk-video-conference]:h-full [&_.lk-video-conference]:w-full [&_.lk-focus-layout]:h-full [&_.lk-grid-layout]:h-full [&_video]:object-cover">
+          <VideoConference />
+        </div>
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>
