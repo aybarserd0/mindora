@@ -247,6 +247,14 @@ export default function ClientChatPage({
   const paymentCompleted = conversation?.payment_status === 'paid'
   const chatActive = conversation?.status === 'active'
   const conversationClosed = conversation?.status === 'closed'
+  console.log('CLIENT CONVERSATION DEBUG', {
+  conversation,
+  payment_status: conversation?.payment_status,
+  status: conversation?.status,
+  paymentCompleted,
+  chatActive,
+  conversationClosed,
+})
 
   const isActive = chatActive && paymentCompleted
 
