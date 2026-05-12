@@ -7,6 +7,8 @@ import {
 } from '@/lib/chat-access-tokens'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 type SenderType = 'client' | 'expert' | 'admin'
 type RecipientType = 'client' | 'expert' | 'admin'
@@ -701,15 +703,25 @@ export async function GET(req: NextRequest, context: RouteContext) {
       (attachments || []).filter((item) => item.message_id)
     )
 
+    const safeConversation = {
+      ...(conversation as Record<string, unknown>),
+      id: toText((conversation as Record<string, unknown>).id),
+      status: toText((conversation as Record<string, unknown>).status) || 'locked',
+      payment_status:
+        toText((conversation as Record<string, unknown>).payment_status) || 'pending',
+    }
+
     return NextResponse.json(
       {
         ok: true,
-        conversation,
+        conversation: safeConversation,
         messages: safeMessages,
       },
       {
         headers: {
-          'Cache-Control': 'no-store',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
         },
       }
     )
