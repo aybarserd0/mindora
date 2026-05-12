@@ -4,14 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
+  GridLayout,
   LiveKitRoom,
+  ParticipantTile,
   RoomAudioRenderer,
   useLocalParticipant,
   useParticipants,
-  VideoConference,
+  useTracks,
 } from '@livekit/components-react'
 
 import '@livekit/components-styles/prefabs'
+import { Track } from 'livekit-client'
 
 type SessionResponse = {
   ok: boolean
@@ -403,14 +406,14 @@ export default function ExpertSessionPage() {
       setRemoteParticipantCount(count)
 
       if (count > 0) {
-  setRemoteParticipantSeen(true)
+        setRemoteParticipantSeen(true)
 
-  setTimeout(() => {
-    setParticipantState('active')
-  }, 300)
+        setTimeout(() => {
+          setParticipantState('active')
+        }, 300)
 
-  return
-}
+        return
+      }
 
       setParticipantState(remoteParticipantSeen ? 'remote-left' : 'waiting')
     },
@@ -765,7 +768,7 @@ export default function ExpertSessionPage() {
   }
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-black [&_.lk-root]:h-full [&_.lk-video-conference]:h-full [&_.lk-focus-layout]:h-full [&_.lk-grid-layout]:h-full">
+    <div className="relative h-dvh w-full overflow-hidden bg-black">
       <SessionTopBar
         connectionStatus={connected ? 'Bağlandı' : connectionStatus}
         elapsedSeconds={elapsedSeconds}
@@ -868,9 +871,7 @@ export default function ExpertSessionPage() {
           onLeave={handleLeaveSession}
           onEndSession={handleEndSession}
         />
-        <div className="h-full w-full [&_.lk-video-conference]:h-full [&_.lk-video-conference]:w-full [&_.lk-focus-layout]:h-full [&_.lk-grid-layout]:h-full [&_video]:object-cover">
-          <VideoConference />
-        </div>
+        <CustomVideoGrid />
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>
@@ -1217,6 +1218,32 @@ function WaitingRoomOverlay({
   )
 }
 
+
+function CustomVideoGrid() {
+  const tracks = useTracks(
+    [
+      {
+        source: Track.Source.Camera,
+        withPlaceholder: true,
+      },
+    ],
+    {
+      onlySubscribed: false,
+    }
+  )
+
+  return (
+    <div className="absolute inset-0 z-0 bg-black px-3 pb-28 pt-28 sm:px-4 sm:pb-32 sm:pt-28">
+      <GridLayout
+        tracks={tracks}
+        className="grid h-full w-full auto-rows-fr gap-3"
+      >
+        <ParticipantTile className="overflow-hidden rounded-3xl bg-zinc-950 shadow-2xl ring-1 ring-white/10 [&_video]:h-full [&_video]:w-full [&_video]:object-cover" />
+      </GridLayout>
+    </div>
+  )
+}
+
 function ParticipantPresenceBridge({
   onChange,
 }: {
@@ -1226,10 +1253,8 @@ function ParticipantPresenceBridge({
 
   useEffect(() => {
     const remoteParticipants = participants.filter(
-  (participant) =>
-    !participant.isLocal &&
-    participant.connectionQuality !== 'unknown'
-)
+      (participant) => !participant.isLocal
+    )
 
     onChange(remoteParticipants.length)
   }, [onChange, participants])
