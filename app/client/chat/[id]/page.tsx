@@ -258,7 +258,6 @@ export default function ClientChatPage({
 
   const canUseChat =
     isConversationReady &&
-    accessVerified &&
     hasValidAccessToken() &&
     !conversationClosed
 
@@ -405,8 +404,8 @@ export default function ClientChatPage({
   async function openAttachment(attachment: Attachment) {
     if (!conversationId) return
 
-    if (!accessVerified || !hasValidAccessToken()) {
-      showToast('Erişim doğrulanamadı', 'Dosya açmak için güvenli erişim gerekir.', 'error')
+    if (!hasValidAccessToken()) {
+      showToast('Güvenli link eksik', 'Dosya açmak için güvenli erişim linki gerekir.', 'error')
       return
     }
 
@@ -770,7 +769,6 @@ export default function ClientChatPage({
   async function loadReadState(id: string) {
     try {
       if (!id) return
-      if (!accessVerified) return
       if (!hasValidAccessToken()) return
 
       const res = await fetch(getReadsUrl(id), {
@@ -802,7 +800,6 @@ export default function ClientChatPage({
   async function markConversationAsRead(id: string) {
     try {
       if (!id) return
-      if (!accessVerified) return
       if (!hasValidAccessToken()) return
 
       setReadSynced(false)
@@ -834,7 +831,6 @@ export default function ClientChatPage({
   async function loadMessages(id: string, showLoading = false) {
     try {
       if (!id) return
-      if (!accessVerified) return
       if (!hasValidAccessToken()) return
 
       if (showLoading) setLoading(true)
@@ -865,7 +861,7 @@ export default function ClientChatPage({
   async function broadcastTyping(isTyping: boolean) {
     if (!channelRef.current) return
     if (!conversationId) return
-    if (!accessVerified) return
+    if (!hasValidAccessToken()) return
 
     try {
       await channelRef.current.send({
@@ -904,8 +900,8 @@ export default function ClientChatPage({
     if (!cleanMessage && !selectedAttachment) return
     if (!conversationId) return
 
-    if (!accessVerified || !hasValidAccessToken()) {
-      setBlockedError('Bu görüşmeye erişim doğrulanamadı.')
+    if (!hasValidAccessToken()) {
+      setBlockedError('Bu görüşmeye erişim için güvenli link gerekir.')
       return
     }
 
@@ -1327,7 +1323,7 @@ export default function ClientChatPage({
               </button>
 
               <p className="max-w-[260px] text-right text-xs font-semibold leading-5 text-[#8a7662]">
-                Video görüşme ödeme tamamlandıktan sonra güvenli token ile açılır.
+                Video görüşme güvenli token ile doğrulanarak açılır.
               </p>
 
               <Link
@@ -1413,8 +1409,7 @@ export default function ClientChatPage({
                       Henüz mesaj yok
                     </p>
                     <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
-                      Chat aktif olduğunda uzmanınızla güvenli şekilde buradan
-                      mesajlaşabilirsiniz.
+                      Uzmanınızla güvenli şekilde buradan mesajlaşabilirsiniz.
                     </p>
                   </div>
                 </div>
