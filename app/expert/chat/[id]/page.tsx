@@ -247,8 +247,40 @@ export default function ExpertChatPage({
     ReturnType<typeof createMindoraRealtimeClient>['channel']
   > | null>(null)
 
-  const isActive =
-    conversation?.status === 'active' && conversation?.payment_status === 'paid'
+  const conversationStatus = conversation?.status?.toString() || ''
+  const conversationPaymentStatus = conversation?.payment_status?.toString() || ''
+
+  const isConversationReady = Boolean(conversation)
+  const paymentCompleted = conversationPaymentStatus === 'paid'
+  const chatActive = conversationStatus === 'active'
+  const conversationClosed = conversationStatus === 'closed'
+
+  // Backend is the source of truth for payment/auth/session rules.
+  // Frontend gates only obvious UX states to avoid hydration/stale-state lockups.
+  const isActive = isConversationReady && chatActive && paymentCompleted
+
+  const canUseChat =
+    isConversationReady &&
+    hasValidAccessToken() &&
+    !conversationClosed
+
+  const canStartVideoSession =
+    isConversationReady &&
+    hasValidAccessToken() &&
+    !conversationClosed
+
+  const showChatLockedBanner =
+    isConversationReady &&
+    !isActive &&
+    !canUseChat
+
+  const videoButtonTitle = !isConversationReady
+    ? 'Görüşme bilgileri yükleniyor'
+    : !hasValidAccessToken()
+      ? 'Güvenli token eksik'
+      : conversationClosed
+        ? 'Bu görüşme kapatılmış'
+        : 'Video görüşmeye katıl'
 
   const notificationStatusText = !notificationsSupported
     ? 'Bildirim desteklenmiyor'
@@ -375,8 +407,8 @@ export default function ExpertChatPage({
   async function openAttachment(attachment: Attachment) {
     if (!conversationId) return
 
-    if (!accessVerified || !hasValidAccessToken()) {
-      showToast('Erişim doğrulanamadı', 'Dosya açmak için güvenli erişim gerekir.', 'error')
+    if (!hasValidAccessToken()) {
+      showToast('Güvenli link eksik', 'Dosya açmak için güvenli erişim linki gerekir.', 'error')
       return
     }
 
@@ -407,7 +439,7 @@ export default function ExpertChatPage({
   }
 
   async function startVoiceRecording() {
-    if (!isActive || !accessVerified || sending || uploadingAttachment) return
+    if (!canUseChat || sending || uploadingAttachment) return
 
     if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       showToast('Mikrofon desteklenmiyor', 'Bu tarayıcı ses kaydını desteklemiyor.', 'warning')
@@ -620,6 +652,8 @@ export default function ExpertChatPage({
   }
 
   async function handleStartVideoSession() {
+    if (videoSessionLoading) return
+
     if (!conversationId) {
       showToast(
         'Video görüşme başlatılamadı',
@@ -629,20 +663,20 @@ export default function ExpertChatPage({
       return
     }
 
-    if (!isActive) {
+    if (!hasValidAccessToken()) {
       showToast(
-        'Video görüşme başlatılamaz',
-        'Video görüşme için chat aktif ve ödeme tamamlanmış olmalıdır.',
-        'warning'
+        'Güvenli link eksik',
+        'Video görüşmeye katılmak için güvenli erişim linki gerekir.',
+        'error'
       )
       return
     }
 
-    if (!accessVerified || !hasValidAccessToken()) {
+    if (conversationClosed) {
       showToast(
-        'Erişim doğrulanamadı',
-        'Video görüşmeye katılmak için güvenli erişim gerekir.',
-        'error'
+        'Video görüşme başlatılamaz',
+        'Bu görüşme kapatılmış.',
+        'warning'
       )
       return
     }
@@ -652,11 +686,17 @@ export default function ExpertChatPage({
 
       const res = await fetch('/api/sessions/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-chat-access-role': 'expert',
+          'x-chat-access-token': getAccessToken(),
+        },
         cache: 'no-store',
         body: JSON.stringify({
           conversationId,
           createdBy: 'expert',
+          role: 'expert',
+          token: getAccessToken(),
         }),
       })
 
@@ -738,7 +778,6 @@ export default function ExpertChatPage({
   async function loadReadState(id: string) {
     try {
       if (!id) return
-      if (!accessVerified) return
       if (!hasValidAccessToken()) return
 
       const res = await fetch(getReadsUrl(id), {
@@ -770,7 +809,6 @@ export default function ExpertChatPage({
   async function markConversationAsRead(id: string) {
     try {
       if (!id) return
-      if (!accessVerified) return
       if (!hasValidAccessToken()) return
 
       setReadSynced(false)
@@ -802,7 +840,6 @@ export default function ExpertChatPage({
   async function loadMessages(id: string, showLoading = false) {
     try {
       if (!id) return
-      if (!accessVerified) return
       if (!hasValidAccessToken()) return
 
       if (showLoading) setLoading(true)
@@ -833,7 +870,7 @@ export default function ExpertChatPage({
   async function broadcastTyping(isTyping: boolean) {
     if (!channelRef.current) return
     if (!conversationId) return
-    if (!accessVerified) return
+    if (!hasValidAccessToken()) return
 
     try {
       await channelRef.current.send({
@@ -853,7 +890,7 @@ export default function ExpertChatPage({
   function handleMessageChange(value: string) {
     setMessage(value)
 
-    if (!isActive || !accessVerified) return
+    if (!canUseChat) return
 
     broadcastTyping(value.trim().length > 0)
 
@@ -872,8 +909,8 @@ export default function ExpertChatPage({
     if (!cleanMessage && !selectedAttachment) return
     if (!conversationId) return
 
-    if (!accessVerified || !hasValidAccessToken()) {
-      setBlockedError('Bu görüşmeye erişim doğrulanamadı.')
+    if (!hasValidAccessToken()) {
+      setBlockedError('Bu görüşmeye erişim için güvenli link gerekir.')
       return
     }
 
@@ -1289,7 +1326,9 @@ export default function ExpertChatPage({
               <button
                 type="button"
                 onClick={handleStartVideoSession}
-                disabled={!isActive || !accessVerified || videoSessionLoading}
+                disabled={!canStartVideoSession || videoSessionLoading}
+                title={videoButtonTitle}
+                data-ready={String(isConversationReady)}
                 className="rounded-full bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {videoSessionLoading
@@ -1332,10 +1371,14 @@ export default function ExpertChatPage({
 
               <div className="rounded-2xl bg-[#faf7f2] p-4 ring-1 ring-black/5">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                  Güvenlik
+                  Video
                 </p>
-                <p className="mt-2 text-lg font-black text-purple-700">
-                  Token Korumalı
+                <p
+                  className={`mt-2 text-lg font-black ${
+                    canStartVideoSession ? 'text-emerald-700' : 'text-orange-700'
+                  }`}
+                >
+                  {canStartVideoSession ? 'Hazır' : 'Beklemede'}
                 </p>
               </div>
             </div>
@@ -1355,15 +1398,15 @@ export default function ExpertChatPage({
           </section>
         ) : (
           <section className="overflow-hidden rounded-[2rem] border border-[#e5d9cc] bg-white shadow-sm">
-            {!isActive && (
+            {showChatLockedBanner && (
               <div className="border-b border-orange-100 bg-orange-50 p-5">
                 <p className="text-lg font-black text-orange-800">
                   🔒 Chat şu anda kilitli
                 </p>
 
                 <p className="mt-2 text-sm font-semibold text-orange-700">
-                  Danışan ödeme işlemini tamamladıktan sonra platform içi
-                  mesajlaşma otomatik aktif olur.
+                  Platform içi mesajlaşma güvenli erişim ve görüşme durumuna göre
+                  açılır. Video görüşme erişimi backend tarafından ayrıca doğrulanır.
                 </p>
               </div>
             )}
@@ -1376,8 +1419,7 @@ export default function ExpertChatPage({
                       Henüz mesaj yok
                     </p>
                     <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
-                      Ödeme tamamlandığında danışanla güvenli şekilde buradan
-                      mesajlaşabilirsiniz.
+                      Danışanla güvenli şekilde buradan mesajlaşabilirsiniz.
                     </p>
                   </div>
                 </div>
@@ -1616,13 +1658,13 @@ export default function ExpertChatPage({
                 <textarea
                   value={message}
                   onChange={(event) => handleMessageChange(event.target.value)}
-                  disabled={!isActive || !accessVerified || sending || isRecording}
+                  disabled={!canUseChat || sending || isRecording}
                   rows={3}
                   maxLength={2000}
                   placeholder={
-                    isActive
+                    canUseChat
                       ? 'Mesajınızı yazın...'
-                      : 'Ödeme tamamlandıktan sonra mesajlaşma aktif olur.'
+                      : 'Güvenli erişim doğrulandıktan sonra mesajlaşma açılır.'
                   }
                   className="min-h-24 flex-1 resize-none rounded-2xl border border-black/10 bg-[#faf7f2] p-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30 disabled:cursor-not-allowed disabled:opacity-60"
                 />
@@ -1639,7 +1681,7 @@ export default function ExpertChatPage({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={!isActive || !accessVerified || sending || isRecording}
+                    disabled={!canUseChat || sending || isRecording}
                     className="flex-1 rounded-2xl border border-black/10 bg-white px-4 py-4 text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     📎 Dosya
@@ -1649,8 +1691,7 @@ export default function ExpertChatPage({
                     type="button"
                     onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
                     disabled={
-                      !isActive ||
-                      !accessVerified ||
+                      !canUseChat ||
                       sending ||
                       uploadingAttachment ||
                       Boolean(selectedAttachment && !isRecording)
@@ -1668,8 +1709,7 @@ export default function ExpertChatPage({
                     type="button"
                     onClick={sendMessage}
                     disabled={
-                      !isActive ||
-                      !accessVerified ||
+                      !canUseChat ||
                       sending ||
                       uploadingAttachment ||
                       isRecording ||
