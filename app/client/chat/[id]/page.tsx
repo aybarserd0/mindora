@@ -158,6 +158,7 @@ function getCleanMessageText(item: Message) {
 
   attachmentNames.forEach((fileName) => {
     const attachment = item.attachments?.find((a) => a.file_name === fileName)
+
     text = text
       .replace(
         `\n\n📎 ${fileName} (${formatFileSize(attachment?.file_size || 0)})`,
@@ -165,7 +166,7 @@ function getCleanMessageText(item: Message) {
       )
       .replace(`📎 Dosya paylaşıldı: ${fileName}`, '')
       .replace(`🎤 Sesli mesaj: ${fileName}`, '')
-      .replace(`🎤 Sesli mesaj gönderildi`, '')
+      .replace('🎤 Sesli mesaj gönderildi', '')
       .trim()
   })
 
@@ -175,16 +176,9 @@ function getCleanMessageText(item: Message) {
 function getBestAudioMimeType() {
   if (typeof MediaRecorder === 'undefined') return 'audio/webm'
 
-  const candidates = [
-    'audio/webm;codecs=opus',
-    'audio/webm',
-    'audio/mp4',
-  ]
+  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
 
-  return (
-    candidates.find((type) => MediaRecorder.isTypeSupported(type)) ||
-    'audio/webm'
-  )
+  return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || 'audio/webm'
 }
 
 export default function ClientChatPage({
@@ -250,8 +244,27 @@ export default function ClientChatPage({
     ReturnType<typeof createMindoraRealtimeClient>['channel']
   > | null>(null)
 
-  const isActive =
-    conversation?.status === 'active' && conversation?.payment_status === 'paid'
+  const paymentCompleted = conversation?.payment_status === 'paid'
+  const chatActive = conversation?.status === 'active'
+  const conversationClosed = conversation?.status === 'closed'
+
+  const isActive = chatActive && paymentCompleted
+
+  const canStartVideoSession =
+    accessVerified &&
+    hasValidAccessToken() &&
+    paymentCompleted &&
+    !conversationClosed
+
+  const videoButtonTitle = !accessVerified
+    ? 'Güvenli erişim doğrulanmalı'
+    : !hasValidAccessToken()
+      ? 'Güvenli token eksik'
+      : !paymentCompleted
+        ? 'Video görüşme için ödeme tamamlanmalı'
+        : conversationClosed
+          ? 'Bu görüşme kapatılmış'
+          : 'Video görüşmeye katıl'
 
   const notificationStatusText = !notificationsSupported
     ? 'Bildirim desteklenmiyor'
@@ -464,11 +477,9 @@ export default function ClientChatPage({
         }
 
         const extension = type.includes('mp4') ? 'mp4' : 'webm'
-        const file = new File(
-          [blob],
-          `mindora-sesli-mesaj-${Date.now()}.${extension}`,
-          { type }
-        )
+        const file = new File([blob], `mindora-sesli-mesaj-${Date.now()}.${extension}`, {
+          type,
+        })
 
         const previewUrl = URL.createObjectURL(blob)
         setAudioPreviewUrl(previewUrl)
@@ -606,11 +617,7 @@ export default function ClientChatPage({
         return
       }
 
-      showToast(
-        'Bildirim izni verilmedi',
-        'İsterseniz daha sonra tekrar açabilirsiniz.',
-        'info'
-      )
+      showToast('Bildirim izni verilmedi', 'İsterseniz daha sonra tekrar açabilirsiniz.', 'info')
     } catch {
       showToast(
         'Bildirim izni alınamadı',
@@ -622,21 +629,13 @@ export default function ClientChatPage({
     }
   }
 
-
   async function handleStartVideoSession() {
+    if (videoSessionLoading) return
+
     if (!conversationId) {
       showToast(
         'Video görüşme başlatılamadı',
         'Konuşma bilgisi henüz hazır değil.',
-        'warning'
-      )
-      return
-    }
-
-    if (!isActive) {
-      showToast(
-        'Video görüşme başlatılamaz',
-        'Video görüşme için chat aktif ve ödeme tamamlanmış olmalıdır.',
         'warning'
       )
       return
@@ -647,6 +646,24 @@ export default function ClientChatPage({
         'Erişim doğrulanamadı',
         'Video görüşmeye katılmak için güvenli erişim gerekir.',
         'error'
+      )
+      return
+    }
+
+    if (!paymentCompleted) {
+      showToast(
+        'Video görüşme başlatılamaz',
+        'Video görüşme için ödeme tamamlanmış olmalıdır.',
+        'warning'
+      )
+      return
+    }
+
+    if (conversationClosed) {
+      showToast(
+        'Video görüşme başlatılamaz',
+        'Bu görüşme kapatılmış.',
+        'warning'
       )
       return
     }
@@ -1273,9 +1290,7 @@ export default function ClientChatPage({
                     disabled={notificationLoading}
                     className="mt-4 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {notificationLoading
-                      ? 'Bildirim izni alınıyor...'
-                      : '🔔 Bildirimleri Aç'}
+                    {notificationLoading ? 'Bildirim izni alınıyor...' : '🔔 Bildirimleri Aç'}
                   </button>
                 )}
 
@@ -1292,13 +1307,16 @@ export default function ClientChatPage({
               <button
                 type="button"
                 onClick={handleStartVideoSession}
-                disabled={!isActive || !accessVerified || videoSessionLoading}
+                disabled={!canStartVideoSession || videoSessionLoading}
+                title={videoButtonTitle}
                 className="rounded-full bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {videoSessionLoading
-                  ? 'Seans hazırlanıyor...'
-                  : '🎥 Video Görüşmeye Katıl'}
+                {videoSessionLoading ? 'Seans hazırlanıyor...' : '🎥 Video Görüşmeye Katıl'}
               </button>
+
+              <p className="max-w-[260px] text-right text-xs font-semibold leading-5 text-[#8a7662]">
+                Video görüşme ödeme tamamlandıktan sonra güvenli token ile açılır.
+              </p>
 
               <Link
                 href="/"
@@ -1335,10 +1353,14 @@ export default function ClientChatPage({
 
               <div className="rounded-2xl bg-[#faf7f2] p-4 ring-1 ring-black/5">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                  Güvenlik
+                  Video
                 </p>
-                <p className="mt-2 text-lg font-black text-purple-700">
-                  Token Korumalı
+                <p
+                  className={`mt-2 text-lg font-black ${
+                    canStartVideoSession ? 'text-emerald-700' : 'text-orange-700'
+                  }`}
+                >
+                  {canStartVideoSession ? 'Hazır' : 'Beklemede'}
                 </p>
               </div>
             </div>
@@ -1365,7 +1387,9 @@ export default function ClientChatPage({
                 </p>
 
                 <p className="mt-2 text-sm font-semibold text-orange-700">
-                  Platform içi mesajlaşma ödeme tamamlandıktan sonra aktif olur.
+                  Platform içi mesajlaşma ödeme tamamlandıktan ve görüşme aktif
+                  hale geldikten sonra açılır. Video görüşme erişimi ödeme
+                  tamamlandıysa ayrı olarak kontrol edilir.
                 </p>
               </div>
             )}
@@ -1395,9 +1419,7 @@ export default function ClientChatPage({
                     return (
                       <div
                         key={item.id}
-                        className={`flex ${
-                          isMine ? 'justify-end' : 'justify-start'
-                        }`}
+                        className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
                           className={`max-w-[82%] rounded-2xl p-4 text-sm shadow-sm ${
@@ -1529,9 +1551,7 @@ export default function ClientChatPage({
 
             {blockedError && (
               <div className="border-t border-red-100 bg-red-50 p-4">
-                <p className="text-sm font-bold text-red-700">
-                  {blockedError}
-                </p>
+                <p className="text-sm font-bold text-red-700">{blockedError}</p>
               </div>
             )}
 
@@ -1622,7 +1642,7 @@ export default function ClientChatPage({
                   placeholder={
                     isActive
                       ? 'Mesajınızı yazın...'
-                      : 'Ödeme tamamlandıktan sonra mesajlaşma aktif olur.'
+                      : 'Ödeme tamamlandıktan ve görüşme aktif hale geldikten sonra mesajlaşma açılır.'
                   }
                   className="min-h-24 flex-1 resize-none rounded-2xl border border-black/10 bg-[#faf7f2] p-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30 disabled:cursor-not-allowed disabled:opacity-60"
                 />
