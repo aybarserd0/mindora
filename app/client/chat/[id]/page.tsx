@@ -255,11 +255,10 @@ export default function ClientChatPage({
   const isActive = isConversationReady && chatActive && paymentCompleted
 
   const canStartVideoSession =
-    isConversationReady &&
-    accessVerified &&
-    hasValidAccessToken() &&
-    paymentCompleted &&
-    !conversationClosed
+  isConversationReady &&
+  hasValidAccessToken() &&
+  paymentCompleted &&
+  !conversationClosed
 
   const showChatLockedBanner = isConversationReady && !isActive
 
@@ -1316,7 +1315,7 @@ export default function ClientChatPage({
               <button
                 type="button"
                 onClick={handleStartVideoSession}
-                disabled={!canStartVideoSession || videoSessionLoading}
+                disabled={videoSessionLoading}
                 title={videoButtonTitle}
                 data-ready={String(isConversationReady)}
                 className="rounded-full bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
