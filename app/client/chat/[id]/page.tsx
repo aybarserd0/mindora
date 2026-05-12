@@ -252,27 +252,33 @@ export default function ClientChatPage({
   const chatActive = conversationStatus === 'active'
   const conversationClosed = conversationStatus === 'closed'
 
+  // Backend is the source of truth for payment/auth/session rules.
+  // Frontend gates only obvious UX states to avoid hydration/stale-state lockups.
   const isActive = isConversationReady && chatActive && paymentCompleted
 
-  const canStartVideoSession =
-  isConversationReady &&
-  hasValidAccessToken() &&
-  paymentCompleted &&
-  !conversationClosed
+  const canUseChat =
+    isConversationReady &&
+    accessVerified &&
+    hasValidAccessToken() &&
+    !conversationClosed
 
-  const showChatLockedBanner = isConversationReady && !isActive
+  const canStartVideoSession =
+    isConversationReady &&
+    hasValidAccessToken() &&
+    !conversationClosed
+
+  const showChatLockedBanner =
+    isConversationReady &&
+    !isActive &&
+    !canUseChat
 
   const videoButtonTitle = !isConversationReady
     ? 'Görüşme bilgileri yükleniyor'
-    : !accessVerified
-    ? 'Güvenli erişim doğrulanmalı'
     : !hasValidAccessToken()
       ? 'Güvenli token eksik'
-      : !paymentCompleted
-        ? 'Video görüşme için ödeme tamamlanmalı'
-        : conversationClosed
-          ? 'Bu görüşme kapatılmış'
-          : 'Video görüşmeye katıl'
+      : conversationClosed
+        ? 'Bu görüşme kapatılmış'
+        : 'Video görüşmeye katıl'
 
   const notificationStatusText = !notificationsSupported
     ? 'Bildirim desteklenmiyor'
@@ -431,7 +437,7 @@ export default function ClientChatPage({
   }
 
   async function startVoiceRecording() {
-    if (!isActive || !accessVerified || sending || uploadingAttachment) return
+    if (!canUseChat || sending || uploadingAttachment) return
 
     if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       showToast('Mikrofon desteklenmiyor', 'Bu tarayıcı ses kaydını desteklemiyor.', 'warning')
@@ -649,20 +655,11 @@ export default function ClientChatPage({
       return
     }
 
-    if (!accessVerified || !hasValidAccessToken()) {
+    if (!hasValidAccessToken()) {
       showToast(
-        'Erişim doğrulanamadı',
-        'Video görüşmeye katılmak için güvenli erişim gerekir.',
+        'Güvenli link eksik',
+        'Video görüşmeye katılmak için güvenli erişim linki gerekir.',
         'error'
-      )
-      return
-    }
-
-    if (!paymentCompleted) {
-      showToast(
-        'Video görüşme başlatılamaz',
-        'Video görüşme için ödeme tamamlanmış olmalıdır.',
-        'warning'
       )
       return
     }
@@ -681,11 +678,17 @@ export default function ClientChatPage({
 
       const res = await fetch('/api/sessions/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-chat-access-role': 'client',
+          'x-chat-access-token': getAccessToken(),
+        },
         cache: 'no-store',
         body: JSON.stringify({
           conversationId,
           createdBy: 'client',
+          role: 'client',
+          token: getAccessToken(),
         }),
       })
 
@@ -882,7 +885,7 @@ export default function ClientChatPage({
   function handleMessageChange(value: string) {
     setMessage(value)
 
-    if (!isActive || !accessVerified) return
+    if (!canUseChat) return
 
     broadcastTyping(value.trim().length > 0)
 
@@ -1315,7 +1318,7 @@ export default function ClientChatPage({
               <button
                 type="button"
                 onClick={handleStartVideoSession}
-                disabled={videoSessionLoading}
+                disabled={!canStartVideoSession || videoSessionLoading}
                 title={videoButtonTitle}
                 data-ready={String(isConversationReady)}
                 className="rounded-full bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
@@ -1396,9 +1399,8 @@ export default function ClientChatPage({
                 </p>
 
                 <p className="mt-2 text-sm font-semibold text-orange-700">
-                  Platform içi mesajlaşma ödeme tamamlandıktan ve görüşme aktif
-                  hale geldikten sonra açılır. Video görüşme erişimi ödeme
-                  tamamlandıysa ayrı olarak kontrol edilir.
+                  Platform içi mesajlaşma güvenli erişim ve görüşme durumuna göre
+                  açılır. Video görüşme erişimi backend tarafından ayrıca doğrulanır.
                 </p>
               </div>
             )}
@@ -1645,13 +1647,13 @@ export default function ClientChatPage({
                 <textarea
                   value={message}
                   onChange={(event) => handleMessageChange(event.target.value)}
-                  disabled={!isActive || !accessVerified || sending || isRecording}
+                  disabled={!canUseChat || sending || isRecording}
                   rows={3}
                   maxLength={2000}
                   placeholder={
-                    isActive
+                    canUseChat
                       ? 'Mesajınızı yazın...'
-                      : 'Ödeme tamamlandıktan ve görüşme aktif hale geldikten sonra mesajlaşma açılır.'
+                      : 'Güvenli erişim doğrulandıktan sonra mesajlaşma açılır.'
                   }
                   className="min-h-24 flex-1 resize-none rounded-2xl border border-black/10 bg-[#faf7f2] p-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30 disabled:cursor-not-allowed disabled:opacity-60"
                 />
@@ -1668,7 +1670,7 @@ export default function ClientChatPage({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={!isActive || !accessVerified || sending || isRecording}
+                    disabled={!canUseChat || sending || isRecording}
                     className="flex-1 rounded-2xl border border-black/10 bg-white px-4 py-4 text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     📎 Dosya
@@ -1678,8 +1680,7 @@ export default function ClientChatPage({
                     type="button"
                     onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
                     disabled={
-                      !isActive ||
-                      !accessVerified ||
+                      !canUseChat ||
                       sending ||
                       uploadingAttachment ||
                       Boolean(selectedAttachment && !isRecording)
@@ -1697,8 +1698,7 @@ export default function ClientChatPage({
                     type="button"
                     onClick={sendMessage}
                     disabled={
-                      !isActive ||
-                      !accessVerified ||
+                      !canUseChat ||
                       sending ||
                       uploadingAttachment ||
                       isRecording ||
