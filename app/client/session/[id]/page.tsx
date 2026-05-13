@@ -1111,6 +1111,7 @@ function WaitingRoomOverlay({
 
 
 
+
 function CustomVideoGrid() {
   const participants = useParticipants()
   const cameraTracks = useTracks(
@@ -1125,20 +1126,48 @@ function CustomVideoGrid() {
     }
   )
 
-  const localParticipant = participants.find((participant) => participant.isLocal)
   const remoteParticipants = participants.filter((participant) => !participant.isLocal)
 
-  const remoteTrackRefs = cameraTracks.filter(
-    (trackRef) => !trackRef.participant.isLocal
+  const playableRemoteTrackRefs = cameraTracks.filter(
+    (trackRef) =>
+      !trackRef.participant.isLocal &&
+      Boolean(trackRef.publication?.track)
   )
-  const localTrackRef = cameraTracks.find((trackRef) => trackRef.participant.isLocal)
 
-  const mainTrackRef = remoteTrackRefs[0] || localTrackRef || cameraTracks[0]
-  const secondaryTrackRefs = remoteTrackRefs.length > 1 ? remoteTrackRefs.slice(1) : []
+  const placeholderRemoteTrackRefs = cameraTracks.filter(
+    (trackRef) =>
+      !trackRef.participant.isLocal &&
+      !trackRef.publication?.track
+  )
+
+  const playableLocalTrackRef = cameraTracks.find(
+    (trackRef) =>
+      trackRef.participant.isLocal &&
+      Boolean(trackRef.publication?.track)
+  )
+
+  const placeholderLocalTrackRef = cameraTracks.find(
+    (trackRef) =>
+      trackRef.participant.isLocal &&
+      !trackRef.publication?.track
+  )
+
+  const localTrackRef = playableLocalTrackRef || placeholderLocalTrackRef || null
+  const mainTrackRef =
+    playableRemoteTrackRefs[0] ||
+    placeholderRemoteTrackRefs[0] ||
+    playableLocalTrackRef ||
+    null
+
+  const hasRemoteParticipant = remoteParticipants.length > 0
+  const showLocalPreview =
+    Boolean(localTrackRef) &&
+    Boolean(mainTrackRef) &&
+    !mainTrackRef?.participant.isLocal
 
   return (
-    <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,#18181b_0%,#050505_48%,#000_100%)] px-3 pb-28 pt-28 sm:px-5 sm:pb-32 sm:pt-28">
-      <div className="relative h-full w-full overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-2xl">
+    <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,#18181b_0%,#050505_48%,#000_100%)] px-2 pb-24 pt-24 sm:px-5 sm:pb-28 sm:pt-28">
+      <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-black shadow-2xl sm:rounded-[2rem]">
         {mainTrackRef ? (
           <FocusVideoTile
             trackRef={mainTrackRef}
@@ -1153,37 +1182,21 @@ function CustomVideoGrid() {
           />
         )}
 
-        {localTrackRef && !mainTrackRef?.participant.isLocal && (
-          <div className="absolute bottom-4 right-4 z-20 h-32 w-24 overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 shadow-2xl sm:bottom-5 sm:right-5 sm:h-44 sm:w-64">
+        {showLocalPreview && localTrackRef && (
+          <div className="absolute bottom-3 right-3 z-20 h-28 w-20 overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 shadow-2xl sm:bottom-5 sm:right-5 sm:h-40 sm:w-56">
             <FocusVideoTile
               trackRef={localTrackRef}
               label="Siz"
               compact
+              forceCover
             />
           </div>
         )}
 
-        {secondaryTrackRefs.length > 0 && (
-          <div className="absolute bottom-4 left-4 z-20 hidden max-w-[55%] gap-3 sm:flex">
-            {secondaryTrackRefs.slice(0, 3).map((trackRef) => (
-              <div
-                key={trackRef.participant.identity}
-                className="h-32 w-48 overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 shadow-2xl"
-              >
-                <FocusVideoTile
-                  trackRef={trackRef}
-                  label={getParticipantLabel(trackRef.participant)}
-                  compact
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/20" />
-
-        <div className="absolute left-4 top-4 z-20 rounded-full border border-white/10 bg-black/55 px-4 py-2 text-xs font-bold text-white shadow-xl backdrop-blur">
-          {remoteParticipants.length > 0 ? 'Canlı görüşme aktif' : 'Uzman bekleniyor'}
+        <div className="absolute left-3 top-3 z-20 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-bold text-white shadow-xl backdrop-blur sm:left-4 sm:top-4 sm:px-4 sm:text-xs">
+          {hasRemoteParticipant ? 'Canlı görüşme aktif' : 'Uzman bekleniyor'}
         </div>
       </div>
     </div>
@@ -1195,16 +1208,23 @@ function FocusVideoTile({
   label,
   isMain = false,
   compact = false,
+  forceCover = false,
 }: {
   trackRef: TrackReferenceOrPlaceholder
   label: string
   isMain?: boolean
   compact?: boolean
+  forceCover?: boolean
 }) {
   const playableTrackRef = getPlayableTrackRef(trackRef)
+  const videoClassName = forceCover
+    ? 'object-cover'
+    : isMain
+      ? 'object-contain'
+      : 'object-cover'
 
   return (
-    <div className="relative h-full w-full bg-black">
+    <div className="relative h-full w-full overflow-hidden bg-black">
       {!playableTrackRef ? (
         <VideoAvatarFallback
           name={label}
@@ -1212,15 +1232,24 @@ function FocusVideoTile({
           large={isMain}
         />
       ) : (
-        <VideoTrack
-          trackRef={playableTrackRef}
-          className="h-full w-full object-contain"
-        />
+        <>
+          {isMain && (
+            <VideoTrack
+              trackRef={playableTrackRef}
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-2xl"
+            />
+          )}
+
+          <VideoTrack
+            trackRef={playableTrackRef}
+            className={`relative z-10 h-full w-full ${videoClassName}`}
+          />
+        </>
       )}
 
       <div
-        className={`absolute left-3 top-3 flex items-center gap-2 rounded-full border border-white/10 bg-black/60 text-white shadow-xl backdrop-blur ${
-          compact ? 'px-2.5 py-1.5 text-[11px]' : 'px-4 py-2 text-xs font-bold'
+        className={`absolute left-2 top-2 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/65 text-white shadow-xl backdrop-blur sm:left-3 sm:top-3 ${
+          compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[11px] font-bold sm:px-4 sm:text-xs'
         }`}
       >
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -1228,11 +1257,11 @@ function FocusVideoTile({
       </div>
 
       <div
-        className={`absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 text-white shadow-xl backdrop-blur ${
-          compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-xs'
+        className={`absolute right-2 top-2 z-20 rounded-full border border-white/10 bg-black/65 text-white shadow-xl backdrop-blur sm:right-3 sm:top-3 ${
+          compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[10px]'
         }`}
       >
-        <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-300">
+        <span className="font-bold uppercase tracking-wide text-zinc-300">
           {playableTrackRef ? 'Kamera açık' : 'Kamera kapalı'}
         </span>
       </div>
@@ -1262,7 +1291,7 @@ function VideoAvatarFallback({
     <div className="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_center,#27272a_0%,#09090b_58%,#000_100%)] px-6 text-center">
       <div
         className={`mb-4 flex items-center justify-center rounded-full border border-white/10 bg-white/10 font-black text-white shadow-2xl ${
-          large ? 'h-24 w-24 text-4xl sm:h-32 sm:w-32 sm:text-5xl' : 'h-16 w-16 text-2xl'
+          large ? 'h-24 w-24 text-4xl sm:h-32 sm:w-32 sm:text-5xl' : 'h-14 w-14 text-xl sm:h-16 sm:w-16 sm:text-2xl'
         }`}
       >
         {initial}
