@@ -616,7 +616,7 @@ export default function ExpertSessionPage() {
                   autoPlay
                   muted
                   playsInline
-                  className="h-full w-full object-cover"
+                  className="h-full w-full scale-x-[-1] object-cover"
                 />
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center px-6 text-center">
@@ -934,48 +934,58 @@ function InCallControls({
     }
   }
 
+  const disabled = recoveryState !== 'idle' || endingSession
+
   return (
-    <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-30 flex justify-center px-3 sm:bottom-6 sm:px-4">
-      <div className="pointer-events-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-3xl border border-white/10 bg-black/70 p-2 shadow-2xl backdrop-blur sm:flex-wrap sm:gap-3 sm:p-3">
+    <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-30 flex justify-center px-2 sm:bottom-6 sm:px-4">
+      <div className="pointer-events-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-[1.75rem] border border-white/10 bg-black/75 p-2 shadow-2xl backdrop-blur sm:w-auto sm:gap-3 sm:rounded-3xl sm:p-3">
         <button
           type="button"
           onClick={toggleMicrophone}
-          disabled={audioBusy || recoveryState !== 'idle' || endingSession}
-          className={`min-w-[92px] rounded-2xl px-3 py-3 sm:min-w-[132px] sm:px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+          disabled={audioBusy || disabled}
+          aria-label={audioEnabled ? 'Mikrofonu kapat' : 'Mikrofonu aç'}
+          className={`flex h-14 min-w-14 items-center justify-center rounded-2xl px-3 text-lg font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
             audioEnabled
               ? 'bg-white text-black hover:bg-zinc-200'
               : 'bg-red-500 text-white hover:bg-red-600'
           }`}
         >
-          {audioBusy
-            ? 'Mikrofon...'
-            : audioEnabled
-              ? '🎤 Mikrofon Açık'
-              : '🔇 Mikrofon Kapalı'}
+          <span className="sm:hidden">{audioEnabled ? '🎤' : '🔇'}</span>
+          <span className="hidden sm:inline">
+            {audioBusy
+              ? 'Mikrofon...'
+              : audioEnabled
+                ? '🎤 Mikrofon Açık'
+                : '🔇 Mikrofon Kapalı'}
+          </span>
         </button>
 
         <button
           type="button"
           onClick={toggleCamera}
-          disabled={videoBusy || recoveryState !== 'idle' || endingSession}
-          className={`min-w-[92px] rounded-2xl px-3 py-3 sm:min-w-[132px] sm:px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+          disabled={videoBusy || disabled}
+          aria-label={videoEnabled ? 'Kamerayı kapat' : 'Kamerayı aç'}
+          className={`flex h-14 min-w-14 items-center justify-center rounded-2xl px-3 text-lg font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
             videoEnabled
               ? 'bg-white text-black hover:bg-zinc-200'
               : 'bg-red-500 text-white hover:bg-red-600'
           }`}
         >
-          {videoBusy
-            ? 'Kamera...'
-            : videoEnabled
-              ? '📷 Kamera Açık'
-              : '🚫 Kamera Kapalı'}
+          <span className="sm:hidden">{videoEnabled ? '📷' : '🚫'}</span>
+          <span className="hidden sm:inline">
+            {videoBusy
+              ? 'Kamera...'
+              : videoEnabled
+                ? '📷 Kamera Açık'
+                : '🚫 Kamera Kapalı'}
+          </span>
         </button>
 
         <button
           type="button"
           onClick={onLeave}
           disabled={endingSession}
-          className="min-w-[82px] rounded-2xl border border-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-14 min-w-16 items-center justify-center rounded-2xl border border-white/10 px-3 text-sm font-black text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[96px] sm:px-4 sm:py-3"
         >
           Ayrıl
         </button>
@@ -984,9 +994,12 @@ function InCallControls({
           type="button"
           onClick={onEndSession}
           disabled={endingSession}
-          className="min-w-[132px] rounded-2xl bg-red-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-14 min-w-20 items-center justify-center rounded-2xl bg-red-500 px-3 text-sm font-black text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3"
         >
-          {endingSession ? 'Bitiriliyor...' : 'Seansı Bitir'}
+          <span className="sm:hidden">{endingSession ? '...' : 'Bitir'}</span>
+          <span className="hidden sm:inline">
+            {endingSession ? 'Bitiriliyor...' : 'Seansı Bitir'}
+          </span>
         </button>
       </div>
     </div>
@@ -1219,8 +1232,6 @@ function WaitingRoomOverlay({
 }
 
 
-
-
 function CustomVideoGrid() {
   const participants = useParticipants()
   const cameraTracks = useTracks(
@@ -1297,6 +1308,7 @@ function CustomVideoGrid() {
               trackRef={localTrackRef}
               label="Siz"
               compact
+              mirrorLocal
               forceCover
             />
           </div>
@@ -1318,19 +1330,23 @@ function FocusVideoTile({
   isMain = false,
   compact = false,
   forceCover = false,
+  mirrorLocal = false,
 }: {
   trackRef: TrackReferenceOrPlaceholder
   label: string
   isMain?: boolean
   compact?: boolean
   forceCover?: boolean
+  mirrorLocal?: boolean
 }) {
   const playableTrackRef = getPlayableTrackRef(trackRef)
+  const shouldMirror = mirrorLocal && trackRef.participant.isLocal
   const videoClassName = forceCover
     ? 'object-cover'
     : isMain
       ? 'object-contain'
       : 'object-cover'
+  const mirrorClassName = shouldMirror ? 'scale-x-[-1]' : ''
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
@@ -1345,13 +1361,15 @@ function FocusVideoTile({
           {isMain && (
             <VideoTrack
               trackRef={playableTrackRef}
-              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-2xl"
+              className={`absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl ${
+                shouldMirror ? 'scale-x-[-1]' : ''
+              }`}
             />
           )}
 
           <VideoTrack
             trackRef={playableTrackRef}
-            className={`relative z-10 h-full w-full ${videoClassName}`}
+            className={`relative z-10 h-full w-full ${videoClassName} ${mirrorClassName}`}
           />
         </>
       )}
