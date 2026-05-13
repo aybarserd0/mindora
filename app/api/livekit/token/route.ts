@@ -33,6 +33,18 @@ type SessionRecord = {
   conversations: ConversationRecord | ConversationRecord[] | null
 }
 
+type SessionAccessTokenRecord = {
+  id: string
+  session_id: string
+  booking_id: string | null
+  conversation_id: string | null
+  user_type: string
+  token: string
+  expires_at: string
+  used_at: string | null
+  revoked_at: string | null
+}
+
 function toText(value: unknown) {
   if (value === null || value === undefined) return ''
   return String(value).trim()
@@ -71,9 +83,7 @@ function normalizeConversation(
 
 function getPublicLivekitUrl(rawUrl: string) {
   const url = rawUrl.trim()
-
   if (!url) return ''
-
   return url
 }
 
@@ -109,6 +119,128 @@ async function markSessionActiveIfNeeded(sessionId: string) {
 
   if (error) {
     console.error('LIVEKIT_SESSION_ACTIVE_UPDATE_ERROR', error)
+  }
+}
+
+async function verifySessionAccessToken({
+  token,
+  sessionId,
+  conversationId,
+  userType,
+}: {
+  token: string
+  sessionId: string
+  conversationId: string
+  userType: UserType
+}) {
+  const supabase = getSupabaseAdmin()
+
+  const { data, error } = await supabase
+    .from('session_access_tokens' as never)
+    .select('*')
+    .eq('token', token as never)
+    .eq('session_id', sessionId as never)
+    .eq('user_type', userType as never)
+    .maybeSingle()
+
+  if (error) {
+    console.error('LIVEKIT_SESSION_ACCESS_TOKEN_QUERY_ERROR', error)
+    return {
+      ok: false,
+      reason: 'query_error',
+    }
+  }
+
+  const access = data as unknown as SessionAccessTokenRecord | null
+
+  if (!access) {
+    return {
+      ok: false,
+      reason: 'not_found',
+    }
+  }
+
+  if (access.revoked_at) {
+    return {
+      ok: false,
+      reason: 'revoked',
+    }
+  }
+
+  if (new Date(access.expires_at).getTime() <= Date.now()) {
+    return {
+      ok: false,
+      reason: 'expired',
+    }
+  }
+
+  if (access.conversation_id && access.conversation_id !== conversationId) {
+    return {
+      ok: false,
+      reason: 'conversation_mismatch',
+    }
+  }
+
+  if (!access.used_at) {
+    const { error: usedError } = await supabase
+      .from('session_access_tokens' as never)
+      .update({
+        used_at: new Date().toISOString(),
+      } as never)
+      .eq('id', access.id as never)
+
+    if (usedError) {
+      console.error('LIVEKIT_SESSION_ACCESS_TOKEN_USED_UPDATE_ERROR', usedError)
+    }
+  }
+
+  return {
+    ok: true,
+    reason: 'valid',
+  }
+}
+
+async function verifyAnyValidAccessToken({
+  token,
+  sessionId,
+  conversationId,
+  userType,
+}: {
+  token: string
+  sessionId: string
+  conversationId: string
+  userType: UserType
+}) {
+  const sessionAccess = await verifySessionAccessToken({
+    token,
+    sessionId,
+    conversationId,
+    userType,
+  })
+
+  if (sessionAccess.ok) {
+    return {
+      ok: true,
+      source: 'session_access_tokens',
+    }
+  }
+
+  const legacyAccess = await verifyConversationAccessToken({
+    token,
+    conversationId,
+    role: userType,
+  })
+
+  if (legacyAccess.ok) {
+    return {
+      ok: true,
+      source: 'conversation_access_tokens',
+    }
+  }
+
+  return {
+    ok: false,
+    source: 'none',
   }
 }
 
@@ -288,10 +420,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const verified = await verifyConversationAccessToken({
+    const verified = await verifyAnyValidAccessToken({
       token: accessToken,
+      sessionId: session.id,
       conversationId: session.conversation_id,
-      role: userTypeRaw,
+      userType: userTypeRaw,
     })
 
     if (!verified.ok) {
@@ -319,6 +452,7 @@ export async function POST(req: NextRequest) {
         sessionId: session.id,
         conversationId: session.conversation_id,
         userType: userTypeRaw,
+        accessSource: verified.source,
       }),
     })
 
