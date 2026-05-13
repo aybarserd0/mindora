@@ -127,15 +127,6 @@ type PrepareBookingResponse = {
   error?: string
 }
 
-type SendLinksResponse = {
-  ok: boolean
-  sent?: {
-    client?: string
-    expert?: string
-  }
-  error?: string
-}
-
 const DEFAULT_TIMEZONE = 'Europe/Istanbul'
 const DEFAULT_LOOKAHEAD_DAYS = 14
 
@@ -279,6 +270,15 @@ function getDayName(day: number) {
   return days[day] || '-'
 }
 
+function isValidUuid(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value
+    )
+  )
+}
+
 export default function AdminConversationPage({
   params,
 }: {
@@ -317,9 +317,6 @@ export default function AdminConversationPage({
   const [bookingActionError, setBookingActionError] = useState('')
   const [bookingActionSuccess, setBookingActionSuccess] = useState('')
   const [prepareLoadingId, setPrepareLoadingId] = useState('')
-  const [sendLinksLoadingId, setSendLinksLoadingId] = useState('')
-  const [sendLinksError, setSendLinksError] = useState('')
-  const [sendLinksSuccess, setSendLinksSuccess] = useState('')
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -333,8 +330,9 @@ export default function AdminConversationPage({
     [messages]
   )
 
-  const expertId = conversation?.expert_id || ''
-  const canUseScheduling = Boolean(conversationId && expertId)
+  const expertId = conversation?.expert_id?.trim() || ''
+  const safeExpertId = isValidUuid(expertId) ? expertId : ''
+  const canUseScheduling = Boolean(conversationId && safeExpertId)
   const groupedSlots = useMemo(() => groupSlotsByDate(slots), [slots])
   const activeAvailability = useMemo(
     () => availability.filter((item) => item.is_active),
@@ -450,14 +448,19 @@ export default function AdminConversationPage({
     }
   }
 
-  async function loadAvailability(currentExpertId = expertId) {
-    if (!currentExpertId) return
+  async function loadAvailability(currentExpertId?: string) {
+    const targetExpertId = (currentExpertId || safeExpertId || '').trim()
+
+    if (!isValidUuid(targetExpertId)) {
+      setAvailability([])
+      return
+    }
 
     try {
       setScheduleError('')
 
       const res = await fetch(
-        `/api/expert/availability?expertId=${encodeURIComponent(currentExpertId)}`,
+        `/api/expert/availability?expertId=${encodeURIComponent(targetExpertId)}`,
         { cache: 'no-store' }
       )
 
@@ -474,9 +477,14 @@ export default function AdminConversationPage({
     }
   }
 
-  async function loadSlots(currentExpertId = expertId) {
-    if (!currentExpertId) {
-      setScheduleError('Uzman ID bulunamadı.')
+  async function loadSlots(currentExpertId?: string) {
+    const targetExpertId = (currentExpertId || safeExpertId || '').trim()
+
+    if (!isValidUuid(targetExpertId)) {
+      setScheduleError(
+        'Geçerli uzman ID bulunamadı. Konuşmanın bir uzmana atanmış olduğundan emin ol.'
+      )
+      setSlots([])
       return
     }
 
@@ -487,7 +495,7 @@ export default function AdminConversationPage({
       setSelectedSlot(null)
 
       const query = new URLSearchParams({
-        expertId: currentExpertId,
+        expertId: targetExpertId,
         startDate: slotStartDate,
         endDate: slotEndDate,
       })
@@ -555,7 +563,7 @@ export default function AdminConversationPage({
         `Randevu oluşturuldu: ${formatCompactDate(selectedSlot.startAt)}`
       )
       setSelectedSlot(null)
-      await loadSlots(conversation.expert_id)
+      await loadSlots(conversation.expert_id || safeExpertId)
       await loadBookings(conversationId)
     } catch {
       setScheduleError('Randevu oluşturulurken hata oluştu.')
@@ -612,7 +620,7 @@ export default function AdminConversationPage({
 
       setBookingActionSuccess(`Randevu durumu güncellendi: ${statusLabel}`)
       await loadBookings(conversationId)
-      if (expertId) await loadSlots(expertId)
+      if (safeExpertId) await loadSlots(safeExpertId)
     } catch {
       setBookingActionError('Randevu durumu güncellenirken hata oluştu.')
     } finally {
@@ -648,59 +656,11 @@ export default function AdminConversationPage({
 
       setBookingActionSuccess('Görüşme hazırlandı. Join linkleri oluşturuldu.')
       await loadBookings(conversationId)
-      if (expertId) await loadSlots(expertId)
+      if (safeExpertId) await loadSlots(safeExpertId)
     } catch {
       setBookingActionError('Görüşme hazırlanırken hata oluştu.')
     } finally {
       setPrepareLoadingId('')
-    }
-  }
-
-  async function sendBookingLinks(booking: Booking) {
-    if (!booking?.id) return
-
-    if (!booking.session_ready) {
-      setSendLinksError('Önce görüşmeyi hazırlamalısın.')
-      return
-    }
-
-    const shouldConfirm = window.confirm(
-      'Güvenli görüşme linkleri danışan ve uzmana mail olarak gönderilsin mi?'
-    )
-
-    if (!shouldConfirm) return
-
-    try {
-      setSendLinksLoadingId(booking.id)
-      setSendLinksError('')
-      setSendLinksSuccess('')
-      setBookingActionError('')
-      setBookingActionSuccess('')
-
-      const res = await fetch(`/api/sessions/bookings/${booking.id}/send-links`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      const data = (await res.json()) as SendLinksResponse
-
-      if (!res.ok || !data.ok) {
-        setSendLinksError(data.error || 'Görüşme linkleri mail olarak gönderilemedi.')
-        return
-      }
-
-      const clientTarget = data.sent?.client || 'danışan'
-      const expertTarget = data.sent?.expert || 'uzman'
-
-      setSendLinksSuccess(
-        `Görüşme linkleri gönderildi: ${clientTarget} • ${expertTarget}`
-      )
-
-      await loadBookings(conversationId)
-    } catch {
-      setSendLinksError('Görüşme linkleri gönderilirken hata oluştu.')
-    } finally {
-      setSendLinksLoadingId('')
     }
   }
 
@@ -802,10 +762,10 @@ export default function AdminConversationPage({
   useEffect(() => {
     if (!expertId) return
 
-    loadAvailability(expertId)
-    loadSlots(expertId)
+    loadAvailability(safeExpertId)
+    loadSlots(safeExpertId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expertId])
+  }, [safeExpertId])
 
   useEffect(() => {
     if (!conversationId) return
@@ -908,7 +868,7 @@ export default function AdminConversationPage({
           async () => {
             if (!isMounted) return
             await loadBookings(conversationId)
-            if (expertId) await loadSlots(expertId)
+            if (safeExpertId) await loadSlots(safeExpertId)
           }
         )
         .subscribe(async (status) => {
@@ -970,7 +930,7 @@ export default function AdminConversationPage({
         expert: false,
       })
     }
-  }, [conversationId, expertId])
+    }, [conversationId, safeExpertId])
 
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-4 py-8 text-[#171717] sm:px-6 sm:py-10">
@@ -1210,15 +1170,11 @@ export default function AdminConversationPage({
                 conversationId={conversationId}
                 actionLoadingId={bookingActionLoadingId}
                 prepareLoadingId={prepareLoadingId}
-                sendLinksLoadingId={sendLinksLoadingId}
                 actionError={bookingActionError}
                 actionSuccess={bookingActionSuccess}
-                sendLinksError={sendLinksError}
-                sendLinksSuccess={sendLinksSuccess}
                 onRefresh={() => loadBookings(conversationId)}
                 onStatusChange={updateBookingStatus}
                 onPrepareSession={prepareBookingSession}
-                onSendLinks={sendBookingLinks}
               />
 
               <div className="rounded-[2rem] border border-[#d8c8b8] bg-[#2b2118] p-5 text-white shadow-sm">
@@ -1233,6 +1189,11 @@ export default function AdminConversationPage({
                     <p className="mt-2 text-sm font-semibold leading-6 text-[#e7d8c8]">
                       Uzmanın müsait slotlarını çek, danışan için güvenli randevu oluştur.
                     </p>
+                    {safeExpertId && (
+                      <p className="mt-2 break-all text-[11px] font-bold text-[#c9b8a7]">
+                        Expert: {safeExpertId}
+                      </p>
+                    )}
                   </div>
 
                   <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white ring-1 ring-white/10">
@@ -1273,7 +1234,7 @@ export default function AdminConversationPage({
                     </div>
 
                     <button
-                      onClick={() => loadSlots(expertId)}
+                      onClick={() => loadSlots(safeExpertId)}
                       disabled={slotsLoading}
                       className="mt-4 w-full rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#2b2118] transition hover:bg-[#f3eadf] disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -1441,7 +1402,6 @@ export default function AdminConversationPage({
                   <p>🧱 Aynı uzman için çakışan booking engellenir.</p>
                   <p>🔁 Randevu lifecycle: planlandı → onaylandı → aktif → tamamlandı.</p>
                   <p>🎥 Görüşmeye hazırla butonu booking’i live session akışına bağlar.</p>
-                  <p>📩 Linkleri Mail Gönder butonu danışan ve uzmana güvenli token’lı link yollar.</p>
                   <p>
                     🚨 Telefon, e-posta, WhatsApp, Instagram, Telegram, IBAN
                     flaglenir.
@@ -1495,15 +1455,11 @@ function UpcomingSessionCard({
   conversationId,
   actionLoadingId,
   prepareLoadingId,
-  sendLinksLoadingId,
   actionError,
   actionSuccess,
-  sendLinksError,
-  sendLinksSuccess,
   onRefresh,
   onStatusChange,
   onPrepareSession,
-  onSendLinks,
 }: {
   booking: Booking | null
   bookings: Booking[]
@@ -1512,15 +1468,11 @@ function UpcomingSessionCard({
   conversationId: string
   actionLoadingId: string
   prepareLoadingId: string
-  sendLinksLoadingId: string
   actionError: string
   actionSuccess: string
-  sendLinksError: string
-  sendLinksSuccess: string
   onRefresh: () => void
   onStatusChange: (booking: Booking, status: BookingStatus) => void
   onPrepareSession: (booking: Booking) => void
-  onSendLinks: (booking: Booking) => void
 }) {
   const timingState = getSessionTimingState(booking)
 
@@ -1670,27 +1622,13 @@ function UpcomingSessionCard({
             </div>
           )}
 
-          {sendLinksError && (
-            <div className="mt-4 rounded-2xl border border-red-300/20 bg-red-500/15 p-3 text-xs font-bold text-red-100">
-              {sendLinksError}
-            </div>
-          )}
-
-          {sendLinksSuccess && (
-            <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/15 p-3 text-xs font-bold text-emerald-100">
-              {sendLinksSuccess}
-            </div>
-          )}
-
           <BookingLifecycleActions
             booking={booking}
             timingState={timingState}
             loading={actionLoadingId === booking.id}
             prepareLoading={prepareLoadingId === booking.id}
-            sendLinksLoading={sendLinksLoadingId === booking.id}
             onStatusChange={onStatusChange}
             onPrepareSession={onPrepareSession}
-            onSendLinks={onSendLinks}
           />
 
           <Link
@@ -1744,19 +1682,15 @@ function BookingLifecycleActions({
   timingState,
   loading,
   prepareLoading,
-  sendLinksLoading,
   onStatusChange,
   onPrepareSession,
-  onSendLinks,
 }: {
   booking: Booking
   timingState: string
   loading: boolean
   prepareLoading: boolean
-  sendLinksLoading: boolean
   onStatusChange: (booking: Booking, status: BookingStatus) => void
   onPrepareSession: (booking: Booking) => void
-  onSendLinks: (booking: Booking) => void
 }) {
   const isClosed =
     booking.status === 'completed' ||
@@ -1784,26 +1718,6 @@ function BookingLifecycleActions({
           : booking.session_ready
             ? 'Görüşme Hazır'
             : 'Görüşmeye Hazırla'}
-      </button>
-
-      <button
-        type="button"
-        disabled={
-          sendLinksLoading ||
-          loading ||
-          prepareLoading ||
-          !booking.session_ready ||
-          !booking.client_join_url ||
-          !booking.expert_join_url
-        }
-        onClick={() => onSendLinks(booking)}
-        className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {sendLinksLoading
-          ? 'Mail gönderiliyor...'
-          : booking.session_ready
-            ? 'Linkleri Mail Gönder'
-            : 'Önce Görüşmeyi Hazırla'}
       </button>
 
       {booking.status === 'scheduled' && (
