@@ -13,11 +13,19 @@ type BookingRow = {
   scheduled_end_at: string
   status: string
   live_session_id?: string | null
-  session_ready?: boolean | null
+}
+
+type ConversationRow = {
+  id: string
+  client_application_id: string | null
+  expert_id: string | null
+  status: string
+  payment_status: string | null
 }
 
 type SessionRow = {
   id: string
+  room_name?: string | null
 }
 
 const TOKEN_TTL_HOURS = 24
@@ -26,7 +34,7 @@ function isValidUuid(value: unknown): value is string {
   return (
     typeof value === 'string' &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      value
+      value.trim()
     )
   )
 }
@@ -43,6 +51,10 @@ function getBaseUrl(req: NextRequest) {
 
 function createSecureToken() {
   return crypto.randomBytes(32).toString('hex')
+}
+
+function createRoomName(sessionId: string) {
+  return `mindora-session-${sessionId}`
 }
 
 function getTokenExpiry() {
@@ -82,9 +94,101 @@ async function createSessionAccessToken({
 
   if (error) throw error
 
+  const row = data as unknown as {
+    token?: string
+    expires_at?: string
+  } | null
+
+  if (!row?.token || !row?.expires_at) {
+    throw new Error('Session access token oluşturulamadı.')
+  }
+
   return {
-    token: (data as any)?.token as string,
-    expiresAt: (data as any)?.expires_at as string,
+    token: row.token,
+    expiresAt: row.expires_at,
+  }
+}
+
+async function ensureLiveSession({
+  supabase,
+  booking,
+  conversation,
+}: {
+  supabase: ReturnType<typeof getSupabaseAdmin>
+  booking: BookingRow
+  conversation: ConversationRow
+}) {
+  if (booking.live_session_id) {
+    const { data: rawExistingSession, error: existingSessionError } =
+      await supabase
+        .from('sessions' as never)
+        .select('id,room_name')
+        .eq('id', booking.live_session_id as never)
+        .maybeSingle()
+
+    if (existingSessionError) throw existingSessionError
+
+    const existingSession = rawExistingSession as unknown as SessionRow | null
+
+    if (existingSession?.id) {
+      if (existingSession.room_name) {
+        return {
+          id: existingSession.id,
+          roomName: existingSession.room_name,
+        }
+      }
+
+      const roomName = createRoomName(existingSession.id)
+
+      const { error: roomUpdateError } = await supabase
+        .from('sessions' as never)
+        .update({ room_name: roomName } as never)
+        .eq('id', existingSession.id as never)
+
+      if (roomUpdateError) throw roomUpdateError
+
+      return {
+        id: existingSession.id,
+        roomName,
+      }
+    }
+  }
+
+  const insertPayload = {
+    conversation_id: booking.conversation_id,
+    client_application_id: conversation.client_application_id,
+    expert_id: booking.expert_id || conversation.expert_id,
+    status: 'scheduled',
+    scheduled_at: booking.scheduled_start_at,
+    room_name: `pending-${booking.id}`,
+  }
+
+  const { data: rawSession, error: sessionError } = await supabase
+    .from('sessions' as never)
+    .insert(insertPayload as never)
+    .select('id,room_name')
+    .single()
+
+  if (sessionError) throw sessionError
+
+  const session = rawSession as unknown as SessionRow | null
+
+  if (!session?.id) {
+    throw new Error('Live session oluşturulamadı.')
+  }
+
+  const finalRoomName = createRoomName(session.id)
+
+  const { error: roomUpdateError } = await supabase
+    .from('sessions' as never)
+    .update({ room_name: finalRoomName } as never)
+    .eq('id', session.id as never)
+
+  if (roomUpdateError) throw roomUpdateError
+
+  return {
+    id: session.id,
+    roomName: finalRoomName,
   }
 }
 
@@ -94,7 +198,7 @@ export async function POST(
 ) {
   try {
     const resolved = await params
-    const bookingId = resolved.id
+    const bookingId = resolved.id?.trim()
 
     if (!isValidUuid(bookingId)) {
       return NextResponse.json(
@@ -122,9 +226,16 @@ export async function POST(
       )
     }
 
-    if (!booking.conversation_id) {
+    if (!booking.conversation_id || !isValidUuid(booking.conversation_id)) {
       return NextResponse.json(
-        { ok: false, error: 'Randevuya bağlı conversation bulunamadı.' },
+        { ok: false, error: 'Randevuya bağlı geçerli conversation bulunamadı.' },
+        { status: 400 }
+      )
+    }
+
+    if (!isValidUuid(booking.expert_id)) {
+      return NextResponse.json(
+        { ok: false, error: 'Randevuya bağlı geçerli expert bulunamadı.' },
         { status: 400 }
       )
     }
@@ -136,53 +247,61 @@ export async function POST(
       )
     }
 
-    let liveSessionId = booking.live_session_id || ''
+    const { data: rawConversation, error: conversationError } = await supabase
+      .from('conversations')
+      .select('id,client_application_id,expert_id,status,payment_status')
+      .eq('id', booking.conversation_id)
+      .single()
 
-    if (!liveSessionId) {
-      const { data: rawSession, error: sessionError } = await supabase
-        .from('sessions' as never)
-        .insert({
-          conversation_id: booking.conversation_id,
-          expert_id: booking.expert_id,
-          client_id: booking.client_id,
-          status: 'scheduled',
-          scheduled_start_at: booking.scheduled_start_at,
-          scheduled_end_at: booking.scheduled_end_at,
-        } as never)
-        .select('id')
-        .single()
+    if (conversationError) throw conversationError
 
-      if (sessionError) throw sessionError
+    const conversation = rawConversation as ConversationRow | null
 
-      const session = rawSession as unknown as SessionRow | null
-      liveSessionId = session?.id || ''
-
-      if (!liveSessionId) {
-        return NextResponse.json(
-          { ok: false, error: 'Live session oluşturulamadı.' },
-          { status: 500 }
-        )
-      }
+    if (!conversation) {
+      return NextResponse.json(
+        { ok: false, error: 'Conversation bulunamadı.' },
+        { status: 404 }
+      )
     }
+
+    if (conversation.status !== 'active') {
+      return NextResponse.json(
+        { ok: false, error: 'Conversation aktif değil.' },
+        { status: 403 }
+      )
+    }
+
+    if (conversation.payment_status !== 'paid') {
+      return NextResponse.json(
+        { ok: false, error: 'Görüşme hazırlamak için ödeme paid olmalı.' },
+        { status: 402 }
+      )
+    }
+
+    const liveSession = await ensureLiveSession({
+      supabase,
+      booking,
+      conversation,
+    })
 
     const [clientAccess, expertAccess, adminAccess] = await Promise.all([
       createSessionAccessToken({
         supabase,
-        sessionId: liveSessionId,
+        sessionId: liveSession.id,
         bookingId: booking.id,
         conversationId: booking.conversation_id,
         userType: 'client',
       }),
       createSessionAccessToken({
         supabase,
-        sessionId: liveSessionId,
+        sessionId: liveSession.id,
         bookingId: booking.id,
         conversationId: booking.conversation_id,
         userType: 'expert',
       }),
       createSessionAccessToken({
         supabase,
-        sessionId: liveSessionId,
+        sessionId: liveSession.id,
         bookingId: booking.id,
         conversationId: booking.conversation_id,
         userType: 'admin',
@@ -191,14 +310,21 @@ export async function POST(
 
     const baseUrl = getBaseUrl(req)
 
-    const clientJoinUrl = `${baseUrl}/client/session/${liveSessionId}?token=${clientAccess.token}`
-    const expertJoinUrl = `${baseUrl}/expert/session/${liveSessionId}?token=${expertAccess.token}`
-    const adminJoinUrl = `${baseUrl}/admin/conversations/${booking.conversation_id}?session=${liveSessionId}&token=${adminAccess.token}`
+    if (!baseUrl) {
+      return NextResponse.json(
+        { ok: false, error: 'Base URL üretilemedi.' },
+        { status: 500 }
+      )
+    }
+
+    const clientJoinUrl = `${baseUrl}/client/session/${liveSession.id}?token=${clientAccess.token}`
+    const expertJoinUrl = `${baseUrl}/expert/session/${liveSession.id}?token=${expertAccess.token}`
+    const adminJoinUrl = `${baseUrl}/admin/conversations/${booking.conversation_id}?session=${liveSession.id}&token=${adminAccess.token}`
 
     const { data: rawUpdatedBooking, error: updateError } = await supabase
       .from('session_bookings' as never)
       .update({
-        live_session_id: liveSessionId,
+        live_session_id: liveSession.id,
         session_ready: true,
         session_ready_at: new Date().toISOString(),
         client_join_url: clientJoinUrl,
@@ -216,7 +342,8 @@ export async function POST(
     return NextResponse.json({
       ok: true,
       booking: rawUpdatedBooking,
-      liveSessionId,
+      liveSessionId: liveSession.id,
+      roomName: liveSession.roomName,
       tokenExpiresAt: clientAccess.expiresAt,
       joinUrls: {
         client: clientJoinUrl,
