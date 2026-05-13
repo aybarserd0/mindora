@@ -42,6 +42,7 @@ type PermissionState = 'idle' | 'checking' | 'granted' | 'denied' | 'unsupported
 type RecoveryState = 'idle' | 'reconnecting' | 'lost'
 type ParticipantState = 'waiting' | 'active' | 'remote-left'
 type ExpertExitReason = 'left' | 'completed' | 'connection_lost'
+type VideoFitMode = 'fit' | 'fill'
 
 type DeviceState = {
   audioInputId: string
@@ -101,7 +102,10 @@ export default function ExpertSessionPage() {
   const [remoteParticipantSeen, setRemoteParticipantSeen] = useState(false)
   const [liveAudioEnabled, setLiveAudioEnabled] = useState(true)
   const [liveVideoEnabled, setLiveVideoEnabled] = useState(true)
+  const [videoFitMode, setVideoFitMode] = useState<VideoFitMode>('fit')
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
+  const sessionContainerRef = useRef<HTMLDivElement | null>(null)
   const previewVideoRef = useRef<HTMLVideoElement | null>(null)
   const previewStreamRef = useRef<MediaStream | null>(null)
   const autoRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -217,6 +221,18 @@ export default function ExpertSessionPage() {
       stopPreviewStream()
     }
   }, [clearRecoveryTimers, stopPreviewStream])
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      setIsFullscreen(Boolean(document.fullscreenElement))
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
 
   useEffect(() => {
     if (!sessionId || !accessToken) {
@@ -444,6 +460,27 @@ export default function ExpertSessionPage() {
     setConnected(false)
     setRecoveryState('idle')
     setConnectionStatus('Bağlantı sonlandı')
+  }
+
+  async function handleToggleFullscreen() {
+    try {
+      const container = sessionContainerRef.current
+
+      if (!container) return
+
+      if (!document.fullscreenElement) {
+        await container.requestFullscreen()
+        return
+      }
+
+      await document.exitFullscreen()
+    } catch (err) {
+      console.error('Fullscreen toggle error:', err)
+    }
+  }
+
+  function handleToggleFitMode() {
+    setVideoFitMode((current) => (current === 'fit' ? 'fill' : 'fit'))
   }
 
   async function handleEndSession() {
@@ -768,7 +805,7 @@ export default function ExpertSessionPage() {
   }
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-black">
+    <div ref={sessionContainerRef} className="relative h-dvh w-full overflow-hidden bg-black">
       <SessionTopBar
         connectionStatus={connected ? 'Bağlandı' : connectionStatus}
         elapsedSeconds={elapsedSeconds}
@@ -866,12 +903,16 @@ export default function ExpertSessionPage() {
           videoEnabled={liveVideoEnabled}
           recoveryState={recoveryState}
           endingSession={endingSession}
+          isFullscreen={isFullscreen}
+          videoFitMode={videoFitMode}
           onAudioChange={setLiveAudioEnabled}
           onVideoChange={setLiveVideoEnabled}
+          onToggleFullscreen={handleToggleFullscreen}
+          onToggleFitMode={handleToggleFitMode}
           onLeave={handleLeaveSession}
           onEndSession={handleEndSession}
         />
-        <CustomVideoGrid />
+        <CustomVideoGrid videoFitMode={videoFitMode} />
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>
@@ -884,8 +925,12 @@ function InCallControls({
   videoEnabled,
   recoveryState,
   endingSession,
+  isFullscreen,
+  videoFitMode,
   onAudioChange,
   onVideoChange,
+  onToggleFullscreen,
+  onToggleFitMode,
   onLeave,
   onEndSession,
 }: {
@@ -893,14 +938,20 @@ function InCallControls({
   videoEnabled: boolean
   recoveryState: RecoveryState
   endingSession: boolean
+  isFullscreen: boolean
+  videoFitMode: VideoFitMode
   onAudioChange: (enabled: boolean) => void
   onVideoChange: (enabled: boolean) => void
+  onToggleFullscreen: () => void
+  onToggleFitMode: () => void
   onLeave: () => void
   onEndSession: () => void
 }) {
   const { localParticipant } = useLocalParticipant()
   const [audioBusy, setAudioBusy] = useState(false)
   const [videoBusy, setVideoBusy] = useState(false)
+  const [screenShareBusy, setScreenShareBusy] = useState(false)
+  const [screenShareEnabled, setScreenShareEnabled] = useState(false)
 
   async function toggleMicrophone() {
     if (!localParticipant || audioBusy) return
@@ -934,11 +985,28 @@ function InCallControls({
     }
   }
 
+  async function toggleScreenShare() {
+    if (!localParticipant || screenShareBusy) return
+
+    const nextValue = !screenShareEnabled
+
+    try {
+      setScreenShareBusy(true)
+      await localParticipant.setScreenShareEnabled(nextValue)
+      setScreenShareEnabled(nextValue)
+    } catch (err) {
+      console.error('Expert screen share toggle error:', err)
+      setScreenShareEnabled(false)
+    } finally {
+      setScreenShareBusy(false)
+    }
+  }
+
   const disabled = recoveryState !== 'idle' || endingSession
 
   return (
     <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-30 flex justify-center px-2 sm:bottom-6 sm:px-4">
-      <div className="pointer-events-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-[1.75rem] border border-white/10 bg-black/75 p-2 shadow-2xl backdrop-blur sm:w-auto sm:gap-3 sm:rounded-3xl sm:p-3">
+      <div className="pointer-events-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-2 rounded-[1.75rem] border border-white/10 bg-black/75 p-2 shadow-2xl backdrop-blur sm:w-auto sm:gap-3 sm:rounded-3xl sm:p-3">
         <button
           type="button"
           onClick={toggleMicrophone}
@@ -979,6 +1047,51 @@ function InCallControls({
                 ? '📷 Kamera Açık'
                 : '🚫 Kamera Kapalı'}
           </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleScreenShare}
+          disabled={screenShareBusy || disabled}
+          aria-label={screenShareEnabled ? 'Ekran paylaşımını kapat' : 'Ekran paylaş'}
+          className={`flex h-14 min-w-14 items-center justify-center rounded-2xl px-3 text-lg font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
+            screenShareEnabled
+              ? 'bg-emerald-500 text-black hover:bg-emerald-400'
+              : 'border border-white/10 bg-white/5 text-white hover:bg-white/10'
+          }`}
+        >
+          <span className="sm:hidden">🖥️</span>
+          <span className="hidden sm:inline">
+            {screenShareBusy
+              ? 'Ekran...'
+              : screenShareEnabled
+                ? '🖥️ Paylaşım Açık'
+                : '🖥️ Ekran Paylaş'}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onToggleFitMode}
+          disabled={disabled}
+          aria-label={videoFitMode === 'fit' ? 'Videoyu doldur' : 'Videoyu sığdır'}
+          className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3 text-lg font-black text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[112px] sm:px-4 sm:py-3 sm:text-sm"
+        >
+          <span className="sm:hidden">{videoFitMode === 'fit' ? '↔️' : '⛶'}</span>
+          <span className="hidden sm:inline">
+            {videoFitMode === 'fit' ? 'Sığdır' : 'Doldur'}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onToggleFullscreen}
+          disabled={disabled}
+          aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
+          className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3 text-lg font-black text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[112px] sm:px-4 sm:py-3 sm:text-sm"
+        >
+          <span className="sm:hidden">{isFullscreen ? '↙️' : '⛶'}</span>
+          <span className="hidden sm:inline">{isFullscreen ? 'Çık' : 'Tam Ekran'}</span>
         </button>
 
         <button
@@ -1232,8 +1345,10 @@ function WaitingRoomOverlay({
 }
 
 
-function CustomVideoGrid() {
+function CustomVideoGrid({ videoFitMode }: { videoFitMode: VideoFitMode }) {
   const participants = useParticipants()
+  const [activeSpeakerId, setActiveSpeakerId] = useState<string>('')
+
   const cameraTracks = useTracks(
     [
       {
@@ -1246,7 +1361,40 @@ function CustomVideoGrid() {
     }
   )
 
+  const screenShareTracks = useTracks(
+    [
+      {
+        source: Track.Source.ScreenShare,
+        withPlaceholder: false,
+      },
+    ],
+    {
+      onlySubscribed: false,
+    }
+  )
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const activeParticipant = participants.find((participant) => participant.isSpeaking)
+      setActiveSpeakerId(activeParticipant?.identity || '')
+    }, 300)
+
+    return () => clearInterval(interval)
+  }, [participants])
+
   const remoteParticipants = participants.filter((participant) => !participant.isLocal)
+
+  const playableRemoteScreenShare = screenShareTracks.find(
+    (trackRef) =>
+      !trackRef.participant.isLocal &&
+      Boolean(trackRef.publication?.track)
+  )
+
+  const playableLocalScreenShare = screenShareTracks.find(
+    (trackRef) =>
+      trackRef.participant.isLocal &&
+      Boolean(trackRef.publication?.track)
+  )
 
   const playableRemoteTrackRefs = cameraTracks.filter(
     (trackRef) =>
@@ -1273,26 +1421,48 @@ function CustomVideoGrid() {
   )
 
   const localTrackRef = playableLocalTrackRef || placeholderLocalTrackRef || null
+
   const mainTrackRef =
+    playableRemoteScreenShare ||
+    playableLocalScreenShare ||
     playableRemoteTrackRefs[0] ||
     placeholderRemoteTrackRefs[0] ||
     playableLocalTrackRef ||
     null
 
   const hasRemoteParticipant = remoteParticipants.length > 0
+  const isScreenShareMain =
+    mainTrackRef?.source === Track.Source.ScreenShare ||
+    mainTrackRef?.publication?.source === Track.Source.ScreenShare
+
   const showLocalPreview =
     Boolean(localTrackRef) &&
     Boolean(mainTrackRef) &&
     !mainTrackRef?.participant.isLocal
 
+  const showRemoteMiniStrip =
+    Boolean(isScreenShareMain) &&
+    playableRemoteTrackRefs.length > 0
+
   return (
-    <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,#18181b_0%,#050505_48%,#000_100%)] px-2 pb-24 pt-24 sm:px-5 sm:pb-28 sm:pt-28">
+    <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,#18181b_0%,#050505_48%,#000_100%)] px-2 pb-28 pt-28 sm:px-5 sm:pb-32 sm:pt-28">
       <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-black shadow-2xl sm:rounded-[2rem]">
         {mainTrackRef ? (
           <FocusVideoTile
             trackRef={mainTrackRef}
-            label={mainTrackRef.participant.isLocal ? 'Siz' : 'Danışan'}
+            label={
+              isScreenShareMain
+                ? mainTrackRef.participant.isLocal
+                  ? 'Ekran Paylaşımınız'
+                  : 'Danışan Ekran Paylaşımı'
+                : mainTrackRef.participant.isLocal
+                  ? 'Siz'
+                  : getParticipantLabel(mainTrackRef.participant)
+            }
             isMain
+            videoFitMode={isScreenShareMain ? 'fit' : videoFitMode}
+            isActiveSpeaker={mainTrackRef.participant.identity === activeSpeakerId}
+            isScreenShare={isScreenShareMain}
           />
         ) : (
           <VideoAvatarFallback
@@ -1300,6 +1470,25 @@ function CustomVideoGrid() {
             label="Video bekleniyor"
             large
           />
+        )}
+
+        {showRemoteMiniStrip && (
+          <div className="absolute bottom-3 left-3 z-20 flex max-w-[calc(100%-1.5rem)] gap-2 overflow-x-auto rounded-3xl border border-white/10 bg-black/55 p-2 shadow-2xl backdrop-blur sm:bottom-5 sm:left-5">
+            {playableRemoteTrackRefs.slice(0, 3).map((trackRef) => (
+              <div
+                key={`${trackRef.participant.identity}-${trackRef.source}`}
+                className="h-24 w-36 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 sm:h-28 sm:w-44"
+              >
+                <FocusVideoTile
+                  trackRef={trackRef}
+                  label={getParticipantLabel(trackRef.participant)}
+                  compact
+                  forceCover
+                  isActiveSpeaker={trackRef.participant.identity === activeSpeakerId}
+                />
+              </div>
+            ))}
+          </div>
         )}
 
         {showLocalPreview && localTrackRef && (
@@ -1310,14 +1499,29 @@ function CustomVideoGrid() {
               compact
               mirrorLocal
               forceCover
+              isActiveSpeaker={localTrackRef.participant.identity === activeSpeakerId}
             />
           </div>
         )}
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />
 
-        <div className="absolute left-3 top-3 z-20 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-bold text-white shadow-xl backdrop-blur sm:left-4 sm:top-4 sm:px-4 sm:text-xs">
-          {hasRemoteParticipant ? 'Canlı görüşme aktif' : 'Danışan bekleniyor'}
+        <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2 sm:left-4 sm:top-4">
+          <div className="rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-bold text-white shadow-xl backdrop-blur sm:px-4 sm:text-xs">
+            {hasRemoteParticipant ? 'Canlı görüşme aktif' : 'Danışan bekleniyor'}
+          </div>
+
+          {activeSpeakerId && (
+            <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-100 shadow-xl backdrop-blur sm:px-4 sm:text-xs">
+              Konuşan: {activeSpeakerId}
+            </div>
+          )}
+
+          {isScreenShareMain && (
+            <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-[11px] font-bold text-sky-100 shadow-xl backdrop-blur sm:px-4 sm:text-xs">
+              Ekran paylaşımı
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1331,6 +1535,9 @@ function FocusVideoTile({
   compact = false,
   forceCover = false,
   mirrorLocal = false,
+  videoFitMode = 'fit',
+  isActiveSpeaker = false,
+  isScreenShare = false,
 }: {
   trackRef: TrackReferenceOrPlaceholder
   label: string
@@ -1338,18 +1545,29 @@ function FocusVideoTile({
   compact?: boolean
   forceCover?: boolean
   mirrorLocal?: boolean
+  videoFitMode?: VideoFitMode
+  isActiveSpeaker?: boolean
+  isScreenShare?: boolean
 }) {
   const playableTrackRef = getPlayableTrackRef(trackRef)
   const shouldMirror = mirrorLocal && trackRef.participant.isLocal
   const videoClassName = forceCover
     ? 'object-cover'
     : isMain
-      ? 'object-contain'
+      ? videoFitMode === 'fill'
+        ? 'object-cover'
+        : 'object-contain'
       : 'object-cover'
   const mirrorClassName = shouldMirror ? 'scale-x-[-1]' : ''
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-black">
+    <div
+      className={`relative h-full w-full overflow-hidden bg-black transition ${
+        isActiveSpeaker
+          ? 'ring-2 ring-emerald-400 ring-offset-0'
+          : 'ring-0'
+      }`}
+    >
       {!playableTrackRef ? (
         <VideoAvatarFallback
           name={label}
@@ -1358,7 +1576,7 @@ function FocusVideoTile({
         />
       ) : (
         <>
-          {isMain && (
+          {isMain && !isScreenShare && (
             <VideoTrack
               trackRef={playableTrackRef}
               className={`absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl ${
@@ -1379,7 +1597,11 @@ function FocusVideoTile({
           compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[11px] font-bold sm:px-4 sm:text-xs'
         }`}
       >
-        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+        <span
+          className={`h-2 w-2 rounded-full ${
+            isActiveSpeaker ? 'bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.95)]' : 'bg-emerald-400'
+          }`}
+        />
         <span className="max-w-[180px] truncate">{label}</span>
       </div>
 
@@ -1389,7 +1611,11 @@ function FocusVideoTile({
         }`}
       >
         <span className="font-bold uppercase tracking-wide text-zinc-300">
-          {playableTrackRef ? 'Kamera açık' : 'Kamera kapalı'}
+          {isScreenShare
+            ? 'Ekran paylaşımı'
+            : playableTrackRef
+              ? 'Kamera açık'
+              : 'Kamera kapalı'}
         </span>
       </div>
     </div>

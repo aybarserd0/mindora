@@ -27,6 +27,7 @@ type SessionResponse = {
 
 type PermissionState = 'idle' | 'checking' | 'granted' | 'denied' | 'unsupported'
 type RecoveryState = 'idle' | 'reconnecting' | 'lost'
+type VideoFitMode = 'contain' | 'cover'
 type ParticipantState = 'waiting' | 'active' | 'remote-left'
 type SessionExitReason = 'left' | 'connection_lost'
 
@@ -85,6 +86,8 @@ export default function ClientSessionPage() {
   const [remoteParticipantSeen, setRemoteParticipantSeen] = useState(false)
   const [liveAudioEnabled, setLiveAudioEnabled] = useState(true)
   const [liveVideoEnabled, setLiveVideoEnabled] = useState(true)
+  const [fitMode, setFitMode] = useState<VideoFitMode>('contain')
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const previewVideoRef = useRef<HTMLVideoElement | null>(null)
   const previewStreamRef = useRef<MediaStream | null>(null)
@@ -201,6 +204,33 @@ export default function ClientSessionPage() {
       stopPreviewStream()
     }
   }, [clearRecoveryTimers, stopPreviewStream])
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      setIsFullscreen(Boolean(document.fullscreenElement))
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
+
+  async function toggleFullscreen() {
+    if (typeof document === 'undefined') return
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+        return
+      }
+
+      await document.documentElement.requestFullscreen()
+    } catch (err) {
+      console.error('Fullscreen toggle error:', err)
+    }
+  }
 
   useEffect(() => {
     if (!sessionId || !accessToken) {
@@ -784,12 +814,16 @@ export default function ClientSessionPage() {
         <InCallControls
           audioEnabled={liveAudioEnabled}
           videoEnabled={liveVideoEnabled}
+          fitMode={fitMode}
+          isFullscreen={isFullscreen}
           recoveryState={recoveryState}
           onAudioChange={setLiveAudioEnabled}
           onVideoChange={setLiveVideoEnabled}
+          onFitModeChange={setFitMode}
+          onFullscreenToggle={toggleFullscreen}
           onLeave={handleLeaveSession}
         />
-        <CustomVideoGrid />
+        <CustomVideoGrid fitMode={fitMode} />
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>
@@ -801,21 +835,31 @@ export default function ClientSessionPage() {
 function InCallControls({
   audioEnabled,
   videoEnabled,
+  fitMode,
+  isFullscreen,
   recoveryState,
   onAudioChange,
   onVideoChange,
+  onFitModeChange,
+  onFullscreenToggle,
   onLeave,
 }: {
   audioEnabled: boolean
   videoEnabled: boolean
+  fitMode: VideoFitMode
+  isFullscreen: boolean
   recoveryState: RecoveryState
   onAudioChange: (enabled: boolean) => void
   onVideoChange: (enabled: boolean) => void
+  onFitModeChange: (mode: VideoFitMode) => void
+  onFullscreenToggle: () => void
   onLeave: () => void
 }) {
   const { localParticipant } = useLocalParticipant()
   const [audioBusy, setAudioBusy] = useState(false)
   const [videoBusy, setVideoBusy] = useState(false)
+  const [screenShareBusy, setScreenShareBusy] = useState(false)
+  const [screenShareEnabled, setScreenShareEnabled] = useState(false)
 
   async function toggleMicrophone() {
     if (!localParticipant || audioBusy) return
@@ -849,63 +893,139 @@ function InCallControls({
     }
   }
 
+  async function toggleScreenShare() {
+    if (!localParticipant || screenShareBusy) return
+
+    const nextValue = !screenShareEnabled
+
+    try {
+      setScreenShareBusy(true)
+      await localParticipant.setScreenShareEnabled(nextValue)
+      setScreenShareEnabled(nextValue)
+    } catch (err) {
+      console.error('Client screen share toggle error:', err)
+    } finally {
+      setScreenShareBusy(false)
+    }
+  }
+
   const disabled = recoveryState !== 'idle'
 
   return (
-    <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-30 flex justify-center px-2 sm:bottom-6 sm:px-4">
-      <div className="pointer-events-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-[1.75rem] border border-white/10 bg-black/75 p-2 shadow-2xl backdrop-blur sm:w-auto sm:gap-3 sm:rounded-3xl sm:p-3">
-        <button
-          type="button"
+    <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-30 flex justify-center px-2 pb-[env(safe-area-inset-bottom)] sm:bottom-6 sm:px-4">
+      <div className="pointer-events-auto flex w-full max-w-5xl items-center justify-center gap-2 overflow-x-auto rounded-[1.75rem] border border-white/10 bg-black/75 p-2 shadow-2xl backdrop-blur sm:w-auto sm:gap-3 sm:rounded-3xl sm:p-3">
+        <ControlButton
           onClick={toggleMicrophone}
           disabled={audioBusy || disabled}
-          aria-label={audioEnabled ? 'Mikrofonu kapat' : 'Mikrofonu aç'}
-          className={`flex h-14 min-w-14 items-center justify-center rounded-2xl px-3 text-lg font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
-            audioEnabled
-              ? 'bg-white text-black hover:bg-zinc-200'
-              : 'bg-red-500 text-white hover:bg-red-600'
-          }`}
-        >
-          <span className="sm:hidden">{audioEnabled ? '🎤' : '🔇'}</span>
-          <span className="hidden sm:inline">
-            {audioBusy
+          active={audioEnabled}
+          danger={!audioEnabled}
+          mobileLabel={audioEnabled ? '🎤' : '🔇'}
+          label={
+            audioBusy
               ? 'Mikrofon...'
               : audioEnabled
                 ? '🎤 Mikrofon Açık'
-                : '🔇 Mikrofon Kapalı'}
-          </span>
-        </button>
+                : '🔇 Mikrofon Kapalı'
+          }
+          ariaLabel={audioEnabled ? 'Mikrofonu kapat' : 'Mikrofonu aç'}
+        />
 
-        <button
-          type="button"
+        <ControlButton
           onClick={toggleCamera}
           disabled={videoBusy || disabled}
-          aria-label={videoEnabled ? 'Kamerayı kapat' : 'Kamerayı aç'}
-          className={`flex h-14 min-w-14 items-center justify-center rounded-2xl px-3 text-lg font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
-            videoEnabled
-              ? 'bg-white text-black hover:bg-zinc-200'
-              : 'bg-red-500 text-white hover:bg-red-600'
-          }`}
-        >
-          <span className="sm:hidden">{videoEnabled ? '📷' : '🚫'}</span>
-          <span className="hidden sm:inline">
-            {videoBusy
+          active={videoEnabled}
+          danger={!videoEnabled}
+          mobileLabel={videoEnabled ? '📷' : '🚫'}
+          label={
+            videoBusy
               ? 'Kamera...'
               : videoEnabled
                 ? '📷 Kamera Açık'
-                : '🚫 Kamera Kapalı'}
-          </span>
-        </button>
+                : '🚫 Kamera Kapalı'
+          }
+          ariaLabel={videoEnabled ? 'Kamerayı kapat' : 'Kamerayı aç'}
+        />
+
+        <ControlButton
+          onClick={toggleScreenShare}
+          disabled={screenShareBusy || disabled}
+          active={screenShareEnabled}
+          mobileLabel="🖥️"
+          label={
+            screenShareBusy
+              ? 'Paylaşım...'
+              : screenShareEnabled
+                ? '🖥️ Paylaşım Açık'
+                : '🖥️ Ekran Paylaş'
+          }
+          ariaLabel={screenShareEnabled ? 'Ekran paylaşımını kapat' : 'Ekran paylaş'}
+        />
+
+        <ControlButton
+          onClick={() => onFitModeChange(fitMode === 'contain' ? 'cover' : 'contain')}
+          disabled={disabled}
+          active
+          mobileLabel={fitMode === 'contain' ? 'Fit' : 'Fill'}
+          label={fitMode === 'contain' ? 'Fit: Tam Gör' : 'Fit: Doldur'}
+          ariaLabel="Video görünüm modunu değiştir"
+        />
+
+        <ControlButton
+          onClick={onFullscreenToggle}
+          disabled={disabled}
+          active
+          mobileLabel={isFullscreen ? 'Çık' : 'Tam'}
+          label={isFullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekran'}
+          ariaLabel={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekrana geç'}
+        />
 
         <button
           type="button"
           onClick={onLeave}
-          className="flex h-14 min-w-20 items-center justify-center rounded-2xl bg-red-500 px-3 text-sm font-black text-white transition hover:bg-red-600 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3"
+          className="flex h-14 min-w-20 shrink-0 items-center justify-center rounded-2xl bg-red-500 px-3 text-sm font-black text-white transition hover:bg-red-600 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3"
         >
           <span className="sm:hidden">Ayrıl</span>
           <span className="hidden sm:inline">Görüşmeden Ayrıl</span>
         </button>
       </div>
     </div>
+  )
+}
+
+function ControlButton({
+  onClick,
+  disabled,
+  active,
+  danger = false,
+  mobileLabel,
+  label,
+  ariaLabel,
+}: {
+  onClick: () => void
+  disabled?: boolean
+  active: boolean
+  danger?: boolean
+  mobileLabel: string
+  label: string
+  ariaLabel: string
+}) {
+  const className = danger
+    ? 'bg-red-500 text-white hover:bg-red-600'
+    : active
+      ? 'bg-white text-black hover:bg-zinc-200'
+      : 'bg-zinc-800 text-white hover:bg-zinc-700'
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      className={`flex h-14 min-w-14 shrink-0 items-center justify-center rounded-2xl px-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 ${className}`}
+    >
+      <span className="text-base sm:hidden">{mobileLabel}</span>
+      <span className="hidden sm:inline">{label}</span>
+    </button>
   )
 }
 
@@ -1125,7 +1245,7 @@ function WaitingRoomOverlay({
 
 
 
-function CustomVideoGrid() {
+function CustomVideoGrid({ fitMode }: { fitMode: VideoFitMode }) {
   const participants = useParticipants()
   const cameraTracks = useTracks(
     [
@@ -1139,53 +1259,90 @@ function CustomVideoGrid() {
     }
   )
 
-  const remoteParticipants = participants.filter((participant) => !participant.isLocal)
+  const orderedParticipants = useMemo(() => {
+    return [...participants].sort((first, second) => {
+      if (first.isLocal !== second.isLocal) return first.isLocal ? 1 : -1
+      if (first.isSpeaking !== second.isSpeaking) return first.isSpeaking ? -1 : 1
+      return first.identity.localeCompare(second.identity)
+    })
+  }, [participants])
 
-  const playableRemoteTrackRefs = cameraTracks.filter(
-    (trackRef) =>
-      !trackRef.participant.isLocal &&
-      Boolean(trackRef.publication?.track)
+  const remoteParticipants = orderedParticipants.filter(
+    (participant) => !participant.isLocal
   )
 
-  const placeholderRemoteTrackRefs = cameraTracks.filter(
-    (trackRef) =>
-      !trackRef.participant.isLocal &&
-      !trackRef.publication?.track
+  const localParticipant = orderedParticipants.find(
+    (participant) => participant.isLocal
   )
 
-  const playableLocalTrackRef = cameraTracks.find(
-    (trackRef) =>
-      trackRef.participant.isLocal &&
-      Boolean(trackRef.publication?.track)
-  )
-
-  const placeholderLocalTrackRef = cameraTracks.find(
-    (trackRef) =>
-      trackRef.participant.isLocal &&
-      !trackRef.publication?.track
-  )
-
-  const localTrackRef = playableLocalTrackRef || placeholderLocalTrackRef || null
-  const mainTrackRef =
-    playableRemoteTrackRefs[0] ||
-    placeholderRemoteTrackRefs[0] ||
-    playableLocalTrackRef ||
+  const mainParticipant =
+    remoteParticipants.find((participant) => participant.isSpeaking) ||
+    remoteParticipants[0] ||
+    localParticipant ||
     null
+
+  const mainTrackRef = mainParticipant
+    ? getCameraTrackRefForParticipant(cameraTracks, mainParticipant)
+    : null
+
+  const localTrackRef = localParticipant
+    ? getCameraTrackRefForParticipant(cameraTracks, localParticipant)
+    : null
 
   const hasRemoteParticipant = remoteParticipants.length > 0
   const showLocalPreview =
     Boolean(localTrackRef) &&
-    Boolean(mainTrackRef) &&
-    !mainTrackRef?.participant.isLocal
+    Boolean(mainParticipant) &&
+    !mainParticipant?.isLocal &&
+    orderedParticipants.length <= 2
+
+  const shouldUseGrid = orderedParticipants.length > 2
 
   return (
     <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,#18181b_0%,#050505_48%,#000_100%)] px-2 pb-24 pt-24 sm:px-5 sm:pb-28 sm:pt-28">
       <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-black shadow-2xl sm:rounded-[2rem]">
-        {mainTrackRef ? (
+        {shouldUseGrid ? (
+          <div className="grid h-full w-full gap-2 p-2 sm:gap-3 sm:p-3 md:grid-cols-2 xl:grid-cols-3">
+            {orderedParticipants.map((participant) => {
+              const trackRef = getCameraTrackRefForParticipant(cameraTracks, participant)
+              const isActiveSpeaker = participant.isSpeaking
+
+              return (
+                <div
+                  key={participant.identity}
+                  className={`min-h-[220px] overflow-hidden rounded-3xl border bg-zinc-950 transition ${
+                    isActiveSpeaker
+                      ? 'border-emerald-400/80 shadow-[0_0_40px_rgba(52,211,153,0.18)]'
+                      : 'border-white/10'
+                  }`}
+                >
+                  {trackRef ? (
+                    <FocusVideoTile
+                      trackRef={trackRef}
+                      label={getParticipantLabel(participant)}
+                      isActiveSpeaker={isActiveSpeaker}
+                      mirrorLocal
+                      fitMode={fitMode}
+                    />
+                  ) : (
+                    <VideoAvatarFallback
+                      name={getParticipantLabel(participant)}
+                      label="Video bekleniyor"
+                      large
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ) : mainTrackRef && mainParticipant ? (
           <FocusVideoTile
             trackRef={mainTrackRef}
-            label={mainTrackRef.participant.isLocal ? 'Siz' : 'Uzman'}
+            label={getParticipantLabel(mainParticipant)}
             isMain
+            isActiveSpeaker={mainParticipant.isSpeaking}
+            mirrorLocal
+            fitMode={fitMode}
           />
         ) : (
           <VideoAvatarFallback
@@ -1195,14 +1352,22 @@ function CustomVideoGrid() {
           />
         )}
 
-        {showLocalPreview && localTrackRef && (
-          <div className="absolute bottom-3 right-3 z-20 h-28 w-20 overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 shadow-2xl sm:bottom-5 sm:right-5 sm:h-40 sm:w-56">
+        {showLocalPreview && localTrackRef && localParticipant && (
+          <div
+            className={`absolute bottom-3 right-3 z-20 h-28 w-20 overflow-hidden rounded-2xl border bg-zinc-950 shadow-2xl transition sm:bottom-5 sm:right-5 sm:h-40 sm:w-56 ${
+              localParticipant.isSpeaking
+                ? 'border-emerald-400/80 shadow-[0_0_32px_rgba(52,211,153,0.22)]'
+                : 'border-white/20'
+            }`}
+          >
             <FocusVideoTile
               trackRef={localTrackRef}
               label="Siz"
               compact
               mirrorLocal
               forceCover
+              isActiveSpeaker={localParticipant.isSpeaking}
+              fitMode={fitMode}
             />
           </div>
         )}
@@ -1212,6 +1377,15 @@ function CustomVideoGrid() {
         <div className="absolute left-3 top-3 z-20 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-bold text-white shadow-xl backdrop-blur sm:left-4 sm:top-4 sm:px-4 sm:text-xs">
           {hasRemoteParticipant ? 'Canlı görüşme aktif' : 'Uzman bekleniyor'}
         </div>
+
+        {orderedParticipants.some((participant) => participant.isSpeaking) && (
+          <div className="absolute right-3 top-3 z-20 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-2 text-[11px] font-bold text-emerald-100 shadow-xl backdrop-blur sm:right-4 sm:top-4 sm:px-4 sm:text-xs">
+            Konuşan: {getParticipantLabel(
+              orderedParticipants.find((participant) => participant.isSpeaking) ||
+                orderedParticipants[0]
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1224,6 +1398,8 @@ function FocusVideoTile({
   compact = false,
   forceCover = false,
   mirrorLocal = false,
+  isActiveSpeaker = false,
+  fitMode,
 }: {
   trackRef: TrackReferenceOrPlaceholder
   label: string
@@ -1231,6 +1407,8 @@ function FocusVideoTile({
   compact?: boolean
   forceCover?: boolean
   mirrorLocal?: boolean
+  isActiveSpeaker?: boolean
+  fitMode: VideoFitMode
 }) {
   const playableTrackRef = getPlayableTrackRef(trackRef)
   const shouldMirror = mirrorLocal && trackRef.participant.isLocal
@@ -1238,11 +1416,17 @@ function FocusVideoTile({
   const videoClassName = forceCover
     ? 'object-cover'
     : isMain
-      ? 'object-contain'
+      ? fitMode === 'cover'
+        ? 'object-cover'
+        : 'object-contain'
       : 'object-cover'
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-black">
+    <div
+      className={`relative h-full w-full overflow-hidden bg-black transition ${
+        isActiveSpeaker ? 'ring-2 ring-emerald-400/80' : ''
+      }`}
+    >
       {!playableTrackRef ? (
         <VideoAvatarFallback
           name={label}
@@ -1270,12 +1454,20 @@ function FocusVideoTile({
       )}
 
       <div
-        className={`absolute left-2 top-2 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/65 text-white shadow-xl backdrop-blur sm:left-3 sm:top-3 ${
+        className={`absolute left-2 top-2 z-20 flex items-center gap-2 rounded-full border bg-black/65 text-white shadow-xl backdrop-blur sm:left-3 sm:top-3 ${
+          isActiveSpeaker ? 'border-emerald-400/60' : 'border-white/10'
+        } ${
           compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[11px] font-bold sm:px-4 sm:text-xs'
         }`}
       >
-        <span className="h-2 w-2 rounded-full bg-emerald-400" />
-        <span className="max-w-[180px] truncate">{label}</span>
+        <span
+          className={`h-2 w-2 rounded-full ${
+            isActiveSpeaker ? 'animate-pulse bg-emerald-300' : 'bg-emerald-400'
+          }`}
+        />
+        <span className="max-w-[180px] truncate">
+          {isActiveSpeaker ? `${label} konuşuyor` : label}
+        </span>
       </div>
 
       <div
@@ -1288,6 +1480,23 @@ function FocusVideoTile({
         </span>
       </div>
     </div>
+  )
+}
+
+function getCameraTrackRefForParticipant(
+  trackRefs: TrackReferenceOrPlaceholder[],
+  participant: Participant
+) {
+  return (
+    trackRefs.find(
+      (trackRef) =>
+        trackRef.participant.identity === participant.identity &&
+        Boolean(trackRef.publication?.track)
+    ) ||
+    trackRefs.find(
+      (trackRef) => trackRef.participant.identity === participant.identity
+    ) ||
+    null
   )
 }
 
