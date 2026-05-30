@@ -38,19 +38,35 @@ type SendLinksResponse = {
     client: string
     expert: string
   }
+  booking?: {
+    id: string
+    status: string
+    sessionReady: boolean
+  }
+  debug?: {
+    bookingId?: string
+    path?: string
+  }
   error?: string
 }
 
+type RouteParams = {
+  id?: string
+  bookingId?: string
+}
+
+type RouteContext = {
+  params?: RouteParams | Promise<RouteParams>
+}
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i
+
 const DEFAULT_TIMEZONE = 'Europe/Istanbul'
 
 function isValidUuid(value: unknown): value is string {
-  return (
-    typeof value === 'string' &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(
-      value
-    )
-  )
+  return typeof value === 'string' && UUID_REGEX.test(value)
 }
 
 function toText(value: unknown) {
@@ -218,14 +234,54 @@ function getPublicBaseUrl(req: NextRequest) {
 }
 
 function normalizeJoinUrl(url: string, req: NextRequest) {
-  if (!url) return ''
+  const cleanUrl = toText(url)
 
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url
+  if (!cleanUrl) return ''
+
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    return cleanUrl
   }
 
   const baseUrl = getPublicBaseUrl(req)
-  return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`
+  return `${baseUrl}${cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`}`
+}
+
+async function readJsonBody(req: NextRequest) {
+  try {
+    return (await req.json()) as Record<string, unknown>
+  } catch {
+    return {}
+  }
+}
+
+function getUuidFromPath(req: NextRequest) {
+  const segments = req.nextUrl.pathname.split('/').filter(Boolean)
+
+  for (const segment of segments) {
+    const decoded = decodeURIComponent(segment)
+
+    if (isValidUuid(decoded)) {
+      return decoded
+    }
+  }
+
+  return ''
+}
+
+async function getBookingIdFromRequest(req: NextRequest, context: RouteContext) {
+  const resolvedParams = await Promise.resolve(context.params || {})
+  const body = await readJsonBody(req)
+
+  const candidates = [
+    toText(resolvedParams.id),
+    toText(resolvedParams.bookingId),
+    toText(body.bookingId),
+    toText(body.id),
+    toText(req.nextUrl.searchParams.get('bookingId')),
+    getUuidFromPath(req),
+  ]
+
+  return candidates.find((candidate) => isValidUuid(candidate)) || ''
 }
 
 async function getBooking(bookingId: string) {
@@ -294,15 +350,27 @@ async function getConversation(conversationId: string) {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: RouteContext
 ): Promise<NextResponse<SendLinksResponse>> {
-  try {
-    const resolved = await params
-    const bookingId = resolved.id
+  const bookingId = await getBookingIdFromRequest(req, context)
 
+  try {
     if (!isValidUuid(bookingId)) {
+      console.warn('SEND_LINKS_INVALID_BOOKING_ID', {
+        bookingId,
+        path: req.nextUrl.pathname,
+        search: req.nextUrl.search,
+      })
+
       return NextResponse.json(
-        { ok: false, error: 'Geçerli booking id gerekli.' },
+        {
+          ok: false,
+          error: 'Geçerli booking id gerekli.',
+          debug: {
+            bookingId: bookingId || undefined,
+            path: req.nextUrl.pathname,
+          },
+        },
         { status: 400 }
       )
     }
@@ -325,12 +393,19 @@ export async function POST(
 
     if (booking.status === 'cancelled' || booking.status === 'no_show') {
       return NextResponse.json(
-        { ok: false, error: 'İptal edilmiş veya kapalı randevu için link gönderilemez.' },
+        {
+          ok: false,
+          error: 'İptal edilmiş veya kapalı randevu için link gönderilemez.',
+        },
         { status: 409 }
       )
     }
 
-    if (!booking.session_ready || !booking.client_join_url || !booking.expert_join_url) {
+    if (
+      !booking.session_ready ||
+      !booking.client_join_url ||
+      !booking.expert_join_url
+    ) {
       return NextResponse.json(
         {
           ok: false,
@@ -427,9 +502,17 @@ export async function POST(
         client: clientEmail,
         expert: expertEmail,
       },
+      booking: {
+        id: booking.id,
+        status: booking.status,
+        sessionReady: Boolean(booking.session_ready),
+      },
     })
   } catch (err) {
-    console.error('SEND_BOOKING_LINKS_ERROR', err)
+    console.error('SEND_BOOKING_LINKS_ERROR', {
+      bookingId,
+      error: err,
+    })
 
     const message =
       err instanceof Error && err.message === 'SMTP environment variables are missing.'
