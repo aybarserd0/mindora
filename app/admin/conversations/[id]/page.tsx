@@ -677,44 +677,77 @@ export default function AdminConversationPage({
   }
 
   async function sendBookingLinks(booking: Booking) {
-    if (!booking?.id) return
+    const bookingId = booking?.id?.trim() || ''
+
+    if (!isValidUuid(bookingId)) {
+      setBookingActionError(
+        `Geçerli booking id bulunamadı. Gelen değer: ${bookingId || 'boş'}`
+      )
+      return
+    }
 
     if (!booking.session_ready) {
-      setBookingActionError('Önce görüşmeyi hazırla. Join linkleri oluşmadan mail gönderilemez.')
+      setBookingActionError(
+        'Önce görüşmeyi hazırla. Join linkleri oluşmadan mail gönderilemez.'
+      )
       return
     }
 
     if (!booking.client_join_url || !booking.expert_join_url) {
-      setBookingActionError('Client veya expert join linki eksik. Görüşmeyi tekrar hazırla.')
+      setBookingActionError(
+        'Client veya expert join linki eksik. Görüşmeyi tekrar hazırla.'
+      )
       return
     }
 
     const shouldConfirm = window.confirm(
-      'Danışan ve uzmana güvenli görüşme linkleri mail olarak gönderilsin mi?'
+      `Danışan ve uzmana güvenli görüşme linkleri mail olarak gönderilsin mi?\n\nBooking ID: ${bookingId}`
     )
 
     if (!shouldConfirm) return
 
     try {
-      setSendLinksLoadingId(booking.id)
+      setSendLinksLoadingId(bookingId)
       setBookingActionError('')
       setBookingActionSuccess('')
 
-      const res = await fetch(`/api/sessions/bookings/${booking.id}/send-links`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
+      const res = await fetch(
+        `/api/sessions/bookings/${encodeURIComponent(bookingId)}/send-links`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify({
+            bookingId,
+            conversationId,
+          }),
+        }
+      )
 
-      const data = (await res.json()) as SendBookingLinksResponse
+      const data = (await res.json().catch(() => null)) as
+        | SendBookingLinksResponse
+        | null
 
-      if (!res.ok || !data.ok) {
-        setBookingActionError(data.error || 'Görüşme linkleri mail olarak gönderilemedi.')
+      if (!res.ok || !data?.ok) {
+        setBookingActionError(
+          data?.error ||
+            `Görüşme linkleri mail olarak gönderilemedi. HTTP ${res.status}`
+        )
         return
       }
 
-      setBookingActionSuccess('Görüşme linkleri danışan ve uzmana mail olarak gönderildi.')
+      const clientRecipient = data.recipients?.client
+      const expertRecipient = data.recipients?.expert
+
+      setBookingActionSuccess(
+        clientRecipient || expertRecipient
+          ? `Görüşme linkleri gönderildi. Danışan: ${clientRecipient || '-'} • Uzman: ${expertRecipient || '-'}`
+          : 'Görüşme linkleri danışan ve uzmana mail olarak gönderildi.'
+      )
+
       await loadBookings(conversationId)
-    } catch {
+    } catch (err) {
+      console.error('SEND_BOOKING_LINKS_UI_ERROR', err)
       setBookingActionError('Görüşme linkleri gönderilirken hata oluştu.')
     } finally {
       setSendLinksLoadingId('')
@@ -1615,7 +1648,12 @@ function UpcomingSessionCard({
           </div>
 
           <div className="mt-4 rounded-2xl border border-white/10 bg-white/10 p-3 text-xs font-bold text-[#e7d8c8]">
-            Booking ID: <span className="break-all">{booking.id}</span>
+            Booking ID: <span className="break-all">{booking.id || '-'}</span>
+            {!isValidUuid(booking.id) && (
+              <p className="mt-2 text-red-200">
+                Uyarı: Booking ID UUID formatında değil. Mail gönderimi engellendi.
+              </p>
+            )}
           </div>
 
           <div className="mt-3 rounded-2xl border border-white/10 bg-white/10 p-3 text-xs font-bold text-[#e7d8c8]">
@@ -1795,6 +1833,7 @@ function BookingLifecycleActions({
           disabled={
             loading ||
             sendLinksLoading ||
+            !isValidUuid(booking.id) ||
             !booking.client_join_url ||
             !booking.expert_join_url
           }
