@@ -155,7 +155,7 @@ async function resolveFromConversationAccessToken(
 
   const { data, error } = await (supabase as any)
     .from('conversation_access_tokens')
-    .select('conversation_id, role, user_type, token, revoked, expires_at')
+    .select('*')
     .eq('token', token)
     .limit(10)
 
