@@ -38,40 +38,26 @@ type SendLinksResponse = {
     client: string
     expert: string
   }
-  booking?: {
-    id: string
-    status: string
-    sessionReady: boolean
-  }
-  debug?: {
-    bookingId?: string
-    path?: string
+  recipients?: {
+    client: string
+    expert: string
   }
   error?: string
 }
 
-type RouteParams = {
-  id?: string
-  bookingId?: string
-}
-
-type RouteContext = {
-  params?: RouteParams | Promise<RouteParams>
-}
-
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 const DEFAULT_TIMEZONE = 'Europe/Istanbul'
-
-function isValidUuid(value: unknown): value is string {
-  return typeof value === 'string' && UUID_REGEX.test(value)
-}
 
 function toText(value: unknown) {
   if (value === null || value === undefined) return ''
   return String(value).trim()
+}
+
+function isValidUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_REGEX.test(value.trim())
 }
 
 function isValidEmail(value: string) {
@@ -110,11 +96,11 @@ function getTransporter() {
   const pass = toText(process.env.SMTP_PASS)
 
   if (!host || !user || !pass) {
-    throw new Error('SMTP environment variables are missing.')
+    throw new Error('SMTP_MISSING')
   }
 
   if (!Number.isFinite(port) || port <= 0) {
-    throw new Error('SMTP_PORT is invalid.')
+    throw new Error('SMTP_PORT_INVALID')
   }
 
   return nodemailer.createTransport({
@@ -129,7 +115,7 @@ function getFromAddress() {
   const from = toText(process.env.SMTP_FROM) || toText(process.env.SMTP_USER)
 
   if (!from) {
-    throw new Error('SMTP_FROM or SMTP_USER is required.')
+    throw new Error('SMTP_FROM_MISSING')
   }
 
   return from
@@ -234,54 +220,71 @@ function getPublicBaseUrl(req: NextRequest) {
 }
 
 function normalizeJoinUrl(url: string, req: NextRequest) {
-  const cleanUrl = toText(url)
+  if (!url) return ''
 
-  if (!cleanUrl) return ''
-
-  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
-    return cleanUrl
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
   }
 
   const baseUrl = getPublicBaseUrl(req)
-  return `${baseUrl}${cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`}`
+  return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`
 }
 
-async function readJsonBody(req: NextRequest) {
+async function getRequestBody(req: NextRequest) {
   try {
-    return (await req.json()) as Record<string, unknown>
+    const body = await req.json()
+    return body && typeof body === 'object' ? (body as Record<string, unknown>) : {}
   } catch {
     return {}
   }
 }
 
-function getUuidFromPath(req: NextRequest) {
-  const segments = req.nextUrl.pathname.split('/').filter(Boolean)
+function getBookingIdFromPath(pathname: string) {
+  const parts = pathname.split('/').filter(Boolean)
+  const bookingsIndex = parts.findIndex((part) => part === 'bookings')
 
-  for (const segment of segments) {
-    const decoded = decodeURIComponent(segment)
+  if (bookingsIndex < 0) return ''
 
-    if (isValidUuid(decoded)) {
-      return decoded
-    }
-  }
-
-  return ''
+  return toText(parts[bookingsIndex + 1])
 }
 
-async function getBookingIdFromRequest(req: NextRequest, context: RouteContext) {
+async function resolveBookingId({
+  req,
+  context,
+  body,
+}: {
+  req: NextRequest
+  context: { params?: { id?: string; bookingId?: string } | Promise<{ id?: string; bookingId?: string }> }
+  body: Record<string, unknown>
+}) {
   const resolvedParams = await Promise.resolve(context.params || {})
-  const body = await readJsonBody(req)
 
   const candidates = [
     toText(resolvedParams.id),
     toText(resolvedParams.bookingId),
+    toText(req.nextUrl.searchParams.get('bookingId')),
+    toText(req.nextUrl.searchParams.get('id')),
     toText(body.bookingId),
     toText(body.id),
-    toText(req.nextUrl.searchParams.get('bookingId')),
-    getUuidFromPath(req),
+    getBookingIdFromPath(req.nextUrl.pathname),
   ]
 
-  return candidates.find((candidate) => isValidUuid(candidate)) || ''
+  const bookingId = candidates.find(isValidUuid) || ''
+
+  return {
+    bookingId,
+    debug: {
+      pathname: req.nextUrl.pathname,
+      paramId: toText(resolvedParams.id),
+      paramBookingId: toText(resolvedParams.bookingId),
+      queryBookingId: toText(req.nextUrl.searchParams.get('bookingId')),
+      queryId: toText(req.nextUrl.searchParams.get('id')),
+      bodyBookingId: toText(body.bookingId),
+      bodyId: toText(body.id),
+      pathBookingId: getBookingIdFromPath(req.nextUrl.pathname),
+      candidates,
+    },
+  }
 }
 
 async function getBooking(bookingId: string) {
@@ -311,7 +314,7 @@ async function getBooking(bookingId: string) {
 
   if (error) {
     console.error('SEND_LINKS_BOOKING_QUERY_ERROR', error)
-    throw new Error('Randevu alınamadı.')
+    throw new Error('BOOKING_QUERY_FAILED')
   }
 
   return data as BookingRow | null
@@ -342,7 +345,7 @@ async function getConversation(conversationId: string) {
 
   if (error) {
     console.error('SEND_LINKS_CONVERSATION_QUERY_ERROR', error)
-    throw new Error('Konuşma bilgileri alınamadı.')
+    throw new Error('CONVERSATION_QUERY_FAILED')
   }
 
   return data as unknown as ConversationRow | null
@@ -350,26 +353,27 @@ async function getConversation(conversationId: string) {
 
 export async function POST(
   req: NextRequest,
-  context: RouteContext
+  context: {
+    params?: { id?: string; bookingId?: string } | Promise<{ id?: string; bookingId?: string }>
+  }
 ): Promise<NextResponse<SendLinksResponse>> {
-  const bookingId = await getBookingIdFromRequest(req, context)
-
   try {
-    if (!isValidUuid(bookingId)) {
-      console.warn('SEND_LINKS_INVALID_BOOKING_ID', {
-        bookingId,
-        path: req.nextUrl.pathname,
-        search: req.nextUrl.search,
-      })
+    const body = await getRequestBody(req)
+
+    const { bookingId, debug } = await resolveBookingId({
+      req,
+      context,
+      body,
+    })
+
+    if (!bookingId) {
+      console.error('SEND_LINKS_INVALID_BOOKING_ID', debug)
 
       return NextResponse.json(
         {
           ok: false,
-          error: 'Geçerli booking id gerekli.',
-          debug: {
-            bookingId: bookingId || undefined,
-            path: req.nextUrl.pathname,
-          },
+          error:
+            'Geçerli booking id gerekli. Route path, query veya body içinde UUID bulunamadı.',
         },
         { status: 400 }
       )
@@ -379,7 +383,7 @@ export async function POST(
 
     if (!booking) {
       return NextResponse.json(
-        { ok: false, error: 'Randevu bulunamadı.' },
+        { ok: false, error: `Randevu bulunamadı. Booking ID: ${bookingId}` },
         { status: 404 }
       )
     }
@@ -502,30 +506,27 @@ export async function POST(
         client: clientEmail,
         expert: expertEmail,
       },
-      booking: {
-        id: booking.id,
-        status: booking.status,
-        sessionReady: Boolean(booking.session_ready),
+      recipients: {
+        client: clientEmail,
+        expert: expertEmail,
       },
     })
   } catch (err) {
-    console.error('SEND_BOOKING_LINKS_ERROR', {
-      bookingId,
-      error: err,
-    })
+    console.error('SEND_BOOKING_LINKS_ERROR', err)
 
     const message =
-      err instanceof Error && err.message === 'SMTP environment variables are missing.'
+      err instanceof Error && err.message === 'SMTP_MISSING'
         ? 'SMTP ayarları eksik. Vercel environment variables içinde SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS ve SMTP_FROM değerlerini kontrol et.'
-        : err instanceof Error && err.message === 'SMTP_PORT is invalid.'
+        : err instanceof Error && err.message === 'SMTP_PORT_INVALID'
           ? 'SMTP_PORT geçersiz.'
-          : err instanceof Error && err.message === 'SMTP_FROM or SMTP_USER is required.'
+          : err instanceof Error && err.message === 'SMTP_FROM_MISSING'
             ? 'SMTP gönderici adresi eksik.'
-            : 'Görüşme linkleri gönderilemedi.'
+            : err instanceof Error && err.message === 'BOOKING_QUERY_FAILED'
+              ? 'Randevu bilgisi alınamadı.'
+              : err instanceof Error && err.message === 'CONVERSATION_QUERY_FAILED'
+                ? 'Konuşma bilgileri alınamadı.'
+                : 'Görüşme linkleri gönderilemedi.'
 
-    return NextResponse.json(
-      { ok: false, error: message },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }
