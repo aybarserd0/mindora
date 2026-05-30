@@ -127,6 +127,17 @@ type PrepareBookingResponse = {
   error?: string
 }
 
+type SendBookingLinksResponse = {
+  ok: boolean
+  sent?: boolean
+  booking?: Booking
+  recipients?: {
+    client?: string | null
+    expert?: string | null
+  }
+  error?: string
+}
+
 const DEFAULT_TIMEZONE = 'Europe/Istanbul'
 const DEFAULT_LOOKAHEAD_DAYS = 14
 
@@ -317,6 +328,7 @@ export default function AdminConversationPage({
   const [bookingActionError, setBookingActionError] = useState('')
   const [bookingActionSuccess, setBookingActionSuccess] = useState('')
   const [prepareLoadingId, setPrepareLoadingId] = useState('')
+  const [sendLinksLoadingId, setSendLinksLoadingId] = useState('')
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -661,6 +673,51 @@ export default function AdminConversationPage({
       setBookingActionError('Görüşme hazırlanırken hata oluştu.')
     } finally {
       setPrepareLoadingId('')
+    }
+  }
+
+  async function sendBookingLinks(booking: Booking) {
+    if (!booking?.id) return
+
+    if (!booking.session_ready) {
+      setBookingActionError('Önce görüşmeyi hazırla. Join linkleri oluşmadan mail gönderilemez.')
+      return
+    }
+
+    if (!booking.client_join_url || !booking.expert_join_url) {
+      setBookingActionError('Client veya expert join linki eksik. Görüşmeyi tekrar hazırla.')
+      return
+    }
+
+    const shouldConfirm = window.confirm(
+      'Danışan ve uzmana güvenli görüşme linkleri mail olarak gönderilsin mi?'
+    )
+
+    if (!shouldConfirm) return
+
+    try {
+      setSendLinksLoadingId(booking.id)
+      setBookingActionError('')
+      setBookingActionSuccess('')
+
+      const res = await fetch(`/api/sessions/bookings/${booking.id}/send-links`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = (await res.json()) as SendBookingLinksResponse
+
+      if (!res.ok || !data.ok) {
+        setBookingActionError(data.error || 'Görüşme linkleri mail olarak gönderilemedi.')
+        return
+      }
+
+      setBookingActionSuccess('Görüşme linkleri danışan ve uzmana mail olarak gönderildi.')
+      await loadBookings(conversationId)
+    } catch {
+      setBookingActionError('Görüşme linkleri gönderilirken hata oluştu.')
+    } finally {
+      setSendLinksLoadingId('')
     }
   }
 
@@ -1170,11 +1227,13 @@ export default function AdminConversationPage({
                 conversationId={conversationId}
                 actionLoadingId={bookingActionLoadingId}
                 prepareLoadingId={prepareLoadingId}
+                sendLinksLoadingId={sendLinksLoadingId}
                 actionError={bookingActionError}
                 actionSuccess={bookingActionSuccess}
                 onRefresh={() => loadBookings(conversationId)}
                 onStatusChange={updateBookingStatus}
                 onPrepareSession={prepareBookingSession}
+                onSendLinks={sendBookingLinks}
               />
 
               <div className="rounded-[2rem] border border-[#d8c8b8] bg-[#2b2118] p-5 text-white shadow-sm">
@@ -1455,11 +1514,13 @@ function UpcomingSessionCard({
   conversationId,
   actionLoadingId,
   prepareLoadingId,
+  sendLinksLoadingId,
   actionError,
   actionSuccess,
   onRefresh,
   onStatusChange,
   onPrepareSession,
+  onSendLinks,
 }: {
   booking: Booking | null
   bookings: Booking[]
@@ -1468,11 +1529,13 @@ function UpcomingSessionCard({
   conversationId: string
   actionLoadingId: string
   prepareLoadingId: string
+  sendLinksLoadingId: string
   actionError: string
   actionSuccess: string
   onRefresh: () => void
   onStatusChange: (booking: Booking, status: BookingStatus) => void
   onPrepareSession: (booking: Booking) => void
+  onSendLinks: (booking: Booking) => void
 }) {
   const timingState = getSessionTimingState(booking)
 
@@ -1627,8 +1690,10 @@ function UpcomingSessionCard({
             timingState={timingState}
             loading={actionLoadingId === booking.id}
             prepareLoading={prepareLoadingId === booking.id}
+            sendLinksLoading={sendLinksLoadingId === booking.id}
             onStatusChange={onStatusChange}
             onPrepareSession={onPrepareSession}
+            onSendLinks={onSendLinks}
           />
 
           <Link
@@ -1682,15 +1747,19 @@ function BookingLifecycleActions({
   timingState,
   loading,
   prepareLoading,
+  sendLinksLoading,
   onStatusChange,
   onPrepareSession,
+  onSendLinks,
 }: {
   booking: Booking
   timingState: string
   loading: boolean
   prepareLoading: boolean
+  sendLinksLoading: boolean
   onStatusChange: (booking: Booking, status: BookingStatus) => void
   onPrepareSession: (booking: Booking) => void
+  onSendLinks: (booking: Booking) => void
 }) {
   const isClosed =
     booking.status === 'completed' ||
@@ -1719,6 +1788,22 @@ function BookingLifecycleActions({
             ? 'Görüşme Hazır'
             : 'Görüşmeye Hazırla'}
       </button>
+
+      {booking.session_ready && (
+        <button
+          type="button"
+          disabled={
+            loading ||
+            sendLinksLoading ||
+            !booking.client_join_url ||
+            !booking.expert_join_url
+          }
+          onClick={() => onSendLinks(booking)}
+          className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {sendLinksLoading ? 'Mail gönderiliyor...' : 'Linkleri Mail Gönder'}
+        </button>
+      )}
 
       {booking.status === 'scheduled' && (
         <button
