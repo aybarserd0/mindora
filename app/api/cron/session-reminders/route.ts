@@ -19,7 +19,7 @@ type ReminderWindow = {
 type BookingRow = {
   id: string
   conversation_id: string | null
-  expert_id: string
+  expert_id: string | null
   client_id: string | null
   scheduled_start_at: string
   scheduled_end_at: string
@@ -31,17 +31,31 @@ type BookingRow = {
   reminder_24h_sent_at?: string | null
   reminder_1h_sent_at?: string | null
   reminder_15m_sent_at?: string | null
-  conversations?: {
-    id?: string | null
-    client_applications?: {
-      name?: string | null
-      email?: string | null
-    } | null
-    experts?: {
-      name?: string | null
-      email?: string | null
-    } | null
-  } | null
+}
+
+type ConversationContact = {
+  clientName: string
+  clientEmail: string
+  expertName: string
+  expertEmail: string
+}
+
+type ConversationRow = {
+  id: string
+  client_application_id: string | null
+  expert_id: string | null
+}
+
+type ClientApplicationRow = {
+  id: string
+  name: string | null
+  email: string | null
+}
+
+type ExpertRow = {
+  id: string
+  name: string | null
+  email: string | null
 }
 
 type ReminderResult = {
@@ -89,6 +103,15 @@ function toText(value: unknown) {
   return String(value).trim()
 }
 
+function isValidUuid(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value.trim()
+    )
+  )
+}
+
 function isValidEmail(value: string) {
   return EMAIL_REGEX.test(value)
 }
@@ -102,16 +125,10 @@ function escapeHtml(value: string) {
     .replaceAll("'", '&#039;')
 }
 
-function getCronSecret() {
-  return toText(process.env.CRON_SECRET)
-}
-
 function isAuthorizedCronRequest(req: NextRequest) {
-  const secret = getCronSecret()
+  const secret = toText(process.env.CRON_SECRET)
 
-  if (!secret) {
-    return true
-  }
+  if (!secret) return true
 
   const authHeader = toText(req.headers.get('authorization'))
   const cronHeader = toText(req.headers.get('x-cron-secret'))
@@ -130,13 +147,8 @@ function getTransporter() {
   const user = toText(process.env.SMTP_USER)
   const pass = toText(process.env.SMTP_PASS)
 
-  if (!host || !user || !pass) {
-    throw new Error('SMTP_MISSING')
-  }
-
-  if (!Number.isFinite(port) || port <= 0) {
-    throw new Error('SMTP_PORT_INVALID')
-  }
+  if (!host || !user || !pass) throw new Error('SMTP_MISSING')
+  if (!Number.isFinite(port) || port <= 0) throw new Error('SMTP_PORT_INVALID')
 
   return nodemailer.createTransport({
     host,
@@ -149,9 +161,7 @@ function getTransporter() {
 function getFromAddress() {
   const from = toText(process.env.SMTP_FROM) || toText(process.env.SMTP_USER)
 
-  if (!from) {
-    throw new Error('SMTP_FROM_MISSING')
-  }
+  if (!from) throw new Error('SMTP_FROM_MISSING')
 
   return from
 }
@@ -166,13 +176,9 @@ function getPublicBaseUrl(req: NextRequest) {
 
 function normalizeJoinUrl(url: string, req: NextRequest) {
   if (!url) return ''
-
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url
-  }
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
 
   const baseUrl = getPublicBaseUrl(req)
-
   return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`
 }
 
@@ -336,18 +342,7 @@ async function getReminderCandidates() {
       expert_join_url,
       reminder_24h_sent_at,
       reminder_1h_sent_at,
-      reminder_15m_sent_at,
-      conversations (
-        id,
-        client_applications (
-          name,
-          email
-        ),
-        experts (
-          name,
-          email
-        )
-      )
+      reminder_15m_sent_at
       `
     )
     .in('status', ['scheduled', 'confirmed'])
@@ -360,11 +355,88 @@ async function getReminderCandidates() {
     .limit(MAX_BOOKINGS_PER_RUN)
 
   if (error) {
-    console.error('SESSION_REMINDERS_QUERY_ERROR', error)
+    console.error('SESSION_REMINDERS_BOOKINGS_QUERY_ERROR', error)
     throw new Error('REMINDER_QUERY_FAILED')
   }
 
   return (data || []) as BookingRow[]
+}
+
+async function getConversationContact(booking: BookingRow): Promise<ConversationContact | null> {
+  if (!booking.conversation_id || !isValidUuid(booking.conversation_id)) {
+    return null
+  }
+
+  const supabase = getSupabaseAdmin()
+
+  const { data: conversationData, error: conversationError } = await supabase
+    .from('conversations')
+    .select('id, client_application_id, expert_id')
+    .eq('id', booking.conversation_id)
+    .maybeSingle()
+
+  if (conversationError) {
+    console.error('SESSION_REMINDERS_CONVERSATION_QUERY_ERROR', {
+      bookingId: booking.id,
+      conversationId: booking.conversation_id,
+      error: conversationError,
+    })
+
+    throw new Error('CONVERSATION_QUERY_FAILED')
+  }
+
+  const conversation = conversationData as ConversationRow | null
+
+  if (!conversation) return null
+
+  const clientApplicationId = toText(conversation.client_application_id)
+  const expertId = toText(conversation.expert_id || booking.expert_id)
+
+  let client: ClientApplicationRow | null = null
+  let expert: ExpertRow | null = null
+
+  if (clientApplicationId && isValidUuid(clientApplicationId)) {
+    const { data, error } = await supabase
+      .from('client_applications')
+      .select('id, name, email')
+      .eq('id', clientApplicationId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('SESSION_REMINDERS_CLIENT_QUERY_ERROR', {
+        bookingId: booking.id,
+        clientApplicationId,
+        error,
+      })
+    } else {
+      client = data as ClientApplicationRow | null
+    }
+  }
+
+  if (expertId && isValidUuid(expertId)) {
+    const { data, error } = await supabase
+      .from('experts')
+      .select('id, name, email')
+      .eq('id', expertId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('SESSION_REMINDERS_EXPERT_QUERY_ERROR', {
+        bookingId: booking.id,
+        expertId,
+        error,
+      })
+    } else {
+      expert = data as ExpertRow | null
+    }
+  }
+
+  return {
+    clientName: toText(client?.name) || 'Danışan',
+    clientEmail: toText(client?.email),
+    expertName: toText(expert?.name) || 'Uzman',
+    expertEmail: toText(expert?.email),
+  }
 }
 
 async function markReminderSent({
@@ -411,11 +483,18 @@ async function sendReminderForBooking({
   transporter: nodemailer.Transporter
   from: string
 }): Promise<ReminderResult> {
-  const conversation = booking.conversations
-  const clientEmail = toText(conversation?.client_applications?.email)
-  const expertEmail = toText(conversation?.experts?.email)
-  const clientName = toText(conversation?.client_applications?.name) || 'Danışan'
-  const expertName = toText(conversation?.experts?.name) || 'Uzman'
+  const contact = await getConversationContact(booking)
+
+  if (!contact) {
+    return {
+      bookingId: booking.id,
+      reminderType: reminder.type,
+      status: 'skipped',
+      reason: 'missing_conversation_contact',
+    }
+  }
+
+  const { clientName, clientEmail, expertName, expertEmail } = contact
 
   if (!clientEmail || !expertEmail) {
     return {
@@ -423,6 +502,8 @@ async function sendReminderForBooking({
       reminderType: reminder.type,
       status: 'skipped',
       reason: 'missing_email',
+      clientEmail,
+      expertEmail,
     }
   }
 
@@ -556,8 +637,7 @@ async function runSessionReminders(req: NextRequest) {
         bookingId: booking.id,
         reminderType: reminder.type,
         status: 'failed',
-        reason:
-          error instanceof Error ? error.message : 'unknown_send_error',
+        reason: error instanceof Error ? error.message : 'unknown_send_error',
       })
     }
   }
@@ -600,10 +680,7 @@ export async function GET(req: NextRequest) {
               ? 'Reminder adayları alınamadı.'
               : 'Session reminder cron çalıştırılamadı.'
 
-    return NextResponse.json(
-      { ok: false, error: message },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }
 
