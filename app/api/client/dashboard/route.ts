@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { verifyConversationAccessToken } from '@/lib/chat-access-tokens'
 
+type AccessSource = 'conversation_access_tokens' | 'session_access_tokens'
+
 type ConversationRow = {
   id: string
   client_application_id: string | null
@@ -48,13 +50,34 @@ type BookingRow = {
   created_at?: string | null
 }
 
-type AccessTokenRow = {
+type ConversationAccessTokenRow = {
   conversation_id: string | null
   role?: string | null
   user_type?: string | null
   token?: string | null
   revoked?: boolean | null
   expires_at?: string | null
+}
+
+type SessionAccessTokenRow = {
+  id?: string | null
+  booking_id?: string | null
+  session_booking_id?: string | null
+  live_session_id?: string | null
+  session_id?: string | null
+  role?: string | null
+  user_type?: string | null
+  participant_type?: string | null
+  token?: string | null
+  access_token?: string | null
+  revoked?: boolean | null
+  expires_at?: string | null
+}
+
+type ResolvedDashboardAccess = {
+  conversationId: string
+  bookingId: string | null
+  source: AccessSource
 }
 
 function toText(value: unknown) {
@@ -79,11 +102,25 @@ function getBaseUrl(req: NextRequest) {
   ).replace(/\/$/, '')
 }
 
-function normalizeRole(row: AccessTokenRow) {
-  return toText(row.role || row.user_type).toLowerCase()
+function normalizeRole(row: {
+  role?: string | null
+  user_type?: string | null
+  participant_type?: string | null
+}) {
+  const role = toText(row.role || row.user_type || row.participant_type).toLowerCase()
+
+  if (role === 'client' || role === 'danisan' || role === 'danışan') {
+    return 'client'
+  }
+
+  if (role === 'expert' || role === 'uzman') {
+    return 'expert'
+  }
+
+  return role
 }
 
-function isTokenUsable(row: AccessTokenRow) {
+function isTokenUsable(row: { revoked?: boolean | null; expires_at?: string | null }) {
   if (row.revoked === true) return false
   if (!row.expires_at) return true
 
@@ -102,7 +139,18 @@ function getSafeDateValue(value?: string | null) {
   return Number.isNaN(time) ? 0 : time
 }
 
-async function resolveConversationIdFromToken(token: string) {
+function normalizeUrl(url: string | null | undefined, req: NextRequest) {
+  const clean = toText(url)
+  if (!clean) return null
+  if (clean.startsWith('http://') || clean.startsWith('https://')) return clean
+
+  const baseUrl = getBaseUrl(req)
+  return `${baseUrl}${clean.startsWith('/') ? clean : `/${clean}`}`
+}
+
+async function resolveFromConversationAccessToken(
+  token: string
+): Promise<ResolvedDashboardAccess | null> {
   const supabase = getSupabaseAdmin()
 
   const { data, error } = await (supabase as any)
@@ -112,23 +160,119 @@ async function resolveConversationIdFromToken(token: string) {
     .limit(10)
 
   if (error) {
-    console.error('CLIENT_DASHBOARD_TOKEN_LOOKUP_ERROR', error)
+    console.error('CLIENT_DASHBOARD_CONVERSATION_TOKEN_LOOKUP_ERROR', error)
     throw new Error('TOKEN_LOOKUP_FAILED')
   }
 
-  const rows = (data || []) as AccessTokenRow[]
+  const rows = (data || []) as ConversationAccessTokenRow[]
 
   const match = rows.find((row) => {
     const role = normalizeRole(row)
 
-    return (
-      row.conversation_id &&
-      role === 'client' &&
-      isTokenUsable(row)
-    )
+    return row.conversation_id && role === 'client' && isTokenUsable(row)
   })
 
-  return match?.conversation_id || ''
+  if (!match?.conversation_id) return null
+
+  const verified = await verifyConversationAccessToken({
+    conversationId: match.conversation_id,
+    role: 'client',
+    token,
+  })
+
+  if (!verified.ok) return null
+
+  return {
+    conversationId: match.conversation_id,
+    bookingId: null,
+    source: 'conversation_access_tokens',
+  }
+}
+
+async function getBookingById(bookingId: string) {
+  if (!isValidUuid(bookingId)) return null
+
+  const supabase = getSupabaseAdmin()
+
+  const { data, error } = await (supabase as any)
+    .from('session_bookings')
+    .select(
+      `
+      id,
+      conversation_id,
+      expert_id,
+      scheduled_start_at,
+      scheduled_end_at,
+      timezone,
+      status,
+      live_session_id,
+      session_ready,
+      client_join_url,
+      created_at
+      `
+    )
+    .eq('id', bookingId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('CLIENT_DASHBOARD_BOOKING_BY_ID_ERROR', error)
+    return null
+  }
+
+  return data as BookingRow | null
+}
+
+async function resolveFromSessionAccessToken(
+  token: string
+): Promise<ResolvedDashboardAccess | null> {
+  const supabase = getSupabaseAdmin()
+
+  const { data, error } = await (supabase as any)
+    .from('session_access_tokens')
+    .select('*')
+    .or(`token.eq.${token},access_token.eq.${token}`)
+    .limit(10)
+
+  if (error) {
+    console.error('CLIENT_DASHBOARD_SESSION_TOKEN_LOOKUP_ERROR', error)
+    return null
+  }
+
+  const rows = (data || []) as SessionAccessTokenRow[]
+
+  const match = rows.find((row) => {
+    const role = normalizeRole(row)
+
+    return role === 'client' && isTokenUsable(row)
+  })
+
+  const bookingId = toText(match?.booking_id || match?.session_booking_id)
+
+  if (!bookingId || !isValidUuid(bookingId)) return null
+
+  const booking = await getBookingById(bookingId)
+
+  if (!booking?.conversation_id || !isValidUuid(booking.conversation_id)) {
+    return null
+  }
+
+  return {
+    conversationId: booking.conversation_id,
+    bookingId,
+    source: 'session_access_tokens',
+  }
+}
+
+async function resolveDashboardAccess(token: string): Promise<ResolvedDashboardAccess | null> {
+  const conversationAccess = await resolveFromConversationAccessToken(token)
+
+  if (conversationAccess) return conversationAccess
+
+  const sessionAccess = await resolveFromSessionAccessToken(token)
+
+  if (sessionAccess) return sessionAccess
+
+  return null
 }
 
 async function getConversation(conversationId: string) {
@@ -136,7 +280,9 @@ async function getConversation(conversationId: string) {
 
   const { data, error } = await supabase
     .from('conversations')
-    .select('id, client_application_id, expert_id, status, payment_status, created_at, updated_at')
+    .select(
+      'id, client_application_id, expert_id, status, payment_status, created_at, updated_at'
+    )
     .eq('id', conversationId)
     .maybeSingle()
 
@@ -275,36 +421,20 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    const conversationId = await resolveConversationIdFromToken(token)
+    const access = await resolveDashboardAccess(token)
 
-    if (!conversationId || !isValidUuid(conversationId)) {
+    if (!access?.conversationId || !isValidUuid(access.conversationId)) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'Dashboard erişimi için geçerli client token bulunamadı.',
+          error:
+            'Dashboard erişimi için geçerli client veya session token bulunamadı.',
         },
         { status: 403 }
       )
     }
 
-    const verified = await verifyConversationAccessToken({
-      conversationId,
-      role: 'client',
-      token,
-    })
-
-    if (!verified.ok) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: 'Dashboard erişim linki geçersiz veya süresi dolmuş.',
-          reason: verified.reason,
-        },
-        { status: 403 }
-      )
-    }
-
-    const conversation = await getConversation(conversationId)
+    const conversation = await getConversation(access.conversationId)
 
     if (!conversation) {
       return NextResponse.json(
@@ -316,26 +446,34 @@ export async function GET(req: NextRequest) {
     const [client, expert, messages, bookings] = await Promise.all([
       getClient(conversation.client_application_id),
       getExpert(conversation.expert_id),
-      getLastMessages(conversationId),
-      getBookings(conversationId),
+      getLastMessages(access.conversationId),
+      getBookings(access.conversationId),
     ])
 
     const upcomingSessions = getUpcomingBookings(bookings)
     const completedSessions = getCompletedBookings(bookings)
-    const nextSession = upcomingSessions[0] || null
+    const nextSession =
+      bookings.find((booking) => booking.id === access.bookingId) ||
+      upcomingSessions[0] ||
+      null
 
     const baseUrl = getBaseUrl(req)
-    const chatUrl = `${baseUrl}/client/chat/${conversation.id}?token=${encodeURIComponent(token)}`
+    const chatUrl = `${baseUrl}/client/chat/${conversation.id}?token=${encodeURIComponent(
+      token
+    )}`
+
     const sessionUrl =
       nextSession?.client_join_url
-        ? nextSession.client_join_url.startsWith('http')
-          ? nextSession.client_join_url
-          : `${baseUrl}${nextSession.client_join_url.startsWith('/') ? nextSession.client_join_url : `/${nextSession.client_join_url}`}`
+        ? normalizeUrl(nextSession.client_join_url, req)
         : null
 
     return NextResponse.json({
       ok: true,
       dashboard: {
+        access: {
+          source: access.source,
+          bookingId: access.bookingId,
+        },
         client: {
           id: client?.id || conversation.client_application_id,
           name: client?.name || 'Danışan',
@@ -377,9 +515,6 @@ export async function GET(req: NextRequest) {
           ? 'Konuşma bilgileri alınamadı.'
           : 'Dashboard bilgileri alınamadı.'
 
-    return NextResponse.json(
-      { ok: false, error: message },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }
