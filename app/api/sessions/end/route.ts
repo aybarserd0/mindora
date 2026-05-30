@@ -12,18 +12,32 @@ type SessionStatus =
 
 type ConversationRecord = {
   id: string
-  status: string
+  status: string | null
   payment_status: string | null
 }
 
 type SessionRecord = {
   id: string
   conversation_id: string
+  client_application_id: string | null
+  expert_id: string | null
   status: SessionStatus | string
   started_at: string | null
   ended_at: string | null
   duration_minutes: number | null
   conversations: ConversationRecord | ConversationRecord[] | null
+}
+
+type SessionAccessTokenRecord = {
+  id: string
+  session_id: string
+  booking_id: string | null
+  conversation_id: string
+  user_type: string
+  token: string
+  expires_at: string | null
+  used_at: string | null
+  revoked_at: string | null
 }
 
 function toText(value: unknown) {
@@ -36,6 +50,27 @@ function normalizeConversation(
 ) {
   if (Array.isArray(value)) return value[0] || null
   return value
+}
+
+function getBearerToken(req: NextRequest) {
+  const header = req.headers.get('authorization') || ''
+  if (!header.toLowerCase().startsWith('bearer ')) return ''
+  return header.slice(7).trim()
+}
+
+function getRequestAccessToken(req: NextRequest, bodyRecord: Record<string, unknown>) {
+  return (
+    toText(bodyRecord.token) ||
+    toText(bodyRecord.accessToken) ||
+    toText(req.headers.get('x-session-access-token')) ||
+    getBearerToken(req)
+  )
+}
+
+function normalizeRole(value: unknown) {
+  const role = toText(value).toLowerCase()
+  if (role === 'expert' || role === 'client' || role === 'admin') return role
+  return ''
 }
 
 function canCompleteSession(status: string) {
@@ -56,6 +91,112 @@ function calculateDurationMinutes(startedAt: string | null, endedAt: Date) {
   return Math.max(1, Math.ceil(diffMs / 1000 / 60))
 }
 
+function isExpired(expiresAt: string | null) {
+  if (!expiresAt) return false
+
+  const expiresDate = new Date(expiresAt)
+
+  if (Number.isNaN(expiresDate.getTime())) return true
+
+  return expiresDate.getTime() <= Date.now()
+}
+
+async function verifySessionAccessToken({
+  token,
+  sessionId,
+  conversationId,
+}: {
+  token: string
+  sessionId: string
+  conversationId: string
+}) {
+  const supabase = getSupabaseAdmin()
+
+  const { data, error } = await (supabase as any)
+    .from('session_access_tokens')
+    .select(
+      `
+      id,
+      session_id,
+      booking_id,
+      conversation_id,
+      user_type,
+      token,
+      expires_at,
+      used_at,
+      revoked_at
+      `
+    )
+    .eq('token', token)
+    .eq('session_id', sessionId)
+    .eq('conversation_id', conversationId)
+    .eq('user_type', 'expert')
+    .maybeSingle()
+
+  if (error) {
+    console.error('SESSION_END_ACCESS_TOKEN_QUERY_ERROR', error)
+    return { ok: false, reason: 'query_error' as const }
+  }
+
+  const access = data as SessionAccessTokenRecord | null
+
+  if (!access) {
+    return { ok: false, reason: 'not_found' as const }
+  }
+
+  if (access.revoked_at) {
+    return { ok: false, reason: 'revoked' as const }
+  }
+
+  if (isExpired(access.expires_at)) {
+    return { ok: false, reason: 'expired' as const }
+  }
+
+  return { ok: true, access }
+}
+
+async function markBookingCompleted({
+  bookingId,
+  liveSessionId,
+  endedAt,
+}: {
+  bookingId?: string | null
+  liveSessionId: string
+  endedAt: string
+}) {
+  const supabase = getSupabaseAdmin()
+
+  const updatePayload = {
+    status: 'completed',
+    completed_at: endedAt,
+    updated_at: endedAt,
+  }
+
+  if (bookingId) {
+    const { error } = await (supabase as any)
+      .from('session_bookings')
+      .update(updatePayload)
+      .eq('id', bookingId)
+      .in('status', ['scheduled', 'confirmed', 'active'])
+
+    if (error) {
+      console.error('SESSION_END_BOOKING_UPDATE_BY_ID_ERROR', error)
+    }
+
+    return
+  }
+
+  const { error } = await (supabase as any)
+    .from('session_bookings')
+    .update(updatePayload)
+    .eq('live_session_id', liveSessionId)
+    .in('status', ['scheduled', 'confirmed', 'active'])
+
+  if (error) {
+    console.error('SESSION_END_BOOKING_UPDATE_BY_SESSION_ERROR', error)
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null)
@@ -70,7 +211,11 @@ export async function POST(req: NextRequest) {
     const bodyRecord = body as Record<string, unknown>
 
     const sessionId = toText(bodyRecord.sessionId)
-    const accessToken = toText(bodyRecord.token)
+    const accessToken = getRequestAccessToken(req, bodyRecord)
+    const requestedRole =
+      normalizeRole(bodyRecord.userType) ||
+      normalizeRole(bodyRecord.role) ||
+      normalizeRole(req.headers.get('x-user-type'))
 
     if (!sessionId) {
       return NextResponse.json(
@@ -86,6 +231,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (requestedRole && requestedRole !== 'expert') {
+      return NextResponse.json(
+        { ok: false, error: 'Only expert can end this session.' },
+        { status: 403 }
+      )
+    }
+
     const supabase = getSupabaseAdmin()
 
     const { data, error: sessionError } = await supabase
@@ -94,6 +246,8 @@ export async function POST(req: NextRequest) {
         `
         id,
         conversation_id,
+        client_application_id,
+        expert_id,
         status,
         started_at,
         ended_at,
@@ -135,20 +289,41 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (conversation.status !== 'active') {
-      return NextResponse.json(
-        { ok: false, error: 'Conversation is not active.' },
-        { status: 403 }
-      )
-    }
-
-    const verified = await verifyConversationAccessToken({
+    const sessionTokenVerification = await verifySessionAccessToken({
       token: accessToken,
+      sessionId: session.id,
       conversationId: session.conversation_id,
-      role: 'expert',
     })
 
-    if (!verified.ok) {
+    let verifiedBy: 'session_access_tokens' | 'conversation_access_tokens' | null =
+      null
+    let bookingId: string | null = null
+
+    if (
+      sessionTokenVerification.ok === true &&
+      sessionTokenVerification.access
+      ) {
+    verifiedBy = 'session_access_tokens'
+    bookingId = sessionTokenVerification.access.booking_id
+    } else {
+      const legacyVerification = await verifyConversationAccessToken({
+        token: accessToken,
+        conversationId: session.conversation_id,
+        role: 'expert',
+      })
+
+      if (legacyVerification.ok) {
+        verifiedBy = 'conversation_access_tokens'
+      }
+    }
+
+    if (!verifiedBy) {
+      console.warn('SESSION_END_UNAUTHORIZED_EXPERT', {
+        sessionId: session.id,
+        conversationId: session.conversation_id,
+        sessionTokenReason: sessionTokenVerification.reason,
+      })
+
       return NextResponse.json(
         {
           ok: false,
@@ -159,12 +334,22 @@ export async function POST(req: NextRequest) {
     }
 
     if (session.status === 'completed') {
+      if (bookingId) {
+        await markBookingCompleted({
+          bookingId,
+          liveSessionId: session.id,
+          endedAt: session.ended_at || new Date().toISOString(),
+        })
+      }
+
       return NextResponse.json({
         ok: true,
         alreadyCompleted: true,
+        verifiedBy,
         session: {
           id: session.id,
           status: session.status,
+          startedAt: session.started_at,
           endedAt: session.ended_at,
           durationMinutes: session.duration_minutes,
         },
@@ -182,7 +367,8 @@ export async function POST(req: NextRequest) {
     }
 
     const endedAt = new Date()
-    const startedAt = session.started_at || endedAt.toISOString()
+    const endedAtIso = endedAt.toISOString()
+    const startedAt = session.started_at || endedAtIso
     const durationMinutes = calculateDurationMinutes(startedAt, endedAt)
 
     const { data: updatedSession, error: updateError } = await supabase
@@ -190,7 +376,7 @@ export async function POST(req: NextRequest) {
       .update({
         status: 'completed',
         started_at: startedAt,
-        ended_at: endedAt.toISOString(),
+        ended_at: endedAtIso,
         duration_minutes: durationMinutes,
       })
       .eq('id', session.id)
@@ -207,9 +393,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    await markBookingCompleted({
+      bookingId,
+      liveSessionId: session.id,
+      endedAt: endedAtIso,
+    })
+
     return NextResponse.json({
       ok: true,
       alreadyCompleted: false,
+      verifiedBy,
       session: {
         id: updatedSession.id,
         status: updatedSession.status,
