@@ -711,18 +711,26 @@ export default function AdminConversationPage({
       setBookingActionError('')
       setBookingActionSuccess('')
 
-      const res = await fetch(
-        `/api/sessions/bookings/${encodeURIComponent(bookingId)}/send-links`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          cache: 'no-store',
-          body: JSON.stringify({
-            bookingId,
-            conversationId,
-          }),
-        }
-      )
+      const sendLinksUrl = `/api/sessions/bookings/${encodeURIComponent(
+        bookingId
+      )}/send-links?bookingId=${encodeURIComponent(bookingId)}`
+
+      console.info('SEND_BOOKING_LINKS_REQUEST', {
+        bookingId,
+        conversationId,
+        sendLinksUrl,
+      })
+
+      const res = await fetch(sendLinksUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({
+          bookingId,
+          id: bookingId,
+          conversationId,
+        }),
+      })
 
       const data = (await res.json().catch(() => null)) as
         | SendBookingLinksResponse
@@ -730,8 +738,9 @@ export default function AdminConversationPage({
 
       if (!res.ok || !data?.ok) {
         setBookingActionError(
-          data?.error ||
-            `Görüşme linkleri mail olarak gönderilemedi. HTTP ${res.status}`
+          data?.error
+            ? `${data.error} • Booking ID: ${bookingId}`
+            : `Görüşme linkleri mail olarak gönderilemedi. HTTP ${res.status} • Booking ID: ${bookingId}`
         )
         return
       }
