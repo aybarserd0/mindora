@@ -61,6 +61,7 @@ const DEFAULT_DEVICE_STATE: DeviceState = {
 const MAX_RETRY_COUNT = 3
 const AUTO_RETRY_DELAY_MS = 2500
 const CONNECTION_FAILSAFE_MS = 15000
+const SESSION_USER_TYPE = 'expert' as const
 
 export default function ExpertSessionPage() {
   const params = useParams()
@@ -68,7 +69,10 @@ export default function ExpertSessionPage() {
   const router = useRouter()
 
   const sessionId = useMemo(() => String(params?.id || ''), [params])
-  const accessToken = searchParams.get('token') || ''
+  const accessToken = useMemo(
+    () => (searchParams.get('token') || '').trim(),
+    [searchParams]
+  )
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -254,7 +258,7 @@ export default function ExpertSessionPage() {
           body: JSON.stringify({
             sessionId,
             participantName: 'expert-user',
-            userType: 'expert',
+            userType: SESSION_USER_TYPE,
             token: accessToken,
           }),
         })
@@ -497,13 +501,30 @@ export default function ExpertSessionPage() {
       setEndingSession(true)
       setEndSessionError('')
 
+      if (!sessionId || !accessToken) {
+        throw new Error('Güvenli uzman tokenı eksik. Lütfen görüşme linkini yeniden oluştur.')
+      }
+
       const res = await fetch('/api/sessions/end', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, token: accessToken }),
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+          'X-Session-Access-Token': accessToken,
+        },
+        body: JSON.stringify({
+          sessionId,
+          token: accessToken,
+          userType: SESSION_USER_TYPE,
+          role: SESSION_USER_TYPE,
+        }),
       })
 
-      const data: EndSessionResponse = await res.json()
+      const data = (await res.json().catch(() => ({
+        ok: false,
+        error: 'Seans bitirme cevabı okunamadı.',
+      }))) as EndSessionResponse
 
       if (!res.ok || !data.ok) {
         throw new Error(data.error || 'Seans bitirilemedi.')
