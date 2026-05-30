@@ -51,27 +51,46 @@ type BookingRow = {
 }
 
 type ConversationAccessTokenRow = {
-  conversation_id: string | null
+  conversation_id?: string | null
+  conversationId?: string | null
   role?: string | null
   user_type?: string | null
+  userType?: string | null
+  participant_type?: string | null
   token?: string | null
+  access_token?: string | null
+  accessToken?: string | null
   revoked?: boolean | null
+  revoked_at?: string | null
+  revokedAt?: string | null
   expires_at?: string | null
+  expiresAt?: string | null
 }
 
 type SessionAccessTokenRow = {
   id?: string | null
-  booking_id?: string | null
-  session_booking_id?: string | null
-  live_session_id?: string | null
   session_id?: string | null
+  sessionId?: string | null
+  booking_id?: string | null
+  bookingId?: string | null
+  session_booking_id?: string | null
+  sessionBookingId?: string | null
+  conversation_id?: string | null
+  conversationId?: string | null
+  live_session_id?: string | null
+  liveSessionId?: string | null
   role?: string | null
   user_type?: string | null
+  userType?: string | null
   participant_type?: string | null
   token?: string | null
   access_token?: string | null
+  accessToken?: string | null
   revoked?: boolean | null
+  revoked_at?: string | null
+  revokedAt?: string | null
   expires_at?: string | null
+  expiresAt?: string | null
 }
 
 type ResolvedDashboardAccess = {
@@ -102,29 +121,57 @@ function getBaseUrl(req: NextRequest) {
   ).replace(/\/$/, '')
 }
 
+function getTokenValue(row: {
+  token?: string | null
+  access_token?: string | null
+  accessToken?: string | null
+}) {
+  return toText(row.token || row.access_token || row.accessToken)
+}
+
 function normalizeRole(row: {
   role?: string | null
   user_type?: string | null
+  userType?: string | null
   participant_type?: string | null
 }) {
-  const role = toText(row.role || row.user_type || row.participant_type).toLowerCase()
+  const role = toText(
+    row.role || row.user_type || row.userType || row.participant_type
+  ).toLowerCase()
 
   if (role === 'client' || role === 'danisan' || role === 'danışan') {
     return 'client'
   }
 
-  if (role === 'expert' || role === 'uzman') {
+  if (
+    role === 'expert' ||
+    role === 'uzman' ||
+    role === 'psychologist' ||
+    role === 'therapist'
+  ) {
     return 'expert'
   }
+
+  if (role === 'admin') return 'admin'
 
   return role
 }
 
-function isTokenUsable(row: { revoked?: boolean | null; expires_at?: string | null }) {
+function isTokenUsable(row: {
+  revoked?: boolean | null
+  revoked_at?: string | null
+  revokedAt?: string | null
+  expires_at?: string | null
+  expiresAt?: string | null
+}) {
   if (row.revoked === true) return false
-  if (!row.expires_at) return true
+  if (row.revoked_at || row.revokedAt) return false
 
-  const expiresAt = new Date(row.expires_at).getTime()
+  const expires = toText(row.expires_at || row.expiresAt)
+
+  if (!expires) return true
+
+  const expiresAt = new Date(expires).getTime()
 
   if (Number.isNaN(expiresAt)) return true
 
@@ -161,7 +208,7 @@ async function resolveFromConversationAccessToken(
 
   if (error) {
     console.error('CLIENT_DASHBOARD_CONVERSATION_TOKEN_LOOKUP_ERROR', error)
-    throw new Error('TOKEN_LOOKUP_FAILED')
+    return null
   }
 
   const rows = (data || []) as ConversationAccessTokenRow[]
@@ -169,13 +216,20 @@ async function resolveFromConversationAccessToken(
   const match = rows.find((row) => {
     const role = normalizeRole(row)
 
-    return row.conversation_id && role === 'client' && isTokenUsable(row)
+    return (
+      getTokenValue(row) === token &&
+      toText(row.conversation_id || row.conversationId) &&
+      role === 'client' &&
+      isTokenUsable(row)
+    )
   })
 
-  if (!match?.conversation_id) return null
+  const conversationId = toText(match?.conversation_id || match?.conversationId)
+
+  if (!conversationId || !isValidUuid(conversationId)) return null
 
   const verified = await verifyConversationAccessToken({
-    conversationId: match.conversation_id,
+    conversationId,
     role: 'client',
     token,
   })
@@ -183,7 +237,7 @@ async function resolveFromConversationAccessToken(
   if (!verified.ok) return null
 
   return {
-    conversationId: match.conversation_id,
+    conversationId,
     bookingId: null,
     source: 'conversation_access_tokens',
   }
@@ -227,10 +281,12 @@ async function resolveFromSessionAccessToken(
 ): Promise<ResolvedDashboardAccess | null> {
   const supabase = getSupabaseAdmin()
 
+  // Table schema in production uses token + user_type + revoked_at.
+  // We intentionally avoid querying non-existent columns such as access_token.
   const { data, error } = await (supabase as any)
     .from('session_access_tokens')
     .select('*')
-    .or(`token.eq.${token},access_token.eq.${token}`)
+    .eq('token', token)
     .limit(10)
 
   if (error) {
@@ -243,10 +299,26 @@ async function resolveFromSessionAccessToken(
   const match = rows.find((row) => {
     const role = normalizeRole(row)
 
-    return role === 'client' && isTokenUsable(row)
+    return getTokenValue(row) === token && role === 'client' && isTokenUsable(row)
   })
 
-  const bookingId = toText(match?.booking_id || match?.session_booking_id)
+  if (!match) return null
+
+  const directConversationId = toText(match.conversation_id || match.conversationId)
+  const bookingId = toText(
+    match.booking_id ||
+      match.bookingId ||
+      match.session_booking_id ||
+      match.sessionBookingId
+  )
+
+  if (directConversationId && isValidUuid(directConversationId)) {
+    return {
+      conversationId: directConversationId,
+      bookingId: isValidUuid(bookingId) ? bookingId : null,
+      source: 'session_access_tokens',
+    }
+  }
 
   if (!bookingId || !isValidUuid(bookingId)) return null
 
@@ -509,11 +581,9 @@ export async function GET(req: NextRequest) {
     console.error('CLIENT_DASHBOARD_ERROR', error)
 
     const message =
-      error instanceof Error && error.message === 'TOKEN_LOOKUP_FAILED'
-        ? 'Dashboard erişim tokenı kontrol edilemedi.'
-        : error instanceof Error && error.message === 'CONVERSATION_QUERY_FAILED'
-          ? 'Konuşma bilgileri alınamadı.'
-          : 'Dashboard bilgileri alınamadı.'
+      error instanceof Error && error.message === 'CONVERSATION_QUERY_FAILED'
+        ? 'Konuşma bilgileri alınamadı.'
+        : 'Dashboard bilgileri alınamadı.'
 
     return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
