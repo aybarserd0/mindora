@@ -1,7 +1,7 @@
 'use client'
 
 import Header from '@/components/Header'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 type Expert = {
   id: string
@@ -14,18 +14,55 @@ type Expert = {
   photo_url: string | null
 }
 
+type ExpertsResponse = {
+  ok?: boolean
+  experts?: Expert[]
+  error?: string
+}
+
+const SUPPORT_AREAS = [
+  'Kaygı ve stres',
+  'İlişki problemleri',
+  'Özgüven',
+  'Depresif duygu durumu',
+  'Aile içi iletişim',
+  'Sınav ve gelecek kaygısı',
+  'Motivasyon eksikliği',
+  'Tükenmişlik',
+]
+
+const TRUST_ITEMS = [
+  {
+    title: 'Değerlendirilmiş uzmanlar',
+    text: 'Mindora’da listelenen uzmanlar başvuru ve profil inceleme sürecinden sonra görünür hale gelir.',
+  },
+  {
+    title: 'İhtiyaca göre yönlendirme',
+    text: 'Danışanın konusu, beklentisi, uygun zamanı ve tercihleri eşleşme sürecinde dikkate alınır.',
+  },
+  {
+    title: 'Online süreç',
+    text: 'Randevu, ödeme, güvenli chat ve video görüşme akışı tek platform üzerinden ilerler.',
+  },
+]
+
 function formatTitle(title: string | null) {
-  if (!title) return 'Uzman'
-  return title.charAt(0).toUpperCase() + title.slice(1)
+  const cleanTitle = title?.trim()
+  if (!cleanTitle) return 'Uzman Psikolog'
+
+  return cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)
 }
 
 function getInitials(name: string) {
-  const parts = name.trim().split(' ').filter(Boolean)
+  const parts = name.trim().split(/\s+/).filter(Boolean)
 
   if (parts.length === 0) return 'M'
-  if (parts.length === 1) return parts[0][0]?.toUpperCase() || 'M'
+  if (parts.length === 1) return parts[0]?.charAt(0).toUpperCase() || 'M'
 
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+  const first = parts[0]?.charAt(0) || 'M'
+  const last = parts[parts.length - 1]?.charAt(0) || ''
+
+  return `${first}${last}`.toUpperCase()
 }
 
 function splitAreas(areas: string | null) {
@@ -39,106 +76,215 @@ function splitAreas(areas: string | null) {
 
 function isPhotoUrlValid(url: string | null) {
   if (!url) return false
-  return url.startsWith('http://') || url.startsWith('https://')
+
+  try {
+    const parsedUrl = new URL(url)
+    return parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
+function normalizeOnlineStatus(value: string | null) {
+  const normalized = value?.trim().toLowerCase()
+
+  if (!normalized) return 'Eşleşme sırasında netleşir'
+  if (['evet', 'yes', 'true', 'online'].includes(normalized)) {
+    return 'Online görüşme yapıyor'
+  }
+  if (['hayır', 'hayir', 'no', 'false'].includes(normalized)) {
+    return 'Online durumu eşleşme sırasında netleşir'
+  }
+
+  return value
 }
 
 export default function Uzmanlar() {
   const [experts, setExperts] = useState<Expert[]>([])
   const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const areas = [
-    'Kaygı ve stres',
-    'İlişki problemleri',
-    'Özgüven sorunları',
-    'Depresif duygu durumu',
-    'Aile içi iletişim',
-    'Sınav ve gelecek kaygısı',
-    'Motivasyon eksikliği',
-    'Tükenmişlik',
-  ]
+  const visibleExperts = useMemo(
+    () =>
+      experts.filter((expert) => {
+        return Boolean(expert.id && expert.name?.trim())
+      }),
+    [experts],
+  )
 
   useEffect(() => {
+    let ignore = false
+
     async function fetchExperts() {
       try {
-        const res = await fetch('/api/experts')
-        const data = await res.json()
+        setLoading(true)
+        setErrorMessage(null)
 
-        if (data.ok) {
-          setExperts(data.experts || [])
+        const res = await fetch('/api/experts', {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+          },
+          cache: 'no-store',
+        })
+
+        if (!res.ok) {
+          throw new Error(`Uzmanlar yüklenemedi. Kod: ${res.status}`)
+        }
+
+        const data = (await res.json()) as ExpertsResponse
+
+        if (!data.ok) {
+          throw new Error(data.error || 'Uzmanlar alınamadı.')
+        }
+
+        if (!ignore) {
+          setExperts(Array.isArray(data.experts) ? data.experts : [])
         }
       } catch (error) {
         console.error('Uzmanlar alınamadı:', error)
+
+        if (!ignore) {
+          setErrorMessage(
+            'Uzmanlar şu anda yüklenemedi. Lütfen biraz sonra tekrar deneyin.',
+          )
+        }
       } finally {
-        setLoading(false)
+        if (!ignore) {
+          setLoading(false)
+        }
       }
     }
 
     fetchExperts()
+
+    return () => {
+      ignore = true
+    }
   }, [])
 
   return (
-    <main className="min-h-screen bg-[#f6f1ea] text-[#171717]">
+    <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
       <Header />
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="mx-auto max-w-7xl px-5 pb-14 pt-16 md:pt-20">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
-            Uzmanlarımız
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
+            Mindora Uzman Ağı
           </p>
 
-          <h1 className="mt-4 text-5xl font-black leading-tight md:text-6xl">
-            Onaylı uzmanlarla güvenli başlangıç.
+          <h1 className="mt-4 text-5xl font-black leading-[1.05] tracking-tight md:text-6xl">
+            Sana uygun psikolojik destek için uzmanları incele.
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
-            Mindora’da uzmanlar başvuru sonrası değerlendirilir. Onaylanan
-            uzmanlar burada görünür ve danışanlar uygun uzmanla eşleştirilir.
+            Mindora’da amaç yalnızca uzman listelemek değil; ihtiyacına, uygun
+            zamanına ve beklentine göre daha doğru bir başlangıç yapmanı
+            kolaylaştırmaktır.
           </p>
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a
               href="/eslesme"
-              className="rounded-2xl bg-black px-8 py-4 text-center font-bold text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
+              className="rounded-2xl bg-black px-8 py-4 text-center font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
             >
               Ücretsiz ön eşleşme başlat
             </a>
 
             <a
-              href="/hakkimizda"
-              className="rounded-2xl border border-black/10 bg-white/60 px-8 py-4 text-center font-bold text-black transition hover:-translate-y-0.5 hover:bg-white"
+              href="#uzman-listesi"
+              className="rounded-2xl border border-black/10 bg-white/70 px-8 py-4 text-center font-black text-black transition hover:-translate-y-0.5 hover:bg-white"
             >
-              Mindora’yı tanı
+              Uzmanları görüntüle
             </a>
           </div>
         </div>
 
-        {loading ? (
-          <div className="mx-auto mt-16 max-w-3xl rounded-[2rem] bg-white/70 p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-neutral-700">Uzmanlar yükleniyor...</p>
+        <div className="mt-12 grid gap-4 rounded-[2rem] bg-white/75 p-6 shadow-sm ring-1 ring-black/5 md:grid-cols-3 md:p-8">
+          {TRUST_ITEMS.map((item) => (
+            <div key={item.title} className="rounded-3xl bg-[#f7f2eb] p-5">
+              <h2 className="text-lg font-black">{item.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-neutral-600">
+                {item.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="uzman-listesi" className="mx-auto max-w-7xl px-5 py-16">
+        <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
+              Uzmanlar
+            </p>
+            <h2 className="mt-3 text-4xl font-black md:text-5xl">
+              Onaylı uzman profilleri.
+            </h2>
           </div>
-        ) : experts.length === 0 ? (
-          <div className="mx-auto mt-16 max-w-3xl rounded-[2rem] bg-white/70 p-8 text-center shadow-sm ring-1 ring-black/5">
+
+          <p className="max-w-xl text-sm leading-6 text-neutral-600">
+            Eşleşme süreci, uzman seçimini kolaylaştırmak için destek konusu,
+            uzmanlık alanı ve uygunluk bilgilerini birlikte değerlendirir.
+          </p>
+        </div>
+
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="rounded-[2rem] bg-white/75 p-7 shadow-sm ring-1 ring-black/5"
+              >
+                <div className="mx-auto h-24 w-24 animate-pulse rounded-full bg-neutral-200" />
+                <div className="mx-auto mt-6 h-5 w-40 animate-pulse rounded-full bg-neutral-200" />
+                <div className="mx-auto mt-3 h-4 w-28 animate-pulse rounded-full bg-neutral-200" />
+                <div className="mt-6 h-28 animate-pulse rounded-3xl bg-[#f7f2eb]" />
+              </div>
+            ))}
+          </div>
+        ) : errorMessage ? (
+          <div className="mx-auto max-w-3xl rounded-[2rem] bg-white/80 p-8 text-center shadow-sm ring-1 ring-black/5">
+            <h2 className="text-2xl font-black">Uzmanlar yüklenemedi.</h2>
+            <p className="mt-3 leading-7 text-neutral-600">{errorMessage}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-6 rounded-2xl bg-black px-7 py-3 font-black text-white transition hover:bg-neutral-800"
+            >
+              Tekrar dene
+            </button>
+          </div>
+        ) : visibleExperts.length === 0 ? (
+          <div className="mx-auto max-w-3xl rounded-[2rem] bg-white/80 p-8 text-center shadow-sm ring-1 ring-black/5">
             <h2 className="text-2xl font-black">Henüz onaylı uzman yok.</h2>
             <p className="mt-3 leading-7 text-neutral-600">
-              Uzman başvuruları incelendikten sonra onaylanan uzmanlar bu
-              sayfada otomatik olarak listelenecek.
+              Uzman başvuruları incelendikten sonra onaylanan profiller bu
+              sayfada otomatik olarak listelenecek. Bu sırada ön eşleşme formunu
+              doldurarak destek ihtiyacını bize iletebilirsin.
             </p>
+            <a
+              href="/eslesme"
+              className="mt-6 inline-block rounded-2xl bg-black px-7 py-3 font-black text-white transition hover:bg-neutral-800"
+            >
+              Ön eşleşme başlat
+            </a>
           </div>
         ) : (
-          <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {experts.map((expert) => {
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {visibleExperts.map((expert) => {
               const expertAreas = splitAreas(expert.areas)
               const showPhoto = isPhotoUrlValid(expert.photo_url)
 
               return (
-                <div
+                <article
                   key={expert.id}
-                  className="group rounded-[2rem] bg-white/80 p-7 text-center shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:bg-white hover:shadow-md"
+                  className="group flex h-full flex-col rounded-[2rem] bg-white/85 p-7 text-center shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:bg-white hover:shadow-md"
                 >
                   {showPhoto ? (
                     <img
                       src={expert.photo_url || ''}
-                      alt={expert.name}
+                      alt={`${expert.name} profil fotoğrafı`}
                       className="mx-auto h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-white"
                     />
                   ) : (
@@ -153,33 +299,38 @@ export default function Uzmanlar() {
                     {formatTitle(expert.title)}
                   </p>
 
-                  {expertAreas.length > 0 ? (
-                    <div className="mt-5 flex flex-wrap justify-center gap-2">
-                      {expertAreas.map((area) => (
-                        <span
-                          key={area}
-                          className="rounded-full bg-[#f6f1ea] px-3 py-1 text-xs font-bold text-neutral-700 ring-1 ring-black/5"
-                        >
-                          {area}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="mt-5 text-sm text-neutral-500">
-                      Uzmanlık alanı belirtilmedi.
-                    </p>
-                  )}
+                  <div className="mt-5 min-h-[2.5rem]">
+                    {expertAreas.length > 0 ? (
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {expertAreas.slice(0, 4).map((area) => (
+                          <span
+                            key={area}
+                            className="rounded-full bg-[#f7f2eb] px-3 py-1 text-xs font-bold text-neutral-700 ring-1 ring-black/5"
+                          >
+                            {area}
+                          </span>
+                        ))}
 
-                  <div className="mt-6 space-y-3 rounded-3xl bg-[#f6f1ea] p-5 text-sm text-neutral-700">
+                        {expertAreas.length > 4 ? (
+                          <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600 ring-1 ring-black/5">
+                            +{expertAreas.length - 4}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-neutral-500">
+                        Uzmanlık alanı eşleşme sırasında netleşir.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-6 flex-1 space-y-3 rounded-3xl bg-[#f7f2eb] p-5 text-left text-sm text-neutral-700">
                     <p>
                       <b>Deneyim:</b> {expert.experience || 'Belirtilmedi'}
                     </p>
 
                     <p>
-                      <b>Görüşme:</b>{' '}
-                      {expert.online === 'Evet'
-                        ? 'Online görüşme yapıyor'
-                        : expert.online || 'Belirtilmedi'}
+                      <b>Görüşme:</b> {normalizeOnlineStatus(expert.online)}
                     </p>
 
                     <p>
@@ -190,21 +341,21 @@ export default function Uzmanlar() {
 
                   <a
                     href="/eslesme"
-                    className="mt-6 inline-block rounded-2xl bg-black px-6 py-3 text-sm font-bold text-white transition hover:bg-neutral-800"
+                    className="mt-6 inline-block rounded-2xl bg-black px-6 py-3 text-sm font-black text-white transition hover:bg-neutral-800"
                   >
-                    Bu uzmanla eşleşme iste
+                    Bu uzman için eşleşme iste
                   </a>
-                </div>
+                </article>
               )
             })}
           </div>
         )}
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="mx-auto max-w-7xl px-5 py-16">
         <div className="grid gap-8 rounded-[2rem] bg-black p-8 text-white md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-400">
+            <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400">
               Eşleşme mantığı
             </p>
 
@@ -224,26 +375,38 @@ export default function Uzmanlar() {
               Form yanıtların; destek konusu, uzman tercihi, uygun zaman ve
               beklenti gibi kriterlerle değerlendirilir.
             </p>
+
+            <a
+              href="/eslesme"
+              className="inline-block rounded-2xl bg-white px-7 py-3 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
+            >
+              Eşleşme formunu doldur
+            </a>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="mx-auto max-w-7xl px-5 py-16">
         <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
             Destek alanları
           </p>
 
           <h2 className="mt-3 text-4xl font-black md:text-5xl">
             Hangi konuda destek alabilirsin?
           </h2>
+
+          <p className="mx-auto mt-4 max-w-2xl leading-7 text-neutral-600">
+            Konunu tam tarif edemesen bile ön eşleşme formu, ihtiyacını daha
+            anlaşılır hale getirmek için tasarlanmıştır.
+          </p>
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {areas.map((area) => (
+          {SUPPORT_AREAS.map((area) => (
             <div
               key={area}
-              className="rounded-2xl bg-white/70 p-5 text-center font-bold text-neutral-700 shadow-sm ring-1 ring-black/5"
+              className="rounded-2xl bg-white/75 p-5 text-center font-bold text-neutral-700 shadow-sm ring-1 ring-black/5"
             >
               {area}
             </div>
@@ -251,7 +414,7 @@ export default function Uzmanlar() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-black/5 md:p-14">
           <h2 className="text-4xl font-black md:text-5xl">
             Sana uygun uzmanı birlikte bulalım.
@@ -259,15 +422,30 @@ export default function Uzmanlar() {
 
           <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-neutral-600">
             Kısa formu doldur, ihtiyacına uygun psikolojik destek süreci için
-            ön eşleşmeyi başlat.
+            ücretsiz ön eşleşmeyi başlat.
           </p>
 
-          <a
-            href="/eslesme"
-            className="mt-8 inline-block rounded-2xl bg-black px-9 py-4 font-bold text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
-          >
-            Ücretsiz ön eşleşme başlat
-          </a>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <a
+              href="/eslesme"
+              className="rounded-2xl bg-black px-9 py-4 font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
+            >
+              Ücretsiz ön eşleşme başlat
+            </a>
+
+            <a
+              href="/uzman-basvuru"
+              className="rounded-2xl border border-black/10 bg-[#f7f2eb] px-9 py-4 font-black text-black transition hover:-translate-y-0.5 hover:bg-white"
+            >
+              Uzman olarak başvur
+            </a>
+          </div>
+
+          <p className="mx-auto mt-6 max-w-3xl text-xs leading-6 text-neutral-500">
+            Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar
+            verme riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da 112
+            ile iletişime geç.
+          </p>
         </div>
       </section>
     </main>
