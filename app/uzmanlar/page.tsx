@@ -1,7 +1,7 @@
 'use client'
 
 import Header from '@/components/Header'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type Expert = {
   id: string
@@ -21,6 +21,7 @@ type ExpertsResponse = {
 }
 
 const SUPPORT_AREAS = [
+  'Tümü',
   'Kaygı ve stres',
   'İlişki problemleri',
   'Özgüven',
@@ -34,16 +35,22 @@ const SUPPORT_AREAS = [
 const TRUST_ITEMS = [
   {
     title: 'Değerlendirilmiş uzmanlar',
-    text: 'Mindora’da listelenen uzmanlar başvuru ve profil inceleme sürecinden sonra görünür hale gelir.',
+    text: 'Listelenen uzman profilleri başvuru ve profil inceleme sürecinden sonra görünür hale gelir.',
   },
   {
     title: 'İhtiyaca göre yönlendirme',
-    text: 'Danışanın konusu, beklentisi, uygun zamanı ve tercihleri eşleşme sürecinde dikkate alınır.',
+    text: 'Destek konusu, beklenti, uygun zaman ve uzman tercihleri eşleşme sürecinde birlikte değerlendirilir.',
   },
   {
-    title: 'Online süreç',
-    text: 'Randevu, ödeme, güvenli chat ve video görüşme akışı tek platform üzerinden ilerler.',
+    title: 'Tek platform deneyimi',
+    text: 'Randevu, ödeme, güvenli chat ve video görüşme akışı Mindora üzerinden sade şekilde ilerler.',
   },
+]
+
+const PROCESS_ITEMS = [
+  'Kısa ön eşleşme formunu doldur',
+  'İhtiyacına uygun uzman profilleri değerlendirilsin',
+  'Randevu, ödeme ve görüşme akışını güvenli şekilde tamamla',
 ]
 
 function formatTitle(title: string | null) {
@@ -99,10 +106,79 @@ function normalizeOnlineStatus(value: string | null) {
   return value
 }
 
+function matchesSearch(expert: Expert, searchTerm: string) {
+  const query = searchTerm.trim().toLowerCase()
+  if (!query) return true
+
+  const searchableText = [
+    expert.name,
+    expert.title,
+    expert.areas,
+    expert.experience,
+    expert.availability,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  return searchableText.includes(query)
+}
+
 export default function Uzmanlar() {
   const [experts, setExperts] = useState<Expert[]>([])
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [selectedArea, setSelectedArea] = useState('Tümü')
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const fetchExperts = useCallback(async () => {
+    try {
+      setLoading(true)
+      setErrorMessage(null)
+
+      const res = await fetch('/api/experts', {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+        cache: 'no-store',
+      })
+
+      if (!res.ok) {
+        throw new Error(`Uzmanlar yüklenemedi. Kod: ${res.status}`)
+      }
+
+      const data = (await res.json()) as ExpertsResponse
+
+      if (!data.ok) {
+        throw new Error(data.error || 'Uzmanlar alınamadı.')
+      }
+
+      setExperts(Array.isArray(data.experts) ? data.experts : [])
+    } catch (error) {
+      console.error('Uzmanlar alınamadı:', error)
+      setErrorMessage(
+        'Uzmanlar şu anda yüklenemedi. Lütfen biraz sonra tekrar deneyin.',
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadExperts() {
+      if (!isActive) return
+      await fetchExperts()
+    }
+
+    loadExperts()
+
+    return () => {
+      isActive = false
+    }
+  }, [fetchExperts])
 
   const visibleExperts = useMemo(
     () =>
@@ -112,56 +188,18 @@ export default function Uzmanlar() {
     [experts],
   )
 
-  useEffect(() => {
-    let ignore = false
+  const filteredExperts = useMemo(() => {
+    return visibleExperts.filter((expert) => {
+      const expertAreas = splitAreas(expert.areas)
 
-    async function fetchExperts() {
-      try {
-        setLoading(true)
-        setErrorMessage(null)
+      const areaMatches =
+        selectedArea === 'Tümü' || expertAreas.includes(selectedArea)
 
-        const res = await fetch('/api/experts', {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-          },
-          cache: 'no-store',
-        })
+      return areaMatches && matchesSearch(expert, searchTerm)
+    })
+  }, [searchTerm, selectedArea, visibleExperts])
 
-        if (!res.ok) {
-          throw new Error(`Uzmanlar yüklenemedi. Kod: ${res.status}`)
-        }
-
-        const data = (await res.json()) as ExpertsResponse
-
-        if (!data.ok) {
-          throw new Error(data.error || 'Uzmanlar alınamadı.')
-        }
-
-        if (!ignore) {
-          setExperts(Array.isArray(data.experts) ? data.experts : [])
-        }
-      } catch (error) {
-        console.error('Uzmanlar alınamadı:', error)
-
-        if (!ignore) {
-          setErrorMessage(
-            'Uzmanlar şu anda yüklenemedi. Lütfen biraz sonra tekrar deneyin.',
-          )
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false)
-        }
-      }
-    }
-
-    fetchExperts()
-
-    return () => {
-      ignore = true
-    }
-  }, [])
+  const hasFilters = selectedArea !== 'Tümü' || searchTerm.trim().length > 0
 
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
@@ -178,9 +216,9 @@ export default function Uzmanlar() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
-            Mindora’da amaç yalnızca uzman listelemek değil; ihtiyacına, uygun
-            zamanına ve beklentine göre daha doğru bir başlangıç yapmanı
-            kolaylaştırmaktır.
+            Mindora yalnızca uzman listeleyen bir platform değildir. İhtiyacını,
+            uygun zamanını ve beklentini dikkate alarak daha doğru bir başlangıç
+            yapmanı kolaylaştırır.
           </p>
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -213,7 +251,7 @@ export default function Uzmanlar() {
       </section>
 
       <section id="uzman-listesi" className="mx-auto max-w-7xl px-5 py-16">
-        <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
               Uzmanlar
@@ -224,9 +262,47 @@ export default function Uzmanlar() {
           </div>
 
           <p className="max-w-xl text-sm leading-6 text-neutral-600">
-            Eşleşme süreci, uzman seçimini kolaylaştırmak için destek konusu,
-            uzmanlık alanı ve uygunluk bilgilerini birlikte değerlendirir.
+            Uzman seçimini kolaylaştırmak için destek konusu, uzmanlık alanı ve
+            uygunluk bilgileri birlikte değerlendirilir.
           </p>
+        </div>
+
+        <div className="mb-8 rounded-[2rem] bg-white/75 p-5 shadow-sm ring-1 ring-black/5">
+          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-neutral-700">
+                Uzman ara
+              </span>
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="İsim, alan veya deneyim ara..."
+                className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold outline-none transition placeholder:text-neutral-400 focus:border-black"
+              />
+            </label>
+
+            <div>
+              <p className="mb-2 text-sm font-black text-neutral-700">
+                Destek alanı
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {SUPPORT_AREAS.map((area) => (
+                  <button
+                    key={area}
+                    type="button"
+                    onClick={() => setSelectedArea(area)}
+                    className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-black transition ${
+                      selectedArea === area
+                        ? 'bg-black text-white'
+                        : 'bg-[#f7f2eb] text-neutral-700 hover:bg-white'
+                    }`}
+                  >
+                    {area}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -249,7 +325,7 @@ export default function Uzmanlar() {
             <p className="mt-3 leading-7 text-neutral-600">{errorMessage}</p>
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={fetchExperts}
               className="mt-6 rounded-2xl bg-black px-7 py-3 font-black text-white transition hover:bg-neutral-800"
             >
               Tekrar dene
@@ -270,9 +346,29 @@ export default function Uzmanlar() {
               Ön eşleşme başlat
             </a>
           </div>
+        ) : filteredExperts.length === 0 ? (
+          <div className="mx-auto max-w-3xl rounded-[2rem] bg-white/80 p-8 text-center shadow-sm ring-1 ring-black/5">
+            <h2 className="text-2xl font-black">Bu filtreyle uzman bulunamadı.</h2>
+            <p className="mt-3 leading-7 text-neutral-600">
+              Arama kelimesini veya destek alanı filtresini değiştirerek tekrar
+              deneyebilirsin.
+            </p>
+            {hasFilters ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('')
+                  setSelectedArea('Tümü')
+                }}
+                className="mt-6 rounded-2xl bg-black px-7 py-3 font-black text-white transition hover:bg-neutral-800"
+              >
+                Filtreleri temizle
+              </button>
+            ) : null}
+          </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {visibleExperts.map((expert) => {
+            {filteredExperts.map((expert) => {
               const expertAreas = splitAreas(expert.areas)
               const showPhoto = isPhotoUrlValid(expert.photo_url)
 
@@ -281,19 +377,26 @@ export default function Uzmanlar() {
                   key={expert.id}
                   className="group flex h-full flex-col rounded-[2rem] bg-white/85 p-7 text-center shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:bg-white hover:shadow-md"
                 >
-                  {showPhoto ? (
-                    <img
-                      src={expert.photo_url || ''}
-                      alt={`${expert.name} profil fotoğrafı`}
-                      className="mx-auto h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-white"
-                    />
-                  ) : (
-                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-lg">
-                      {getInitials(expert.name)}
-                    </div>
-                  )}
+                  <div className="relative mx-auto">
+                    {showPhoto ? (
+                      <img
+                        src={expert.photo_url || ''}
+                        alt={`${expert.name} profil fotoğrafı`}
+                        className="h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-white"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-black text-2xl font-black text-white shadow-lg">
+                        {getInitials(expert.name)}
+                      </div>
+                    )}
 
-                  <h3 className="mt-6 text-xl font-black">{expert.name}</h3>
+                    <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#f7f2eb] px-3 py-1 text-[11px] font-black text-neutral-700 ring-1 ring-black/5">
+                      Onaylı profil
+                    </span>
+                  </div>
+
+                  <h3 className="mt-8 text-xl font-black">{expert.name}</h3>
 
                   <p className="mt-1 text-sm font-bold text-neutral-500">
                     {formatTitle(expert.title)}
@@ -371,10 +474,19 @@ export default function Uzmanlar() {
               başlangıç yapmasını sağlamaktır.
             </p>
 
-            <p>
-              Form yanıtların; destek konusu, uzman tercihi, uygun zaman ve
-              beklenti gibi kriterlerle değerlendirilir.
-            </p>
+            <div className="space-y-3">
+              {PROCESS_ITEMS.map((item, index) => (
+                <div
+                  key={item}
+                  className="flex gap-3 rounded-2xl bg-white/10 p-4 text-sm font-bold text-white"
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-black">
+                    {index + 1}
+                  </span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
 
             <a
               href="/eslesme"
@@ -403,7 +515,7 @@ export default function Uzmanlar() {
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {SUPPORT_AREAS.map((area) => (
+          {SUPPORT_AREAS.filter((area) => area !== 'Tümü').map((area) => (
             <div
               key={area}
               className="rounded-2xl bg-white/75 p-5 text-center font-bold text-neutral-700 shadow-sm ring-1 ring-black/5"
