@@ -1,129 +1,240 @@
-import Header from "@/components/Header";
+import Header from '@/components/Header'
+
+const FAQ_GROUPS = [
+  {
+    category: 'Başlangıç',
+    description: 'Mindora’ya ilk kez gelen danışanların en çok merak ettiği konular.',
+    items: [
+      {
+        q: 'Ön eşleşme ücretli mi?',
+        a: 'Hayır. Mindora’da ön eşleşme süreci ücretsizdir. Formu doldurmak seans satın alma zorunluluğu oluşturmaz.',
+      },
+      {
+        q: 'Formu doldurduktan sonra ne olacak?',
+        a: 'Bilgilerin değerlendirilir. Destek konusu, tercihlerin ve uygun zamanına göre sana uygun başlangıç için dönüş yapılır.',
+      },
+      {
+        q: 'Ne kadar sürede dönüş alırım?',
+        a: 'Başvurular yoğunluğa göre değerlendirilir. Hedefimiz en kısa sürede uygun yönlendirme için iletişime geçmektir.',
+      },
+    ],
+  },
+  {
+    category: 'Görüşme süreci',
+    description: 'Online görüşme, uzman seçimi ve seans planlaması hakkında bilgiler.',
+    items: [
+      {
+        q: 'Görüşmeler online mı?',
+        a: 'Evet. Mindora başlangıçta online psikolojik destek sürecine odaklanır. Görüşme süreci uygun uzman ve planlama netleştikten sonra ilerler.',
+      },
+      {
+        q: 'Hangi uzmanla görüşeceğime nasıl karar veriliyor?',
+        a: 'Formdaki yanıtların; destek almak istediğin konu, uzman tercihin, uygun zamanın ve beklentin dikkate alınarak değerlendirilir.',
+      },
+      {
+        q: 'Seans ücreti ne kadar?',
+        a: 'Seans ücreti uzman ve planlama netleştikten sonra açıkça paylaşılır. Ön eşleşme aşaması ücretsizdir.',
+      },
+    ],
+  },
+  {
+    category: 'Gizlilik ve güven',
+    description: 'Paylaşılan bilgiler, güvenlik yaklaşımı ve önemli sınırlar.',
+    items: [
+      {
+        q: 'Bilgilerim gizli mi?',
+        a: 'Paylaştığın bilgiler yalnızca ön eşleşme ve yönlendirme süreci için kullanılır. Amaç, sana uygun destek sürecini daha doğru planlamaktır.',
+      },
+      {
+        q: 'Mindora acil destek hattı mı?',
+        a: 'Hayır. Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski varsa 112 ile iletişime geçmeli ya da en yakın sağlık kuruluşuna başvurmalısın.',
+      },
+      {
+        q: 'Test sonuçları tanı koyar mı?',
+        a: 'Hayır. Mindora’daki testler yalnızca farkındalık amacı taşır. Tanı, değerlendirme ve tedavi süreci uzman görüşü gerektirir.',
+      },
+    ],
+  },
+  {
+    category: 'Uzman başvurusu',
+    description: 'Mindora uzman ağına katılmak isteyen psikologlar için bilgiler.',
+    items: [
+      {
+        q: 'Psikologlar Mindora’ya nasıl katılabilir?',
+        a: 'Psikologlar, uzman başvuru formunu doldurarak Mindora uzman ağına katılmak için ilk adımı atabilir.',
+      },
+      {
+        q: 'Uzman başvurusu ücretli mi?',
+        a: 'Hayır. Mindora uzman ağına başvuru yapmak ücretsizdir. Başvurular değerlendirme sürecinden sonra sonuçlandırılır.',
+      },
+    ],
+  },
+]
+
+const TRUST_ITEMS = [
+  'Ücretsiz ön eşleşme',
+  'Seans zorunluluğu yok',
+  'Gizlilik odaklı süreç',
+  'Online destek akışı',
+]
 
 export default function SSS() {
-  const faqs = [
-    {
-      category: "Başlangıç",
-      items: [
-        {
-          q: "Ön eşleşme ücretli mi?",
-          a: "Hayır. Mindora’da ön eşleşme süreci ücretsizdir. Formu doldurmak seans satın alma zorunluluğu oluşturmaz.",
-        },
-        {
-          q: "Formu doldurduktan sonra ne olacak?",
-          a: "Bilgilerin değerlendirilir. Destek konusu, tercihlerin ve uygun zamanına göre sana dönüş yapılır.",
-        },
-        {
-          q: "Ne kadar sürede dönüş alırım?",
-          a: "Başvurular yoğunluğa göre değerlendirilir. Hedefimiz en kısa sürede uygun yönlendirme için iletişime geçmektir.",
-        },
-      ],
-    },
-    {
-      category: "Görüşme süreci",
-      items: [
-        {
-          q: "Görüşmeler online mı?",
-          a: "Evet. Mindora başlangıçta online psikolojik destek sürecine odaklanır.",
-        },
-        {
-          q: "Hangi uzmanla görüşeceğime nasıl karar veriliyor?",
-          a: "Formdaki yanıtların; destek almak istediğin konu, uzman tercihin, uygun zamanın ve beklentin dikkate alınarak değerlendirilir.",
-        },
-        {
-          q: "Seans ücreti ne kadar?",
-          a: "Seans ücreti uzman ve planlama netleştikten sonra açıkça paylaşılır. Ön eşleşme aşaması ücretsizdir.",
-        },
-      ],
-    },
-    {
-      category: "Gizlilik ve güven",
-      items: [
-        {
-          q: "Bilgilerim gizli mi?",
-          a: "Paylaştığın bilgiler yalnızca ön eşleşme ve yönlendirme süreci için kullanılır.",
-        },
-        {
-          q: "Mindora acil destek hattı mı?",
-          a: "Hayır. Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski varsa 112 ile iletişime geçmelisin.",
-        },
-      ],
-    },
-    {
-      category: "Uzman başvurusu",
-      items: [
-        {
-          q: "Psikologlar Mindora’ya nasıl katılabilir?",
-          a: "Psikologlar, psikolog başvuru formunu doldurarak Mindora uzman ağına katılmak için ilk adımı atabilir.",
-        },
-        {
-          q: "Uzman başvurusu ücretli mi?",
-          a: "Hayır. Mindora uzman ağına başvuru yapmak ücretsizdir.",
-        },
-      ],
-    },
-  ];
-
   return (
-    <main className="min-h-screen bg-[#f6f1ea] text-[#171717]">
+    <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
       <Header />
 
-      <section className="mx-auto max-w-5xl px-6 py-20">
-        <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
-            SSS
+      <section className="mx-auto max-w-7xl px-5 pb-14 pt-16 md:pt-20">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
+            Sık Sorulan Sorular
           </p>
 
-          <h1 className="mt-4 text-5xl font-black leading-tight md:text-6xl">
-            Sık sorulan sorular
+          <h1 className="mt-4 text-5xl font-black leading-[1.05] tracking-tight md:text-6xl">
+            Mindora’ya başlamadan önce aklına takılanlar.
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-neutral-600">
-            Mindora’ya başlamadan önce aklına gelebilecek soruların kısa ve
-            anlaşılır cevapları.
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
+            Ön eşleşme, online görüşme, gizlilik, ücretlendirme ve uzman
+            başvurusu hakkında en çok merak edilen soruları burada topladık.
           </p>
+
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <a
+              href="/eslesme"
+              className="rounded-2xl bg-black px-8 py-4 text-center font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
+            >
+              Ücretsiz ön eşleşme başlat
+            </a>
+
+            <a
+              href="/uzmanlar"
+              className="rounded-2xl border border-black/10 bg-white/70 px-8 py-4 text-center font-black text-black transition hover:-translate-y-0.5 hover:bg-white"
+            >
+              Uzmanları incele
+            </a>
+          </div>
         </div>
 
-        <div className="mt-14 space-y-12">
-          {faqs.map((group) => (
-            <div key={group.category}>
-              <h2 className="mb-5 text-2xl font-black">{group.category}</h2>
-
-              <div className="space-y-4">
-                {group.items.map((faq) => (
-                  <div
-                    key={faq.q}
-                    className="rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-black/5"
-                  >
-                    <h3 className="text-lg font-black">{faq.q}</h3>
-                    <p className="mt-2 leading-7 text-neutral-600">{faq.a}</p>
-                  </div>
-                ))}
-              </div>
+        <div className="mx-auto mt-10 grid max-w-5xl gap-3 sm:grid-cols-2 md:grid-cols-4">
+          {TRUST_ITEMS.map((item) => (
+            <div
+              key={item}
+              className="rounded-2xl bg-white/75 px-5 py-4 text-center text-sm font-black text-neutral-700 shadow-sm ring-1 ring-black/5"
+            >
+              {item}
             </div>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="rounded-[2rem] bg-black p-8 text-center text-white md:p-14">
-          <h2 className="text-4xl font-black md:text-5xl">
-            Aklındaki soru netleştiyse ilk adımı at.
-          </h2>
+      <section className="mx-auto max-w-7xl px-5 py-12">
+        <div className="grid gap-6 lg:grid-cols-[0.32fr_0.68fr]">
+          <aside className="lg:sticky lg:top-28 lg:self-start">
+            <div className="rounded-[2rem] bg-white/75 p-6 shadow-sm ring-1 ring-black/5">
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-neutral-500">
+                Kategoriler
+              </p>
 
-          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-neutral-300">
-            Kısa formu doldur, sana uygun psikolojik destek süreci için ön
-            eşleşmeyi başlat.
-          </p>
+              <div className="mt-5 space-y-2">
+                {FAQ_GROUPS.map((group) => (
+                  <a
+                    key={group.category}
+                    href={`#${group.category.toLowerCase().replaceAll(' ', '-')}`}
+                    className="block rounded-2xl bg-[#f7f2eb] px-4 py-3 text-sm font-black text-neutral-700 transition hover:bg-white"
+                  >
+                    {group.category}
+                  </a>
+                ))}
+              </div>
 
-          <a
-               href="/eslesme"
-               className="mt-8 inline-block rounded-2xl bg-white px-9 py-4 font-bold text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
-            >
-              Ücretsiz ön eşleşme başlat
-          </a>
+              <div className="mt-6 rounded-3xl bg-black p-5 text-white">
+                <p className="font-black">Sorun burada yok mu?</p>
+                <p className="mt-2 text-sm leading-6 text-neutral-300">
+                  Ön eşleşme formunda eklemek istediğin not alanından durumunu
+                  kısaca paylaşabilirsin.
+                </p>
+                <a
+                  href="/eslesme"
+                  className="mt-4 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-neutral-200"
+                >
+                  Forma git
+                </a>
+              </div>
+            </div>
+          </aside>
+
+          <div className="space-y-8">
+            {FAQ_GROUPS.map((group) => (
+              <section
+                key={group.category}
+                id={group.category.toLowerCase().replaceAll(' ', '-')}
+                className="scroll-mt-28 rounded-[2rem] bg-white/75 p-6 shadow-sm ring-1 ring-black/5 md:p-8"
+              >
+                <div className="mb-6">
+                  <h2 className="text-3xl font-black">{group.category}</h2>
+                  <p className="mt-2 leading-7 text-neutral-600">
+                    {group.description}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {group.items.map((faq) => (
+                    <article
+                      key={faq.q}
+                      className="rounded-3xl bg-[#f7f2eb] p-6 ring-1 ring-black/5"
+                    >
+                      <h3 className="text-lg font-black">{faq.q}</h3>
+                      <p className="mt-3 leading-7 text-neutral-600">{faq.a}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-20">
+        <div className="grid gap-8 rounded-[2rem] bg-black p-8 text-white md:grid-cols-2 md:p-14">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400">
+              İlk adım
+            </p>
+            <h2 className="mt-4 text-4xl font-black leading-tight md:text-5xl">
+              Aklındaki soru netleştiyse uygun destek sürecini birlikte planlayalım.
+            </h2>
+          </div>
+
+          <div>
+            <p className="text-lg leading-8 text-neutral-300">
+              Kısa formu doldur, destek ihtiyacını paylaş ve sana uygun online
+              psikolojik destek süreci için ücretsiz ön eşleşmeyi başlat.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="/eslesme"
+                className="rounded-2xl bg-white px-8 py-4 text-center font-black text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
+              >
+                Ücretsiz ön eşleşme başlat
+              </a>
+
+              <a
+                href="/psikolojik-testler"
+                className="rounded-2xl border border-white/15 bg-white/10 px-8 py-4 text-center font-black text-white transition hover:-translate-y-0.5 hover:bg-white/15"
+              >
+                Testleri incele
+              </a>
+            </div>
+
+            <p className="mt-6 text-xs leading-6 text-neutral-400">
+              Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar
+              verme riski varsa lütfen 112 ile iletişime geç ya da en yakın
+              sağlık kuruluşuna başvur.
+            </p>
+          </div>
         </div>
       </section>
     </main>
-  );
+  )
 }

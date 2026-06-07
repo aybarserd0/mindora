@@ -1,5 +1,6 @@
 'use client'
 
+import Header from '@/components/Header'
 import { FormEvent, useMemo, useState } from 'react'
 
 type SubmitState =
@@ -146,51 +147,19 @@ export default function EslesmePage() {
 
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
-      <nav className="sticky top-0 z-50 border-b border-black/10 bg-[#f7f2eb]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-          <a href="/" className="flex items-center gap-3">
-            <img
-              src="/logo.png"
-              alt="Mindora"
-              className="h-10 w-10 rounded-2xl object-cover"
-            />
-            <div>
-              <p className="text-lg font-black leading-none">Mindora</p>
-              <p className="hidden text-xs text-neutral-500 sm:block">
-                Online psikolojik destek
-              </p>
-            </div>
-          </a>
+      <Header />
 
-          <div className="flex items-center gap-2">
-            <a
-              href="/uzmanlar"
-              className="hidden rounded-full border border-black/10 bg-white/70 px-5 py-2.5 text-sm font-black text-black transition hover:bg-white sm:inline-block"
-            >
-              Uzmanlar
-            </a>
-
-            <a
-              href="/uzman-basvuru"
-              className="rounded-full bg-black px-5 py-2.5 text-sm font-black text-white transition hover:bg-neutral-800"
-            >
-              Uzman mısın?
-            </a>
-          </div>
-        </div>
-      </nav>
-
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
+        <aside className="lg:sticky lg:top-28 lg:self-start">
           <div className="inline-flex rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-black text-neutral-700 shadow-sm">
             Ücretsiz ön eşleşme
           </div>
 
-          <h1 className="mt-6 text-5xl font-black leading-[1.05] tracking-tight md:text-6xl">
+          <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[1.03] tracking-tight md:text-6xl lg:text-7xl">
             Sana uygun psikolojik desteği birlikte planlayalım.
           </h1>
 
-          <p className="mt-6 text-lg leading-8 text-neutral-700">
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-700 md:text-xl">
             Kısa bilgilerini paylaş. Mindora, ihtiyacını ve beklentini
             değerlendirerek sana daha uygun bir başlangıç yolu sunmayı hedefler.
           </p>
@@ -245,7 +214,7 @@ export default function EslesmePage() {
               Eşleşme formu
             </p>
 
-            <h2 className="mt-3 text-3xl font-black md:text-4xl">
+            <h2 className="mt-3 text-3xl font-black leading-tight md:text-4xl">
               Başlangıç bilgileri
             </h2>
 

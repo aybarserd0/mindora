@@ -1,3 +1,5 @@
+import Header from '@/components/Header';
+
 export default function Home() {
   const steps = [
     {
@@ -65,56 +67,15 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
-      <nav className="sticky top-0 z-50 border-b border-black/10 bg-[#f7f2eb]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-          <a href="/" className="flex items-center gap-3">
-            <img
-              src="/logo.png"
-              alt="Mindora"
-              className="h-10 w-10 rounded-2xl object-cover"
-            />
-            <div>
-              <p className="text-lg font-black leading-none">Mindora</p>
-              <p className="hidden text-xs text-neutral-500 sm:block">
-                Online psikolojik destek
-              </p>
-            </div>
-          </a>
+      <Header />
 
-          <div className="hidden items-center gap-7 text-sm font-semibold text-neutral-600 lg:flex">
-            <a href="/uzmanlar" className="transition hover:text-black">
-              Uzmanlar
-            </a>
-            <a href="/psikolojik-testler" className="transition hover:text-black">
-              Testler
-            </a>
-            <a href="/hakkimizda" className="transition hover:text-black">
-              Hakkımızda
-            </a>
-            <a href="/sss" className="transition hover:text-black">
-              SSS
-            </a>
-            <a href="/uzman-basvuru" className="transition hover:text-black">
-              Uzman Başvurusu
-            </a>
-          </div>
-
-          <a
-            href="/eslesme"
-            className="rounded-full bg-black px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
-          >
-            Ücretsiz eşleş
-          </a>
-        </div>
-      </nav>
-
-      <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:pt-24">
+      <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-14 md:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:pt-24">
         <div>
           <div className="mb-6 inline-flex rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-bold text-neutral-700 shadow-sm">
             Güvenli online psikolojik destek platformu
           </div>
 
-          <h1 className="max-w-4xl text-5xl font-black leading-[1.02] tracking-tight md:text-7xl">
+          <h1 className="max-w-4xl text-5xl font-black leading-[1.03] tracking-tight md:text-6xl lg:text-7xl">
             Psikolojik desteğe doğru uzmanla, güvenli şekilde başla.
           </h1>
 
