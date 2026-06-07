@@ -10,34 +10,25 @@ type PayoutStatus = 'unpaid' | 'scheduled' | 'paid' | 'blocked' | null
 type BookingRow = {
   id: string
   expert_id: string | null
-  client_id?: string | null
-  conversation_id?: string | null
+  conversation_id: string | null
   scheduled_start_at: string | null
   scheduled_end_at: string | null
   status: string | null
-  client_applications?: {
-    id?: string | null
-    name?: string | null
-    email?: string | null
-  } | null
 }
 
 type ConversationRow = {
   id: string
+  client_application_id: string | null
   expert_id: string | null
-  client_id?: string | null
   status: string | null
-  payment_status?: string | null
-  client_applications?: {
-    id?: string | null
-    name?: string | null
-    email?: string | null
-  } | null
+  payment_status: string | null
+  updated_at: string | null
 }
 
 type PaymentRow = {
   id: string
   expert_id: string | null
+  client_id: string | null
   amount: number | null
   commission_amount: number | null
   expert_amount: number | null
@@ -45,11 +36,12 @@ type PaymentRow = {
   expert_payout_status: PayoutStatus | string
   expert_payout_paid_at: string | null
   created_at: string | null
-  client_applications?: {
-    id?: string | null
-    name?: string | null
-    email?: string | null
-  } | null
+}
+
+type ClientRow = {
+  id: string
+  name: string | null
+  email: string | null
 }
 
 type DashboardData = {
@@ -57,8 +49,8 @@ type DashboardData = {
   upcomingBookings: BookingRow[]
   activeConversations: ConversationRow[]
   payments: PaymentRow[]
+  clientsById: Map<string, ClientRow>
   hasRuntimeError: boolean
-  errorMessage: string | null
 }
 
 const quickActions = [
@@ -99,17 +91,17 @@ function formatMoney(value: number | null | undefined) {
 function formatDateTime(value: string | null | undefined) {
   if (!value) return '-'
 
-  try {
-    return new Intl.DateTimeFormat('tr-TR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(value))
-  } catch {
-    return '-'
-  }
+  const date = new Date(value)
+
+  if (!Number.isFinite(date.getTime())) return '-'
+
+  return new Intl.DateTimeFormat('tr-TR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
 }
 
 function isCurrentMonth(value: string | null | undefined) {
@@ -132,43 +124,100 @@ function sumNumbers<T>(items: T[], getter: (item: T) => number | null | undefine
   }, 0)
 }
 
-function getClientName(row: BookingRow | ConversationRow | PaymentRow) {
-  return row.client_applications?.name?.trim() || 'Danışan'
+function getClientName(
+  clientId: string | null | undefined,
+  clientsById: Map<string, ClientRow>,
+  fallback = 'Danışan'
+) {
+  if (!clientId) return fallback
+
+  const name = clientsById.get(clientId)?.name?.trim()
+  return name || fallback
+}
+
+function normalizeStatusLabel(status: string | null | undefined) {
+  switch ((status || '').toLowerCase()) {
+    case 'scheduled':
+      return 'Planlandı'
+    case 'confirmed':
+      return 'Onaylandı'
+    case 'active':
+      return 'Aktif'
+    case 'completed':
+      return 'Tamamlandı'
+    case 'cancelled':
+      return 'İptal'
+    default:
+      return status || 'Planlandı'
+  }
+}
+
+function getConversationForBooking(
+  booking: BookingRow,
+  conversationsById: Map<string, ConversationRow>
+) {
+  if (!booking.conversation_id) return null
+  return conversationsById.get(booking.conversation_id) || null
+}
+
+async function fetchClientsByIds(clientIds: string[]) {
+  const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)))
+
+  if (uniqueIds.length === 0) return new Map<string, ClientRow>()
+
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('client_applications')
+    .select('id, name, email')
+    .in('id', uniqueIds)
+
+  if (error) {
+    console.error('EXPERT_DASHBOARD_CLIENTS_QUERY_ERROR', error)
+    return new Map<string, ClientRow>()
+  }
+
+  return new Map((data || []).map((client) => [client.id, client as ClientRow]))
 }
 
 async function getExpertDashboardData(): Promise<DashboardData> {
-  try {
-    const supabase = getSupabaseAdmin() as any
-    const nowIso = new Date().toISOString()
+  const emptyData: DashboardData = {
+    expertId: process.env.MINDORA_DEV_EXPERT_ID || null,
+    upcomingBookings: [],
+    activeConversations: [],
+    payments: [],
+    clientsById: new Map<string, ClientRow>(),
+    hasRuntimeError: false,
+  }
 
+  try {
+    const supabase = getSupabaseAdmin()
+    const nowIso = new Date().toISOString()
     const expertId = process.env.MINDORA_DEV_EXPERT_ID || null
 
     let bookingsQuery = supabase
-      .from('bookings')
-      .select(
-        'id, expert_id, client_id, conversation_id, scheduled_start_at, scheduled_end_at, status, client_applications(id, name, email)'
-      )
-      .in('status', ['scheduled', 'confirmed', 'active'])
-      .gte('scheduled_start_at', nowIso)
+      .from('session_bookings' as never)
+      .select('id, expert_id, conversation_id, scheduled_start_at, scheduled_end_at, status')
+      .in('status', ['scheduled', 'confirmed', 'active'] as never)
+      .gte('scheduled_start_at', nowIso as never)
       .order('scheduled_start_at', { ascending: true })
       .limit(5)
 
     let conversationsQuery = supabase
       .from('conversations')
-      .select('id, expert_id, client_id, status, payment_status, client_applications(id, name, email)')
+      .select('id, client_application_id, expert_id, status, payment_status, updated_at')
       .in('status', ['active', 'matched', 'open'])
       .limit(100)
 
     let paymentsQuery = supabase
       .from('payments')
       .select(
-        'id, expert_id, amount, commission_amount, expert_amount, status, expert_payout_status, expert_payout_paid_at, created_at, client_applications(id, name, email)'
+        'id, expert_id, client_id, amount, commission_amount, expert_amount, status, expert_payout_status, expert_payout_paid_at, created_at'
       )
       .order('created_at', { ascending: false })
       .limit(100)
 
     if (expertId) {
-      bookingsQuery = bookingsQuery.eq('expert_id', expertId)
+      bookingsQuery = bookingsQuery.eq('expert_id', expertId as never)
       conversationsQuery = conversationsQuery.eq('expert_id', expertId)
       paymentsQuery = paymentsQuery.eq('expert_id', expertId)
     }
@@ -183,40 +232,48 @@ async function getExpertDashboardData(): Promise<DashboardData> {
       bookingsResult.error || conversationsResult.error || paymentsResult.error || null
 
     if (firstError) {
+      console.error('EXPERT_DASHBOARD_QUERY_ERROR', firstError)
       return {
+        ...emptyData,
         expertId,
-        upcomingBookings: [],
-        activeConversations: [],
-        payments: [],
         hasRuntimeError: true,
-        errorMessage: firstError.message || 'Dashboard verileri alınamadı.',
       }
     }
 
-    return {
-      expertId,
-      upcomingBookings: (bookingsResult.data || []) as BookingRow[],
-      activeConversations: (conversationsResult.data || []) as ConversationRow[],
-      payments: (paymentsResult.data || []) as PaymentRow[],
-      hasRuntimeError: false,
-      errorMessage: null,
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Beklenmeyen dashboard hatası.'
+    const upcomingBookings = (bookingsResult.data || []) as BookingRow[]
+    const activeConversations = (conversationsResult.data || []) as ConversationRow[]
+    const payments = (paymentsResult.data || []) as PaymentRow[]
+
+    const clientIds = [
+      ...activeConversations.map((conversation) => conversation.client_application_id),
+      ...payments.map((payment) => payment.client_id),
+    ].filter((id): id is string => Boolean(id))
+
+    const clientsById = await fetchClientsByIds(clientIds)
 
     return {
-      expertId: null,
-      upcomingBookings: [],
-      activeConversations: [],
-      payments: [],
+      expertId,
+      upcomingBookings,
+      activeConversations,
+      payments,
+      clientsById,
+      hasRuntimeError: false,
+    }
+  } catch (error) {
+    console.error('EXPERT_DASHBOARD_RUNTIME_ERROR', error)
+    return {
+      ...emptyData,
       hasRuntimeError: true,
-      errorMessage: message,
     }
   }
 }
 
 export default async function ExpertDashboardPage() {
   const data = await getExpertDashboardData()
+
+  const conversationsById = new Map(
+    data.activeConversations.map((conversation) => [conversation.id, conversation])
+  )
 
   const paidPayments = data.payments.filter((payment) => payment.status === 'paid')
   const thisMonthPaidPayments = paidPayments.filter((payment) =>
@@ -235,7 +292,7 @@ export default async function ExpertDashboardPage() {
 
   const uniqueActiveClientIds = new Set(
     data.activeConversations
-      .map((conversation) => conversation.client_id || conversation.client_applications?.id)
+      .map((conversation) => conversation.client_application_id)
       .filter(Boolean)
   )
 
@@ -265,43 +322,44 @@ export default async function ExpertDashboardPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-indigo-600">Uzman Paneli</p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">
-              Hoş geldiniz
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-              Yaklaşan seanslarınızı, danışanlarınızı, müsaitlik durumunuzu ve
-              kazanç özetinizi tek ekrandan takip edin.
-            </p>
-          </div>
+        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.24em] text-indigo-600">
+                Expert Workspace
+              </p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                Hoş geldiniz
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                Yaklaşan seanslarınızı, danışanlarınızı, müsaitlik durumunuzu ve
+                kazanç özetinizi tek ekrandan takip edin.
+              </p>
+            </div>
 
-          <Link
-            href="/expert/dashboard/availability"
-            className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Müsaitlik Yönet
-          </Link>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/expert/dashboard/sessions"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50"
+              >
+                Seansları Gör
+              </Link>
+              <Link
+                href="/expert/dashboard/availability"
+                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                Müsaitlik Yönet
+              </Link>
+            </div>
+          </div>
         </div>
 
         {data.hasRuntimeError ? (
           <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            <p className="font-semibold">Dashboard verisi şu an alınamadı.</p>
-            <p className="mt-1 text-amber-800">{data.errorMessage}</p>
-            <p className="mt-2 text-xs text-amber-700">
-              Sayfa build-safe çalışır. Veri bağlantısı için tablo/kolon isimleri ve uzman
-              kimliği eşleşmesi kontrol edilmeli.
-            </p>
-          </div>
-        ) : null}
-
-        {!data.expertId ? (
-          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
-            <p className="font-semibold text-slate-900">Geliştirme modu</p>
-            <p className="mt-1">
-              Henüz oturumdaki uzman kimliği bağlanmadığı için dashboard tüm uzman verileriyle
-              özetlenir. Canlı sistemde bu alan auth üzerinden sadece ilgili uzmana filtrelenecek.
+            <p className="font-semibold">Veriler şu an sınırlı görüntüleniyor.</p>
+            <p className="mt-1 text-amber-800">
+              Panel çalışıyor; bazı canlı veriler tablo/kolon eşleşmesi tamamlanınca otomatik
+              görünür olacak.
             </p>
           </div>
         ) : null}
@@ -339,25 +397,33 @@ export default async function ExpertDashboardPage() {
 
             {data.upcomingBookings.length > 0 ? (
               <div className="space-y-3">
-                {data.upcomingBookings.map((booking) => (
-                  <div
-                    key={booking.id}
-                    className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-slate-950">
-                        {getClientName(booking)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {formatDateTime(booking.scheduled_start_at)}
-                      </p>
-                    </div>
+                {data.upcomingBookings.map((booking) => {
+                  const conversation = getConversationForBooking(booking, conversationsById)
+                  const clientName = getClientName(
+                    conversation?.client_application_id,
+                    data.clientsById
+                  )
 
-                    <span className="inline-flex w-fit rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
-                      {booking.status || 'scheduled'}
-                    </span>
-                  </div>
-                ))}
+                  return (
+                    <div
+                      key={booking.id}
+                      className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950">
+                          {clientName}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {formatDateTime(booking.scheduled_start_at)}
+                        </p>
+                      </div>
+
+                      <span className="inline-flex w-fit rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
+                        {normalizeStatusLabel(booking.status)}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             ) : (
               <EmptyState
@@ -408,10 +474,10 @@ export default async function ExpertDashboardPage() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-slate-950">
-                        {getClientName(conversation)}
+                        {getClientName(conversation.client_application_id, data.clientsById)}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Durum: {conversation.status || '-'}
+                        Durum: {normalizeStatusLabel(conversation.status)}
                       </p>
                     </div>
 
