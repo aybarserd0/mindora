@@ -414,61 +414,6 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-black/10 px-5 py-10">
-        <div className="mx-auto grid max-w-7xl gap-8 text-sm text-neutral-600 md:grid-cols-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <img
-                src="/logo.png"
-                alt="Mindora"
-                className="h-9 w-9 rounded-xl object-cover"
-              />
-              <div>
-                <p className="font-black text-black">Mindora</p>
-                <p>Zihnine iyi gelen yer.</p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-3 font-black text-black">Platform</p>
-            <div className="space-y-2">
-              <p>
-                <a href="/uzmanlar">Uzmanlar</a>
-              </p>
-              <p>
-                <a href="/psikolojik-testler">Psikolojik Testler</a>
-              </p>
-              <p>
-                <a href="/hakkimizda">Hakkımızda</a>
-              </p>
-              <p>
-                <a href="/sss">SSS</a>
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-3 font-black text-black">Başvuru</p>
-            <div className="space-y-2">
-              <p>
-                <a href="/eslesme">Danışan eşleşmesi</a>
-              </p>
-              <p>
-                <a href="/uzman-basvuru">Uzman başvurusu</a>
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-3 font-black text-black">İletişim</p>
-            <div className="space-y-2">
-              <p>Instagram: @mindora.live</p>
-              <p>Mail: mindora.live@gmail.com</p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
