@@ -1,25 +1,46 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
 
-let adminClient: ReturnType<typeof createClient<Database>> | null = null
+type SupabaseAdminClient = SupabaseClient<Database>
 
-function getRequiredEnv(name: string) {
-  const value = process.env[name]
+let adminClient: SupabaseAdminClient | null = null
+
+function getRequiredEnv(name: string): string {
+  const value = process.env[name]?.trim()
 
   if (!value) {
-    throw new Error(`${name} env bilgisi eksik.`)
+    throw new Error(`[Supabase Admin] ${name} env bilgisi eksik.`)
   }
 
   return value
 }
 
-export function getSupabaseAdmin() {
+function getSupabaseUrl(): string {
+  const url = getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL')
+
+  try {
+    new URL(url)
+  } catch {
+    throw new Error('[Supabase Admin] NEXT_PUBLIC_SUPABASE_URL geçerli bir URL değil.')
+  }
+
+  return url
+}
+
+function getServiceRoleKey(): string {
+  const key = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+
+  if (key.length < 40) {
+    throw new Error('[Supabase Admin] SUPABASE_SERVICE_ROLE_KEY hatalı görünüyor.')
+  }
+
+  return key
+}
+
+export function getSupabaseAdmin(): SupabaseAdminClient {
   if (adminClient) return adminClient
 
-  const supabaseUrl = getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL')
-  const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
-
-  adminClient = createClient<Database>(supabaseUrl, serviceRoleKey, {
+  adminClient = createClient<Database>(getSupabaseUrl(), getServiceRoleKey(), {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
