@@ -50,7 +50,6 @@ type DashboardData = {
   activeConversations: ConversationRow[]
   payments: PaymentRow[]
   clientsById: Map<string, ClientRow>
-  hasRuntimeError: boolean
 }
 
 const quickActions = [
@@ -147,6 +146,12 @@ function normalizeStatusLabel(status: string | null | undefined) {
       return 'Tamamlandı'
     case 'cancelled':
       return 'İptal'
+    case 'matched':
+      return 'Eşleşti'
+    case 'open':
+      return 'Açık'
+    case 'closed':
+      return 'Kapandı'
     default:
       return status || 'Planlandı'
   }
@@ -165,34 +170,47 @@ async function fetchClientsByIds(clientIds: string[]) {
 
   if (uniqueIds.length === 0) return new Map<string, ClientRow>()
 
-  const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from('client_applications')
-    .select('id, name, email')
-    .in('id', uniqueIds)
+  try {
+    const supabase = getSupabaseAdmin()
+    const { data, error } = await supabase
+      .from('client_applications')
+      .select('id, name, email')
+      .in('id', uniqueIds)
 
-  if (error) {
-    console.error('EXPERT_DASHBOARD_CLIENTS_QUERY_ERROR', error)
+    if (error) {
+      console.error('EXPERT_DASHBOARD_CLIENTS_QUERY_ERROR', error)
+      return new Map<string, ClientRow>()
+    }
+
+    return new Map((data || []).map((client) => [client.id, client as ClientRow]))
+  } catch (error) {
+    console.error('EXPERT_DASHBOARD_CLIENTS_RUNTIME_ERROR', error)
     return new Map<string, ClientRow>()
   }
+}
 
-  return new Map((data || []).map((client) => [client.id, client as ClientRow]))
+async function safeQuery<T>(query: PromiseLike<{ data: T[] | null; error: unknown }>) {
+  try {
+    const result = await query
+
+    if (result.error) {
+      console.error('EXPERT_DASHBOARD_QUERY_ERROR', result.error)
+      return [] as T[]
+    }
+
+    return (result.data || []) as T[]
+  } catch (error) {
+    console.error('EXPERT_DASHBOARD_QUERY_RUNTIME_ERROR', error)
+    return [] as T[]
+  }
 }
 
 async function getExpertDashboardData(): Promise<DashboardData> {
-  const emptyData: DashboardData = {
-    expertId: process.env.MINDORA_DEV_EXPERT_ID || null,
-    upcomingBookings: [],
-    activeConversations: [],
-    payments: [],
-    clientsById: new Map<string, ClientRow>(),
-    hasRuntimeError: false,
-  }
+  const expertId = process.env.MINDORA_DEV_EXPERT_ID || null
 
   try {
     const supabase = getSupabaseAdmin()
     const nowIso = new Date().toISOString()
-    const expertId = process.env.MINDORA_DEV_EXPERT_ID || null
 
     let bookingsQuery = supabase
       .from('session_bookings' as never)
@@ -222,27 +240,11 @@ async function getExpertDashboardData(): Promise<DashboardData> {
       paymentsQuery = paymentsQuery.eq('expert_id', expertId)
     }
 
-    const [bookingsResult, conversationsResult, paymentsResult] = await Promise.all([
-      bookingsQuery,
-      conversationsQuery,
-      paymentsQuery,
+    const [upcomingBookings, activeConversations, payments] = await Promise.all([
+      safeQuery<BookingRow>(bookingsQuery as never),
+      safeQuery<ConversationRow>(conversationsQuery),
+      safeQuery<PaymentRow>(paymentsQuery),
     ])
-
-    const firstError =
-      bookingsResult.error || conversationsResult.error || paymentsResult.error || null
-
-    if (firstError) {
-      console.error('EXPERT_DASHBOARD_QUERY_ERROR', firstError)
-      return {
-        ...emptyData,
-        expertId,
-        hasRuntimeError: true,
-      }
-    }
-
-    const upcomingBookings = (bookingsResult.data || []) as BookingRow[]
-    const activeConversations = (conversationsResult.data || []) as ConversationRow[]
-    const payments = (paymentsResult.data || []) as PaymentRow[]
 
     const clientIds = [
       ...activeConversations.map((conversation) => conversation.client_application_id),
@@ -257,13 +259,16 @@ async function getExpertDashboardData(): Promise<DashboardData> {
       activeConversations,
       payments,
       clientsById,
-      hasRuntimeError: false,
     }
   } catch (error) {
     console.error('EXPERT_DASHBOARD_RUNTIME_ERROR', error)
+
     return {
-      ...emptyData,
-      hasRuntimeError: true,
+      expertId,
+      upcomingBookings: [],
+      activeConversations: [],
+      payments: [],
+      clientsById: new Map<string, ClientRow>(),
     }
   }
 }
@@ -322,47 +327,39 @@ export default async function ExpertDashboardPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.24em] text-indigo-600">
-                Expert Workspace
-              </p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                Hoş geldiniz
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Yaklaşan seanslarınızı, danışanlarınızı, müsaitlik durumunuzu ve
-                kazanç özetinizi tek ekrandan takip edin.
-              </p>
-            </div>
+        <div className="mb-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6 sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-indigo-600">
+                  Expert Workspace
+                </p>
+                <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                  Hoş geldiniz
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                  Yaklaşan seanslarınızı, danışanlarınızı, müsaitlik durumunuzu ve
+                  kazanç özetinizi tek ekrandan takip edin.
+                </p>
+              </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50"
-              >
-                Seansları Gör
-              </Link>
-              <Link
-                href="/expert/dashboard/availability"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                Müsaitlik Yönet
-              </Link>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/expert/dashboard/sessions"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50"
+                >
+                  Seansları Gör
+                </Link>
+                <Link
+                  href="/expert/dashboard/availability"
+                  className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  Müsaitlik Yönet
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-
-        {data.hasRuntimeError ? (
-          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            <p className="font-semibold">Veriler şu an sınırlı görüntüleniyor.</p>
-            <p className="mt-1 text-amber-800">
-              Panel çalışıyor; bazı canlı veriler tablo/kolon eşleşmesi tamamlanınca otomatik
-              görünür olacak.
-            </p>
-          </div>
-        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((item) => (
