@@ -5,32 +5,47 @@ const navigationItems = [
   {
     label: 'Dashboard',
     href: '/expert/dashboard',
-    description: 'Genel özet ve hızlı aksiyonlar',
+    description: 'Genel özet',
   },
   {
     label: 'Seanslar',
     href: '/expert/dashboard/sessions',
-    description: 'Yaklaşan ve geçmiş görüşmeler',
+    description: 'Görüşme takibi',
   },
   {
     label: 'Danışanlar',
     href: '/expert/dashboard/clients',
-    description: 'Aktif danışan listesi',
+    description: 'Danışan süreçleri',
   },
   {
     label: 'Müsaitlik',
     href: '/expert/dashboard/availability',
-    description: 'Uygun gün ve saatler',
+    description: 'Uygun saatler',
   },
   {
     label: 'Kazançlar',
     href: '/expert/dashboard/earnings',
-    description: 'Gelir ve ödeme özeti',
+    description: 'Ödeme özeti',
   },
   {
     label: 'Profil',
     href: '/expert/dashboard/profile',
-    description: 'Uzman profil bilgileri',
+    description: 'Profil bilgileri',
+  },
+]
+
+const workspaceStats = [
+  {
+    label: 'Bugünkü seans',
+    value: '0',
+  },
+  {
+    label: 'Aktif danışan',
+    value: '0',
+  },
+  {
+    label: 'Bu ay',
+    value: '₺0',
   },
 ]
 
@@ -40,48 +55,39 @@ export default function ExpertDashboardLayout({
   children: ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
-      <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col lg:flex-row">
-        <aside className="border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:h-screen lg:w-80 lg:shrink-0 lg:border-b-0 lg:border-r">
-          <div className="flex h-full flex-col px-4 py-5 sm:px-6 lg:px-5">
-            <div className="flex items-center justify-between gap-4 lg:block">
-              <Link href="/" className="group inline-flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-sm font-black text-white shadow-sm transition group-hover:bg-indigo-700">
-                  M
+    <div className="h-screen overflow-hidden bg-slate-100 text-slate-950">
+      <div className="flex h-full min-h-0 w-full">
+        <aside className="hidden h-full w-80 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
+          <div className="flex min-h-0 flex-1 flex-col px-5 py-5">
+            <Link href="/" className="group inline-flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-sm font-black text-white shadow-sm transition group-hover:bg-indigo-700">
+                M
+              </span>
+              <span>
+                <span className="block text-base font-black tracking-tight text-slate-950">
+                  Mindora
                 </span>
-                <span>
-                  <span className="block text-base font-black tracking-tight text-slate-950">
-                    Mindora
-                  </span>
-                  <span className="block text-xs font-semibold text-slate-500">
-                    Uzman Paneli
-                  </span>
+                <span className="block text-xs font-semibold text-slate-500">
+                  Uzman Paneli
                 </span>
-              </Link>
+              </span>
+            </Link>
 
-              <Link
-                href="/"
-                className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 lg:hidden"
-              >
-                Siteye Dön
-              </Link>
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-              <p className="text-sm font-bold text-indigo-950">Expert Workspace</p>
+            <section className="mt-5 rounded-3xl border border-indigo-100 bg-indigo-50 p-4">
+              <p className="text-sm font-black text-indigo-950">Expert Workspace</p>
               <p className="mt-1 text-xs leading-5 text-indigo-800">
-                Seans, danışan, müsaitlik, kazanç ve profil yönetimini tek yerden takip edin.
+                Seanslarınızı, danışanlarınızı ve kazançlarınızı tek panelden yönetin.
               </p>
-            </div>
+            </section>
 
-            <nav className="mt-5 grid gap-2 sm:grid-cols-2 lg:flex lg:flex-1 lg:flex-col lg:gap-1.5">
+            <nav className="mt-5 flex flex-col gap-1.5">
               {navigationItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:border-indigo-200 hover:bg-indigo-50 lg:border-transparent"
+                  className="group rounded-2xl px-4 py-3 transition hover:bg-indigo-50"
                 >
-                  <span className="block text-sm font-bold text-slate-950 group-hover:text-indigo-700">
+                  <span className="block text-sm font-black text-slate-900 group-hover:text-indigo-700">
                     {item.label}
                   </span>
                   <span className="mt-0.5 block text-xs leading-5 text-slate-500">
@@ -91,55 +97,92 @@ export default function ExpertDashboardLayout({
               ))}
             </nav>
 
-            <div className="mt-6 hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:block">
-              <p className="text-sm font-bold text-slate-950">Panel durumu</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                C8 Expert Dashboard aktif. API hatası olsa bile panel sayfaları kontrollü boş durumla açılmalıdır.
-              </p>
-            </div>
+            <section className="mt-auto space-y-3 pt-5">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                  Kısa Özet
+                </p>
+                <div className="mt-4 space-y-3">
+                  {workspaceStats.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200"
+                    >
+                      <span className="text-xs font-semibold text-slate-500">
+                        {item.label}
+                      </span>
+                      <span className="text-sm font-black text-slate-950">
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            <div className="mt-4 hidden gap-2 lg:grid">
               <Link
-                href="/uzmanlar"
-                className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                href="/expert/dashboard/profile"
+                className="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
               >
-                Public Uzmanları Gör
+                Profili Görüntüle
               </Link>
+
               <Link
                 href="/"
-                className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                className="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
               >
                 Ana Siteye Dön
               </Link>
-            </div>
+            </section>
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <header className="shrink-0 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
                   Mindora Expert
                 </p>
-                <h2 className="mt-1 text-lg font-black text-slate-950">
+                <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
                   Uzman Yönetim Alanı
-                </h2>
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  Bugünkü seanslarınızı, danışanlarınızı ve kazançlarınızı tek panelden yönetin.
+                </p>
               </div>
 
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-xs font-black text-indigo-700">
-                  U
+              <div className="flex items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 lg:min-w-72">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-100 text-sm font-black text-indigo-700 ring-1 ring-indigo-200">
+                    U
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-slate-950">Uzman Hesabı</p>
+                    <p className="text-xs font-medium text-slate-500">Panel erişimi aktif</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-950">Uzman</p>
-                  <p className="text-xs text-slate-500">Panel erişimi aktif</p>
-                </div>
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">
+                  Aktif
+                </span>
               </div>
             </div>
+
+            <nav className="mt-4 grid gap-2 sm:grid-cols-3 lg:hidden">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-800 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </header>
 
-          <div className="flex-1 px-0 py-0">{children}</div>
+          <main className="min-h-0 flex-1 overflow-y-auto bg-slate-50">
+            {children}
+          </main>
         </div>
       </div>
     </div>
