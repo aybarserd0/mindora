@@ -62,6 +62,19 @@ const DEFAULT_SUPPORT_AREAS = [
   'Sınav ve gelecek kaygısı',
 ]
 
+const TRUST_BADGES = [
+  'Mindora onaylı profil',
+  'Online görüşme süreci',
+  'Güvenli ödeme akışı',
+  'Ön eşleşme desteği',
+]
+
+const PROCESS_STEPS = [
+  'Kısa ön eşleşme formunu doldur',
+  'İhtiyacına ve uygun zamanına göre süreç netleşsin',
+  'Randevu, ödeme ve görüşme adımlarını güvenli şekilde tamamla',
+]
+
 function toText(value: unknown, fallback = '') {
   if (value === null || value === undefined) return fallback
   const text = String(value).trim()
@@ -199,7 +212,7 @@ function normalizeExpert(row: ExpertRow): PublicExpertProfile {
     sessionDurationMinutes: 50,
     bio: toText(
       row.expectation || row.note,
-      'Mindora uzman profili, danışanın ihtiyaçlarını daha doğru anlamak ve güvenli bir başlangıç yapmasını kolaylaştırmak için hazırlanmıştır.'
+      'Bu uzman profili, danışanın ihtiyaçlarını daha doğru anlamak ve güvenli bir başlangıç yapmasını kolaylaştırmak için hazırlanmıştır.'
     ),
     approach: toText(
       row.note,
@@ -301,10 +314,10 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
   const matchingHref = `/eslesme?expert=${encodeURIComponent(expert.slug)}`
 
   return (
-    <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
+    <main className="min-h-screen overflow-x-hidden bg-[#f7f2eb] text-[#171717]">
       <Header />
 
-      <section className="mx-auto max-w-7xl px-5 py-8">
+      <section className="mx-auto max-w-7xl px-5 py-7">
         <nav className="flex flex-wrap items-center gap-2 text-sm font-bold text-neutral-500">
           <Link href="/" className="transition hover:text-black">
             Ana Sayfa
@@ -319,61 +332,65 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-10">
-        <div className="grid gap-6 rounded-[2.25rem] bg-white p-6 shadow-sm ring-1 ring-black/5 lg:grid-cols-[1fr_390px] lg:p-10">
-          <div className="flex flex-col gap-7 sm:flex-row">
-            <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-[2rem] bg-black text-white shadow-sm ring-1 ring-black/10">
-              {expert.profileImageUrl ? (
-                <img
-                  src={expert.profileImageUrl}
-                  alt={`${expert.name} profil fotoğrafı`}
-                  className="h-full w-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-4xl font-black">
-                  {expert.imageInitials}
+        <div className="grid gap-8 rounded-[2rem] border border-black/5 bg-white p-5 shadow-sm md:p-8 lg:grid-cols-[1fr_380px] lg:p-10">
+          <div className="min-w-0">
+            <div className="flex flex-col gap-7 md:flex-row">
+              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-[2rem] bg-black text-white shadow-sm ring-1 ring-black/10 md:h-36 md:w-36">
+                {expert.profileImageUrl ? (
+                  <img
+                    src={expert.profileImageUrl}
+                    alt={`${expert.name} profil fotoğrafı`}
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-4xl font-black md:text-5xl">
+                    {expert.imageInitials}
+                  </div>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <Badge tone="success">Onaylı uzman profili</Badge>
+                  <Badge tone="dark">{expert.onlineText}</Badge>
                 </div>
-              )}
+
+                <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
+                  {expert.name}
+                </h1>
+
+                <p className="mt-3 text-base font-bold text-neutral-600">
+                  {expert.title} • {expert.experience}
+                </p>
+
+                <p className="mt-5 max-w-3xl text-sm leading-7 text-neutral-600 md:text-base md:leading-8">
+                  {expert.bio}
+                </p>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  <MiniStat label="Görüşme" value={expert.onlineText} />
+                  <MiniStat label="Seans" value={`${expert.sessionDurationMinutes} dk`} />
+                  <MiniStat label="Deneyim" value={expert.experience} />
+                </div>
+              </div>
             </div>
 
-            <div className="min-w-0">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
-                  Onaylı uzman profili
+            <div className="mt-8 flex flex-wrap gap-2">
+              {expert.areas.slice(0, 8).map((area) => (
+                <span
+                  key={area}
+                  className="rounded-full bg-[#f7f2eb] px-4 py-2 text-xs font-black text-neutral-700 ring-1 ring-black/5"
+                >
+                  {area}
                 </span>
-                <span className="rounded-full bg-black px-3 py-1 text-xs font-black text-white">
-                  {expert.onlineText}
-                </span>
-              </div>
-
-              <h1 className="text-4xl font-black tracking-tight md:text-5xl">
-                {expert.name}
-              </h1>
-
-              <p className="mt-3 text-base font-bold text-neutral-600">
-                {expert.title} • {expert.experience}
-              </p>
-
-              <p className="mt-5 max-w-2xl text-sm leading-7 text-neutral-600">
-                {expert.bio}
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {expert.areas.slice(0, 8).map((area) => (
-                  <span
-                    key={area}
-                    className="rounded-full bg-[#f7f2eb] px-3 py-1 text-xs font-black text-neutral-700 ring-1 ring-black/5"
-                  >
-                    {area}
-                  </span>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
 
-          <aside className="rounded-[2rem] bg-[#f7f2eb] p-6 ring-1 ring-black/5">
+          <aside className="self-start rounded-[2rem] bg-[#f7f2eb] p-5 ring-1 ring-black/5 md:p-6">
             <p className="text-sm font-bold text-neutral-500">Seans ücreti</p>
-            <p className="mt-2 text-3xl font-black text-black">{expert.priceText}</p>
+            <p className="mt-2 text-4xl font-black text-black">{expert.priceText}</p>
             <p className="mt-1 text-sm text-neutral-500">
               {expert.sessionDurationMinutes} dk online görüşme
             </p>
@@ -383,6 +400,20 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               <p className="mt-1 text-sm leading-6 text-neutral-600">
                 {expert.availabilityText}
               </p>
+            </div>
+
+            <div className="mt-5 grid gap-2">
+              {TRUST_BADGES.map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-neutral-700 ring-1 ring-black/5"
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs text-white">
+                    ✓
+                  </span>
+                  <span>{item}</span>
+                </div>
+              ))}
             </div>
 
             <div className="mt-6 space-y-3">
@@ -408,10 +439,12 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 pb-12 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 pb-12 lg:grid-cols-[1fr_390px]">
+        <div className="space-y-6">
           <InfoCard title="Çalışma Yaklaşımı">
-            <p className="text-sm leading-7 text-neutral-600">{expert.approach}</p>
+            <p className="text-sm leading-7 text-neutral-600 md:text-base md:leading-8">
+              {expert.approach}
+            </p>
           </InfoCard>
 
           <InfoCard title="Çalıştığı Konular">
@@ -419,11 +452,20 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               {expert.areas.map((area) => (
                 <div
                   key={area}
-                  className="rounded-2xl border border-black/5 bg-[#f7f2eb] px-4 py-3 text-sm font-black text-neutral-700"
+                  className="rounded-2xl border border-black/5 bg-[#f7f2eb] px-4 py-4 text-sm font-black text-neutral-700"
                 >
                   {area}
                 </div>
               ))}
+            </div>
+          </InfoCard>
+
+          <InfoCard title="Neden bu uzman?">
+            <div className="grid gap-3 md:grid-cols-2">
+              <ReasonCard title="İhtiyaç odaklı başlangıç" text="Ön eşleşme formundaki bilgilerle görüşme sürecinin daha doğru başlaması hedeflenir." />
+              <ReasonCard title="Net süreç akışı" text="Eşleşme, randevu, ödeme ve online görüşme adımları Mindora içinde takip edilir." />
+              <ReasonCard title="Güvenli yönlendirme" text="Profil bilgileri, çalışma alanları ve uygunluk bilgileri daha şeffaf gösterilir." />
+              <ReasonCard title="Online destek kolaylığı" text="Uygun gün ve saatler netleştiğinde görüşme süreci online olarak ilerleyebilir." />
             </div>
           </InfoCard>
         </div>
@@ -439,13 +481,13 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           </InfoCard>
 
           <InfoCard title="Mindora Akışı">
-            <List
-              items={[
-                'Ön eşleşme formunu doldur',
-                'İhtiyacına uygun süreç netleşsin',
-                'Randevu, ödeme ve görüşme adımlarını güvenli şekilde tamamla',
-              ]}
-            />
+            <List items={PROCESS_STEPS} />
+          </InfoCard>
+
+          <InfoCard title="Ön eşleşme notu">
+            <p className="text-sm leading-7 text-neutral-600">
+              Bu profil, ilk kararını kolaylaştırmak için hazırlanır. Nihai uzman uygunluğu, destek ihtiyacın ve müsaitlik durumun ön eşleşme sonrasında netleşir.
+            </p>
           </InfoCard>
         </div>
       </section>
@@ -457,7 +499,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               <p className="text-sm font-black uppercase tracking-[0.25em] text-neutral-400">
                 Ücretsiz ön eşleşme
               </p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight">
+              <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
                 Bu uzman senin için uygun mu birlikte değerlendirelim.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-300">
@@ -478,6 +520,28 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
   )
 }
 
+function Badge({ children, tone }: { children: React.ReactNode; tone: 'success' | 'dark' }) {
+  const className =
+    tone === 'success'
+      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+      : 'bg-black text-white ring-black'
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>
+      {children}
+    </span>
+  )
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-[#f7f2eb] px-4 py-3 ring-1 ring-black/5">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-neutral-500">{label}</p>
+      <p className="mt-1 line-clamp-2 text-sm font-black text-black">{value}</p>
+    </div>
+  )
+}
+
 function InfoCard({
   title,
   children,
@@ -487,7 +551,7 @@ function InfoCard({
 }) {
   return (
     <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-black tracking-tight text-black">{title}</h2>
+      <h2 className="text-xl font-black tracking-tight text-black">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   )
@@ -502,12 +566,23 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   )
 }
 
+function ReasonCard({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-2xl bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+      <h3 className="text-sm font-black text-black">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-neutral-600">{text}</p>
+    </div>
+  )
+}
+
 function List({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3">
       {items.map((item) => (
         <li key={item} className="flex gap-3 text-sm leading-6 text-neutral-600">
-          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-black" />
+          <span className="mt-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black text-[10px] font-black text-white">
+            ✓
+          </span>
           <span>{item}</span>
         </li>
       ))}
