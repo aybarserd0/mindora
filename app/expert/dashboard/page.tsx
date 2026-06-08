@@ -4,9 +4,6 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
-type PayoutStatus = 'unpaid' | 'scheduled' | 'paid' | 'blocked' | null
-
 type BookingRow = {
   id: string
   expert_id: string | null
@@ -32,9 +29,8 @@ type PaymentRow = {
   amount: number | null
   commission_amount: number | null
   expert_amount: number | null
-  status: PaymentStatus | string | null
-  expert_payout_status: PayoutStatus | string
-  expert_payout_paid_at: string | null
+  status: string | null
+  expert_payout_status: string | null
   created_at: string | null
 }
 
@@ -45,7 +41,6 @@ type ClientRow = {
 }
 
 type DashboardData = {
-  expertId: string | null
   upcomingBookings: BookingRow[]
   activeConversations: ConversationRow[]
   payments: PaymentRow[]
@@ -123,17 +118,6 @@ function sumNumbers<T>(items: T[], getter: (item: T) => number | null | undefine
   }, 0)
 }
 
-function getClientName(
-  clientId: string | null | undefined,
-  clientsById: Map<string, ClientRow>,
-  fallback = 'Danışan'
-) {
-  if (!clientId) return fallback
-
-  const name = clientsById.get(clientId)?.name?.trim()
-  return name || fallback
-}
-
 function normalizeStatusLabel(status: string | null | undefined) {
   switch ((status || '').toLowerCase()) {
     case 'scheduled':
@@ -146,23 +130,14 @@ function normalizeStatusLabel(status: string | null | undefined) {
       return 'Tamamlandı'
     case 'cancelled':
       return 'İptal'
-    case 'matched':
-      return 'Eşleşti'
-    case 'open':
-      return 'Açık'
-    case 'closed':
-      return 'Kapandı'
     default:
       return status || 'Planlandı'
   }
 }
 
-function getConversationForBooking(
-  booking: BookingRow,
-  conversationsById: Map<string, ConversationRow>
-) {
-  if (!booking.conversation_id) return null
-  return conversationsById.get(booking.conversation_id) || null
+function getClientName(clientId: string | null | undefined, clientsById: Map<string, ClientRow>) {
+  if (!clientId) return 'Danışan'
+  return clientsById.get(clientId)?.name?.trim() || 'Danışan'
 }
 
 async function fetchClientsByIds(clientIds: string[]) {
@@ -177,108 +152,87 @@ async function fetchClientsByIds(clientIds: string[]) {
       .select('id, name, email')
       .in('id', uniqueIds)
 
-    if (error) {
-      console.error('EXPERT_DASHBOARD_CLIENTS_QUERY_ERROR', error)
-      return new Map<string, ClientRow>()
-    }
-
+    if (error) return new Map<string, ClientRow>()
     return new Map((data || []).map((client) => [client.id, client as ClientRow]))
-  } catch (error) {
-    console.error('EXPERT_DASHBOARD_CLIENTS_RUNTIME_ERROR', error)
+  } catch {
     return new Map<string, ClientRow>()
   }
 }
 
-async function safeQuery<T>(query: PromiseLike<{ data: T[] | null; error: unknown }>) {
-  try {
-    const result = await query
-
-    if (result.error) {
-      console.error('EXPERT_DASHBOARD_QUERY_ERROR', result.error)
-      return [] as T[]
-    }
-
-    return (result.data || []) as T[]
-  } catch (error) {
-    console.error('EXPERT_DASHBOARD_QUERY_RUNTIME_ERROR', error)
-    return [] as T[]
-  }
-}
-
 async function getExpertDashboardData(): Promise<DashboardData> {
-  const expertId = process.env.MINDORA_DEV_EXPERT_ID || null
+  const emptyData: DashboardData = {
+    upcomingBookings: [],
+    activeConversations: [],
+    payments: [],
+    clientsById: new Map<string, ClientRow>(),
+  }
 
   try {
     const supabase = getSupabaseAdmin()
     const nowIso = new Date().toISOString()
+    const expertId = process.env.MINDORA_DEV_EXPERT_ID || null
 
-    let bookingsQuery = supabase
-      .from('session_bookings' as never)
+    let bookingsQuery = (supabase as any)
+      .from('session_bookings')
       .select('id, expert_id, conversation_id, scheduled_start_at, scheduled_end_at, status')
-      .in('status', ['scheduled', 'confirmed', 'active'] as never)
-      .gte('scheduled_start_at', nowIso as never)
+      .in('status', ['scheduled', 'confirmed', 'active'])
+      .gte('scheduled_start_at', nowIso)
       .order('scheduled_start_at', { ascending: true })
-      .limit(5)
+      .limit(4)
 
     let conversationsQuery = supabase
       .from('conversations')
       .select('id, client_application_id, expert_id, status, payment_status, updated_at')
       .in('status', ['active', 'matched', 'open'])
-      .limit(100)
+      .order('updated_at', { ascending: false })
+      .limit(20)
 
     let paymentsQuery = supabase
       .from('payments')
       .select(
-        'id, expert_id, client_id, amount, commission_amount, expert_amount, status, expert_payout_status, expert_payout_paid_at, created_at'
+        'id, expert_id, client_id, amount, commission_amount, expert_amount, status, expert_payout_status, created_at'
       )
       .order('created_at', { ascending: false })
       .limit(100)
 
     if (expertId) {
-      bookingsQuery = bookingsQuery.eq('expert_id', expertId as never)
+      bookingsQuery = bookingsQuery.eq('expert_id', expertId)
       conversationsQuery = conversationsQuery.eq('expert_id', expertId)
       paymentsQuery = paymentsQuery.eq('expert_id', expertId)
     }
 
-    const [upcomingBookings, activeConversations, payments] = await Promise.all([
-      safeQuery<BookingRow>(bookingsQuery as never),
-      safeQuery<ConversationRow>(conversationsQuery),
-      safeQuery<PaymentRow>(paymentsQuery),
+    const [bookingsResult, conversationsResult, paymentsResult] = await Promise.all([
+      bookingsQuery,
+      conversationsQuery,
+      paymentsQuery,
     ])
 
-    const clientIds = [
-      ...activeConversations.map((conversation) => conversation.client_application_id),
-      ...payments.map((payment) => payment.client_id),
-    ].filter((id): id is string => Boolean(id))
+    if (bookingsResult.error || conversationsResult.error || paymentsResult.error) {
+      return emptyData
+    }
+
+    const upcomingBookings = (bookingsResult.data || []) as BookingRow[]
+    const activeConversations = (conversationsResult.data || []) as ConversationRow[]
+    const payments = (paymentsResult.data || []) as PaymentRow[]
+    const clientIds = activeConversations
+      .map((conversation) => conversation.client_application_id)
+      .filter((id): id is string => Boolean(id))
 
     const clientsById = await fetchClientsByIds(clientIds)
 
     return {
-      expertId,
       upcomingBookings,
       activeConversations,
       payments,
       clientsById,
     }
-  } catch (error) {
-    console.error('EXPERT_DASHBOARD_RUNTIME_ERROR', error)
-
-    return {
-      expertId,
-      upcomingBookings: [],
-      activeConversations: [],
-      payments: [],
-      clientsById: new Map<string, ClientRow>(),
-    }
+  } catch {
+    return emptyData
   }
 }
 
 export default async function ExpertDashboardPage() {
   const data = await getExpertDashboardData()
-
-  const conversationsById = new Map(
-    data.activeConversations.map((conversation) => [conversation.id, conversation])
-  )
 
   const paidPayments = data.payments.filter((payment) => payment.status === 'paid')
   const thisMonthPaidPayments = paidPayments.filter((payment) =>
@@ -288,7 +242,6 @@ export default async function ExpertDashboardPage() {
     (payment) => payment.expert_payout_status !== 'paid'
   )
 
-  const totalEarnings = sumNumbers(paidPayments, (payment) => payment.expert_amount)
   const thisMonthEarnings = sumNumbers(
     thisMonthPaidPayments,
     (payment) => payment.expert_amount
@@ -325,202 +278,160 @@ export default async function ExpertDashboardPage() {
   ]
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6 sm:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.24em] text-indigo-600">
-                  Expert Workspace
-                </p>
-                <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                  Hoş geldiniz
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                  Yaklaşan seanslarınızı, danışanlarınızı, müsaitlik durumunuzu ve
-                  kazanç özetinizi tek ekrandan takip edin.
-                </p>
-              </div>
+    <div className="space-y-5">
+      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              Günlük özet
+            </p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+              Bugünkü iş akışınız hazır
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              Yaklaşan seansları, aktif danışanları ve kazanç durumunu tek ekrandan hızlıca kontrol edin.
+            </p>
+          </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/expert/dashboard/sessions"
-                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50"
-                >
-                  Seansları Gör
-                </Link>
-                <Link
-                  href="/expert/dashboard/availability"
-                  className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  Müsaitlik Yönet
-                </Link>
-              </div>
-            </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link
+              href="/expert/dashboard/sessions"
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+            >
+              Seansları Aç
+            </Link>
+            <Link
+              href="/expert/dashboard/availability"
+              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+            >
+              Müsaitlik Yönet
+            </Link>
           </div>
         </div>
+      </section>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((item) => (
-            <DashboardCard
-              key={item.title}
-              title={item.title}
-              value={item.value}
-              description={item.description}
-            />
-          ))}
-        </div>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((item) => (
+          <DashboardCard
+            key={item.title}
+            title={item.title}
+            value={item.value}
+            description={item.description}
+          />
+        ))}
+      </section>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-950">
-                  Yaklaşan Seanslar
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Bugün ve önümüzdeki günlerdeki planlı görüşmeler.
-                </p>
-              </div>
-
-              <Link
-                href="/expert/dashboard/sessions"
-                className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
-              >
-                Tümünü gör
-              </Link>
-            </div>
-
-            {data.upcomingBookings.length > 0 ? (
-              <div className="space-y-3">
-                {data.upcomingBookings.map((booking) => {
-                  const conversation = getConversationForBooking(booking, conversationsById)
-                  const clientName = getClientName(
-                    conversation?.client_application_id,
-                    data.clientsById
-                  )
-
-                  return (
-                    <div
-                      key={booking.id}
-                      className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-slate-950">
-                          {clientName}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {formatDateTime(booking.scheduled_start_at)}
-                        </p>
-                      </div>
-
-                      <span className="inline-flex w-fit rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
-                        {normalizeStatusLabel(booking.status)}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <EmptyState
-                title="Henüz yaklaşan seans yok"
-                description="Yeni bir seans planlandığında burada tarih, saat ve danışan bilgisiyle görünecek."
-              />
-            )}
-          </section>
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-950">Kazanç Özeti</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Aylık gelir ve ödeme durumunuz.
-            </p>
-
-            <div className="mt-6 space-y-4">
-              <MoneyRow label="Toplam Kazanç" value={formatMoney(totalEarnings)} />
-              <MoneyRow label="Bu Ay" value={formatMoney(thisMonthEarnings)} />
-              <MoneyRow label="Bekleyen" value={formatMoney(pendingPayoutAmount)} />
-            </div>
-          </section>
-        </div>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-950">Danışanlar</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Aktif danışanlarınız ve görüşme geçmişiniz.
-                </p>
-              </div>
-
-              <Link
-                href="/expert/dashboard/clients"
-                className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
-              >
-                Tümünü gör
-              </Link>
-            </div>
-
-            {data.activeConversations.length > 0 ? (
-              <div className="mt-5 space-y-3">
-                {data.activeConversations.slice(0, 4).map((conversation) => (
-                  <div
-                    key={conversation.id}
-                    className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-slate-950">
-                        {getClientName(conversation.client_application_id, data.clientsById)}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Durum: {normalizeStatusLabel(conversation.status)}
-                      </p>
-                    </div>
-
-                    <Link
-                      href={`/expert/chat/${conversation.id}`}
-                      className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
-                    >
-                      Chat
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Henüz aktif danışan yok"
-                description="Eşleşme tamamlandığında danışanlarınız burada listelenecek."
-              />
-            )}
-          </section>
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-950">Hızlı İşlemler</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              En sık kullanılan uzman paneli aksiyonları.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              {quickActions.map((action) => (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className="block rounded-xl border border-slate-200 p-4 transition hover:border-indigo-200 hover:bg-indigo-50/50"
+      <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <Panel
+          title="Yaklaşan Seanslar"
+          description="Bugün ve önümüzdeki günlerdeki planlı görüşmeler."
+          actionHref="/expert/dashboard/sessions"
+          actionLabel="Tümünü gör"
+        >
+          {data.upcomingBookings.length > 0 ? (
+            <div className="space-y-3">
+              {data.upcomingBookings.map((booking) => (
+                <div
+                  key={booking.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <p className="text-sm font-semibold text-slate-950">
-                    {action.title}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {action.description}
-                  </p>
-                </Link>
+                  <div>
+                    <p className="text-sm font-black text-slate-950">Danışan</p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {formatDateTime(booking.scheduled_start_at)}
+                    </p>
+                  </div>
+                  <span className="w-fit rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
+                    {normalizeStatusLabel(booking.status)}
+                  </span>
+                </div>
               ))}
             </div>
-          </section>
-        </div>
+          ) : (
+            <EmptyState
+              title="Henüz yaklaşan seans yok"
+              description="Yeni bir seans planlandığında burada tarih, saat ve danışan bilgisiyle görünecek."
+            />
+          )}
+        </Panel>
+
+        <Panel title="Hızlı İşlemler" description="En sık kullanılan uzman paneli aksiyonları.">
+          <div className="grid gap-3">
+            {quickActions.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="group rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-indigo-200 hover:bg-indigo-50"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-black text-slate-950 group-hover:text-indigo-700">
+                      {action.title}
+                    </p>
+                    <p className="mt-1 text-sm leading-5 text-slate-500">
+                      {action.description}
+                    </p>
+                  </div>
+                  <span className="text-lg font-black text-slate-300 group-hover:text-indigo-500">
+                    →
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Panel>
       </section>
-    </main>
+
+      <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+        <Panel
+          title="Danışanlar"
+          description="Aktif danışanlarınız ve görüşme geçmişiniz."
+          actionHref="/expert/dashboard/clients"
+          actionLabel="Tümünü gör"
+        >
+          {data.activeConversations.length > 0 ? (
+            <div className="space-y-3">
+              {data.activeConversations.slice(0, 4).map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-slate-950">
+                      {getClientName(conversation.client_application_id, data.clientsById)}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Durum: {normalizeStatusLabel(conversation.status)}
+                    </p>
+                  </div>
+
+                  <Link
+                    href={`/expert/chat/${conversation.id}`}
+                    className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
+                  >
+                    Chat
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="Henüz aktif danışan yok"
+              description="Eşleşme tamamlandığında danışanlarınız burada listelenecek."
+            />
+          )}
+        </Panel>
+
+        <Panel title="Bugünkü öncelikler" description="Seans öncesi kısa kontrol listesi.">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ChecklistItem title="Kamera ve mikrofon kontrolü" />
+            <ChecklistItem title="Danışan notlarını gözden geçir" />
+            <ChecklistItem title="Seans sonrası kısa not bırak" />
+            <ChecklistItem title="Yeni randevu gerekirse planla" />
+          </div>
+        </Panel>
+      </section>
+    </div>
   )
 }
 
@@ -534,26 +445,52 @@ function DashboardCard({
   description: string
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-        {value}
-      </p>
+    <article className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
 }
 
-function EmptyState({
+function Panel({
   title,
   description,
+  actionHref,
+  actionLabel,
+  children,
 }: {
   title: string
   description: string
+  actionHref?: string
+  actionLabel?: string
+  children: React.ReactNode
 }) {
   return (
-    <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <p className="text-sm font-semibold text-slate-800">{title}</p>
+    <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-black text-slate-950">{title}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+        </div>
+        {actionHref && actionLabel ? (
+          <Link
+            href={actionHref}
+            className="shrink-0 text-sm font-black text-indigo-600 transition hover:text-indigo-700"
+          >
+            {actionLabel}
+          </Link>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function EmptyState({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+      <p className="text-sm font-black text-slate-800">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
         {description}
       </p>
@@ -561,11 +498,13 @@ function EmptyState({
   )
 }
 
-function MoneyRow({ label, value }: { label: string; value: string }) {
+function ChecklistItem({ title }: { title: string }) {
   return (
-    <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-      <span className="text-sm text-slate-600">{label}</span>
-      <span className="text-sm font-semibold text-slate-950">{value}</span>
+    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
+        ✓
+      </span>
+      <span className="text-sm font-semibold text-slate-700">{title}</span>
     </div>
   )
 }
