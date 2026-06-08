@@ -1,280 +1,117 @@
-import Header from '@/components/Header'
-import { getSupabaseAdmin } from '@/lib/supabase/admin'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
-type PageProps = {
-  params: Promise<{ slug: string }>
-}
-
-type ExpertRow = {
-  id?: string | null
-  slug?: string | null
-  name?: string | null
-  title?: string | null
-  city?: string | null
-  status?: string | null
-  is_active?: boolean | null
-  bio?: string | null
-  public_bio?: string | null
-  approach?: string | null
-  specialties?: unknown
-  focus_areas?: unknown
-  education?: unknown
-  certificates?: unknown
-  experience_years?: number | string | null
-  session_price?: number | string | null
-  session_duration_minutes?: number | string | null
-  profile_image_url?: string | null
-  photo_url?: string | null
-  availability?: string | null
-  online?: string | null
-}
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
 type PublicExpertProfile = {
-  id: string
-  slug: string
-  name: string
-  title: string
-  city: string
-  imageInitials: string
-  profileImageUrl: string | null
-  specialties: string[]
-  focusAreas: string[]
-  education: string[]
-  certificates: string[]
-  experienceYears: number
-  sessionPrice: number
-  sessionDurationMinutes: number
-  availabilityText: string
-  bio: string
-  approach: string
-}
+  slug: string;
+  name: string;
+  title: string;
+  imageInitials: string;
+  specialties: string[];
+  focusAreas: string[];
+  education: string[];
+  certificates: string[];
+  experienceYears: number;
+  sessionPrice: number;
+  sessionDuration: string;
+  rating: number;
+  reviewCount: number;
+  nextAvailableSlot: string;
+  isAvailableThisWeek: boolean;
+  bio: string;
+  approach: string;
+};
 
-function toText(value: unknown, fallback = '') {
-  if (value === null || value === undefined) return fallback
-  const text = String(value).trim()
-  return text || fallback
-}
-
-function toNumber(value: unknown, fallback = 0) {
-  const numberValue = Number(value)
-  return Number.isFinite(numberValue) ? numberValue : fallback
-}
-
-function normalizeStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.map((item) => toText(item)).filter(Boolean)
-  }
-
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (!trimmed) return []
-
-    try {
-      const parsed = JSON.parse(trimmed)
-      if (Array.isArray(parsed)) {
-        return parsed.map((item) => toText(item)).filter(Boolean)
-      }
-    } catch {
-      // JSON değilse virgüllü metin olarak değerlendir.
-    }
-
-    return trimmed
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean)
-  }
-
-  return []
-}
-
-function getInitials(name: string) {
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toLocaleUpperCase('tr-TR'))
-    .join('')
-
-  return initials || 'M'
-}
-
-function isSafeSlug(value: string) {
-  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(value)
-}
-
-function isValidImageUrl(value: string | null) {
-  if (!value) return false
-
-  try {
-    const url = new URL(value)
-    return url.protocol === 'https:' || url.protocol === 'http:'
-  } catch {
-    return false
-  }
-}
+const expert: PublicExpertProfile = {
+  slug: "demo-uzman",
+  name: "Uzm. Psk. Elif Demir",
+  title: "Klinik Psikolog",
+  imageInitials: "ED",
+  specialties: ["Kaygı", "Stres Yönetimi", "İlişkiler", "Özgüven"],
+  focusAreas: [
+    "Kaygı ve panik belirtileri",
+    "İlişki problemleri",
+    "Özgüven çalışmaları",
+    "Yoğun stres ve tükenmişlik",
+    "Duygu düzenleme",
+    "Yaşam geçişleri",
+  ],
+  education: [
+    "Psikoloji Lisans",
+    "Klinik Psikoloji Yüksek Lisans",
+  ],
+  certificates: [
+    "Bilişsel Davranışçı Terapi Eğitimi",
+    "Kısa Süreli Çözüm Odaklı Terapi Eğitimi",
+    "Online Terapi Etik ve Güvenlik Eğitimi",
+  ],
+  experienceYears: 6,
+  sessionPrice: 1500,
+  sessionDuration: "50 dk",
+  rating: 4.9,
+  reviewCount: 38,
+  nextAvailableSlot: "Salı 18:00",
+  isAvailableThisWeek: true,
+  bio: "Danışanların günlük yaşamda zorlandıkları kaygı, stres, ilişki ve özgüven konularında güvenli, yapılandırılmış ve destekleyici bir terapi süreci sunar.",
+  approach:
+    "Görüşmelerde danışanın ihtiyacına göre hedef odaklı ilerlenir. İlk seansta ihtiyaçlar netleştirilir, ardından kişiye özel çalışma planı oluşturulur.",
+};
 
 function formatMoney(value: number) {
-  if (!Number.isFinite(value) || value <= 0) return 'Eşleşme sonrası netleşir'
-
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(value);
 }
 
-function normalizeExpert(row: ExpertRow): PublicExpertProfile {
-  const name = toText(row.name, 'Mindora Uzmanı')
-  const title = toText(row.title, 'Uzman Psikolog')
-  const profileImageUrl = toText(row.profile_image_url || row.photo_url) || null
-
-  return {
-    id: toText(row.id),
-    slug: toText(row.slug),
-    name,
-    title,
-    city: toText(row.city, 'Online'),
-    imageInitials: getInitials(name),
-    profileImageUrl: isValidImageUrl(profileImageUrl) ? profileImageUrl : null,
-    specialties: normalizeStringArray(row.specialties),
-    focusAreas: normalizeStringArray(row.focus_areas),
-    education: normalizeStringArray(row.education),
-    certificates: normalizeStringArray(row.certificates),
-    experienceYears: toNumber(row.experience_years, 0),
-    sessionPrice: toNumber(row.session_price, 0),
-    sessionDurationMinutes: toNumber(row.session_duration_minutes, 50),
-    availabilityText: toText(row.availability, 'Uygun saatler eşleşme sırasında netleşir'),
-    bio: toText(
-      row.public_bio || row.bio,
-      'Uzmanın çalışma alanları ve yaklaşımı Mindora ekibi tarafından doğrulandıktan sonra burada görüntülenir.'
-    ),
-    approach: toText(
-      row.approach,
-      'İlk görüşmede ihtiyaçlar netleştirilir ve kişiye uygun destek süreci planlanır.'
-    ),
+export default function PublicExpertProfilePage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  if (!params.slug) {
+    notFound();
   }
-}
-
-async function getExpertBySlug(slug: string) {
-  const supabase = getSupabaseAdmin()
-
-  const { data, error } = await (supabase as any)
-    .from('experts')
-    .select('*')
-    .eq('slug', slug)
-    .limit(1)
-    .maybeSingle()
-
-  if (error) {
-    console.error('PUBLIC_EXPERT_PROFILE_QUERY_ERROR', error)
-    return null
-  }
-
-  if (!data) return null
-
-  const status = toText(data.status).toLowerCase()
-  const isActive = data.is_active !== false
-
-  if (!isActive || status === 'rejected' || status === 'passive') {
-    return null
-  }
-
-  return normalizeExpert(data as ExpertRow)
-}
-
-export async function generateMetadata({ params }: PageProps) {
-  const { slug } = await params
-
-  if (!slug || !isSafeSlug(slug)) {
-    return {
-      title: 'Uzman Profili | Mindora',
-    }
-  }
-
-  const expert = await getExpertBySlug(slug)
-
-  if (!expert) {
-    return {
-      title: 'Uzman Profili Bulunamadı | Mindora',
-    }
-  }
-
-  return {
-    title: `${expert.name} | Mindora`,
-    description: `${expert.name} - ${expert.title}. Online psikolojik destek sürecine Mindora ile güvenli şekilde başlayın.`,
-  }
-}
-
-export default async function PublicExpertProfilePage({ params }: PageProps) {
-  const { slug } = await params
-
-  if (!slug || !isSafeSlug(slug)) {
-    notFound()
-  }
-
-  const expert = await getExpertBySlug(slug)
-
-  if (!expert) {
-    notFound()
-  }
-
-  const matchingHref = `/eslesme?expert=${encodeURIComponent(expert.slug)}`
-  const hasSpecialties = expert.specialties.length > 0
-  const hasFocusAreas = expert.focusAreas.length > 0
-  const hasEducation = expert.education.length > 0
-  const hasCertificates = expert.certificates.length > 0
 
   return (
-    <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
-      <Header />
-
-      <section className="border-b border-black/5 bg-white/70">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 lg:grid-cols-[1fr_380px] lg:items-center lg:py-14">
-          <div className="flex flex-col gap-7 sm:flex-row sm:items-center">
-            <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-[2rem] bg-black text-white shadow-sm ring-1 ring-black/10">
-              {expert.profileImageUrl ? (
-                <img
-                  src={expert.profileImageUrl}
-                  alt={`${expert.name} profil fotoğrafı`}
-                  className="h-full w-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-3xl font-black">
-                  {expert.imageInitials}
-                </div>
-              )}
+    <main className="min-h-screen bg-slate-50 text-slate-950">
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-14">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+            <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-3xl bg-indigo-100 text-3xl font-black text-indigo-700 ring-1 ring-indigo-200">
+              {expert.imageInitials}
             </div>
 
             <div>
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
-                  Onaylı uzman profili
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+                  {expert.isAvailableThisWeek ? "Bu hafta uygun" : "Yakında uygun"}
                 </span>
-                <span className="rounded-full bg-black px-3 py-1 text-xs font-black text-white">
+                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200">
                   Online görüşme
                 </span>
               </div>
 
-              <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
+              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
                 {expert.name}
               </h1>
-
-              <p className="mt-3 text-base font-bold text-neutral-600">
-                {expert.title}
-                {expert.experienceYears > 0 ? ` • ${expert.experienceYears} yıl deneyim` : ''}
+              <p className="mt-2 text-base font-semibold text-slate-600">
+                {expert.title} • {expert.experienceYears} yıl deneyim
               </p>
 
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-600">
+                <span>⭐ {expert.rating.toFixed(1)}</span>
+                <span className="text-slate-300">•</span>
+                <span>{expert.reviewCount} danışan yorumu</span>
+                <span className="text-slate-300">•</span>
+                <span>İlk uygun seans: {expert.nextAvailableSlot}</span>
+              </div>
+
               <div className="mt-5 flex flex-wrap gap-2">
-                {(hasSpecialties ? expert.specialties : ['Online psikolojik destek']).slice(0, 6).map((item) => (
+                {expert.specialties.map((item) => (
                   <span
                     key={item}
-                    className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-700 ring-1 ring-black/10"
+                    className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 ring-1 ring-slate-200"
                   >
                     {item}
                   </span>
@@ -283,102 +120,98 @@ export default async function PublicExpertProfilePage({ params }: PageProps) {
             </div>
           </div>
 
-          <aside className="rounded-[2rem] border border-black/10 bg-white p-6 shadow-sm">
-            <p className="text-sm font-bold text-neutral-500">Seans ücreti</p>
-            <p className="mt-2 text-3xl font-black text-black">
+          <aside className="w-full rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm lg:max-w-sm">
+            <p className="text-sm font-semibold text-slate-500">Seans ücreti</p>
+            <p className="mt-2 text-3xl font-black text-slate-950">
               {formatMoney(expert.sessionPrice)}
             </p>
-            <p className="mt-1 text-sm text-neutral-500">
-              {expert.sessionDurationMinutes} dk online görüşme
+            <p className="mt-1 text-sm text-slate-500">
+              {expert.sessionDuration} online görüşme
             </p>
 
-            <div className="mt-6 space-y-3">
+            <div className="mt-5 space-y-3">
               <Link
-                href={matchingHref}
-                className="flex w-full items-center justify-center rounded-2xl bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-neutral-800"
+                href="/eslesme"
+                className="flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700"
               >
-                Bu uzmanla eşleşme iste
+                Randevu Talep Et
               </Link>
               <Link
                 href="/uzmanlar"
-                className="flex w-full items-center justify-center rounded-2xl border border-black/10 bg-[#f7f2eb] px-5 py-3 text-sm font-black text-black transition hover:bg-white"
+                className="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100"
               >
-                Diğer uzmanları gör
+                Diğer Uzmanları Gör
               </Link>
             </div>
 
-            <p className="mt-5 text-xs leading-5 text-neutral-500">
-              Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski varsa 112 ile iletişime geç.
+            <p className="mt-4 text-xs leading-5 text-slate-500">
+              Mindora acil kriz hattı değildir. Kendinize veya bir başkasına zarar verme riski varsa 112 ile iletişime geçin.
             </p>
           </aside>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-3">
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-3 lg:px-8">
         <div className="space-y-6 lg:col-span-2">
           <InfoCard title="Hakkında">
-            <p className="text-sm leading-7 text-neutral-600">{expert.bio}</p>
+            <p className="text-sm leading-7 text-slate-600">{expert.bio}</p>
           </InfoCard>
 
           <InfoCard title="Çalışma Yaklaşımı">
-            <p className="text-sm leading-7 text-neutral-600">{expert.approach}</p>
+            <p className="text-sm leading-7 text-slate-600">{expert.approach}</p>
           </InfoCard>
 
           <InfoCard title="Çalıştığı Konular">
-            {hasFocusAreas ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {expert.focusAreas.map((area) => (
-                  <div
-                    key={area}
-                    className="rounded-2xl border border-black/5 bg-[#f7f2eb] px-4 py-3 text-sm font-bold text-neutral-700"
-                  >
-                    {area}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm leading-7 text-neutral-600">
-                Destek alanı ön eşleşme formundaki ihtiyacına göre netleştirilir.
-              </p>
-            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {expert.focusAreas.map((area) => (
+                <div
+                  key={area}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"
+                >
+                  {area}
+                </div>
+              ))}
+            </div>
           </InfoCard>
         </div>
 
         <div className="space-y-6">
-          <InfoCard title="Müsaitlik Özeti">
-            <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
-              <p className="text-sm font-black text-emerald-800">Görüşme planlaması</p>
-              <p className="mt-1 text-sm leading-6 text-emerald-700">
-                {expert.availabilityText}
-              </p>
-            </div>
-          </InfoCard>
-
           <InfoCard title="Eğitim">
-            <List items={expert.education} emptyText="Eğitim bilgisi henüz eklenmedi." />
+            <List items={expert.education} />
           </InfoCard>
 
           <InfoCard title="Sertifikalar">
-            <List items={expert.certificates} emptyText="Sertifika bilgisi henüz eklenmedi." />
+            <List items={expert.certificates} />
+          </InfoCard>
+
+          <InfoCard title="Müsaitlik Özeti">
+            <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+              <p className="text-sm font-bold text-emerald-800">
+                {expert.isAvailableThisWeek ? "Bu hafta seans alınabilir" : "Şu an sınırlı müsaitlik"}
+              </p>
+              <p className="mt-1 text-sm text-emerald-700">
+                İlk uygun saat: {expert.nextAvailableSlot}
+              </p>
+            </div>
           </InfoCard>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 pb-14">
-        <div className="rounded-[2rem] bg-black p-8 text-white shadow-sm md:p-12">
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="rounded-3xl bg-indigo-600 p-8 text-white shadow-sm sm:p-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-3xl font-black tracking-tight">
-                Bu uzmanla görüşmek ister misin?
+              <h2 className="text-2xl font-black tracking-tight">
+                Bu uzmanla görüşmek ister misiniz?
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-300">
-                Kısa ön eşleşme formunu doldur. Mindora ekibi ihtiyacına ve uygun zamanına göre süreci güvenli şekilde başlatsın.
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-indigo-100">
+                Kısa eşleşme formunu doldurun. Mindora ekibi ihtiyacınıza göre sizi uygun uzman ve seans akışıyla yönlendirsin.
               </p>
             </div>
 
             <Link
-              href={matchingHref}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-black transition hover:bg-neutral-200"
+              href="/eslesme"
+              className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-indigo-700 transition hover:bg-indigo-50"
             >
               Eşleşme Formuna Git
             </Link>
@@ -386,37 +219,33 @@ export default async function PublicExpertProfilePage({ params }: PageProps) {
         </div>
       </section>
     </main>
-  )
+  );
 }
 
 function InfoCard({
   title,
   children,
 }: {
-  title: string
-  children: React.ReactNode
+  title: string;
+  children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-black tracking-tight text-black">{title}</h2>
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
-  )
+  );
 }
 
-function List({ items, emptyText }: { items: string[]; emptyText: string }) {
-  if (items.length === 0) {
-    return <p className="text-sm leading-7 text-neutral-600">{emptyText}</p>
-  }
-
+function List({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3">
       {items.map((item) => (
-        <li key={item} className="flex gap-3 text-sm leading-6 text-neutral-600">
-          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-black" />
+        <li key={item} className="flex gap-3 text-sm leading-6 text-slate-600">
+          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
           <span>{item}</span>
         </li>
       ))}
     </ul>
-  )
+  );
 }
