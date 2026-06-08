@@ -4,10 +4,10 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 
-type ProfileStatus = 'approved' | 'pending' | 'review' | 'passive'
-type AccountStatus = 'active' | 'passive'
+type ProfilDurumu = 'approved' | 'pending' | 'review' | 'passive'
+type HesapDurumu = 'active' | 'passive'
 
-type ExpertProfile = {
+type UzmanProfili = {
   id: string
   name: string
   title: string
@@ -15,41 +15,46 @@ type ExpertProfile = {
   phone: string | null
   city: string | null
   specialties: string[]
+  focusAreas: string[]
   experienceYears: number | null
   sessionPrice: number | null
-  status: ProfileStatus
-  accountStatus: AccountStatus
+  status: ProfilDurumu
+  accountStatus: HesapDurumu
   approvedAt: string | null
   slug: string | null
   bio: string | null
   publicBio: string | null
+  approach: string | null
   education: string[]
   certificates: string[]
+  profileImageUrl?: string | null
 }
 
-type ProfileStats = {
+type ProfilIstatistikleri = {
   totalClients: number
   completedSessions: number
   averageRating: number | null
   totalEarnings: number
 }
 
-type ProfileApiResponse = {
+type ProfilApiResponse = {
   ok?: boolean
   error?: string
-  profile?: Partial<ExpertProfile> | null
-  expert?: Partial<ExpertProfile> | null
-  stats?: Partial<ProfileStats> | null
+  profile?: Partial<UzmanProfili> | null
+  expert?: Partial<UzmanProfili> | null
+  publicProfile?: Partial<UzmanProfili> | null
+  stats?: Partial<ProfilIstatistikleri> | null
 }
 
-const fallbackProfile: ExpertProfile = {
-  id: 'fallback-expert',
+const VARSAYILAN_PROFIL: UzmanProfili = {
+  id: 'uzman-profili',
   name: 'Uzman Profili',
   title: 'Uzman',
   email: null,
   phone: null,
   city: null,
   specialties: [],
+  focusAreas: [],
   experienceYears: null,
   sessionPrice: null,
   status: 'review',
@@ -58,26 +63,61 @@ const fallbackProfile: ExpertProfile = {
   slug: null,
   bio: null,
   publicBio: null,
+  approach: null,
   education: [],
   certificates: [],
+  profileImageUrl: null,
 }
 
-const fallbackStats: ProfileStats = {
+const VARSAYILAN_ISTATISTIKLER: ProfilIstatistikleri = {
   totalClients: 0,
   completedSessions: 0,
   averageRating: null,
   totalEarnings: 0,
 }
 
-function normalizeStringArray(value: unknown): string[] {
+function temizMetin(value: unknown, fallback = '') {
+  if (value === null || value === undefined) return fallback
+
+  const text = String(value).trim()
+  return text || fallback
+}
+
+function temizNullableMetin(value: unknown) {
+  const text = temizMetin(value)
+  return text || null
+}
+
+function sayi(value: unknown) {
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : 0
+}
+
+function nullableSayi(value: unknown) {
+  if (value === null || value === undefined || value === '') return null
+
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : null
+}
+
+function metinListesi(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value
-      .map((item) => (typeof item === 'string' ? item.trim() : ''))
-      .filter(Boolean)
+    return value.map((item) => temizMetin(item)).filter(Boolean)
   }
 
   if (typeof value === 'string' && value.trim()) {
-    return value
+    const trimmed = value.trim()
+
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => temizMetin(item)).filter(Boolean)
+      }
+    } catch {
+      // Virgülle ayrılmış metin desteği.
+    }
+
+    return trimmed
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean)
@@ -86,69 +126,67 @@ function normalizeStringArray(value: unknown): string[] {
   return []
 }
 
-function normalizeProfile(input: Partial<ExpertProfile> | null | undefined): ExpertProfile {
-  return {
-    ...fallbackProfile,
-    ...input,
-    id: safeText(input?.id, fallbackProfile.id),
-    name: safeText(input?.name, fallbackProfile.name),
-    title: safeText(input?.title, fallbackProfile.title),
-    email: cleanNullableText(input?.email),
-    phone: cleanNullableText(input?.phone),
-    city: cleanNullableText(input?.city),
-    slug: cleanNullableText(input?.slug),
-    bio: cleanNullableText(input?.bio),
-    publicBio: cleanNullableText(input?.publicBio),
-    specialties: normalizeStringArray(input?.specialties),
-    education: normalizeStringArray(input?.education),
-    certificates: normalizeStringArray(input?.certificates),
-    experienceYears: normalizeNullableNumber(input?.experienceYears),
-    sessionPrice: normalizeNullableNumber(input?.sessionPrice),
-    status: normalizeProfileStatus(input?.status),
-    accountStatus: normalizeAccountStatus(input?.accountStatus),
-    approvedAt: cleanNullableText(input?.approvedAt),
-  }
-}
-
-function normalizeStats(input: Partial<ProfileStats> | null | undefined): ProfileStats {
-  return {
-    totalClients: normalizeNumber(input?.totalClients),
-    completedSessions: normalizeNumber(input?.completedSessions),
-    averageRating: normalizeNullableNumber(input?.averageRating),
-    totalEarnings: normalizeNumber(input?.totalEarnings),
-  }
-}
-
-function normalizeProfileStatus(value: unknown): ProfileStatus {
-  if (value === 'approved' || value === 'pending' || value === 'review' || value === 'passive') {
+function profilDurumu(value: unknown): ProfilDurumu {
+  if (
+    value === 'approved' ||
+    value === 'pending' ||
+    value === 'review' ||
+    value === 'passive'
+  ) {
     return value
   }
 
   return 'review'
 }
 
-function normalizeAccountStatus(value: unknown): AccountStatus {
+function hesapDurumu(value: unknown): HesapDurumu {
   return value === 'passive' ? 'passive' : 'active'
 }
 
-function normalizeNumber(value: unknown) {
-  const numberValue = Number(value)
-  return Number.isFinite(numberValue) ? numberValue : 0
+function profiliDuzenle(input: Partial<UzmanProfili> | null | undefined): UzmanProfili {
+  const raw = input || {}
+
+  return {
+    ...VARSAYILAN_PROFIL,
+    ...raw,
+    id: temizMetin(raw.id, VARSAYILAN_PROFIL.id),
+    name: temizMetin(raw.name, VARSAYILAN_PROFIL.name),
+    title: temizMetin(raw.title, VARSAYILAN_PROFIL.title),
+    email: temizNullableMetin(raw.email),
+    phone: temizNullableMetin(raw.phone),
+    city: temizNullableMetin(raw.city),
+    slug: temizNullableMetin(raw.slug),
+    bio: temizNullableMetin(raw.bio),
+    publicBio: temizNullableMetin(raw.publicBio),
+    approach: temizNullableMetin(raw.approach),
+    profileImageUrl: temizNullableMetin(raw.profileImageUrl),
+    specialties: metinListesi(raw.specialties),
+    focusAreas: metinListesi(raw.focusAreas),
+    education: metinListesi(raw.education),
+    certificates: metinListesi(raw.certificates),
+    experienceYears: nullableSayi(raw.experienceYears),
+    sessionPrice: nullableSayi(raw.sessionPrice),
+    status: profilDurumu(raw.status),
+    accountStatus: hesapDurumu(raw.accountStatus),
+    approvedAt: temizNullableMetin(raw.approvedAt),
+  }
 }
 
-function normalizeNullableNumber(value: unknown) {
-  const numberValue = Number(value)
-  return Number.isFinite(numberValue) ? numberValue : null
+function istatistikleriDuzenle(
+  input: Partial<ProfilIstatistikleri> | null | undefined
+): ProfilIstatistikleri {
+  return {
+    totalClients: sayi(input?.totalClients),
+    completedSessions: sayi(input?.completedSessions),
+    averageRating: nullableSayi(input?.averageRating),
+    totalEarnings: sayi(input?.totalEarnings),
+  }
 }
 
-function cleanNullableText(value: unknown) {
-  return typeof value === 'string' && value.trim() ? value.trim() : null
-}
-
-function formatMoney(value: number | null | undefined) {
+function para(value: number | null | undefined) {
   const numberValue = Number(value)
 
-  if (!Number.isFinite(numberValue)) return '-'
+  if (!Number.isFinite(numberValue)) return 'Belirtilmedi'
 
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
@@ -157,12 +195,12 @@ function formatMoney(value: number | null | undefined) {
   }).format(numberValue)
 }
 
-function formatDate(value: string | null | undefined) {
-  if (!value) return '-'
+function tarih(value: string | null | undefined) {
+  if (!value) return 'Belirtilmedi'
 
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) return '-'
+  if (Number.isNaN(date.getTime())) return 'Belirtilmedi'
 
   return new Intl.DateTimeFormat('tr-TR', {
     day: '2-digit',
@@ -171,11 +209,11 @@ function formatDate(value: string | null | undefined) {
   }).format(date)
 }
 
-function safeText(value: string | null | undefined, fallback = '-') {
+function guvenliMetin(value: string | null | undefined, fallback = 'Belirtilmedi') {
   return value && value.trim() ? value.trim() : fallback
 }
 
-function getInitials(name: string) {
+function basHarfler(name: string) {
   const initials = name
     .split(' ')
     .filter(Boolean)
@@ -186,22 +224,22 @@ function getInitials(name: string) {
   return initials || 'M'
 }
 
-function getProfileStatusLabel(status: ProfileStatus) {
+function profilDurumuEtiketi(status: ProfilDurumu) {
   switch (status) {
     case 'approved':
       return 'Onaylı'
     case 'pending':
-      return 'Beklemede'
+      return 'Onay Bekliyor'
     case 'review':
       return 'İncelemede'
     case 'passive':
       return 'Pasif'
     default:
-      return 'Bilinmiyor'
+      return 'İncelemede'
   }
 }
 
-function getProfileStatusClass(status: ProfileStatus) {
+function profilDurumuStili(status: ProfilDurumu) {
   switch (status) {
     case 'approved':
       return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
@@ -216,15 +254,15 @@ function getProfileStatusClass(status: ProfileStatus) {
   }
 }
 
-function getAccountStatusLabel(status: AccountStatus) {
+function hesapDurumuEtiketi(status: HesapDurumu) {
   return status === 'active' ? 'Aktif' : 'Pasif'
 }
 
 export default function ExpertProfilePage() {
-  const [profile, setProfile] = useState<ExpertProfile>(fallbackProfile)
-  const [stats, setStats] = useState<ProfileStats>(fallbackStats)
+  const [profile, setProfile] = useState<UzmanProfili>(VARSAYILAN_PROFIL)
+  const [stats, setStats] = useState<ProfilIstatistikleri>(VARSAYILAN_ISTATISTIKLER)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [dataWarning, setDataWarning] = useState(false)
 
   const publicPreviewHref = useMemo(
     () => (profile.slug ? `/expert/${profile.slug}` : '/uzmanlar'),
@@ -234,23 +272,23 @@ export default function ExpertProfilePage() {
   const statCards = useMemo(
     () => [
       {
-        label: 'Toplam Danışan',
+        label: 'Danışan',
         value: String(stats.totalClients),
-        description: 'Platformdaki danışan sayısı',
+        description: 'Platformdaki aktif ve geçmiş danışanlar',
       },
       {
-        label: 'Tamamlanan Seans',
+        label: 'Tamamlanan Görüşme',
         value: String(stats.completedSessions),
-        description: 'Başarıyla tamamlanan görüşme',
+        description: 'Başarıyla tamamlanan seanslar',
       },
       {
         label: 'Ortalama Puan',
-        value: stats.averageRating === null ? '-' : stats.averageRating.toFixed(1),
-        description: 'Geri bildirimler sonrası',
+        value: stats.averageRating === null ? 'Yeni' : stats.averageRating.toFixed(1),
+        description: 'Danışan geri bildirimleri',
       },
       {
         label: 'Toplam Kazanç',
-        value: formatMoney(stats.totalEarnings),
+        value: para(stats.totalEarnings),
         description: 'Net uzman kazancı',
       },
     ],
@@ -260,22 +298,26 @@ export default function ExpertProfilePage() {
   async function fetchProfile() {
     try {
       setLoading(true)
-      setError('')
+      setDataWarning(false)
 
       const res = await fetch('/api/expert/profile', { cache: 'no-store' })
-      const data = (await res.json()) as ProfileApiResponse
+      const data = (await res.json()) as ProfilApiResponse
 
       if (!res.ok || data.ok === false) {
-        setError(data.error || 'Profil bilgileri alınamadı.')
+        setProfile(VARSAYILAN_PROFIL)
+        setStats(VARSAYILAN_ISTATISTIKLER)
+        setDataWarning(true)
         return
       }
 
       const rawProfile = data.profile || data.expert || null
 
-      setProfile(normalizeProfile(rawProfile))
-      setStats(normalizeStats(data.stats))
+      setProfile(profiliDuzenle(rawProfile))
+      setStats(istatistikleriDuzenle(data.stats))
     } catch {
-      setError('Profil bilgileri alınırken sunucuya bağlanılamadı.')
+      setProfile(VARSAYILAN_PROFIL)
+      setStats(VARSAYILAN_ISTATISTIKLER)
+      setDataWarning(true)
     } finally {
       setLoading(false)
     }
@@ -286,63 +328,77 @@ export default function ExpertProfilePage() {
   }, [])
 
   return (
-    <main className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-indigo-50 text-2xl font-black text-indigo-700 ring-1 ring-indigo-100">
-              {getInitials(profile.name)}
-            </div>
-
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-indigo-600">Uzman Profili</p>
-                <StatusBadge status={profile.status} />
+    <main className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-indigo-600 text-2xl font-black text-white shadow-sm ring-1 ring-indigo-100">
+                {profile.profileImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.profileImageUrl}
+                    alt={profile.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  basHarfler(profile.name)
+                )}
               </div>
 
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-                {safeText(profile.name, 'Uzman')}
-              </h1>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-bold text-indigo-700">Uzman Profili</p>
+                  <StatusBadge status={profile.status} />
+                </div>
 
-              <p className="mt-1 text-sm font-medium text-slate-600">
-                {safeText(profile.title)} • {safeText(profile.city)}
-              </p>
+                <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950">
+                  {guvenliMetin(profile.name, 'Uzman')}
+                </h1>
 
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Bu sayfa uzmanın kendi panelinde gördüğü internal profil alanıdır.
-                E-posta, telefon, kazanç, ödeme ve hesap bilgileri danışana gösterilmez.
-              </p>
+                <p className="mt-1 text-sm font-semibold text-slate-600">
+                  {guvenliMetin(profile.title)} • {guvenliMetin(profile.city)}
+                </p>
+
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                  Profiliniz; danışanların sizi tanıması, güven duyması ve doğru
+                  uzmanla eşleştiğini hissetmesi için en önemli alanlardan biridir.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+              <button
+                type="button"
+                onClick={fetchProfile}
+                disabled={loading}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? 'Yükleniyor...' : 'Bilgileri Yenile'}
+              </button>
+
+              <Link
+                href={publicPreviewHref}
+                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700"
+              >
+                Danışan Görünümünü Aç
+              </Link>
             </div>
           </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-            <Link
-              href="/expert/dashboard"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              Dashboard'a Dön
-            </Link>
-            <Link
-              href={publicPreviewHref}
-              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              Public Görünümü Önizle
-            </Link>
-          </div>
         </div>
-      </section>
 
-      {loading ? (
-        <NoticeCard title="Profil yükleniyor" description="Uzman profil bilgileri getiriliyor." />
-      ) : error ? (
-        <NoticeCard
-          tone="warning"
-          title="Profil bilgileri alınamadı"
-          description={error}
-          actionLabel="Tekrar Dene"
-          onAction={fetchProfile}
-        />
-      ) : null}
+        {dataWarning ? (
+          <div className="border-t border-amber-100 bg-amber-50 px-6 py-4">
+            <p className="text-sm font-bold text-amber-900">
+              Profil bilgileri henüz tamamlanmadı.
+            </p>
+            <p className="mt-1 text-sm leading-6 text-amber-800">
+              Uzman profiliniz admin onayı ve profil bilgileri tamamlandıkça burada
+              güncel şekilde görüntülenecek.
+            </p>
+          </div>
+        ) : null}
+      </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((item) => (
@@ -353,152 +409,107 @@ export default function ExpertProfilePage() {
       <section className="grid gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Panel
-            title="Profil Bilgileri"
-            description="Platform içi uzman hesap bilgileri. Özel alanlar yalnızca uzman ve admin tarafında görünür."
+            title="Temel Bilgiler"
+            description="Profilinizde görünen ana bilgiler ve platform içi iletişim alanları."
           >
             <div className="grid gap-4 sm:grid-cols-2">
-              <InfoRow label="Ad Soyad" value={safeText(profile.name)} />
-              <InfoRow label="Unvan" value={safeText(profile.title)} />
-              <InfoRow label="E-posta" value={safeText(profile.email)} privateField />
-              <InfoRow label="Telefon" value={safeText(profile.phone)} privateField />
-              <InfoRow label="Şehir" value={safeText(profile.city)} />
+              <InfoRow label="Ad Soyad" value={guvenliMetin(profile.name)} />
+              <InfoRow label="Unvan" value={guvenliMetin(profile.title)} />
+              <InfoRow label="Şehir" value={guvenliMetin(profile.city)} />
               <InfoRow
                 label="Deneyim"
-                value={profile.experienceYears === null ? '-' : `${profile.experienceYears} yıl`}
+                value={
+                  profile.experienceYears === null
+                    ? 'Belirtilmedi'
+                    : `${profile.experienceYears} yıl`
+                }
               />
-              <InfoRow label="Seans Ücreti" value={formatMoney(profile.sessionPrice)} />
-              <InfoRow
-                label="Hesap Durumu"
-                value={getAccountStatusLabel(profile.accountStatus)}
-                privateField
-              />
+              <InfoRow label="Seans Ücreti" value={para(profile.sessionPrice)} />
+              <InfoRow label="Hesap Durumu" value={hesapDurumuEtiketi(profile.accountStatus)} />
+              <InfoRow label="E-posta" value={guvenliMetin(profile.email)} />
+              <InfoRow label="Telefon" value={guvenliMetin(profile.phone)} />
             </div>
           </Panel>
 
           <Panel
             title="Uzmanlık Alanları"
-            description="Danışan eşleşmesinde ve public profilde kullanılacak alanlar."
+            description="Danışan eşleşmesi ve profil görünürlüğü için kullanılan alanlar."
           >
             <TagList items={profile.specialties} emptyText="Uzmanlık alanı eklenmemiş." />
           </Panel>
 
           <Panel
             title="Hakkımda"
-            description="Internal açıklama ile danışanın göreceği public açıklama ayrı tutulur."
+            description="Danışanların sizi ve çalışma biçiminizi anlamasına yardımcı olur."
           >
             <div className="grid gap-4 lg:grid-cols-2">
               <TextBlock
-                title="Internal Not"
-                text={safeText(profile.bio, 'Internal not eklenmemiş.')}
-                privateField
+                title="Kısa Tanıtım"
+                text={guvenliMetin(
+                  profile.publicBio,
+                  'Danışanların göreceği kısa tanıtım metni henüz eklenmemiş.'
+                )}
               />
               <TextBlock
-                title="Public Tanıtım"
-                text={safeText(profile.publicBio, 'Public tanıtım metni eklenmemiş.')}
+                title="Çalışma Yaklaşımı"
+                text={guvenliMetin(
+                  profile.approach || profile.bio,
+                  'Çalışma yaklaşımı henüz eklenmemiş.'
+                )}
               />
             </div>
+          </Panel>
+
+          <Panel
+            title="Çalıştığı Konular"
+            description="Profilinizde öne çıkan destek başlıkları."
+          >
+            <TagList
+              items={profile.focusAreas}
+              emptyText="Çalışılan konu başlığı eklenmemiş."
+            />
           </Panel>
         </div>
 
         <aside className="space-y-6">
-          <Panel title="Onay Durumu" description="Admin inceleme ve hesap bilgileri.">
-            <div className="space-y-4">
-              <StatusLine label="Profil Durumu" value={getProfileStatusLabel(profile.status)} />
-              <StatusLine label="Hesap" value={getAccountStatusLabel(profile.accountStatus)} />
-              <StatusLine label="Onay Tarihi" value={formatDate(profile.approvedAt)} />
-              <StatusLine label="Public Slug" value={safeText(profile.slug)} />
+          <Panel title="Profil Durumu" description="Profilinizin platformdaki görünürlük durumu.">
+            <div className="space-y-3">
+              <StatusLine label="Durum" value={profilDurumuEtiketi(profile.status)} />
+              <StatusLine label="Hesap" value={hesapDurumuEtiketi(profile.accountStatus)} />
+              <StatusLine label="Onay Tarihi" value={tarih(profile.approvedAt)} />
+              <StatusLine label="Profil Adresi" value={profile.slug ? `/${profile.slug}` : 'Belirtilmedi'} />
             </div>
           </Panel>
 
-          <Panel title="Eğitim" description="Public profilde gösterilebilir.">
+          <Panel title="Eğitim" description="Danışan güvenini artıran eğitim bilgileri.">
             <List items={profile.education} emptyText="Eğitim bilgisi eklenmemiş." />
           </Panel>
 
-          <Panel title="Sertifikalar" description="Güven artırıcı profil alanı.">
+          <Panel title="Sertifikalar" description="Mesleki gelişim ve uzmanlık belgeleri.">
             <List items={profile.certificates} emptyText="Sertifika eklenmemiş." />
           </Panel>
+
+          <section className="rounded-3xl border border-indigo-100 bg-indigo-50 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-indigo-950">Profil önerisi</h2>
+            <p className="mt-2 text-sm leading-6 text-indigo-800">
+              Daha iyi dönüşüm için tanıtım metninizi sade, güven veren ve danışanın
+              anlayacağı bir dille yazın. Uzmanlık alanlarınızı kısa başlıklarla belirtin.
+            </p>
+          </section>
         </aside>
-      </section>
-
-      <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
-        <p className="text-sm font-bold text-amber-900">Gizlilik Notu</p>
-        <p className="mt-2 text-sm leading-6 text-amber-800">
-          E-posta, telefon, kazanç, payout, komisyon, admin notları, internal profil
-          notları ve hesap statüleri sadece uzman paneli ve admin tarafında görünmelidir.
-          Danışan tarafındaki public profilde yalnızca güven veren mesleki bilgiler gösterilmelidir.
-        </p>
-      </section>
-
-      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-3">
-          <InfoBlock
-            title="Veri Kaynağı"
-            value="/api/expert/profile"
-            description="Bu sayfa uzman profil verisini API üzerinden alır."
-          />
-          <InfoBlock
-            title="Public Profil Kaynağı"
-            value="slug"
-            description="Danışanın göreceği uzman profili slug üzerinden açılır."
-          />
-          <InfoBlock
-            title="Güvenlik Kuralı"
-            value="private fields"
-            description="Özel alanlar public route tarafında asla render edilmemeli."
-          />
-        </div>
       </section>
     </main>
   )
 }
 
-function NoticeCard({
-  title,
-  description,
-  tone = 'default',
-  actionLabel,
-  onAction,
-}: {
-  title: string
-  description: string
-  tone?: 'default' | 'warning'
-  actionLabel?: string
-  onAction?: () => void
-}) {
-  const className =
-    tone === 'warning'
-      ? 'border-amber-200 bg-amber-50 text-amber-900'
-      : 'border-slate-200 bg-white text-slate-700'
-
-  return (
-    <section className={`rounded-2xl border p-5 shadow-sm ${className}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-bold">{title}</p>
-          <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
-        </div>
-        {actionLabel && onAction ? (
-          <button
-            type="button"
-            onClick={onAction}
-            className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 transition hover:bg-slate-50"
-          >
-            {actionLabel}
-          </button>
-        ) : null}
-      </div>
-    </section>
-  )
-}
-
-function StatusBadge({ status }: { status: ProfileStatus }) {
+function StatusBadge({ status }: { status: ProfilDurumu }) {
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${getProfileStatusClass(
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${profilDurumuStili(
         status
       )}`}
     >
-      {getProfileStatusLabel(status)}
+      {profilDurumuEtiketi(status)}
     </span>
   )
 }
@@ -514,9 +525,9 @@ function StatCard({
 }) {
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{value}</p>
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
+      <p className="text-sm font-semibold text-slate-500">{label}</p>
+      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
     </article>
   )
 }
@@ -533,7 +544,7 @@ function Panel({
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+        <h2 className="text-lg font-bold text-slate-950">{title}</h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
       </div>
       {children}
@@ -541,53 +552,23 @@ function Panel({
   )
 }
 
-function InfoRow({
-  label,
-  value,
-  privateField = false,
-}: {
-  label: string
-  value: string
-  privateField?: boolean
-}) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-          {label}
-        </p>
-        {privateField && <PrivateBadge />}
-      </div>
-      <p className="mt-2 break-words text-sm font-semibold text-slate-950">{value}</p>
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-2 break-words text-sm font-bold text-slate-950">{value}</p>
     </div>
   )
 }
 
-function TextBlock({
-  title,
-  text,
-  privateField = false,
-}: {
-  title: string
-  text: string
-  privateField?: boolean
-}) {
+function TextBlock({ title, text }: { title: string; text: string }) {
   return (
     <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-950">{title}</p>
-        {privateField && <PrivateBadge />}
-      </div>
-      <p className="text-sm leading-6 text-slate-600">{text}</p>
+      <p className="text-sm font-bold text-slate-950">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
     </div>
-  )
-}
-
-function PrivateBadge() {
-  return (
-    <span className="rounded-full bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700 ring-1 ring-rose-100">
-      Özel
-    </span>
   )
 }
 
@@ -595,14 +576,18 @@ function StatusLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
       <span className="text-sm text-slate-600">{label}</span>
-      <span className="text-right text-sm font-semibold text-slate-950">{value}</span>
+      <span className="text-right text-sm font-bold text-slate-950">{value}</span>
     </div>
   )
 }
 
 function TagList({ items, emptyText }: { items: string[]; emptyText: string }) {
   if (items.length === 0) {
-    return <p className="text-sm text-slate-500">{emptyText}</p>
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+        {emptyText}
+      </div>
+    )
   }
 
   return (
@@ -610,7 +595,7 @@ function TagList({ items, emptyText }: { items: string[]; emptyText: string }) {
       {items.map((item) => (
         <span
           key={item}
-          className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-100"
+          className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-bold text-indigo-700 ring-1 ring-indigo-100"
         >
           {item}
         </span>
@@ -621,7 +606,11 @@ function TagList({ items, emptyText }: { items: string[]; emptyText: string }) {
 
 function List({ items, emptyText }: { items: string[]; emptyText: string }) {
   if (items.length === 0) {
-    return <p className="text-sm text-slate-500">{emptyText}</p>
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+        {emptyText}
+      </div>
+    )
   }
 
   return (
@@ -629,29 +618,11 @@ function List({ items, emptyText }: { items: string[]; emptyText: string }) {
       {items.map((item) => (
         <li
           key={item}
-          className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 ring-1 ring-slate-100"
+          className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-100"
         >
           {item}
         </li>
       ))}
     </ul>
-  )
-}
-
-function InfoBlock({
-  title,
-  value,
-  description,
-}: {
-  title: string
-  value: string
-  description: string
-}) {
-  return (
-    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <p className="mt-2 text-lg font-bold text-slate-950">{value}</p>
-      <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
-    </div>
   )
 }

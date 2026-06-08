@@ -31,8 +31,8 @@ type EarningsSummary = {
 
 type EarningsApiResponse = {
   ok: boolean
-  earnings?: EarningPayment[]
-  payments?: EarningPayment[]
+  earnings?: Partial<EarningPayment>[]
+  payments?: Partial<EarningPayment>[]
   summary?: Partial<EarningsSummary>
   error?: string
 }
@@ -49,9 +49,9 @@ const EMPTY_SUMMARY: EarningsSummary = {
 
 const payoutFilters: Array<{ label: string; value: PayoutFilter }> = [
   { label: 'Tümü', value: 'all' },
-  { label: 'Ödenmedi', value: 'unpaid' },
-  { label: 'Planlandı', value: 'scheduled' },
-  { label: 'Ödendi', value: 'paid' },
+  { label: 'Bekleyen', value: 'unpaid' },
+  { label: 'Planlanan', value: 'scheduled' },
+  { label: 'Ödenen', value: 'paid' },
   { label: 'Blokeli', value: 'blocked' },
 ]
 
@@ -61,7 +61,7 @@ const paymentStatusConfig: Record<PaymentStatus, { label: string; className: str
     className: 'bg-amber-50 text-amber-700 ring-amber-200',
   },
   paid: {
-    label: 'Ödendi',
+    label: 'Başarılı',
     className: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   },
   failed: {
@@ -69,18 +69,18 @@ const paymentStatusConfig: Record<PaymentStatus, { label: string; className: str
     className: 'bg-red-50 text-red-700 ring-red-200',
   },
   cancelled: {
-    label: 'İptal',
+    label: 'İptal Edildi',
     className: 'bg-slate-100 text-slate-700 ring-slate-200',
   },
   refunded: {
-    label: 'İade',
+    label: 'İade Edildi',
     className: 'bg-sky-50 text-sky-700 ring-sky-200',
   },
 }
 
 const payoutStatusConfig: Record<PayoutStatus, { label: string; className: string }> = {
   unpaid: {
-    label: 'Ödenmedi',
+    label: 'Beklemede',
     className: 'bg-amber-50 text-amber-700 ring-amber-200',
   },
   scheduled: {
@@ -88,7 +88,7 @@ const payoutStatusConfig: Record<PayoutStatus, { label: string; className: strin
     className: 'bg-blue-50 text-blue-700 ring-blue-200',
   },
   paid: {
-    label: 'Uzmana Ödendi',
+    label: 'Ödendi',
     className: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   },
   blocked: {
@@ -197,12 +197,12 @@ export default function ExpertEarningsPage() {
   const [filter, setFilter] = useState<PayoutFilter>('all')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [hasLoadIssue, setHasLoadIssue] = useState(false)
 
   async function fetchEarnings() {
     try {
       setLoading(true)
-      setError('')
+      setHasLoadIssue(false)
 
       const response = await fetch('/api/expert/earnings', {
         method: 'GET',
@@ -214,7 +214,7 @@ export default function ExpertEarningsPage() {
       if (!response.ok || !data.ok) {
         setPayments([])
         setSummary(EMPTY_SUMMARY)
-        setError(data.error || 'Kazanç bilgileri alınamadı.')
+        setHasLoadIssue(true)
         return
       }
 
@@ -227,7 +227,7 @@ export default function ExpertEarningsPage() {
     } catch {
       setPayments([])
       setSummary(EMPTY_SUMMARY)
-      setError('Sunucuya bağlanırken hata oluştu.')
+      setHasLoadIssue(true)
     } finally {
       setLoading(false)
     }
@@ -260,35 +260,30 @@ export default function ExpertEarningsPage() {
   const hasPayments = payments.length > 0
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-indigo-600">Uzman Paneli</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">
-            Kazançlar
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Seans gelirlerinizi, Mindora komisyonunu, net kazancınızı ve payout
-            durumlarınızı tek ekrandan takip edin.
-          </p>
+    <div className="space-y-6">
+      <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-indigo-600">Uzman Paneli</p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">
+              Kazançlar
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              Görüşme gelirlerinizi, platform kesintisini ve ödeme durumunuzu tek
+              ekrandan takip edin.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={fetchEarnings}
+            disabled={loading}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? 'Yükleniyor...' : 'Yenile'}
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={fetchEarnings}
-          disabled={loading}
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? 'Yükleniyor...' : 'Yenile'}
-        </button>
       </header>
-
-      {error ? (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <p className="font-semibold">Kazanç verisi alınamadı.</p>
-          <p className="mt-1 text-amber-800">{error}</p>
-        </section>
-      ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
@@ -304,12 +299,30 @@ export default function ExpertEarningsPage() {
         <SummaryCard
           title="Bekleyen Ödeme"
           value={formatMoney(summary.pendingPayout)}
-          description="Henüz uzmana aktarılmayan"
+          description="Henüz aktarılmayan tutar"
         />
         <SummaryCard
-          title="Tamamlanan Ödeme"
+          title="Aktarılan Tutar"
           value={formatMoney(summary.completedPayout)}
-          description="Uzmana ödenmiş tutar"
+          description="Uzmana ödenen toplam"
+        />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <InfoBlock
+          title="Brüt Ödeme"
+          value={formatMoney(summary.totalGross)}
+          description="Danışanlardan tahsil edilen başarılı ödemeler."
+        />
+        <InfoBlock
+          title="Mindora Kesintisi"
+          value={formatMoney(summary.totalCommission)}
+          description="Platform hizmet bedeli olarak ayrılan tutar."
+        />
+        <InfoBlock
+          title="Net Kazanç"
+          value={formatMoney(summary.totalNet)}
+          description="Kesintiler sonrası uzman hesabına yansıyacak tutar."
         />
       </section>
 
@@ -320,14 +333,15 @@ export default function ExpertEarningsPage() {
               Ödeme Geçmişi
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Seans bazlı brüt tutar, komisyon, net kazanç ve payout durumu.
+              Görüşme bazlı brüt tutar, kesinti, net kazanç ve aktarım durumunu
+              görüntüleyin.
             </p>
           </div>
 
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Danışan, e-posta veya ödeme ara..."
+            placeholder="Danışan veya ödeme ara..."
             className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
           />
         </div>
@@ -354,41 +368,26 @@ export default function ExpertEarningsPage() {
         {loading ? (
           <EmptyState
             title="Kazanç kayıtları yükleniyor"
-            description="Ödeme ve payout bilgileri hazırlanıyor."
+            description="Ödeme ve aktarım bilgileri hazırlanıyor."
+          />
+        ) : hasLoadIssue && !hasPayments ? (
+          <EmptyState
+            title="Henüz görüntülenecek kazanç bulunmuyor"
+            description="İlk başarılı ödeme oluştuğunda kazanç özetiniz ve ödeme geçmişiniz burada görüntülenecek."
           />
         ) : !hasPayments ? (
           <EmptyState
             title="Henüz kazanç kaydı yok"
-            description="Ödeme tamamlanmış seanslar oluştuğunda brüt tutar, komisyon, net kazanç ve payout durumu burada listelenecek."
+            description="Ödeme tamamlanmış görüşmeler oluştuğunda brüt tutar, kesinti, net kazanç ve aktarım durumu burada listelenecek."
           />
         ) : filteredPayments.length === 0 ? (
           <EmptyState
             title="Bu filtrede kayıt bulunamadı"
-            description="Arama metnini veya payout filtresini değiştirerek tekrar deneyin."
+            description="Arama metnini veya ödeme filtresini değiştirerek tekrar deneyin."
           />
         ) : (
           <EarningsTable payments={filteredPayments} />
         )}
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-3">
-          <InfoBlock
-            title="Brüt Ödeme"
-            value={formatMoney(summary.totalGross)}
-            description="Danışandan tahsil edilen toplam başarılı ödeme."
-          />
-          <InfoBlock
-            title="Mindora Komisyonu"
-            value={formatMoney(summary.totalCommission)}
-            description="Başarılı ödemelerden ayrılan platform komisyonu."
-          />
-          <InfoBlock
-            title="API Bağlantısı"
-            value="/api/expert/earnings"
-            description="Bu ekran canlı endpoint üzerinden güncel ödeme verisini çeker."
-          />
-        </div>
       </section>
     </div>
   )
@@ -403,10 +402,10 @@ function EarningsTable({ payments }: { payments: EarningPayment[] }) {
             <th className="px-5 py-4">Tarih</th>
             <th className="px-5 py-4">Danışan</th>
             <th className="px-5 py-4">Brüt</th>
-            <th className="px-5 py-4">Komisyon</th>
+            <th className="px-5 py-4">Kesinti</th>
             <th className="px-5 py-4">Net Kazanç</th>
             <th className="px-5 py-4">Ödeme</th>
-            <th className="px-5 py-4">Payout</th>
+            <th className="px-5 py-4">Aktarım</th>
           </tr>
         </thead>
 
@@ -425,7 +424,7 @@ function EarningsTable({ payments }: { payments: EarningPayment[] }) {
               <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-950">
                 {formatMoney(payment.grossAmount)}
               </td>
-              <td className="whitespace-nowrap px-5 py-4 font-semibold text-emerald-700">
+              <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-700">
                 {formatMoney(payment.commissionAmount)}
               </td>
               <td className="whitespace-nowrap px-5 py-4 font-bold text-indigo-700">
@@ -472,8 +471,8 @@ function SummaryCard({
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="px-5 py-12 text-center">
-      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8">
+    <div className="px-5 py-10 text-center">
+      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-7">
         <p className="text-sm font-semibold text-slate-800">{title}</p>
         <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
       </div>
@@ -491,7 +490,7 @@ function InfoBlock({
   description: string
 }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-sm font-medium text-slate-500">{title}</p>
       <p className="mt-2 text-lg font-bold text-slate-950">{value}</p>
       <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>

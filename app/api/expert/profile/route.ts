@@ -6,30 +6,36 @@ export const revalidate = 0
 
 type ExpertStatus = 'pending' | 'approved' | 'rejected' | 'passive' | 'review' | string
 
-type ExpertRow = {
-  id?: string | null
-  slug?: string | null
-  name?: string | null
-  email?: string | null
-  phone?: string | null
-  title?: string | null
-  city?: string | null
-  status?: ExpertStatus | null
-  is_active?: boolean | null
-  bio?: string | null
-  public_bio?: string | null
-  approach?: string | null
-  specialties?: unknown
-  focus_areas?: unknown
-  education?: unknown
-  certificates?: unknown
-  experience_years?: number | string | null
-  session_price?: number | string | null
-  session_duration_minutes?: number | string | null
-  profile_image_url?: string | null
-  approved_at?: string | null
-  created_at?: string | null
-  updated_at?: string | null
+type UnknownRecord = Record<string, unknown>
+
+type NormalizedExpert = {
+  id: string
+  slug: string
+  name: string
+  title: string
+  email: string | null
+  phone: string | null
+  city: string
+  status: ExpertStatus
+  accountStatus: 'active' | 'passive'
+  approvedAt: string | null
+  createdAt: string | null
+  updatedAt: string | null
+  specialties: string[]
+  focusAreas: string[]
+  education: string[]
+  certificates: string[]
+  experienceYears: number
+  sessionPrice: number
+  sessionDurationMinutes: number
+  profileImageUrl: string | null
+  bio: string
+  publicBio: string
+  approach: string
+  totalClients: number
+  completedSessions: number
+  averageRating: number | null
+  totalEarnings: number
 }
 
 function jsonOk(payload: Record<string, unknown>, status = 200) {
@@ -53,6 +59,11 @@ function toText(value: unknown, fallback = '') {
   return text || fallback
 }
 
+function toNullableText(value: unknown) {
+  const text = toText(value)
+  return text || null
+}
+
 function toNumber(value: unknown, fallback = 0) {
   const numberValue = Number(value)
   return Number.isFinite(numberValue) ? numberValue : fallback
@@ -61,7 +72,7 @@ function toNumber(value: unknown, fallback = 0) {
 function isValidUuid(value: unknown): value is string {
   return (
     typeof value === 'string' &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(
       value.trim()
     )
   )
@@ -78,16 +89,15 @@ function normalizeStringArray(value: unknown): string[] {
 
   if (typeof value === 'string') {
     const trimmed = value.trim()
-
     if (!trimmed) return []
 
     try {
-      const parsed = JSON.parse(trimmed)
+      const parsed = JSON.parse(trimmed) as unknown
       if (Array.isArray(parsed)) {
         return parsed.map((item) => toText(item)).filter(Boolean)
       }
     } catch {
-      // String CSV fallback.
+      // CSV fallback.
     }
 
     return trimmed
@@ -99,6 +109,15 @@ function normalizeStringArray(value: unknown): string[] {
   return []
 }
 
+function pick(row: UnknownRecord, keys: string[], fallback: unknown = '') {
+  for (const key of keys) {
+    const value = row[key]
+    if (value !== null && value !== undefined && String(value).trim() !== '') return value
+  }
+
+  return fallback
+}
+
 function getInitials(name: string) {
   const initials = name
     .split(' ')
@@ -108,7 +127,7 @@ function getInitials(name: string) {
     .map((part) => part[0]?.toUpperCase())
     .join('')
 
-  return initials || 'MN'
+  return initials || 'M'
 }
 
 function normalizeStatus(status: unknown): ExpertStatus {
@@ -121,37 +140,60 @@ function normalizeStatus(status: unknown): ExpertStatus {
   return normalized || 'pending'
 }
 
-function normalizeExpert(row: ExpertRow) {
-  const name = toText(row.name, 'Mindora Uzmanı')
-  const title = toText(row.title, 'Uzman')
-  const status = normalizeStatus(row.status)
-  const isActive = row.is_active !== false && status !== 'passive' && status !== 'rejected'
-  const sessionDurationMinutes = toNumber(row.session_duration_minutes, 50)
+function statusLabel(status: ExpertStatus) {
+  switch (status) {
+    case 'approved':
+      return 'Onaylandı'
+    case 'rejected':
+      return 'Reddedildi'
+    case 'passive':
+      return 'Pasif'
+    case 'review':
+      return 'İncelemede'
+    case 'pending':
+    default:
+      return 'İncelemede'
+  }
+}
 
-  const internalProfile = {
-    id: toText(row.id),
-    slug: toText(row.slug),
+function normalizeExpert(row: UnknownRecord) {
+  const name = toText(pick(row, ['name', 'full_name', 'display_name'], 'Mindora Uzmanı'))
+  const title = toText(pick(row, ['title', 'profession', 'expert_title'], 'Uzman'))
+  const status = normalizeStatus(pick(row, ['status', 'profile_status'], 'pending'))
+  const isActive = row.is_active !== false && status !== 'passive' && status !== 'rejected'
+  const sessionDurationMinutes = toNumber(
+    pick(row, ['session_duration_minutes', 'session_duration', 'duration_minutes'], 50),
+    50
+  )
+
+  const internalProfile: NormalizedExpert = {
+    id: toText(pick(row, ['id'])),
+    slug: toText(pick(row, ['slug', 'public_slug'])),
     name,
     title,
-    email: toText(row.email, null as unknown as string) || null,
-    phone: toText(row.phone, null as unknown as string) || null,
-    city: toText(row.city, 'Belirtilmedi'),
+    email: toNullableText(pick(row, ['email', 'contact_email'])),
+    phone: toNullableText(pick(row, ['phone', 'phone_number', 'contact_phone'])),
+    city: toText(pick(row, ['city', 'location'], 'Belirtilmedi')),
     status,
     accountStatus: isActive ? 'active' : 'passive',
-    approvedAt: row.approved_at || null,
-    createdAt: row.created_at || null,
-    updatedAt: row.updated_at || null,
-    specialties: normalizeStringArray(row.specialties),
-    focusAreas: normalizeStringArray(row.focus_areas),
-    education: normalizeStringArray(row.education),
-    certificates: normalizeStringArray(row.certificates),
-    experienceYears: toNumber(row.experience_years, 0),
-    sessionPrice: toNumber(row.session_price, 0),
+    approvedAt: toNullableText(pick(row, ['approved_at'])),
+    createdAt: toNullableText(pick(row, ['created_at'])),
+    updatedAt: toNullableText(pick(row, ['updated_at'])),
+    specialties: normalizeStringArray(pick(row, ['specialties', 'specialty', 'areas'])),
+    focusAreas: normalizeStringArray(pick(row, ['focus_areas', 'focusAreas', 'working_areas'])),
+    education: normalizeStringArray(pick(row, ['education', 'educations'])),
+    certificates: normalizeStringArray(pick(row, ['certificates', 'certificate'])),
+    experienceYears: toNumber(pick(row, ['experience_years', 'experienceYears', 'years_of_experience']), 0),
+    sessionPrice: toNumber(pick(row, ['session_price', 'price', 'session_fee']), 0),
     sessionDurationMinutes,
-    profileImageUrl: toText(row.profile_image_url, null as unknown as string) || null,
-    bio: toText(row.bio),
-    publicBio: toText(row.public_bio || row.bio),
-    approach: toText(row.approach),
+    profileImageUrl: toNullableText(pick(row, ['profile_image_url', 'avatar_url', 'image_url'])),
+    bio: toText(pick(row, ['bio', 'internal_bio', 'about'])),
+    publicBio: toText(pick(row, ['public_bio', 'bio', 'about'])),
+    approach: toText(pick(row, ['approach', 'therapy_approach'])),
+    totalClients: 0,
+    completedSessions: 0,
+    averageRating: null,
+    totalEarnings: 0,
   }
 
   const publicProfile = {
@@ -173,52 +215,23 @@ function normalizeExpert(row: ExpertRow) {
     approach: internalProfile.approach,
     isAvailableThisWeek: false,
     nextAvailableSlot: null,
+    statusLabel: statusLabel(internalProfile.status),
   }
 
-  return {
-    internalProfile,
-    publicProfile,
-  }
+  return { internalProfile, publicProfile }
 }
 
 async function findExpert({ expertId, slug }: { expertId: string | null; slug: string | null }) {
-  const supabase = getSupabaseAdmin()
+  const supabase = getSupabaseAdmin() as any
 
-  let query = (supabase as any)
-    .from('experts')
-    .select(
-      [
-        'id',
-        'slug',
-        'name',
-        'email',
-        'phone',
-        'title',
-        'city',
-        'status',
-        'is_active',
-        'bio',
-        'public_bio',
-        'approach',
-        'specialties',
-        'focus_areas',
-        'education',
-        'certificates',
-        'experience_years',
-        'session_price',
-        'session_duration_minutes',
-        'profile_image_url',
-        'approved_at',
-        'created_at',
-        'updated_at',
-      ].join(', ')
-    )
-    .limit(1)
+  let query = supabase.from('experts').select('*').limit(1)
 
   if (expertId) {
     query = query.eq('id', expertId)
   } else if (slug) {
     query = query.eq('slug', slug)
+  } else if (process.env.MINDORA_DEV_EXPERT_ID && isValidUuid(process.env.MINDORA_DEV_EXPERT_ID)) {
+    query = query.eq('id', process.env.MINDORA_DEV_EXPERT_ID)
   } else {
     query = query.order('created_at', { ascending: false })
   }
@@ -227,25 +240,28 @@ async function findExpert({ expertId, slug }: { expertId: string | null; slug: s
 
   if (error) throw error
 
-  return data as ExpertRow | null
+  return (data || null) as UnknownRecord | null
 }
 
 export async function GET(req: NextRequest) {
   try {
     const expertIdParam = toText(req.nextUrl.searchParams.get('expertId'))
     const slugParam = toText(req.nextUrl.searchParams.get('slug')).toLowerCase()
-    const modeParam = toText(req.nextUrl.searchParams.get('mode'), 'internal').toLowerCase()
+    const modeParam = toText(
+      req.nextUrl.searchParams.get('mode') || req.nextUrl.searchParams.get('scope'),
+      'internal'
+    ).toLowerCase()
 
     const expertId = expertIdParam && isValidUuid(expertIdParam) ? expertIdParam : null
     const slug = slugParam && isSafeSlug(slugParam) ? slugParam : null
     const mode = modeParam === 'public' ? 'public' : 'internal'
 
     if (expertIdParam && !expertId) {
-      return jsonError('Geçerli expertId gerekli.', 400)
+      return jsonError('Geçerli uzman kimliği gerekli.', 400)
     }
 
     if (slugParam && !slug) {
-      return jsonError('Geçerli slug gerekli.', 400)
+      return jsonError('Geçerli profil bağlantısı gerekli.', 400)
     }
 
     const expert = await findExpert({ expertId, slug })
@@ -260,10 +276,18 @@ export async function GET(req: NextRequest) {
       return jsonOk({ profile: normalized.publicProfile, mode })
     }
 
-    return jsonOk({ profile: normalized.internalProfile, publicProfile: normalized.publicProfile, mode })
+    return jsonOk({
+      profile: normalized.internalProfile,
+      publicProfile: normalized.publicProfile,
+      mode,
+    })
   } catch (error) {
     console.error('EXPERT_PROFILE_API_ERROR', error)
 
-    return jsonError('Uzman profili alınamadı.', 500, error instanceof Error ? error.message : error)
+    return jsonError(
+      'Uzman profili şu anda alınamadı.',
+      500,
+      error instanceof Error ? error.message : error
+    )
   }
 }
