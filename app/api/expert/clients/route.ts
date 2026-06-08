@@ -18,31 +18,27 @@ type BookingStatus =
 type ConversationRow = {
   id: string
   expert_id: string | null
-  client_id?: string | null
-  client_application_id?: string | null
+  client_application_id: string | null
   status: ConversationStatus | null
-  payment_status?: string | null
-  created_at?: string | null
-  updated_at?: string | null
-  client_applications?: {
-    id?: string | null
-    name?: string | null
-    email?: string | null
-    phone?: string | null
-    support_topic?: string | null
-    topic?: string | null
-  } | null
+  payment_status: string | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 type BookingRow = {
   id: string
   expert_id: string | null
-  client_id?: string | null
-  conversation_id?: string | null
+  conversation_id: string | null
   scheduled_start_at: string | null
   scheduled_end_at: string | null
   status: BookingStatus | null
-  created_at?: string | null
+  created_at: string | null
+}
+
+type ClientApplicationRow = {
+  id: string
+  name: string | null
+  email: string | null
 }
 
 type ClientItem = {
@@ -112,22 +108,17 @@ function normalizeClientStatus(
   return 'active'
 }
 
-function getClientApplicationId(conversation: ConversationRow) {
-  return (
-    toText(conversation.client_application_id) ||
-    toText(conversation.client_id) ||
-    toText(conversation.client_applications?.id) ||
-    null
-  )
-}
+function buildClientItem(
+  conversation: ConversationRow,
+  allBookings: BookingRow[],
+  clientsById: Map<string, ClientApplicationRow>
+): ClientItem {
+  const clientApplicationId = toText(conversation.client_application_id) || null
+  const client = clientApplicationId ? clientsById.get(clientApplicationId) || null : null
 
-function buildClientItem(conversation: ConversationRow, allBookings: BookingRow[]): ClientItem {
-  const clientApplicationId = getClientApplicationId(conversation)
-  const relatedBookings = allBookings.filter((booking) => {
-    if (booking.conversation_id && booking.conversation_id === conversation.id) return true
-    if (clientApplicationId && booking.client_id === clientApplicationId) return true
-    return false
-  })
+  const relatedBookings = allBookings.filter(
+    (booking) => booking.conversation_id === conversation.id
+  )
 
   const now = Date.now()
 
@@ -159,13 +150,10 @@ function buildClientItem(conversation: ConversationRow, allBookings: BookingRow[
     id: clientApplicationId || conversation.id,
     conversationId: conversation.id,
     clientApplicationId,
-    name: toText(conversation.client_applications?.name) || 'Danışan',
-    email: toText(conversation.client_applications?.email) || null,
-    phone: toText(conversation.client_applications?.phone) || null,
-    topic:
-      toText(conversation.client_applications?.support_topic) ||
-      toText(conversation.client_applications?.topic) ||
-      '-',
+    name: toText(client?.name) || 'Danışan',
+    email: toText(client?.email) || null,
+    phone: null,
+    topic: '-',
     status: normalizeClientStatus(conversation, relatedBookings),
     conversationStatus: conversation.status || null,
     paymentStatus: conversation.payment_status || null,
@@ -193,9 +181,32 @@ function summarizeClients(clients: ClientItem[]) {
   }
 }
 
+async function fetchClientsByIds(clientIds: string[]) {
+  const uniqueIds = Array.from(new Set(clientIds.filter(isValidUuid)))
+
+  if (uniqueIds.length === 0) {
+    return new Map<string, ClientApplicationRow>()
+  }
+
+  const supabase = getSupabaseAdmin() as any
+
+  const { data, error } = await supabase
+    .from('client_applications')
+    .select('id, name, email')
+    .in('id', uniqueIds)
+
+  if (error) {
+    console.error('EXPERT_CLIENTS_CLIENT_APPLICATIONS_QUERY_ERROR', error)
+    return new Map<string, ClientApplicationRow>()
+  }
+
+  const rows = (data || []) as ClientApplicationRow[]
+  return new Map(rows.map((client) => [client.id, client]))
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
     const requestedExpertId = req.nextUrl.searchParams.get('expertId')
     const envExpertId = process.env.MINDORA_DEV_EXPERT_ID || null
     const expertId = requestedExpertId || envExpertId
@@ -208,34 +219,24 @@ export async function GET(req: NextRequest) {
     }
 
     let conversationsQuery = supabase
-      .from('conversations' as never)
+      .from('conversations')
       .select(
-        `
-        id,
-        expert_id,
-        client_id,
-        client_application_id,
-        status,
-        payment_status,
-        created_at,
-        updated_at,
-        client_applications(id, name, email, phone, support_topic, topic)
-        `
+        'id, expert_id, client_application_id, status, payment_status, created_at, updated_at'
       )
       .order('updated_at', { ascending: false })
       .limit(250)
 
     let bookingsQuery = supabase
-      .from('bookings' as never)
+      .from('session_bookings')
       .select(
-        'id, expert_id, client_id, conversation_id, scheduled_start_at, scheduled_end_at, status, created_at'
+        'id, expert_id, conversation_id, scheduled_start_at, scheduled_end_at, status, created_at'
       )
       .order('scheduled_start_at', { ascending: false })
       .limit(500)
 
     if (expertId) {
-      conversationsQuery = conversationsQuery.eq('expert_id', expertId as never)
-      bookingsQuery = bookingsQuery.eq('expert_id', expertId as never)
+      conversationsQuery = conversationsQuery.eq('expert_id', expertId)
+      bookingsQuery = bookingsQuery.eq('expert_id', expertId)
     }
 
     const [conversationsResult, bookingsResult] = await Promise.all([
@@ -251,7 +252,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          error: firstError.message || 'Danışan verileri alınamadı.',
+          error: 'Danışan verileri şu an alınamadı.',
         },
         { status: 500 }
       )
@@ -260,8 +261,14 @@ export async function GET(req: NextRequest) {
     const conversations = (conversationsResult.data || []) as ConversationRow[]
     const bookings = (bookingsResult.data || []) as BookingRow[]
 
+    const clientIds = conversations
+      .map((conversation) => conversation.client_application_id)
+      .filter((id): id is string => isValidUuid(id))
+
+    const clientsById = await fetchClientsByIds(clientIds)
+
     const clients = conversations
-      .map((conversation) => buildClientItem(conversation, bookings))
+      .map((conversation) => buildClientItem(conversation, bookings, clientsById))
       .sort((a, b) => {
         const aNext = getDateTime(a.nextSessionAt)
         const bNext = getDateTime(b.nextSessionAt)
