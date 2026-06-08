@@ -18,6 +18,7 @@ type Expert = {
   price?: number | string | null
   session_price?: number | string | null
   sessionDuration?: string | null
+  status?: string | null
 }
 
 type ExpertsResponse = {
@@ -98,7 +99,11 @@ function createSlug(value: string) {
 }
 
 function getExpertSlug(expert: Expert) {
-  return toText(expert.slug) || createSlug(expert.name)
+  const slug = toText(expert.slug)
+  if (slug) return slug
+
+  const generatedSlug = createSlug(expert.name)
+  return generatedSlug || expert.id
 }
 
 function splitAreas(areas: string | null) {
@@ -222,7 +227,13 @@ export default function UzmanlarPage() {
   }, [fetchExperts])
 
   const visibleExperts = useMemo(
-    () => experts.filter((expert) => Boolean(expert.id && expert.name?.trim())),
+    () =>
+      experts.filter((expert) => {
+        const status = toText(expert.status).toLowerCase()
+        const isHidden = ['rejected', 'passive'].includes(status)
+
+        return Boolean(expert.id && expert.name?.trim() && !isHidden)
+      }),
     [experts],
   )
 
@@ -238,10 +249,10 @@ export default function UzmanlarPage() {
   const hasFilters = selectedArea !== 'Tümü' || searchTerm.trim().length > 0
 
   return (
-    <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
+    <main className="min-h-screen overflow-x-hidden bg-[#f7f2eb] text-[#171717]">
       <Header />
 
-      <section className="mx-auto max-w-7xl px-5 pb-12 pt-14 md:pb-16 md:pt-20">
+      <section className="mx-auto w-full max-w-7xl px-5 pb-10 pt-12 sm:px-6 md:pb-14 md:pt-16 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.35em] text-neutral-500">
@@ -295,7 +306,7 @@ export default function UzmanlarPage() {
         </div>
       </section>
 
-      <section id="uzman-listesi" className="mx-auto max-w-7xl px-5 py-12 md:py-16">
+      <section id="uzman-listesi" className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 md:py-14 lg:px-8">
         <div className="mb-8 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.35em] text-neutral-500">
@@ -312,7 +323,7 @@ export default function UzmanlarPage() {
           </p>
         </div>
 
-        <div className="sticky top-4 z-20 mb-8 rounded-[2rem] border border-black/5 bg-white/90 p-4 shadow-sm backdrop-blur md:p-5">
+        <div className="mb-8 rounded-[2rem] border border-black/5 bg-white/95 p-4 shadow-sm md:p-5">
           <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
             <label className="block">
               <span className="mb-2 block text-sm font-black text-neutral-700">Uzman ara</span>
@@ -326,13 +337,13 @@ export default function UzmanlarPage() {
 
             <div>
               <p className="mb-2 text-sm font-black text-neutral-700">Destek alanı</p>
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div className="flex flex-wrap gap-2">
                 {SUPPORT_AREAS.map((area) => (
                   <button
                     key={area}
                     type="button"
                     onClick={() => setSelectedArea(area)}
-                    className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-black transition ${
+                    className={`rounded-full px-4 py-2 text-sm font-black transition ${
                       selectedArea === area
                         ? 'bg-black text-white'
                         : 'bg-[#f7f2eb] text-neutral-700 hover:bg-neutral-100'
@@ -385,7 +396,7 @@ export default function UzmanlarPage() {
         )}
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12 md:py-16">
+      <section className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 md:py-14 lg:px-8">
         <div className="grid gap-8 rounded-[2rem] bg-black p-8 text-white md:grid-cols-2 md:p-14">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400">
@@ -427,7 +438,7 @@ export default function UzmanlarPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12 md:py-16">
+      <section className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 md:py-14 lg:px-8">
         <div className="text-center">
           <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
             Destek alanları
@@ -455,7 +466,7 @@ export default function UzmanlarPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-16 md:py-20">
+      <section className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-6 md:py-16 lg:px-8">
         <div className="rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-black/5 md:p-14">
           <h2 className="text-4xl font-black md:text-5xl">
             Sana uygun uzmanı birlikte bulalım.
@@ -502,7 +513,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
   const price = getPrice(expert)
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-md">
+    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-md">
       <div className="p-7 text-center">
         <div className="relative mx-auto h-28 w-28">
           {showPhoto ? (

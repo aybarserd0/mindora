@@ -1,7 +1,6 @@
 import Header from '@/components/Header'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -9,7 +8,9 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 type PageProps = {
-  params: Promise<{ slug: string }>
+  params: Promise<{
+    slug: string
+  }>
 }
 
 type ExpertRow = {
@@ -17,25 +18,17 @@ type ExpertRow = {
   slug?: string | null
   name?: string | null
   title?: string | null
-  city?: string | null
-  status?: string | null
-  is_active?: boolean | null
-  bio?: string | null
-  public_bio?: string | null
-  approach?: string | null
-  specialties?: unknown
-  focus_areas?: unknown
-  education?: unknown
-  certificates?: unknown
-  experience_years?: number | string | null
-  session_price?: number | string | null
-  session_duration_minutes?: number | string | null
-  profile_image_url?: string | null
-  photo_url?: string | null
-  availability?: string | null
+  areas?: string | null
+  experience?: string | null
   online?: string | null
+  price?: string | null
+  session_price?: number | string | null
+  availability?: string | null
+  expectation?: string | null
+  note?: string | null
+  status?: string | null
+  photo_url?: string | null
   created_at?: string | null
-  updated_at?: string | null
 }
 
 type PublicExpertProfile = {
@@ -43,17 +36,15 @@ type PublicExpertProfile = {
   slug: string
   name: string
   title: string
-  city: string
   imageInitials: string
   profileImageUrl: string | null
-  specialties: string[]
-  focusAreas: string[]
-  education: string[]
-  certificates: string[]
-  experienceYears: number
+  areas: string[]
+  experience: string
+  onlineText: string
+  availabilityText: string
+  priceText: string
   sessionPrice: number
   sessionDurationMinutes: number
-  availabilityText: string
   bio: string
   approach: string
   isOnlineAvailable: boolean
@@ -62,6 +53,15 @@ type PublicExpertProfile = {
 const DEFAULT_DESCRIPTION =
   'Mindora ile online psikolojik destek sürecine güvenli, sade ve uygun uzman eşleşmesiyle başlayın.'
 
+const DEFAULT_SUPPORT_AREAS = [
+  'Kaygı ve stres',
+  'İlişki problemleri',
+  'Özgüven',
+  'Depresif duygu durumu',
+  'Aile içi iletişim',
+  'Sınav ve gelecek kaygısı',
+]
+
 function toText(value: unknown, fallback = '') {
   if (value === null || value === undefined) return fallback
   const text = String(value).trim()
@@ -69,43 +69,21 @@ function toText(value: unknown, fallback = '') {
 }
 
 function toNumber(value: unknown, fallback = 0) {
-  const numberValue = Number(value)
-  return Number.isFinite(numberValue) ? numberValue : fallback
-}
+  if (value === null || value === undefined || value === '') return fallback
 
-function normalizeStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.map((item) => toText(item)).filter(Boolean)
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : fallback
   }
 
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (!trimmed) return []
+  const normalized = String(value)
+    .replace(/\s/g, '')
+    .replace(/[₺TLtl]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.')
 
-    try {
-      const parsed = JSON.parse(trimmed)
-      if (Array.isArray(parsed)) {
-        return parsed.map((item) => toText(item)).filter(Boolean)
-      }
-    } catch {
-      // JSON değilse virgülle ayrılmış metin olarak değerlendirilir.
-    }
+  const parsed = Number(normalized)
 
-    return trimmed
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean)
-  }
-
-  return []
-}
-
-function getInitials(name: string) {
-  const parts = name.split(/\s+/).filter(Boolean)
-  const first = parts[0]?.[0] || 'M'
-  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] || '' : ''
-
-  return `${first}${last}`.toLocaleUpperCase('tr-TR')
+  return Number.isFinite(parsed) ? parsed : fallback
 }
 
 function isSafeSlug(value: string) {
@@ -123,6 +101,28 @@ function isValidImageUrl(value: string | null) {
   }
 }
 
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+
+  if (parts.length === 0) return 'M'
+  if (parts.length === 1) return parts[0]?.charAt(0).toLocaleUpperCase('tr-TR') || 'M'
+
+  const first = parts[0]?.charAt(0) || 'M'
+  const last = parts[parts.length - 1]?.charAt(0) || ''
+
+  return `${first}${last}`.toLocaleUpperCase('tr-TR')
+}
+
+function splitTextList(value: string | null | undefined) {
+  const text = toText(value)
+  if (!text) return []
+
+  return text
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 function formatMoney(value: number) {
   if (!Number.isFinite(value) || value <= 0) return 'Eşleşme sonrası netleşir'
 
@@ -133,50 +133,79 @@ function formatMoney(value: number) {
   }).format(value)
 }
 
-function normalizeOnlineStatus(value: unknown) {
+function normalizeOnlineStatus(value: string | null | undefined) {
   const normalized = toText(value).toLowerCase()
 
-  if (!normalized) return true
-  if (['evet', 'yes', 'true', 'online', 'aktif'].includes(normalized)) return true
-  if (['hayır', 'hayir', 'no', 'false', 'pasif'].includes(normalized)) return false
+  if (!normalized) {
+    return {
+      isOnlineAvailable: true,
+      onlineText: 'Online görüşme',
+    }
+  }
 
-  return true
+  if (['evet', 'yes', 'true', 'online', 'aktif', 'var'].includes(normalized)) {
+    return {
+      isOnlineAvailable: true,
+      onlineText: 'Online görüşme',
+    }
+  }
+
+  if (['hayır', 'hayir', 'no', 'false', 'pasif', 'yok'].includes(normalized)) {
+    return {
+      isOnlineAvailable: false,
+      onlineText: 'Görüşme tipi eşleşmede netleşir',
+    }
+  }
+
+  return {
+    isOnlineAvailable: true,
+    onlineText: value || 'Online görüşme',
+  }
+}
+
+function isPublicExpert(row: ExpertRow) {
+  const status = toText(row.status).toLowerCase()
+
+  if (!status) return true
+
+  return ['approved', 'onaylı', 'onayli', 'active', 'aktif'].includes(status)
 }
 
 function normalizeExpert(row: ExpertRow): PublicExpertProfile {
   const name = toText(row.name, 'Mindora Uzmanı')
   const title = toText(row.title, 'Uzman Psikolog')
-  const profileImageUrl = toText(row.profile_image_url || row.photo_url) || null
-  const sessionDurationMinutes = toNumber(row.session_duration_minutes, 50)
+  const areas = splitTextList(row.areas)
+  const online = normalizeOnlineStatus(row.online)
+  const sessionPrice = toNumber(row.session_price ?? row.price, 0)
+  const priceText = sessionPrice > 0 ? formatMoney(sessionPrice) : toText(row.price, 'Eşleşme sonrası netleşir')
+  const profileImageUrl = toText(row.photo_url) || null
 
   return {
     id: toText(row.id),
     slug: toText(row.slug),
     name,
     title,
-    city: toText(row.city, 'Online'),
     imageInitials: getInitials(name),
     profileImageUrl: isValidImageUrl(profileImageUrl) ? profileImageUrl : null,
-    specialties: normalizeStringArray(row.specialties),
-    focusAreas: normalizeStringArray(row.focus_areas),
-    education: normalizeStringArray(row.education),
-    certificates: normalizeStringArray(row.certificates),
-    experienceYears: toNumber(row.experience_years, 0),
-    sessionPrice: toNumber(row.session_price, 0),
-    sessionDurationMinutes,
+    areas: areas.length > 0 ? areas : DEFAULT_SUPPORT_AREAS.slice(0, 3),
+    experience: toText(row.experience, 'Eşleşme sırasında netleşir'),
+    onlineText: online.onlineText,
     availabilityText: toText(
       row.availability,
       'Uygun gün ve saatler ön eşleşme sonrasında birlikte netleştirilir.'
     ),
+    priceText,
+    sessionPrice,
+    sessionDurationMinutes: 50,
     bio: toText(
-      row.public_bio || row.bio,
-      'Uzmanın çalışma alanları ve yaklaşımı Mindora ekibi tarafından doğrulandıktan sonra burada görüntülenir.'
+      row.expectation || row.note,
+      'Mindora uzman profili, danışanın ihtiyaçlarını daha doğru anlamak ve güvenli bir başlangıç yapmasını kolaylaştırmak için hazırlanmıştır.'
     ),
     approach: toText(
-      row.approach,
-      'İlk görüşmede ihtiyaçlar netleştirilir, ardından kişiye uygun destek süreci planlanır.'
+      row.note,
+      'İlk adımda ihtiyacın, beklentin ve uygun zamanların değerlendirilir. Ardından sana en uygun psikolojik destek süreci planlanır.'
     ),
-    isOnlineAvailable: normalizeOnlineStatus(row.online),
+    isOnlineAvailable: online.isOnlineAvailable,
   }
 }
 
@@ -191,25 +220,17 @@ async function getExpertBySlug(slug: string) {
         'slug',
         'name',
         'title',
-        'city',
-        'status',
-        'is_active',
-        'bio',
-        'public_bio',
-        'approach',
-        'specialties',
-        'focus_areas',
-        'education',
-        'certificates',
-        'experience_years',
-        'session_price',
-        'session_duration_minutes',
-        'profile_image_url',
-        'photo_url',
-        'availability',
+        'areas',
+        'experience',
         'online',
+        'price',
+        'session_price',
+        'availability',
+        'expectation',
+        'note',
+        'status',
+        'photo_url',
         'created_at',
-        'updated_at',
       ].join(', ')
     )
     .eq('slug', slug)
@@ -217,17 +238,13 @@ async function getExpertBySlug(slug: string) {
     .maybeSingle()
 
   if (error) {
-    console.error('PUBLIC_EXPERT_PROFILE_QUERY_ERROR', error)
+    console.error('PUBLIC_EXPERT_DETAIL_QUERY_ERROR', error)
     return null
   }
 
-  if (!data) return null
-
-  const status = toText(data.status).toLowerCase()
-  const isActive = data.is_active !== false
-  const isPubliclyVisible = !['rejected', 'passive'].includes(status)
-
-  if (!isActive || !isPubliclyVisible) return null
+  if (!data || !isPublicExpert(data as ExpertRow)) {
+    return null
+  }
 
   return normalizeExpert(data as ExpertRow)
 }
@@ -268,89 +285,100 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function PublicExpertProfilePage({ params }: PageProps) {
+export default async function PublicExpertDetailPage({ params }: PageProps) {
   const { slug } = await params
 
-  if (!slug || !isSafeSlug(slug)) notFound()
+  if (!slug || !isSafeSlug(slug)) {
+    notFound()
+  }
 
   const expert = await getExpertBySlug(slug)
 
-  if (!expert) notFound()
+  if (!expert) {
+    notFound()
+  }
 
   const matchingHref = `/eslesme?expert=${encodeURIComponent(expert.slug)}`
-  const hasSpecialties = expert.specialties.length > 0
-  const hasFocusAreas = expert.focusAreas.length > 0
 
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
       <Header />
 
-      <section className="border-b border-black/5 bg-white/70">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 lg:grid-cols-[1fr_390px] lg:items-center lg:py-14">
-          <div className="flex flex-col gap-7 sm:flex-row sm:items-center">
-            <div className="relative flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-[2rem] bg-black text-white shadow-sm ring-1 ring-black/10">
+      <section className="mx-auto max-w-7xl px-5 py-8">
+        <nav className="flex flex-wrap items-center gap-2 text-sm font-bold text-neutral-500">
+          <Link href="/" className="transition hover:text-black">
+            Ana Sayfa
+          </Link>
+          <span>/</span>
+          <Link href="/uzmanlar" className="transition hover:text-black">
+            Uzmanlar
+          </Link>
+          <span>/</span>
+          <span className="text-black">{expert.name}</span>
+        </nav>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pb-10">
+        <div className="grid gap-6 rounded-[2.25rem] bg-white p-6 shadow-sm ring-1 ring-black/5 lg:grid-cols-[1fr_390px] lg:p-10">
+          <div className="flex flex-col gap-7 sm:flex-row">
+            <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-[2rem] bg-black text-white shadow-sm ring-1 ring-black/10">
               {expert.profileImageUrl ? (
-                <Image
+                <img
                   src={expert.profileImageUrl}
                   alt={`${expert.name} profil fotoğrafı`}
-                  fill
-                  sizes="128px"
-                  className="object-cover"
+                  className="h-full w-full object-cover"
+                  referrerPolicy="no-referrer"
                 />
               ) : (
-                <span className="text-4xl font-black">{expert.imageInitials}</span>
+                <div className="flex h-full w-full items-center justify-center text-4xl font-black">
+                  {expert.imageInitials}
+                </div>
               )}
             </div>
 
-            <div>
-              <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="min-w-0">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
                   Onaylı uzman profili
                 </span>
                 <span className="rounded-full bg-black px-3 py-1 text-xs font-black text-white">
-                  {expert.isOnlineAvailable ? 'Online görüşme' : 'Görüşme tipi netleşir'}
+                  {expert.onlineText}
                 </span>
               </div>
 
-              <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">
+              <h1 className="text-4xl font-black tracking-tight md:text-5xl">
                 {expert.name}
               </h1>
 
               <p className="mt-3 text-base font-bold text-neutral-600">
-                {expert.title}
-                {expert.experienceYears > 0 ? ` • ${expert.experienceYears} yıl deneyim` : ''}
-                {expert.city ? ` • ${expert.city}` : ''}
+                {expert.title} • {expert.experience}
               </p>
 
               <p className="mt-5 max-w-2xl text-sm leading-7 text-neutral-600">
                 {expert.bio}
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-2">
-                {(hasSpecialties ? expert.specialties : ['Online psikolojik destek'])
-                  .slice(0, 6)
-                  .map((item) => (
-                    <span
-                      key={item}
-                      className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-700 ring-1 ring-black/10"
-                    >
-                      {item}
-                    </span>
-                  ))}
+              <div className="mt-6 flex flex-wrap gap-2">
+                {expert.areas.slice(0, 8).map((area) => (
+                  <span
+                    key={area}
+                    className="rounded-full bg-[#f7f2eb] px-3 py-1 text-xs font-black text-neutral-700 ring-1 ring-black/5"
+                  >
+                    {area}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
 
-          <aside className="rounded-[2rem] border border-black/10 bg-white p-6 shadow-sm">
+          <aside className="rounded-[2rem] bg-[#f7f2eb] p-6 ring-1 ring-black/5">
             <p className="text-sm font-bold text-neutral-500">Seans ücreti</p>
-            <p className="mt-2 text-3xl font-black text-black">
-              {formatMoney(expert.sessionPrice)}
-            </p>
+            <p className="mt-2 text-3xl font-black text-black">{expert.priceText}</p>
             <p className="mt-1 text-sm text-neutral-500">
               {expert.sessionDurationMinutes} dk online görüşme
             </p>
 
-            <div className="mt-5 rounded-2xl bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+            <div className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-black/5">
               <p className="text-sm font-black text-black">Müsaitlik</p>
               <p className="mt-1 text-sm leading-6 text-neutral-600">
                 {expert.availabilityText}
@@ -364,9 +392,10 @@ export default async function PublicExpertProfilePage({ params }: PageProps) {
               >
                 Bu uzmanla eşleşme iste
               </Link>
+
               <Link
                 href="/uzmanlar"
-                className="flex w-full items-center justify-center rounded-2xl border border-black/10 bg-[#f7f2eb] px-5 py-3 text-sm font-black text-black transition hover:bg-white"
+                className="flex w-full items-center justify-center rounded-2xl border border-black/10 bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-[#f7f2eb]"
               >
                 Diğer uzmanları gör
               </Link>
@@ -379,47 +408,44 @@ export default async function PublicExpertProfilePage({ params }: PageProps) {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-3">
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 pb-12 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <InfoCard title="Çalışma Yaklaşımı">
             <p className="text-sm leading-7 text-neutral-600">{expert.approach}</p>
           </InfoCard>
 
           <InfoCard title="Çalıştığı Konular">
-            {hasFocusAreas ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {expert.focusAreas.map((area) => (
-                  <div
-                    key={area}
-                    className="rounded-2xl border border-black/5 bg-[#f7f2eb] px-4 py-3 text-sm font-bold text-neutral-700"
-                  >
-                    {area}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm leading-7 text-neutral-600">
-                Destek alanı ön eşleşme formundaki ihtiyacına göre netleştirilir.
-              </p>
-            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {expert.areas.map((area) => (
+                <div
+                  key={area}
+                  className="rounded-2xl border border-black/5 bg-[#f7f2eb] px-4 py-3 text-sm font-black text-neutral-700"
+                >
+                  {area}
+                </div>
+              ))}
+            </div>
           </InfoCard>
         </div>
 
         <div className="space-y-6">
-          <InfoCard title="Eğitim">
-            <List items={expert.education} emptyText="Eğitim bilgisi henüz eklenmedi." />
-          </InfoCard>
-
-          <InfoCard title="Sertifikalar">
-            <List items={expert.certificates} emptyText="Sertifika bilgisi henüz eklenmedi." />
-          </InfoCard>
-
-          <InfoCard title="Seans Bilgisi">
-            <div className="space-y-3 text-sm text-neutral-600">
-              <InfoRow label="Görüşme süresi" value={`${expert.sessionDurationMinutes} dk`} />
-              <InfoRow label="Görüşme tipi" value={expert.isOnlineAvailable ? 'Online' : 'Eşleşme sonrası netleşir'} />
-              <InfoRow label="Ücret" value={formatMoney(expert.sessionPrice)} />
+          <InfoCard title="Güvenli Süreç">
+            <div className="space-y-3">
+              <InfoRow label="Profil" value="Onaylı" />
+              <InfoRow label="Görüşme" value={expert.onlineText} />
+              <InfoRow label="Süre" value={`${expert.sessionDurationMinutes} dk`} />
+              <InfoRow label="Ücret" value={expert.priceText} />
             </div>
+          </InfoCard>
+
+          <InfoCard title="Mindora Akışı">
+            <List
+              items={[
+                'Ön eşleşme formunu doldur',
+                'İhtiyacına uygun süreç netleşsin',
+                'Randevu, ödeme ve görüşme adımlarını güvenli şekilde tamamla',
+              ]}
+            />
           </InfoCard>
         </div>
       </section>
@@ -428,11 +454,14 @@ export default async function PublicExpertProfilePage({ params }: PageProps) {
         <div className="rounded-[2rem] bg-black p-8 text-white shadow-sm md:p-12">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-3xl font-black tracking-tight">
-                Bu uzmanla görüşmek ister misin?
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-neutral-400">
+                Ücretsiz ön eşleşme
+              </p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight">
+                Bu uzman senin için uygun mu birlikte değerlendirelim.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-300">
-                Kısa ön eşleşme formunu doldur. Mindora ekibi ihtiyacına ve uygun zamanına göre süreci güvenli şekilde başlatsın.
+                Kısa formu doldur. Mindora ekibi ihtiyacına, beklentine ve uygun zamanına göre süreci güvenli şekilde başlatsın.
               </p>
             </div>
 
@@ -466,18 +495,14 @@ function InfoCard({
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#f7f2eb] px-4 py-3 ring-1 ring-black/5">
-      <span>{label}</span>
-      <span className="font-black text-black">{value}</span>
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#f7f2eb] px-4 py-3 text-sm ring-1 ring-black/5">
+      <span className="text-neutral-600">{label}</span>
+      <span className="text-right font-black text-black">{value}</span>
     </div>
   )
 }
 
-function List({ items, emptyText }: { items: string[]; emptyText: string }) {
-  if (items.length === 0) {
-    return <p className="text-sm leading-7 text-neutral-600">{emptyText}</p>
-  }
-
+function List({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3">
       {items.map((item) => (
