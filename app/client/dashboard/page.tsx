@@ -111,10 +111,11 @@ function normalizeConversationStatus(status?: string | null) {
   const normalized = String(status || '').trim().toLowerCase()
 
   if (normalized === 'active') return 'Aktif'
-  if (normalized === 'locked') return 'Kilitli'
+  if (normalized === 'locked') return 'Hazırlanıyor'
   if (normalized === 'closed') return 'Kapalı'
+  if (normalized === 'unknown') return 'Bekleniyor'
 
-  return status || '-'
+  return status || 'Bekleniyor'
 }
 
 function normalizePaymentStatus(status?: string | null) {
@@ -124,8 +125,9 @@ function normalizePaymentStatus(status?: string | null) {
   if (normalized === 'pending') return 'Ödeme bekleniyor'
   if (normalized === 'failed') return 'Ödeme başarısız'
   if (normalized === 'refunded') return 'Ödeme iade edildi'
+  if (normalized === 'unknown') return 'Bekleniyor'
 
-  return status || '-'
+  return status || 'Bekleniyor'
 }
 
 function normalizeBookingStatus(status?: string | null) {
@@ -138,8 +140,9 @@ function normalizeBookingStatus(status?: string | null) {
   if (normalized === 'cancelled' || normalized === 'canceled') return 'İptal'
   if (normalized === 'no_show') return 'Katılmadı'
   if (normalized === 'rescheduled') return 'Ertelendi'
+  if (normalized === 'unknown') return 'Bekleniyor'
 
-  return status || '-'
+  return status || 'Bekleniyor'
 }
 
 function getSenderLabel(sender?: string | null) {
@@ -212,7 +215,7 @@ function ClientDashboardContent() {
   const [dashboard, setDashboard] = useState<ClientDashboard | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState('')
+  const [softNotice, setSoftNotice] = useState('')
 
   const chatUrl = useMemo(() => {
     if (!dashboard?.conversation?.chatUrl) return '#'
@@ -233,7 +236,7 @@ function ClientDashboardContent() {
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (!token || isPlaceholderToken(token)) {
         setDashboard(null)
-        setError('Dashboard erişimi için geçerli client veya session token bulunamadı.')
+        setSoftNotice('Danışan paneliniz henüz aktif bağlantı ile açılmadı.')
         setLoading(false)
         setRefreshing(false)
         return
@@ -246,7 +249,7 @@ function ClientDashboardContent() {
           setRefreshing(true)
         }
 
-        setError('')
+        setSoftNotice('')
 
         const res = await fetch(`/api/client/dashboard?token=${encodeURIComponent(token)}`, {
           method: 'GET',
@@ -259,16 +262,16 @@ function ClientDashboardContent() {
         const data = (await res.json().catch(() => null)) as DashboardResponse | null
 
         if (!res.ok || !data?.ok || !data.dashboard) {
-          throw new Error(data?.error || 'Dashboard bilgileri alınamadı.')
+          throw new Error(data?.error || 'Panel bilgileri henüz hazırlanmadı.')
         }
 
         setDashboard(data.dashboard)
       } catch (err) {
         setDashboard(null)
-        setError(
+        setSoftNotice(
           err instanceof Error && err.message.trim()
             ? err.message
-            : 'Dashboard yüklenirken bağlantı hatası oluştu.'
+            : 'Danışan paneliniz henüz aktif hale getirilmedi.'
         )
       } finally {
         setLoading(false)
@@ -292,31 +295,14 @@ function ClientDashboardContent() {
     )
   }
 
-  if (error || !dashboard) {
+  if (!dashboard) {
     return (
-      <section className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-[2rem] border border-rose-100 bg-rose-50 p-8 text-center shadow-sm">
-          <p className="text-xl font-black text-rose-700">Erişim sağlanamadı</p>
-          <p className="mt-2 text-sm font-bold text-rose-600">
-            {error || 'Dashboard bilgileri alınamadı.'}
-          </p>
-          <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => void loadDashboard('refresh')}
-              className="inline-flex justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-900 ring-1 ring-rose-200 transition hover:bg-rose-100"
-            >
-              Tekrar Dene
-            </button>
-            <Link
-              href="/"
-              className="inline-flex justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
-            >
-              Ana sayfaya dön
-            </Link>
-          </div>
-        </div>
-      </section>
+      <InactiveDashboardState
+        token={token}
+        notice={softNotice}
+        refreshing={refreshing}
+        onRetry={() => void loadDashboard('refresh')}
+      />
     )
   }
 
@@ -326,7 +312,7 @@ function ClientDashboardContent() {
   return (
     <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
@@ -359,22 +345,31 @@ function ClientDashboardContent() {
                 type="button"
                 onClick={() => void loadDashboard('refresh')}
                 disabled={refreshing}
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
 
-              <Link
-                href={chatUrl}
-                className="rounded-2xl bg-slate-950 px-5 py-4 text-center text-sm font-black text-white transition hover:bg-slate-800"
-              >
-                Sohbete Git
-              </Link>
+              {chatUrl !== '#' ? (
+                <Link
+                  href={chatUrl}
+                  className="rounded-2xl bg-slate-950 px-5 py-4 text-center text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+                >
+                  Sohbete Git
+                </Link>
+              ) : (
+                <button
+                  disabled
+                  className="cursor-not-allowed rounded-2xl bg-slate-100 px-5 py-4 text-sm font-black text-slate-500"
+                >
+                  Sohbet Beklemede
+                </button>
+              )}
 
               {canJoinSession ? (
                 <a
                   href={sessionUrl}
-                  className="rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-black text-white transition hover:bg-emerald-700"
+                  className="rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
                 >
                   Görüşmeye Katıl
                 </a>
@@ -391,31 +386,15 @@ function ClientDashboardContent() {
         </section>
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            title="Yaklaşan"
-            value={String(dashboard.stats.upcomingCount)}
-            subtitle="aktif seans"
-          />
-          <MetricCard
-            title="Tamamlanan"
-            value={String(dashboard.stats.completedCount)}
-            subtitle="geçmiş seans"
-          />
-          <MetricCard
-            title="Toplam"
-            value={String(dashboard.stats.totalSessions)}
-            subtitle="randevu"
-          />
-          <MetricCard
-            title="Mesaj"
-            value={String(dashboard.stats.recentMessageCount)}
-            subtitle="son kayıt"
-          />
+          <MetricCard title="Yaklaşan" value={String(dashboard.stats.upcomingCount)} subtitle="aktif seans" />
+          <MetricCard title="Tamamlanan" value={String(dashboard.stats.completedCount)} subtitle="geçmiş seans" />
+          <MetricCard title="Toplam" value={String(dashboard.stats.totalSessions)} subtitle="randevu" />
+          <MetricCard title="Mesaj" value={String(dashboard.stats.recentMessageCount)} subtitle="son kayıt" />
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
@@ -451,14 +430,8 @@ function ClientDashboardContent() {
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     <MiniCard label="Uzman" value={safeText(dashboard.expert.name, 'Uzman')} />
-                    <MiniCard
-                      label="Video"
-                      value={nextSession.session_ready ? 'Hazır' : 'Hazırlanıyor'}
-                    />
-                    <MiniCard
-                      label="Saat Dilimi"
-                      value={nextSession.timezone || 'Europe/Istanbul'}
-                    />
+                    <MiniCard label="Video" value={nextSession.session_ready ? 'Hazır' : 'Hazırlanıyor'} />
+                    <MiniCard label="Saat Dilimi" value={nextSession.timezone || 'Europe/Istanbul'} />
                     <MiniCard label="Durum" value={normalizeBookingStatus(nextSession.status)} />
                   </div>
 
@@ -466,18 +439,20 @@ function ClientDashboardContent() {
                     {canJoinSession ? (
                       <a
                         href={sessionUrl}
-                        className="flex-1 rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-black text-white transition hover:bg-emerald-700"
+                        className="flex-1 rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
                       >
                         Güvenli Görüşmeye Katıl
                       </a>
                     ) : null}
 
-                    <Link
-                      href={chatUrl}
-                      className="flex-1 rounded-2xl bg-white px-5 py-4 text-center text-sm font-black text-slate-950 transition hover:bg-slate-100"
-                    >
-                      Sohbete Git
-                    </Link>
+                    {chatUrl !== '#' ? (
+                      <Link
+                        href={chatUrl}
+                        className="flex-1 rounded-2xl bg-white px-5 py-4 text-center text-sm font-black text-slate-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
+                      >
+                        Sohbete Git
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
               )}
@@ -497,7 +472,7 @@ function ClientDashboardContent() {
           </div>
 
           <div className="space-y-6">
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
               <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
                 Hızlı İşlemler
               </p>
@@ -514,7 +489,7 @@ function ClientDashboardContent() {
               {dashboard.recentMessages.map((message) => (
                 <div
                   key={message.id}
-                  className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100"
+                  className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
@@ -543,6 +518,122 @@ function ClientDashboardContent() {
   )
 }
 
+function InactiveDashboardState({
+  token,
+  notice,
+  refreshing,
+  onRetry,
+}: {
+  token: string
+  notice: string
+  refreshing: boolean
+  onRetry: () => void
+}) {
+  const sessionsHref = buildTokenUrl('/client/dashboard/sessions', token)
+  const paymentsHref = buildTokenUrl('/client/dashboard/payments', token)
+  const filesHref = buildTokenUrl('/client/dashboard/files', token)
+  const profileHref = buildTokenUrl('/client/dashboard/profile', token)
+
+  return (
+    <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <section className="overflow-hidden rounded-[2rem] border border-indigo-100 bg-white shadow-sm">
+          <div className="bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6 lg:p-8">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              Mindora Danışan Paneli
+            </p>
+            <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
+              Danışan paneli henüz aktif değil
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
+              İlk eşleşme, ödeme veya seans hazırlığı tamamlandığında kişisel paneliniz
+              otomatik olarak aktif hale gelir. Bu alanda randevularınızı, ödemelerinizi,
+              dosyalarınızı ve uzman görüşmenizi takip edebilirsiniz.
+            </p>
+
+            {notice ? (
+              <div className="mt-5 rounded-3xl border border-indigo-100 bg-indigo-50 p-4">
+                <p className="text-sm font-black text-indigo-950">Süreç bilgilendirmesi</p>
+                <p className="mt-1 text-sm leading-6 text-indigo-800">{notice}</p>
+              </div>
+            ) : null}
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={onRetry}
+                disabled={refreshing}
+                className="inline-flex items-center justify-center rounded-2xl border border-indigo-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {refreshing ? 'Kontrol ediliyor...' : 'Tekrar Kontrol Et'}
+              </button>
+              <Link
+                href="/eslesme"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+              >
+                Ücretsiz Ön Eşleşme
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+              >
+                Ana Sayfa
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <ProcessCard
+            title="Uzman Eşleşmesi"
+            description="Başvurunuz değerlendirilir ve size uygun uzman süreci hazırlanır."
+          />
+          <ProcessCard
+            title="Randevular"
+            description="Planlanan seanslarınız tarih ve saat bilgileriyle burada görünür."
+          />
+          <ProcessCard
+            title="Ödemeler"
+            description="Ödeme geçmişiniz ve ödeme sonrası erişim durumunuz güvenli şekilde takip edilir."
+          />
+          <ProcessCard
+            title="Dosyalar"
+            description="Görüşme sürecinde paylaşılan dosyalar bu panelde listelenir."
+          />
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+              Panelde Neler Olacak?
+            </p>
+            <h2 className="mt-2 text-xl font-black text-slate-950">Mindora süreciniz</h2>
+            <div className="mt-5 space-y-3">
+              <StepLine index="1" title="Ön eşleşme" text="İhtiyacınıza göre uygun uzman ve süreç belirlenir." />
+              <StepLine index="2" title="Güvenli ödeme" text="Ödeme tamamlandığında chat ve seans erişiminiz açılır." />
+              <StepLine index="3" title="Online görüşme" text="Hazır olan seanslara güvenli bağlantı üzerinden katılırsınız." />
+              <StepLine index="4" title="Takip ve dosyalar" text="Mesajlar, ödemeler ve paylaşımlar panelinizde kalır." />
+            </div>
+          </section>
+
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+              Hızlı Erişim
+            </p>
+            <h2 className="mt-2 text-xl font-black text-slate-950">Panel bölümleri</h2>
+            <div className="mt-5 grid gap-3">
+              <QuickLink href={sessionsHref} title="Seanslarım" description="Randevu ve görüşme takibi" />
+              <QuickLink href={paymentsHref} title="Ödemelerim" description="Ödeme geçmişi ve durumlar" />
+              <QuickLink href={filesHref} title="Dosyalarım" description="Paylaşılan belgeler" />
+              <QuickLink href={profileHref} title="Profilim" description="Hesap ve eşleşme bilgileri" />
+            </div>
+          </section>
+        </section>
+      </div>
+    </section>
+  )
+}
+
 function Pill({ children, tone }: { children: React.ReactNode; tone: 'green' | 'purple' | 'blue' }) {
   const className =
     tone === 'green'
@@ -560,7 +651,7 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: 'green' | '
 
 function MetricCard({ title, value, subtitle }: { title: string; value: string; subtitle: string }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{title}</p>
       <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
       <p className="mt-1 text-xs font-bold text-slate-500">{subtitle}</p>
@@ -581,11 +672,34 @@ function QuickLink({ href, title, description }: { href: string; title: string; 
   return (
     <Link
       href={href}
-      className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-200 hover:bg-indigo-50"
+      className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-lg"
     >
       <p className="text-sm font-black text-slate-950">{title}</p>
       <p className="mt-1 text-xs font-semibold text-slate-500">{description}</p>
     </Link>
+  )
+}
+
+function ProcessCard({ title, description }: { title: string; description: string }) {
+  return (
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lg">
+      <p className="text-sm font-black text-slate-950">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
+    </article>
+  )
+}
+
+function StepLine({ index, title, text }: { index: string; title: string; text: string }) {
+  return (
+    <div className="flex gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-black text-white">
+        {index}
+      </span>
+      <div>
+        <p className="text-sm font-black text-slate-950">{title}</p>
+        <p className="mt-1 text-sm leading-6 text-slate-500">{text}</p>
+      </div>
+    </div>
   )
 }
 
@@ -607,7 +721,7 @@ function ListCard({
   const hasChildren = Array.isArray(children) ? children.length > 0 : Boolean(children)
 
   return (
-    <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">{eyebrow}</p>
@@ -635,7 +749,7 @@ function ListCard({
 
 function SessionRow({ booking, compact = false }: { booking: DashboardBooking; compact?: boolean }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-black text-slate-950">
