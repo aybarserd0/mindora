@@ -37,6 +37,8 @@ type NormalizedExpert = {
   totalEarnings: number
 }
 
+const ROUTE_VERSION = 'expert-profile-schema-safe-v3-no-approach-column'
+
 const REVIEW_REQUIRED_KEYS = new Set([
   'title',
   'specialties',
@@ -343,6 +345,9 @@ function buildPatchUpdate(body: UnknownRecord) {
     updated_at: new Date().toISOString(),
   }
 
+  // Safety guard: the experts table does not have an "approach" column in the current schema.
+  delete update.approach
+
   return update
 }
 
@@ -366,8 +371,11 @@ function getMissingColumnFromError(error: unknown) {
       ? String((error as { message?: unknown }).message || '')
       : ''
 
-  const match = message.match(/Could not find the '([^']+)' column/i)
-  return match?.[1] || null
+  const directMatch = message.match(/Could not find the '([^']+)' column/i)
+  if (directMatch?.[1]) return directMatch[1]
+
+  const schemaMatch = message.match(/column "?([a-zA-Z0-9_]+)"? (?:does not exist|of relation)/i)
+  return schemaMatch?.[1] || null
 }
 
 async function updateExpertWithSchemaFallback({
@@ -441,13 +449,14 @@ export async function GET(req: NextRequest) {
     const normalized = normalizeExpert(expert)
 
     if (mode === 'public') {
-      return jsonOk({ profile: normalized.publicProfile, mode })
+      return jsonOk({ profile: normalized.publicProfile, mode, routeVersion: ROUTE_VERSION })
     }
 
     return jsonOk({
       profile: normalized.internalProfile,
       publicProfile: normalized.publicProfile,
       mode,
+      routeVersion: ROUTE_VERSION,
     })
   } catch (error) {
     console.error('EXPERT_PROFILE_API_ERROR', error)
@@ -505,6 +514,7 @@ export async function PATCH(req: NextRequest) {
       publicProfile: normalized.publicProfile,
       pendingReview,
       skippedColumns: removedColumns,
+      routeVersion: ROUTE_VERSION,
       message: pendingReview
         ? 'Profil güncellendi. Kritik alanlar admin incelemesine alındı.'
         : 'Profil bilgileriniz başarıyla güncellendi.',
