@@ -89,3 +89,89 @@ Lütfen süreci Mindora üzerinden takip ediniz.
 Mindora ekibi
 `
 }
+
+export function bookingPreparedClientTemplate({
+  clientName,
+  expertName,
+  scheduledStartText,
+  scheduledEndText,
+  chatUrl,
+  sessionUrl,
+}: {
+  clientName: string
+  expertName: string
+  scheduledStartText: string
+  scheduledEndText: string
+  chatUrl: string
+  sessionUrl: string
+}) {
+  return `
+Merhaba ${clientName},
+
+Mindora görüşme bağlantınız hazırlandı.
+
+Uzmanınız:
+${expertName}
+
+Görüşme başlangıcı:
+${scheduledStartText}
+
+Görüşme bitişi:
+${scheduledEndText}
+
+Sohbet bağlantınız:
+${chatUrl}
+
+Video görüşme bağlantınız:
+${sessionUrl}
+
+Görüşme saatinden önce bağlantınızı, kameranızı ve mikrofonunuzu kontrol etmenizi öneririz.
+
+Güvenliğiniz için görüşme ve iletişim sürecini Mindora dışına taşımayınız.
+
+Mindora ekibi
+`
+}
+
+export function bookingPreparedExpertTemplate({
+  expertName,
+  clientName,
+  scheduledStartText,
+  scheduledEndText,
+  chatUrl,
+  sessionUrl,
+}: {
+  expertName: string
+  clientName: string
+  scheduledStartText: string
+  scheduledEndText: string
+  chatUrl: string
+  sessionUrl: string
+}) {
+  return `
+Merhaba ${expertName},
+
+Mindora üzerinden planlanan görüşmeniz hazırlandı.
+
+Danışan:
+${clientName}
+
+Görüşme başlangıcı:
+${scheduledStartText}
+
+Görüşme bitişi:
+${scheduledEndText}
+
+Sohbet bağlantınız:
+${chatUrl}
+
+Video görüşme bağlantınız:
+${sessionUrl}
+
+Görüşme öncesinde danışan notlarını kontrol etmenizi, kamera ve mikrofon izinlerinizi test etmenizi öneririz.
+
+Tüm süreci Mindora üzerinden yürütmeniz güvenlik, ödeme ve kayıt bütünlüğü açısından önemlidir.
+
+Mindora ekibi
+`
+}

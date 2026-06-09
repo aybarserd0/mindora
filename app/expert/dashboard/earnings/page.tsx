@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded' | 'unknown'
 type PayoutStatus = 'unpaid' | 'scheduled' | 'paid' | 'blocked' | 'unknown'
@@ -31,7 +31,7 @@ type EarningsSummary = {
 }
 
 type EarningsApiResponse = {
-  ok: boolean
+  ok?: boolean
   earnings?: Partial<EarningPayment>[]
   payments?: Partial<EarningPayment>[]
   summary?: Partial<EarningsSummary>
@@ -63,53 +63,20 @@ const payoutFilters: Array<{ label: string; value: PayoutFilter }> = [
 ]
 
 const paymentStatusConfig: Record<PaymentStatus, { label: string; className: string }> = {
-  pending: {
-    label: 'Bekliyor',
-    className: 'bg-amber-50 text-amber-700 ring-amber-200',
-  },
-  paid: {
-    label: 'Başarılı',
-    className: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  },
-  failed: {
-    label: 'Başarısız',
-    className: 'bg-red-50 text-red-700 ring-red-200',
-  },
-  cancelled: {
-    label: 'İptal Edildi',
-    className: 'bg-slate-100 text-slate-700 ring-slate-200',
-  },
-  refunded: {
-    label: 'İade Edildi',
-    className: 'bg-sky-50 text-sky-700 ring-sky-200',
-  },
-  unknown: {
-    label: 'Bilinmiyor',
-    className: 'bg-slate-100 text-slate-600 ring-slate-200',
-  },
+  pending: { label: 'Bekliyor', className: 'bg-amber-50 text-amber-700 ring-amber-200' },
+  paid: { label: 'Başarılı', className: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
+  failed: { label: 'Başarısız', className: 'bg-red-50 text-red-700 ring-red-200' },
+  cancelled: { label: 'İptal Edildi', className: 'bg-slate-100 text-slate-700 ring-slate-200' },
+  refunded: { label: 'İade Edildi', className: 'bg-sky-50 text-sky-700 ring-sky-200' },
+  unknown: { label: 'Bilinmiyor', className: 'bg-slate-100 text-slate-600 ring-slate-200' },
 }
 
 const payoutStatusConfig: Record<PayoutStatus, { label: string; className: string }> = {
-  unpaid: {
-    label: 'Beklemede',
-    className: 'bg-amber-50 text-amber-700 ring-amber-200',
-  },
-  scheduled: {
-    label: 'Planlandı',
-    className: 'bg-blue-50 text-blue-700 ring-blue-200',
-  },
-  paid: {
-    label: 'Ödendi',
-    className: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  },
-  blocked: {
-    label: 'Blokeli',
-    className: 'bg-red-50 text-red-700 ring-red-200',
-  },
-  unknown: {
-    label: 'Bilinmiyor',
-    className: 'bg-slate-100 text-slate-600 ring-slate-200',
-  },
+  unpaid: { label: 'Beklemede', className: 'bg-amber-50 text-amber-700 ring-amber-200' },
+  scheduled: { label: 'Planlandı', className: 'bg-blue-50 text-blue-700 ring-blue-200' },
+  paid: { label: 'Ödendi', className: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
+  blocked: { label: 'Blokeli', className: 'bg-red-50 text-red-700 ring-red-200' },
+  unknown: { label: 'Bilinmiyor', className: 'bg-slate-100 text-slate-600 ring-slate-200' },
 }
 
 function normalizePaymentStatus(value: unknown): PaymentStatus {
@@ -143,30 +110,29 @@ function toNumber(value: unknown) {
   return Number.isFinite(numberValue) ? numberValue : 0
 }
 
+function safeText(value: unknown, fallback = '') {
+  const normalized = String(value || '').trim()
+  return normalized || fallback
+}
+
 function fallbackId(payment: Partial<EarningPayment>, index: number) {
-  return [
-    payment.id,
-    payment.clientName,
-    payment.clientEmail,
-    payment.createdAt,
-    index,
-  ]
+  return [payment.id, payment.clientName, payment.clientEmail, payment.createdAt, index]
     .filter(Boolean)
     .join('-')
 }
 
 function normalizePayment(payment: Partial<EarningPayment>, index: number): EarningPayment {
   return {
-    id: String(payment.id || fallbackId(payment, index) || `earning-${index}`),
-    clientName: String(payment.clientName || 'Danışan').trim() || 'Danışan',
-    clientEmail: payment.clientEmail ? String(payment.clientEmail).trim() : null,
+    id: safeText(payment.id, fallbackId(payment, index) || `earning-${index}`),
+    clientName: safeText(payment.clientName, 'Danışan'),
+    clientEmail: safeText(payment.clientEmail) || null,
     grossAmount: toNumber(payment.grossAmount),
     commissionAmount: toNumber(payment.commissionAmount),
     expertAmount: toNumber(payment.expertAmount),
     status: normalizePaymentStatus(payment.status),
     payoutStatus: normalizePayoutStatus(payment.payoutStatus),
-    payoutPaidAt: payment.payoutPaidAt || null,
-    createdAt: payment.createdAt || null,
+    payoutPaidAt: safeText(payment.payoutPaidAt) || null,
+    createdAt: safeText(payment.createdAt) || null,
   }
 }
 
@@ -174,11 +140,9 @@ function isCurrentMonth(date: string | null | undefined) {
   if (!date) return false
 
   const target = new Date(date)
-
   if (Number.isNaN(target.getTime())) return false
 
   const now = new Date()
-
   return target.getFullYear() === now.getFullYear() && target.getMonth() === now.getMonth()
 }
 
@@ -236,12 +200,11 @@ function formatDate(date: string | null | undefined) {
   if (!date) return '-'
 
   const parsed = new Date(date)
-
   if (Number.isNaN(parsed.getTime())) return '-'
 
   return new Intl.DateTimeFormat('tr-TR', {
     day: '2-digit',
-    month: 'long',
+    month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -251,6 +214,14 @@ function formatDate(date: string | null | undefined) {
 function getSafeErrorMessage(error: unknown) {
   if (error instanceof Error && error.message.trim()) return error.message
   return 'Kazanç bilgileri şu anda görüntülenemiyor. Bağlantınızı kontrol edip tekrar deneyin.'
+}
+
+function sortPayments(payments: EarningPayment[]) {
+  return [...payments].sort((a, b) => {
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
+    return bTime - aTime
+  })
 }
 
 export default function ExpertEarningsPage() {
@@ -275,9 +246,7 @@ export default function ExpertEarningsPage() {
       const response = await fetch('/api/expert/earnings', {
         method: 'GET',
         cache: 'no-store',
-        headers: {
-          Accept: 'application/json',
-        },
+        headers: { Accept: 'application/json' },
       })
 
       const data = (await response.json().catch(() => ({}))) as Partial<EarningsApiResponse>
@@ -287,7 +256,7 @@ export default function ExpertEarningsPage() {
       }
 
       const rawPayments = data.earnings || data.payments || []
-      const normalizedPayments = rawPayments.map(normalizePayment)
+      const normalizedPayments = sortPayments(rawPayments.map(normalizePayment))
       const fallbackSummary = buildFallbackSummary(normalizedPayments)
 
       setPayments(normalizedPayments)
@@ -321,6 +290,7 @@ export default function ExpertEarningsPage() {
         payment.clientEmail,
         payment.status,
         payment.payoutStatus,
+        formatMoney(payment.grossAmount),
         formatMoney(payment.expertAmount),
       ]
         .filter(Boolean)
@@ -332,6 +302,7 @@ export default function ExpertEarningsPage() {
   }, [payments, filter, search])
 
   const hasPayments = payments.length > 0
+  const commissionRate = summary.totalGross > 0 ? Math.round((summary.totalCommission / summary.totalGross) * 100) : 30
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -346,29 +317,29 @@ export default function ExpertEarningsPage() {
                 Kazançlar
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Görüşme gelirlerinizi, platform kesintisini ve ödeme durumunuzu tek
-                ekrandan takip edin.
+                Görüşme gelirlerinizi, platform kesintisini, net kazancınızı ve aktarım
+                durumunuzu güvenli şekilde tek ekrandan takip edin.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="grid gap-3 sm:flex sm:flex-row">
               <button
                 type="button"
                 onClick={() => void fetchEarnings('refresh')}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href="/expert/dashboard"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
               >
                 Dashboard
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-700"
               >
                 Görüşmeleri Gör
               </Link>
@@ -417,7 +388,7 @@ export default function ExpertEarningsPage() {
           <InfoBlock
             title="Mindora Kesintisi"
             value={formatMoney(summary.totalCommission)}
-            description="Platform hizmet bedeli olarak ayrılan tutar."
+            description={`Ortalama platform hizmet bedeli: %${commissionRate}.`}
           />
           <InfoBlock
             title="Net Kazanç"
@@ -431,8 +402,7 @@ export default function ExpertEarningsPage() {
             <div>
               <h2 className="text-xl font-black text-slate-950">Ödeme Geçmişi</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Görüşme bazlı brüt tutar, kesinti, net kazanç ve aktarım durumunu
-                görüntüleyin.
+                Görüşme bazlı brüt tutar, kesinti, net kazanç ve aktarım durumunu görüntüleyin.
               </p>
             </div>
 
@@ -450,7 +420,7 @@ export default function ExpertEarningsPage() {
                 key={item.value}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition ${
+                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition hover:-translate-y-0.5 ${
                   filter === item.value
                     ? 'bg-slate-950 text-white ring-slate-950'
                     : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
@@ -463,6 +433,11 @@ export default function ExpertEarningsPage() {
         </section>
 
         <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <SectionHeader
+            title="Kazanç Kayıtları"
+            description={loading ? 'Kayıtlar hazırlanıyor.' : `${filteredPayments.length} kayıt görüntüleniyor.`}
+          />
+
           {loading ? (
             <EmptyState
               title="Kazanç kayıtları yükleniyor"
@@ -479,7 +454,10 @@ export default function ExpertEarningsPage() {
               description="Arama metnini veya ödeme filtresini değiştirerek tekrar deneyin."
             />
           ) : (
-            <EarningsTable payments={filteredPayments} />
+            <>
+              <EarningsCards payments={filteredPayments} />
+              <EarningsTable payments={filteredPayments} />
+            </>
           )}
         </section>
       </section>
@@ -489,17 +467,17 @@ export default function ExpertEarningsPage() {
 
 function EarningsTable({ payments }: { payments: EarningPayment[] }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="hidden overflow-x-auto lg:block">
       <table className="min-w-full text-left text-sm">
         <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
           <tr>
-            <th className="px-5 py-4 font-black">Tarih</th>
-            <th className="px-5 py-4 font-black">Danışan</th>
-            <th className="px-5 py-4 font-black">Brüt</th>
-            <th className="px-5 py-4 font-black">Kesinti</th>
-            <th className="px-5 py-4 font-black">Net Kazanç</th>
-            <th className="px-5 py-4 font-black">Ödeme</th>
-            <th className="px-5 py-4 font-black">Aktarım</th>
+            <TableHead>Tarih</TableHead>
+            <TableHead>Danışan</TableHead>
+            <TableHead>Brüt</TableHead>
+            <TableHead>Kesinti</TableHead>
+            <TableHead>Net Kazanç</TableHead>
+            <TableHead>Ödeme</TableHead>
+            <TableHead>Aktarım</TableHead>
           </tr>
         </thead>
 
@@ -539,21 +517,61 @@ function EarningsTable({ payments }: { payments: EarningPayment[] }) {
   )
 }
 
-function SummaryCard({
-  title,
-  value,
-  description,
-}: {
-  title: string
-  value: string
-  description: string
-}) {
+function EarningsCards({ payments }: { payments: EarningPayment[] }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="grid gap-4 p-4 lg:hidden">
+      {payments.map((payment) => (
+        <article key={payment.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-black text-slate-950">{payment.clientName}</p>
+              <p className="mt-1 text-xs text-slate-500">{payment.clientEmail || '-'}</p>
+              <p className="mt-2 text-xs font-bold text-slate-500">{formatDate(payment.createdAt)}</p>
+            </div>
+            <PaymentBadge status={payment.status} />
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <MiniMetric label="Brüt" value={formatMoney(payment.grossAmount)} />
+            <MiniMetric label="Kesinti" value={formatMoney(payment.commissionAmount)} />
+            <MiniMetric label="Net" value={formatMoney(payment.expertAmount)} emphasized />
+            <div className="rounded-2xl bg-white p-3 ring-1 ring-slate-200">
+              <p className="text-xs font-bold text-slate-500">Aktarım</p>
+              <div className="mt-2"><PayoutBadge status={payment.payoutStatus} /></div>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
+  return (
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <p className="text-sm font-bold text-slate-500">{title}</p>
       <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
+  )
+}
+
+function InfoBlock({ title, value, description }: { title: string; value: string; description: string }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <p className="mt-2 text-lg font-black text-slate-950">{value}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+    </div>
+  )
+}
+
+function MiniMetric({ label, value, emphasized = false }: { label: string; value: string; emphasized?: boolean }) {
+  return (
+    <div className="rounded-2xl bg-white p-3 ring-1 ring-slate-200">
+      <p className="text-xs font-bold text-slate-500">{label}</p>
+      <p className={`mt-1 font-black ${emphasized ? 'text-indigo-700' : 'text-slate-900'}`}>{value}</p>
+    </div>
   )
 }
 
@@ -568,31 +586,24 @@ function EmptyState({ title, description }: { title: string; description: string
   )
 }
 
-function InfoBlock({
-  title,
-  value,
-  description,
-}: {
-  title: string
-  value: string
-  description: string
-}) {
+function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-2 text-lg font-black text-slate-950">{value}</p>
-      <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+    <div className="flex flex-col gap-2 border-b border-slate-200 px-5 py-5 sm:px-6">
+      <h2 className="text-xl font-black text-slate-950">{title}</h2>
+      <p className="text-sm text-slate-500">{description}</p>
     </div>
   )
+}
+
+function TableHead({ children }: { children: ReactNode }) {
+  return <th className="px-5 py-4 font-black">{children}</th>
 }
 
 function PaymentBadge({ status }: { status: PaymentStatus }) {
   const config = paymentStatusConfig[status] || paymentStatusConfig.unknown
 
   return (
-    <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}
-    >
+    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}>
       {config.label}
     </span>
   )
@@ -602,9 +613,7 @@ function PayoutBadge({ status }: { status: PayoutStatus }) {
   const config = payoutStatusConfig[status] || payoutStatusConfig.unknown
 
   return (
-    <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}
-    >
+    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}>
       {config.label}
     </span>
   )

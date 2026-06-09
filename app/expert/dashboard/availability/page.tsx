@@ -101,6 +101,19 @@ function calculateSlotCount(row: AvailabilityRow) {
   return Math.max(Math.floor((endTotal - startTotal + buffer) / step), 0)
 }
 
+function calculateFormSlotPreview(form: FormState) {
+  return calculateSlotCount({
+    id: 'preview',
+    day_of_week: form.dayOfWeek,
+    start_time: form.startTime,
+    end_time: form.endTime,
+    slot_duration_minutes: form.slotDurationMinutes,
+    buffer_minutes: form.bufferMinutes,
+    timezone: form.timezone,
+    is_active: form.isActive,
+  })
+}
+
 function normalizeAvailabilityRows(value: AvailabilityApiResponse['availability']) {
   if (Array.isArray(value)) return value
   if (value) return [value]
@@ -186,6 +199,9 @@ export default function ExpertAvailabilityPage() {
     [sortedAvailability]
   )
 
+
+  const formSlotPreview = useMemo(() => calculateFormSlotPreview(form), [form])
+
   const summary = useMemo(() => {
     const activeDayCount = new Set(activeRows.map((row) => row.day_of_week)).size
     const weeklySlotCount = activeRows.reduce((total, row) => total + calculateSlotCount(row), 0)
@@ -230,6 +246,9 @@ export default function ExpertAvailabilityPage() {
 
       const response = await fetch(buildAvailabilityQuery(expertId), {
         cache: 'no-store',
+        headers: {
+          Accept: 'application/json',
+        },
       })
 
       const data = (await response.json().catch(() => ({}))) as AvailabilityApiResponse
@@ -326,6 +345,7 @@ export default function ExpertAvailabilityPage() {
         throw new Error(data.error || 'Müsaitlik silinemedi.')
       }
 
+      setAvailability((current) => current.filter((item) => item.id !== row.id))
       setNotice({
         title: 'Müsaitlik silindi',
         description: 'Seçili çalışma aralığı takvimden kaldırıldı.',
@@ -394,19 +414,19 @@ export default function ExpertAvailabilityPage() {
                 type="button"
                 onClick={() => void fetchAvailability()}
                 disabled={loading}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
               >
                 {loading ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href="/expert/dashboard"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
                 Dashboard
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
               >
                 Görüşmeleri Gör
               </Link>
@@ -531,6 +551,19 @@ export default function ExpertAvailabilityPage() {
 
               <input type="hidden" value={form.timezone} readOnly />
 
+              <div className="sm:col-span-2 rounded-3xl border border-indigo-100 bg-indigo-50 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-600">
+                  Önizleme
+                </p>
+                <p className="mt-2 text-sm font-black text-indigo-950">
+                  {getDayLabel(form.dayOfWeek)} · {form.startTime || '-'} - {form.endTime || '-'}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-indigo-800">
+                  Bu aralık yaklaşık <strong>{formSlotPreview}</strong> randevu slotu üretir.
+                  Saatler {form.timezone} zaman dilimine göre kaydedilir.
+                </p>
+              </div>
+
               <div className="sm:col-span-2">
                 <button
                   type="submit"
@@ -601,7 +634,7 @@ function SummaryCard({
   description: string
 }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-100 hover:shadow-md">
       <p className="text-sm font-bold text-slate-500">{title}</p>
       <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
@@ -619,50 +652,97 @@ function AvailabilityTable({
   onDelete: (row: AvailabilityRow) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-200">
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-5 py-4 font-black">Gün</th>
-              <th className="px-5 py-4 font-black">Saat Aralığı</th>
-              <th className="px-5 py-4 font-black">Seans</th>
-              <th className="px-5 py-4 font-black">Ara</th>
-              <th className="px-5 py-4 font-black">Slot</th>
-              <th className="px-5 py-4 font-black">Durum</th>
-              <th className="px-5 py-4 text-right font-black">İşlem</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
-            {rows.map((row) => (
-              <tr key={row.id} className="transition hover:bg-slate-50">
-                <td className="px-5 py-4 font-black text-slate-950">
+    <>
+      <div className="grid gap-3 lg:hidden">
+        {rows.map((row) => (
+          <article
+            key={row.id}
+            className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-100 hover:shadow-md"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-base font-black text-slate-950">
                   {getDayLabel(row.day_of_week)}
-                </td>
-                <td className="px-5 py-4 font-semibold text-slate-700">
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-600">
                   {normalizeTime(row.start_time)} - {normalizeTime(row.end_time)}
-                </td>
-                <td className="px-5 py-4 text-slate-600">{row.slot_duration_minutes} dk</td>
-                <td className="px-5 py-4 text-slate-600">{row.buffer_minutes} dk</td>
-                <td className="px-5 py-4 text-slate-600">{calculateSlotCount(row)} slot</td>
-                <td className="px-5 py-4">
-                  <StatusBadge active={row.is_active} />
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <button
-                    type="button"
-                    onClick={() => onDelete(row)}
-                    disabled={deletingId === row.id}
-                    className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {deletingId === row.id ? 'Siliniyor...' : 'Sil'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </p>
+              </div>
+              <StatusBadge active={row.is_active} />
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+              <MiniMetric label="Seans" value={`${row.slot_duration_minutes} dk`} />
+              <MiniMetric label="Ara" value={`${row.buffer_minutes} dk`} />
+              <MiniMetric label="Slot" value={`${calculateSlotCount(row)}`} />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onDelete(row)}
+              disabled={deletingId === row.id}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {deletingId === row.id ? 'Siliniyor...' : 'Müsaitliği Sil'}
+            </button>
+          </article>
+        ))}
       </div>
+
+      <div className="hidden overflow-hidden rounded-3xl border border-slate-200 lg:block">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
+              <tr>
+                <th className="px-5 py-4 font-black">Gün</th>
+                <th className="px-5 py-4 font-black">Saat Aralığı</th>
+                <th className="px-5 py-4 font-black">Seans</th>
+                <th className="px-5 py-4 font-black">Ara</th>
+                <th className="px-5 py-4 font-black">Slot</th>
+                <th className="px-5 py-4 font-black">Durum</th>
+                <th className="px-5 py-4 text-right font-black">İşlem</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {rows.map((row) => (
+                <tr key={row.id} className="transition hover:bg-indigo-50/40">
+                  <td className="px-5 py-4 font-black text-slate-950">
+                    {getDayLabel(row.day_of_week)}
+                  </td>
+                  <td className="px-5 py-4 font-semibold text-slate-700">
+                    {normalizeTime(row.start_time)} - {normalizeTime(row.end_time)}
+                  </td>
+                  <td className="px-5 py-4 text-slate-600">{row.slot_duration_minutes} dk</td>
+                  <td className="px-5 py-4 text-slate-600">{row.buffer_minutes} dk</td>
+                  <td className="px-5 py-4 text-slate-600">{calculateSlotCount(row)} slot</td>
+                  <td className="px-5 py-4">
+                    <StatusBadge active={row.is_active} />
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => onDelete(row)}
+                      disabled={deletingId === row.id}
+                      className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {deletingId === row.id ? 'Siliniyor...' : 'Sil'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 px-3 py-2 ring-1 ring-slate-100">
+      <p className="font-black text-slate-950">{value}</p>
+      <p className="mt-0.5 font-bold text-slate-500">{label}</p>
     </div>
   )
 }
