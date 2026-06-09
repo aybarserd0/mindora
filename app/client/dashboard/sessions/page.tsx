@@ -94,7 +94,7 @@ const statusConfig: Record<NormalizedSessionStatus, { label: string; className: 
   cancelled: { label: 'İptal', className: 'bg-rose-50 text-rose-700 ring-rose-100' },
   no_show: { label: 'Katılmadı', className: 'bg-orange-50 text-orange-700 ring-orange-100' },
   rescheduled: { label: 'Ertelendi', className: 'bg-purple-50 text-purple-700 ring-purple-100' },
-  unknown: { label: 'Belirsiz', className: 'bg-slate-100 text-slate-600 ring-slate-200' },
+  unknown: { label: 'Belirlenmedi', className: 'bg-slate-100 text-slate-600 ring-slate-200' },
 }
 
 const filters: Array<{ label: string; value: SessionFilter }> = [
@@ -139,7 +139,7 @@ function getTime(value?: string | null) {
 
 function formatDate(value?: string | null) {
   const date = getDate(value)
-  if (!date) return '-'
+  if (!date) return 'Tarih bekleniyor'
 
   return new Intl.DateTimeFormat('tr-TR', {
     weekday: 'long',
@@ -153,7 +153,7 @@ function formatTimeRange(startAt?: string | null, endAt?: string | null) {
   const start = getDate(startAt)
   const end = getDate(endAt)
 
-  if (!start || !end) return '-'
+  if (!start || !end) return 'Saat bekleniyor'
 
   const formatter = new Intl.DateTimeFormat('tr-TR', {
     hour: '2-digit',
@@ -204,7 +204,8 @@ function fallbackId(session: ApiClientSession, index: number) {
 function toUiSession(session: ApiClientSession, index: number, token: string): UiSession {
   const status = normalizeStatus(session.status)
   const startTime = getTime(session.scheduledStartAt)
-  const rawJoinHref = session.joinHref || (session.id ? `/client/session/${encodeURIComponent(session.id)}` : null)
+  const rawJoinHref =
+    session.joinHref || (session.id ? `/client/session/${encodeURIComponent(session.id)}` : null)
   const rawChatHref =
     session.chatHref ||
     (session.conversationId ? `/client/chat/${encodeURIComponent(session.conversationId)}` : null)
@@ -216,7 +217,7 @@ function toUiSession(session: ApiClientSession, index: number, token: string): U
   return {
     id: String(session.id || fallbackId(session, index) || `session-${index}`),
     conversationId: session.conversationId || null,
-    expertName: session.expertName?.trim() || 'Uzman',
+    expertName: session.expertName?.trim() || 'Uzman eşleştirme sürecinde',
     expertTitle: session.expertTitle?.trim() || 'Mindora Uzmanı',
     expertPhotoUrl: session.expertPhotoUrl?.trim() || null,
     scheduledStartAt: session.scheduledStartAt || null,
@@ -263,14 +264,14 @@ function ClientSessionsContent() {
   const [sessions, setSessions] = useState<UiSession[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState('')
+  const [softNotice, setSoftNotice] = useState('')
   const [filter, setFilter] = useState<SessionFilter>('all')
   const [search, setSearch] = useState('')
 
   const fetchSessions = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (!token) {
-        setError('Seans bilgileri için güvenli token gerekli.')
+        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Size iletilen danışan paneli bağlantısını kullanabilirsiniz.')
         setSessions([])
         setLoading(false)
         setRefreshing(false)
@@ -281,7 +282,7 @@ function ClientSessionsContent() {
         if (mode === 'initial') setLoading(true)
         else setRefreshing(true)
 
-        setError('')
+        setSoftNotice('')
 
         const response = await fetch(`/api/client/sessions?token=${encodeURIComponent(token)}`, {
           method: 'GET',
@@ -292,7 +293,7 @@ function ClientSessionsContent() {
         const data = (await response.json().catch(() => ({}))) as ClientSessionsResponse
 
         if (!response.ok || data.ok === false) {
-          throw new Error(data.error || 'Seans bilgileri alınamadı.')
+          throw new Error(data.error || 'Henüz planlanmış seansınız bulunmuyor.')
         }
 
         const merged = [
@@ -313,10 +314,10 @@ function ClientSessionsContent() {
         setSessions(normalized)
       } catch (err) {
         setSessions([])
-        setError(
+        setSoftNotice(
           err instanceof Error && err.message.trim()
             ? err.message
-            : 'Seans bilgileri alınırken bağlantı hatası oluştu.'
+            : 'Henüz planlanmış seansınız bulunmuyor.'
         )
       } finally {
         setLoading(false)
@@ -387,8 +388,8 @@ function ClientSessionsContent() {
   const cancelledCount = pastSessions.filter(isCancelledLike).length
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 md:px-6 md:py-10">
-      <section className="mx-auto max-w-7xl space-y-6">
+    <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+      <div className="mx-auto max-w-7xl space-y-6">
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -409,20 +410,20 @@ function ClientSessionsContent() {
                 type="button"
                 onClick={() => void fetchSessions('refresh')}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href={buildTokenUrl('/client/dashboard', token)}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
                 Dashboard
               </Link>
               {nextSession?.canJoin ? (
                 <a
                   href={nextSession.joinHref}
-                  className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700"
+                  className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
                 >
                   Görüşmeye Katıl
                 </a>
@@ -431,10 +432,11 @@ function ClientSessionsContent() {
           </div>
         </header>
 
-        {error ? (
+        {softNotice ? (
           <NoticeCard
-            title="Seans bilgileri alınamadı"
-            description={error}
+            title="Henüz planlanmış seansınız bulunmuyor"
+            description="Yeni bir görüşme planlandığında tarih, saat ve katılım bilgileri burada görüntülenecektir."
+            detail={softNotice}
             onRetry={() => void fetchSessions('refresh')}
           />
         ) : null}
@@ -465,14 +467,14 @@ function ClientSessionsContent() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href={nextSession.chatHref}
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-slate-100"
+                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
                 >
                   Sohbete Git
                 </Link>
                 {nextSession.canJoin ? (
                   <a
                     href={nextSession.joinHref}
-                    className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-700"
+                    className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
                   >
                     Görüşmeye Katıl
                   </a>
@@ -509,7 +511,7 @@ function ClientSessionsContent() {
                 key={item.value}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition ${
+                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   filter === item.value
                     ? 'bg-slate-950 text-white ring-slate-950'
                     : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
@@ -546,18 +548,18 @@ function ClientSessionsContent() {
           ) : (
             <EmptyState
               title="Seans kaydı bulunamadı"
-              description="Filtreyi değiştirebilir veya yeni bir seans planlandığında tekrar kontrol edebilirsiniz."
+              description="Yeni bir görüşme planlandığında burada tarih, saat ve katılım bilgileriyle birlikte listelenecektir."
             />
           )}
         </section>
-      </section>
-    </main>
+      </div>
+    </section>
   )
 }
 
 function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <p className="text-sm font-bold text-slate-500">{title}</p>
       <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
@@ -569,7 +571,7 @@ function SessionCard({ session }: { session: UiSession }) {
   const config = statusConfig[session.status] || statusConfig.unknown
 
   return (
-    <article className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:border-indigo-200 hover:bg-indigo-50/40">
+    <article className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-lg">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-indigo-600 text-lg font-black text-white">
@@ -595,15 +597,9 @@ function SessionCard({ session }: { session: UiSession }) {
             </div>
             <p className="mt-1 text-sm font-semibold text-slate-600">{session.expertTitle}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-slate-600">
-              <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">
-                {session.date}
-              </span>
-              <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">
-                {session.timeRange}
-              </span>
-              <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">
-                {session.duration}
-              </span>
+              <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">{session.date}</span>
+              <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">{session.timeRange}</span>
+              <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">{session.duration}</span>
             </div>
           </div>
         </div>
@@ -611,7 +607,7 @@ function SessionCard({ session }: { session: UiSession }) {
         <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
           <Link
             href={session.chatHref}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-100"
+            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
           >
             Sohbete Git
           </Link>
@@ -619,7 +615,7 @@ function SessionCard({ session }: { session: UiSession }) {
           {session.canJoin ? (
             <a
               href={session.joinHref}
-              className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-700"
+              className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
             >
               Görüşmeye Katıl
             </a>
@@ -634,20 +630,33 @@ function SessionCard({ session }: { session: UiSession }) {
   )
 }
 
-function NoticeCard({ title, description, onRetry }: { title: string; description: string; onRetry: () => void }) {
+function NoticeCard({
+  title,
+  description,
+  detail,
+  onRetry,
+}: {
+  title: string
+  description: string
+  detail?: string
+  onRetry: () => void
+}) {
   return (
-    <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-amber-900 shadow-sm">
+    <section className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 text-indigo-950 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-black">{title}</p>
-          <p className="mt-1 text-sm leading-6 text-amber-800">{description}</p>
+          <p className="mt-1 text-sm leading-6 text-indigo-800">{description}</p>
+          {detail ? (
+            <p className="mt-1 text-xs font-semibold text-indigo-500">{detail}</p>
+          ) : null}
         </div>
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-indigo-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-md"
         >
-          Tekrar Dene
+          Yenile
         </button>
       </div>
     </section>
@@ -667,11 +676,11 @@ export default function ClientDashboardSessionsPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
-          <div className="mx-auto max-w-6xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+        <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+          <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
             <p className="font-black text-slate-600">Seanslar yükleniyor...</p>
           </div>
-        </main>
+        </section>
       }
     >
       <ClientSessionsContent />

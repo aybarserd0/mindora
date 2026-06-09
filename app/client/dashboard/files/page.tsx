@@ -99,7 +99,7 @@ function getTime(value?: string | null) {
 
 function formatDateTime(value?: string | null) {
   const date = getDate(value)
-  if (!date) return '-'
+  if (!date) return 'Tarih bekleniyor'
 
   return new Intl.DateTimeFormat('tr-TR', {
     day: '2-digit',
@@ -113,7 +113,7 @@ function formatDateTime(value?: string | null) {
 function formatFileSize(bytes: number | null | undefined) {
   const value = Number(bytes || 0)
 
-  if (!Number.isFinite(value) || value <= 0) return '-'
+  if (!Number.isFinite(value) || value <= 0) return 'Boyut bekleniyor'
 
   const units = ['B', 'KB', 'MB', 'GB']
   let size = value
@@ -188,7 +188,7 @@ function ownerLabel(owner: FileOwner) {
   if (normalized === 'admin') return 'Mindora'
   if (normalized === 'system') return 'Sistem'
 
-  return 'Dosya'
+  return 'Belirlenmedi'
 }
 
 function fallbackId(file: ApiClientFile, index: number) {
@@ -264,14 +264,14 @@ function ClientFilesContent() {
   const [summary, setSummary] = useState<FileSummary>(EMPTY_SUMMARY)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState('')
+  const [softNotice, setSoftNotice] = useState('')
   const [filter, setFilter] = useState<FileFilter>('all')
   const [search, setSearch] = useState('')
 
   const fetchFiles = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (!token) {
-        setError('Dosya bilgileri için güvenli token gerekli.')
+        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Size iletilen danışan paneli bağlantısını kullanabilirsiniz.')
         setFiles([])
         setSummary(EMPTY_SUMMARY)
         setLoading(false)
@@ -286,7 +286,7 @@ function ClientFilesContent() {
           setRefreshing(true)
         }
 
-        setError('')
+        setSoftNotice('')
 
         const response = await fetch(`/api/client/files?token=${encodeURIComponent(token)}`, {
           method: 'GET',
@@ -299,7 +299,7 @@ function ClientFilesContent() {
         const data = (await response.json().catch(() => ({}))) as ClientFilesResponse
 
         if (!response.ok || data.ok === false) {
-          throw new Error(data.error || 'Dosya bilgileri alınamadı.')
+          throw new Error(data.error || 'Henüz paylaşılmış dosya bulunmuyor.')
         }
 
         const normalized = (data.files || data.attachments || []).map((file, index) =>
@@ -313,10 +313,10 @@ function ClientFilesContent() {
       } catch (err) {
         setFiles([])
         setSummary(EMPTY_SUMMARY)
-        setError(
+        setSoftNotice(
           err instanceof Error && err.message.trim()
             ? err.message
-            : 'Dosyalar alınırken bağlantı hatası oluştu.'
+            : 'Henüz paylaşılmış dosya bulunmuyor.'
         )
       } finally {
         setLoading(false)
@@ -355,8 +355,8 @@ function ClientFilesContent() {
   }, [files, filter, search])
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 md:px-6 md:py-10">
-      <section className="mx-auto max-w-7xl space-y-6">
+    <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+      <div className="mx-auto max-w-7xl space-y-6">
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -377,19 +377,19 @@ function ClientFilesContent() {
                 type="button"
                 onClick={() => void fetchFiles('refresh')}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href={buildTokenUrl('/client/dashboard', token)}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
                 Dashboard
               </Link>
               <Link
                 href={buildTokenUrl('/client/dashboard/sessions', token)}
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
               >
                 Seanslarım
               </Link>
@@ -397,10 +397,11 @@ function ClientFilesContent() {
           </div>
         </header>
 
-        {error ? (
+        {softNotice ? (
           <NoticeCard
-            title="Dosya bilgileri alınamadı"
-            description={error}
+            title="Henüz paylaşılmış dosya bulunmuyor"
+            description="Uzmanınızla belge, rapor, görsel veya doküman paylaştığınızda dosyalarınız burada güvenli şekilde görüntülenecektir."
+            detail={softNotice}
             onRetry={() => void fetchFiles('refresh')}
           />
         ) : null}
@@ -451,7 +452,7 @@ function ClientFilesContent() {
                 key={item.value}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition ${
+                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   filter === item.value
                     ? 'bg-slate-950 text-white ring-slate-950'
                     : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
@@ -484,12 +485,12 @@ function ClientFilesContent() {
           ) : (
             <EmptyState
               title="Dosya bulunamadı"
-              description="Görüşmelerinizde dosya paylaşıldığında burada listelenecek."
+              description="Uzmanınızla belge, rapor veya doküman paylaştığınızda burada güvenli şekilde listelenecektir."
             />
           )}
         </section>
-      </section>
-    </main>
+      </div>
+    </section>
   )
 }
 
@@ -539,7 +540,7 @@ function FilesTable({ files }: { files: UiFile[] }) {
                       href={file.previewUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100"
+                      className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
                     >
                       Aç
                     </a>
@@ -548,7 +549,7 @@ function FilesTable({ files }: { files: UiFile[] }) {
                     href={file.downloadUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-2xl bg-indigo-600 px-3 py-2 text-xs font-black text-white transition hover:bg-indigo-700"
+                    className="rounded-2xl bg-indigo-600 px-3 py-2 text-xs font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
                   >
                     İndir
                   </a>
@@ -591,7 +592,7 @@ function FileTypeBadge({ type }: { type: FileType }) {
 
 function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <p className="text-sm font-bold text-slate-500">{title}</p>
       <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
@@ -601,7 +602,7 @@ function SummaryCard({ title, value, description }: { title: string; value: stri
 
 function InfoBlock({ title, description }: { title: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <p className="text-sm font-black text-slate-950">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
     </article>
@@ -611,25 +612,28 @@ function InfoBlock({ title, description }: { title: string; description: string 
 function NoticeCard({
   title,
   description,
+  detail,
   onRetry,
 }: {
   title: string
   description: string
+  detail?: string
   onRetry: () => void
 }) {
   return (
-    <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-amber-900 shadow-sm">
+    <section className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 text-indigo-950 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-black">{title}</p>
-          <p className="mt-1 text-sm leading-6 text-amber-800">{description}</p>
+          <p className="mt-1 text-sm leading-6 text-indigo-800">{description}</p>
+          {detail ? <p className="mt-1 text-xs font-semibold text-indigo-500">{detail}</p> : null}
         </div>
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-indigo-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-md"
         >
-          Tekrar Dene
+          Yenile
         </button>
       </div>
     </section>
@@ -651,11 +655,11 @@ export default function ClientDashboardFilesPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
-          <div className="mx-auto max-w-6xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+        <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+          <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
             <p className="font-black text-slate-600">Dosyalar yükleniyor...</p>
           </div>
-        </main>
+        </section>
       }
     >
       <ClientFilesContent />

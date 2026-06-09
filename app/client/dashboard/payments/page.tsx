@@ -123,7 +123,7 @@ const statusConfig: Record<NormalizedPaymentStatus, { label: string; className: 
     className: 'bg-sky-50 text-sky-700 ring-sky-100',
   },
   unknown: {
-    label: 'Bilinmiyor',
+    label: 'Belirlenmedi',
     className: 'bg-slate-100 text-slate-600 ring-slate-200',
   },
 }
@@ -167,7 +167,7 @@ function getTime(value?: string | null) {
 
 function formatDateTime(value?: string | null) {
   const date = getDate(value)
-  if (!date) return '-'
+  if (!date) return 'Tarih bekleniyor'
 
   return new Intl.DateTimeFormat('tr-TR', {
     day: '2-digit',
@@ -240,7 +240,7 @@ function toUiPayment(payment: ApiClientPayment, index: number, token: string): U
 
   return {
     id: String(payment.id || fallbackId(payment, index) || `payment-${index}`),
-    expertName: payment.expertName?.trim() || 'Uzman',
+    expertName: payment.expertName?.trim() || 'Uzman eşleştirme sürecinde',
     expertTitle: payment.expertTitle?.trim() || 'Mindora Uzmanı',
     conversationId: payment.conversationId || null,
     sessionId: payment.sessionId || null,
@@ -298,14 +298,14 @@ function ClientPaymentsContent() {
   const [summary, setSummary] = useState<PaymentSummary>(EMPTY_SUMMARY)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState('')
+  const [softNotice, setSoftNotice] = useState('')
   const [filter, setFilter] = useState<PaymentFilter>('all')
   const [search, setSearch] = useState('')
 
   const fetchPayments = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (!token) {
-        setError('Ödeme bilgileri için güvenli token gerekli.')
+        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Size iletilen danışan paneli bağlantısını kullanabilirsiniz.')
         setPayments([])
         setSummary(EMPTY_SUMMARY)
         setLoading(false)
@@ -320,7 +320,7 @@ function ClientPaymentsContent() {
           setRefreshing(true)
         }
 
-        setError('')
+        setSoftNotice('')
 
         const response = await fetch(`/api/client/payments?token=${encodeURIComponent(token)}`, {
           method: 'GET',
@@ -333,7 +333,7 @@ function ClientPaymentsContent() {
         const data = (await response.json().catch(() => ({}))) as ClientPaymentsResponse
 
         if (!response.ok || data.ok === false) {
-          throw new Error(data.error || 'Ödeme bilgileri alınamadı.')
+          throw new Error(data.error || 'Henüz ödeme kaydı bulunmuyor.')
         }
 
         const normalized = (data.payments || []).map((payment, index) =>
@@ -347,10 +347,10 @@ function ClientPaymentsContent() {
       } catch (err) {
         setPayments([])
         setSummary(EMPTY_SUMMARY)
-        setError(
+        setSoftNotice(
           err instanceof Error && err.message.trim()
             ? err.message
-            : 'Ödeme bilgileri alınırken bağlantı hatası oluştu.'
+            : 'Henüz ödeme kaydı bulunmuyor.'
         )
       } finally {
         setLoading(false)
@@ -394,8 +394,8 @@ function ClientPaymentsContent() {
   }, [payments, filter, search])
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 md:px-6 md:py-10">
-      <section className="mx-auto max-w-7xl space-y-6">
+    <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+      <div className="mx-auto max-w-7xl space-y-6">
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -416,19 +416,19 @@ function ClientPaymentsContent() {
                 type="button"
                 onClick={() => void fetchPayments('refresh')}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href={buildTokenUrl('/client/dashboard', token)}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
                 Dashboard
               </Link>
               <Link
                 href={buildTokenUrl('/client/dashboard/sessions', token)}
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
               >
                 Seanslarım
               </Link>
@@ -436,10 +436,11 @@ function ClientPaymentsContent() {
           </div>
         </header>
 
-        {error ? (
+        {softNotice ? (
           <NoticeCard
-            title="Ödeme bilgileri alınamadı"
-            description={error}
+            title="Henüz ödeme kaydı bulunmuyor"
+            description="İlk görüşme ödemeniz tamamlandığında ödeme geçmişiniz, durum bilgisi ve ilgili seans bağlantıları burada görüntülenecektir."
+            detail={softNotice}
             onRetry={() => void fetchPayments('refresh')}
           />
         ) : null}
@@ -505,7 +506,7 @@ function ClientPaymentsContent() {
                 key={item.value}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition ${
+                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   filter === item.value
                     ? 'bg-slate-950 text-white ring-slate-950'
                     : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
@@ -532,21 +533,18 @@ function ClientPaymentsContent() {
           </div>
 
           {loading ? (
-            <EmptyState
-              title="Ödemeler yükleniyor"
-              description="Ödeme geçmişiniz hazırlanıyor."
-            />
+            <EmptyState title="Ödemeler yükleniyor" description="Ödeme geçmişiniz hazırlanıyor." />
           ) : filteredPayments.length > 0 ? (
             <PaymentsTable payments={filteredPayments} />
           ) : (
             <EmptyState
               title="Ödeme kaydı bulunamadı"
-              description="Ödeme tamamlandığında kayıtlar burada listelenecek."
+              description="Ödeme işlemleriniz tamamlandığında tutar, tarih, durum ve ilgili seans bağlantıları burada listelenecektir."
             />
           )}
         </section>
-      </section>
-    </main>
+      </div>
+    </section>
   )
 }
 
@@ -593,7 +591,7 @@ function PaymentsTable({ payments }: { payments: UiPayment[] }) {
                   {payment.chatHref !== '#' ? (
                     <Link
                       href={payment.chatHref}
-                      className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100"
+                      className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
                     >
                       Chat
                     </Link>
@@ -602,7 +600,7 @@ function PaymentsTable({ payments }: { payments: UiPayment[] }) {
                   {payment.sessionHref !== '#' ? (
                     <Link
                       href={payment.sessionHref}
-                      className="rounded-2xl bg-indigo-600 px-3 py-2 text-xs font-black text-white transition hover:bg-indigo-700"
+                      className="rounded-2xl bg-indigo-600 px-3 py-2 text-xs font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
                     >
                       Seans
                     </Link>
@@ -613,7 +611,7 @@ function PaymentsTable({ payments }: { payments: UiPayment[] }) {
                       href={payment.receiptUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100"
+                      className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
                     >
                       Dekont
                     </a>
@@ -640,7 +638,7 @@ function PaymentBadge({ status }: { status: NormalizedPaymentStatus }) {
 
 function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <p className="text-sm font-bold text-slate-500">{title}</p>
       <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
@@ -650,7 +648,7 @@ function SummaryCard({ title, value, description }: { title: string; value: stri
 
 function InfoBlock({ title, description }: { title: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <p className="text-sm font-black text-slate-950">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
     </article>
@@ -660,25 +658,28 @@ function InfoBlock({ title, description }: { title: string; description: string 
 function NoticeCard({
   title,
   description,
+  detail,
   onRetry,
 }: {
   title: string
   description: string
+  detail?: string
   onRetry: () => void
 }) {
   return (
-    <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-amber-900 shadow-sm">
+    <section className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 text-indigo-950 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-black">{title}</p>
-          <p className="mt-1 text-sm leading-6 text-amber-800">{description}</p>
+          <p className="mt-1 text-sm leading-6 text-indigo-800">{description}</p>
+          {detail ? <p className="mt-1 text-xs font-semibold text-indigo-500">{detail}</p> : null}
         </div>
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-indigo-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-md"
         >
-          Tekrar Dene
+          Yenile
         </button>
       </div>
     </section>
@@ -700,11 +701,11 @@ export default function ClientDashboardPaymentsPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
-          <div className="mx-auto max-w-6xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+        <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+          <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
             <p className="font-black text-slate-600">Ödemeler yükleniyor...</p>
           </div>
-        </main>
+        </section>
       }
     >
       <ClientPaymentsContent />
