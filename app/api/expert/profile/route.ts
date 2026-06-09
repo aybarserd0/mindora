@@ -5,7 +5,6 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 type ExpertStatus = 'pending' | 'approved' | 'rejected' | 'passive' | 'review' | string
-
 type UnknownRecord = Record<string, unknown>
 
 type NormalizedExpert = {
@@ -38,6 +37,18 @@ type NormalizedExpert = {
   totalEarnings: number
 }
 
+const REVIEW_REQUIRED_KEYS = new Set([
+  'title',
+  'specialties',
+  'focus_areas',
+  'education',
+  'certificates',
+  'bio',
+  'public_bio',
+  'approach',
+  'profile_image_url',
+])
+
 function jsonOk(payload: Record<string, unknown>, status = 200) {
   return NextResponse.json({ ok: true, ...payload }, { status })
 }
@@ -67,6 +78,13 @@ function toNullableText(value: unknown) {
 function toNumber(value: unknown, fallback = 0) {
   const numberValue = Number(value)
   return Number.isFinite(numberValue) ? numberValue : fallback
+}
+
+function toNullableNumber(value: unknown) {
+  if (value === null || value === undefined || value === '') return null
+
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : null
 }
 
 function isValidUuid(value: unknown): value is string {
@@ -109,6 +127,21 @@ function normalizeStringArray(value: unknown): string[] {
   return []
 }
 
+function uniqueCleanList(value: unknown, maxItems = 30) {
+  const seen = new Set<string>()
+
+  return normalizeStringArray(value)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => {
+      const key = item.toLocaleLowerCase('tr-TR')
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .slice(0, maxItems)
+}
+
 function pick(row: UnknownRecord, keys: string[], fallback: unknown = '') {
   for (const key of keys) {
     const value = row[key]
@@ -124,7 +157,7 @@ function getInitials(name: string) {
     .map((part) => part.trim())
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
+    .map((part) => part[0]?.toLocaleUpperCase('tr-TR'))
     .join('')
 
   return initials || 'M'
@@ -183,7 +216,10 @@ function normalizeExpert(row: UnknownRecord) {
     focusAreas: normalizeStringArray(pick(row, ['focus_areas', 'focusAreas', 'working_areas'])),
     education: normalizeStringArray(pick(row, ['education', 'educations'])),
     certificates: normalizeStringArray(pick(row, ['certificates', 'certificate'])),
-    experienceYears: toNumber(pick(row, ['experience_years', 'experienceYears', 'years_of_experience']), 0),
+    experienceYears: toNumber(
+      pick(row, ['experience_years', 'experienceYears', 'years_of_experience']),
+      0
+    ),
     sessionPrice: toNumber(pick(row, ['session_price', 'price', 'session_fee']), 0),
     sessionDurationMinutes,
     profileImageUrl: toNullableText(pick(row, ['profile_image_url', 'avatar_url', 'image_url'])),
@@ -212,6 +248,7 @@ function normalizeExpert(row: UnknownRecord) {
     sessionPrice: internalProfile.sessionPrice,
     sessionDuration: `${internalProfile.sessionDurationMinutes} dk`,
     bio: internalProfile.publicBio,
+    publicBio: internalProfile.publicBio,
     approach: internalProfile.approach,
     isAvailableThisWeek: false,
     nextAvailableSlot: null,
@@ -232,6 +269,11 @@ async function findExpert({ expertId, slug }: { expertId: string | null; slug: s
     query = query.eq('slug', slug)
   } else if (process.env.MINDORA_DEV_EXPERT_ID && isValidUuid(process.env.MINDORA_DEV_EXPERT_ID)) {
     query = query.eq('id', process.env.MINDORA_DEV_EXPERT_ID)
+  } else if (
+    process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID &&
+    isValidUuid(process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID)
+  ) {
+    query = query.eq('id', process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID)
   } else {
     query = query.order('created_at', { ascending: false })
   }
@@ -241,6 +283,81 @@ async function findExpert({ expertId, slug }: { expertId: string | null; slug: s
   if (error) throw error
 
   return (data || null) as UnknownRecord | null
+}
+
+function validatePatchPayload(body: UnknownRecord) {
+  const name = toText(body.name)
+  const title = toText(body.title)
+
+  if (!name) return 'Ad soyad alanı zorunludur.'
+  if (!title) return 'Unvan alanı zorunludur.'
+
+  const experienceYears = toNullableNumber(body.experienceYears ?? body.experience_years)
+  if (
+    (body.experienceYears !== undefined || body.experience_years !== undefined) &&
+    (experienceYears === null || experienceYears < 0 || experienceYears > 80)
+  ) {
+    return 'Deneyim yılı 0 ile 80 arasında olmalıdır.'
+  }
+
+  const sessionPrice = toNullableNumber(body.sessionPrice ?? body.session_price)
+  if (
+    (body.sessionPrice !== undefined || body.session_price !== undefined) &&
+    (sessionPrice === null || sessionPrice < 0 || sessionPrice > 100000)
+  ) {
+    return 'Seans ücreti geçerli bir tutar olmalıdır.'
+  }
+
+  const publicBio = toText(body.publicBio ?? body.public_bio)
+  if (publicBio.length > 1200) return 'Kısa tanıtım metni en fazla 1200 karakter olabilir.'
+
+  const approach = toText(body.approach)
+  if (approach.length > 1600) return 'Çalışma yaklaşımı en fazla 1600 karakter olabilir.'
+
+  const profileImageUrl = toText(body.profileImageUrl ?? body.profile_image_url)
+  if (profileImageUrl && !/^https?:\/\/.+/i.test(profileImageUrl)) {
+    return 'Profil fotoğrafı için geçerli bir URL kullanılmalıdır.'
+  }
+
+  return ''
+}
+
+function buildPatchUpdate(body: UnknownRecord) {
+  const publicBio = toNullableText(body.publicBio ?? body.public_bio ?? body.bio)
+  const update: UnknownRecord = {
+    name: toText(body.name),
+    full_name: toText(body.name),
+    title: toText(body.title),
+    phone: toNullableText(body.phone),
+    city: toText(body.city, 'Belirtilmedi'),
+    specialties: uniqueCleanList(body.specialties),
+    focus_areas: uniqueCleanList(body.focusAreas ?? body.focus_areas),
+    experience_years: toNullableNumber(body.experienceYears ?? body.experience_years) ?? 0,
+    session_price: toNullableNumber(body.sessionPrice ?? body.session_price) ?? 0,
+    public_bio: publicBio || '',
+    bio: toNullableText(body.bio) || publicBio || '',
+    approach: toNullableText(body.approach) || '',
+    education: uniqueCleanList(body.education),
+    certificates: uniqueCleanList(body.certificates),
+    profile_image_url: toNullableText(body.profileImageUrl ?? body.profile_image_url),
+    updated_at: new Date().toISOString(),
+  }
+
+  return update
+}
+
+function hasReviewRequiredChange(current: UnknownRecord, update: UnknownRecord) {
+  return Object.entries(update).some(([key, value]) => {
+    if (!REVIEW_REQUIRED_KEYS.has(key)) return false
+
+    const currentValue = current[key]
+
+    if (Array.isArray(value) || Array.isArray(currentValue)) {
+      return JSON.stringify(normalizeStringArray(currentValue)) !== JSON.stringify(normalizeStringArray(value))
+    }
+
+    return toText(currentValue) !== toText(value)
+  })
 }
 
 export async function GET(req: NextRequest) {
@@ -286,6 +403,68 @@ export async function GET(req: NextRequest) {
 
     return jsonError(
       'Uzman profili şu anda alınamadı.',
+      500,
+      error instanceof Error ? error.message : error
+    )
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const expertIdParam = toText(req.nextUrl.searchParams.get('expertId'))
+    const expertId = expertIdParam && isValidUuid(expertIdParam) ? expertIdParam : null
+
+    if (expertIdParam && !expertId) {
+      return jsonError('Geçerli uzman kimliği gerekli.', 400)
+    }
+
+    const body = (await req.json().catch(() => ({}))) as UnknownRecord
+    const validationError = validatePatchPayload(body)
+
+    if (validationError) {
+      return jsonError(validationError, 422)
+    }
+
+    const currentExpert = await findExpert({ expertId, slug: null })
+
+    if (!currentExpert) {
+      return jsonError('Uzman profili bulunamadı.', 404)
+    }
+
+    const update = buildPatchUpdate(body)
+    const pendingReview = hasReviewRequiredChange(currentExpert, update)
+    const currentStatus = normalizeStatus(pick(currentExpert, ['status', 'profile_status'], 'pending'))
+
+    if (pendingReview && currentStatus === 'approved') {
+      update.status = 'review'
+    }
+
+    const supabase = getSupabaseAdmin() as any
+
+    const { data, error } = await supabase
+      .from('experts')
+      .update(update)
+      .eq('id', currentExpert.id)
+      .select('*')
+      .single()
+
+    if (error) throw error
+
+    const normalized = normalizeExpert((data || currentExpert) as UnknownRecord)
+
+    return jsonOk({
+      profile: normalized.internalProfile,
+      publicProfile: normalized.publicProfile,
+      pendingReview,
+      message: pendingReview
+        ? 'Profil güncellendi. Kritik alanlar admin incelemesine alındı.'
+        : 'Profil bilgileriniz başarıyla güncellendi.',
+    })
+  } catch (error) {
+    console.error('EXPERT_PROFILE_PATCH_API_ERROR', error)
+
+    return jsonError(
+      'Profil güncellenemedi.',
       500,
       error instanceof Error ? error.message : error
     )
