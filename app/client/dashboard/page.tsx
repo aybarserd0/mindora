@@ -75,10 +75,8 @@ function safeText(value: string | null | undefined, fallback = '-') {
 
 function getDate(value?: string | null) {
   if (!value) return null
-
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
-
   return date
 }
 
@@ -165,7 +163,6 @@ function getPreview(message?: string | null) {
 
 function buildTokenUrl(path: string | null | undefined, token: string) {
   if (!path) return '#'
-
   if (!token) return path
 
   try {
@@ -177,7 +174,6 @@ function buildTokenUrl(path: string | null | undefined, token: string) {
     }
 
     if (isAbsolute) return url.toString()
-
     return `${url.pathname}${url.search}${url.hash}`
   } catch {
     if (path.includes('token=')) return path
@@ -188,12 +184,7 @@ function buildTokenUrl(path: string | null | undefined, token: string) {
 }
 
 function getBookingKey(booking: DashboardBooking, index: number) {
-  return [
-    booking.id,
-    booking.conversation_id,
-    booking.scheduled_start_at,
-    index,
-  ]
+  return [booking.id, booking.conversation_id, booking.scheduled_start_at, index]
     .filter(Boolean)
     .join('-')
 }
@@ -204,7 +195,14 @@ function isSessionJoinable(booking: DashboardBooking | null, sessionUrl: string 
   const status = String(booking.status || '').toLowerCase()
   const statusReady = status === 'confirmed' || status === 'active' || status === 'scheduled'
 
-  return Boolean(statusReady && (booking.session_ready || booking.live_session_id || booking.client_join_url))
+  return Boolean(
+    statusReady && (booking.session_ready || booking.live_session_id || booking.client_join_url)
+  )
+}
+
+function isPlaceholderToken(token: string) {
+  const normalized = token.trim().toLowerCase()
+  return normalized === 'token' || normalized === 'gercek_token' || normalized === 'gerçek_token'
 }
 
 function ClientDashboardContent() {
@@ -226,10 +224,16 @@ function ClientDashboardContent() {
     return buildTokenUrl(dashboard.sessionUrl, token)
   }, [dashboard, token])
 
+  const sessionsHref = useMemo(() => buildTokenUrl('/client/dashboard/sessions', token), [token])
+  const paymentsHref = useMemo(() => buildTokenUrl('/client/dashboard/payments', token), [token])
+  const filesHref = useMemo(() => buildTokenUrl('/client/dashboard/files', token), [token])
+  const profileHref = useMemo(() => buildTokenUrl('/client/dashboard/profile', token), [token])
+
   const loadDashboard = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
-      if (!token) {
-        setError('Dashboard erişimi için güvenli token gerekli.')
+      if (!token || isPlaceholderToken(token)) {
+        setDashboard(null)
+        setError('Dashboard erişimi için geçerli client veya session token bulunamadı.')
         setLoading(false)
         setRefreshing(false)
         return
@@ -280,30 +284,39 @@ function ClientDashboardContent() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
-        <div className="mx-auto max-w-6xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+      <section className="px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
           <p className="font-black text-slate-600">Dashboard yükleniyor...</p>
         </div>
-      </main>
+      </section>
     )
   }
 
   if (error || !dashboard) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
+      <section className="px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-rose-100 bg-rose-50 p-8 text-center shadow-sm">
           <p className="text-xl font-black text-rose-700">Erişim sağlanamadı</p>
           <p className="mt-2 text-sm font-bold text-rose-600">
             {error || 'Dashboard bilgileri alınamadı.'}
           </p>
-          <Link
-            href="/"
-            className="mt-5 inline-flex rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white"
-          >
-            Ana sayfaya dön
-          </Link>
+          <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => void loadDashboard('refresh')}
+              className="inline-flex justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-900 ring-1 ring-rose-200 transition hover:bg-rose-100"
+            >
+              Tekrar Dene
+            </button>
+            <Link
+              href="/"
+              className="inline-flex justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
+            >
+              Ana sayfaya dön
+            </Link>
+          </div>
         </div>
-      </main>
+      </section>
     )
   }
 
@@ -311,8 +324,8 @@ function ClientDashboardContent() {
   const canJoinSession = isSessionJoinable(nextSession, sessionUrl)
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 md:px-6 md:py-10">
-      <div className="mx-auto max-w-7xl">
+    <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -330,7 +343,7 @@ function ClientDashboardContent() {
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <Pill tone="green">Secure dashboard</Pill>
+                <Pill tone="green">Güvenli panel</Pill>
                 <Pill tone="purple">Uzman: {safeText(dashboard.expert.name, 'Uzman')}</Pill>
                 <Pill tone="blue">
                   Chat: {normalizeConversationStatus(dashboard.conversation.status)}
@@ -355,7 +368,7 @@ function ClientDashboardContent() {
                 href={chatUrl}
                 className="rounded-2xl bg-slate-950 px-5 py-4 text-center text-sm font-black text-white transition hover:bg-slate-800"
               >
-                💬 Sohbete Git
+                Sohbete Git
               </Link>
 
               {canJoinSession ? (
@@ -363,21 +376,21 @@ function ClientDashboardContent() {
                   href={sessionUrl}
                   className="rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-black text-white transition hover:bg-emerald-700"
                 >
-                  🎥 Görüşmeye Katıl
+                  Görüşmeye Katıl
                 </a>
               ) : (
                 <button
                   disabled
                   className="cursor-not-allowed rounded-2xl bg-emerald-100 px-5 py-4 text-sm font-black text-emerald-500"
                 >
-                  🎥 Görüşme Beklemede
+                  Görüşme Beklemede
                 </button>
               )}
             </div>
           </div>
         </section>
 
-        <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Yaklaşan"
             value={String(dashboard.stats.upcomingCount)}
@@ -400,7 +413,7 @@ function ClientDashboardContent() {
           />
         </section>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-start justify-between gap-3">
@@ -455,7 +468,7 @@ function ClientDashboardContent() {
                         href={sessionUrl}
                         className="flex-1 rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-black text-white transition hover:bg-emerald-700"
                       >
-                        🎥 Güvenli Görüşmeye Katıl
+                        Güvenli Görüşmeye Katıl
                       </a>
                     ) : null}
 
@@ -463,14 +476,20 @@ function ClientDashboardContent() {
                       href={chatUrl}
                       className="flex-1 rounded-2xl bg-white px-5 py-4 text-center text-sm font-black text-slate-950 transition hover:bg-slate-100"
                     >
-                      💬 Sohbete Git
+                      Sohbete Git
                     </Link>
                   </div>
                 </div>
               )}
             </div>
 
-            <ListCard title="Yaklaşan Seanslar" eyebrow="Takvim" emptyText="Yaklaşan seans bulunmuyor.">
+            <ListCard
+              title="Yaklaşan Seanslar"
+              eyebrow="Takvim"
+              emptyText="Yaklaşan seans bulunmuyor."
+              actionHref={sessionsHref}
+              actionLabel="Tümünü gör"
+            >
               {dashboard.upcomingSessions.map((booking, index) => (
                 <SessionRow key={getBookingKey(booking, index)} booking={booking} />
               ))}
@@ -478,6 +497,19 @@ function ClientDashboardContent() {
           </div>
 
           <div className="space-y-6">
+            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+                Hızlı İşlemler
+              </p>
+              <h2 className="mt-2 text-xl font-black text-slate-950">Kısayollar</h2>
+              <div className="mt-5 grid gap-3">
+                <QuickLink href={sessionsHref} title="Seanslarım" description="Yaklaşan ve geçmiş seanslar" />
+                <QuickLink href={paymentsHref} title="Ödemelerim" description="Ödeme geçmişi ve durumlar" />
+                <QuickLink href={filesHref} title="Dosyalarım" description="Paylaşılan dosyalar" />
+                <QuickLink href={profileHref} title="Profilim" description="Hesap ve destek bilgileri" />
+              </div>
+            </section>
+
             <ListCard title="Son Mesajlar" eyebrow="Chat" emptyText="Henüz mesaj görünmüyor.">
               {dashboard.recentMessages.map((message) => (
                 <div
@@ -507,7 +539,7 @@ function ClientDashboardContent() {
           </div>
         </section>
       </div>
-    </main>
+    </section>
   )
 }
 
@@ -545,23 +577,48 @@ function MiniCard({ label, value }: { label: string; value: string }) {
   )
 }
 
+function QuickLink({ href, title, description }: { href: string; title: string; description: string }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-200 hover:bg-indigo-50"
+    >
+      <p className="text-sm font-black text-slate-950">{title}</p>
+      <p className="mt-1 text-xs font-semibold text-slate-500">{description}</p>
+    </Link>
+  )
+}
+
 function ListCard({
   eyebrow,
   title,
   emptyText,
   children,
+  actionHref,
+  actionLabel,
 }: {
   eyebrow: string
   title: string
   emptyText: string
   children: React.ReactNode
+  actionHref?: string
+  actionLabel?: string
 }) {
   const hasChildren = Array.isArray(children) ? children.length > 0 : Boolean(children)
 
   return (
     <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">{eyebrow}</p>
-      <h2 className="mt-2 text-xl font-black text-slate-950">{title}</h2>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">{eyebrow}</p>
+          <h2 className="mt-2 text-xl font-black text-slate-950">{title}</h2>
+        </div>
+        {actionHref && actionLabel ? (
+          <Link href={actionHref} className="text-sm font-black text-indigo-600 transition hover:text-indigo-700">
+            {actionLabel}
+          </Link>
+        ) : null}
+      </div>
 
       <div className="mt-5 space-y-3">
         {hasChildren ? (
@@ -603,11 +660,11 @@ export default function ClientDashboardPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950">
-          <div className="mx-auto max-w-6xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+        <section className="px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
             <p className="font-black text-slate-600">Dashboard yükleniyor...</p>
           </div>
-        </main>
+        </section>
       }
     >
       <ClientDashboardContent />
