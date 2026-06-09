@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 
 type AvailabilityRow = {
   id: string
@@ -33,8 +33,14 @@ type FormState = {
   isActive: boolean
 }
 
-const DEFAULT_EXPERT_ID = process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID || ''
+type NoticeState = {
+  title: string
+  description: string
+  tone: 'warning' | 'success' | 'default'
+} | null
+
 const DEFAULT_TIMEZONE = 'Europe/Istanbul'
+const DEFAULT_EXPERT_ID = process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID?.trim() || ''
 
 const weekDays = [
   { id: 1, label: 'Pazartesi' },
@@ -44,7 +50,7 @@ const weekDays = [
   { id: 5, label: 'Cuma' },
   { id: 6, label: 'Cumartesi' },
   { id: 0, label: 'Pazar' },
-]
+] as const
 
 const initialForm: FormState = {
   dayOfWeek: 1,
@@ -54,6 +60,11 @@ const initialForm: FormState = {
   bufferMinutes: 10,
   timezone: DEFAULT_TIMEZONE,
   isActive: true,
+}
+
+function getDayOrder(dayOfWeek: number) {
+  if (dayOfWeek === 0) return 7
+  return dayOfWeek
 }
 
 function getDayLabel(dayOfWeek: number) {
@@ -70,21 +81,22 @@ function toNumber(value: unknown, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
-function calculateSlotCount(row: AvailabilityRow) {
-  const [startHour = 0, startMinute = 0] = normalizeTime(row.start_time)
-    .split(':')
-    .map(Number)
-  const [endHour = 0, endMinute = 0] = normalizeTime(row.end_time)
-    .split(':')
-    .map(Number)
+function timeToMinutes(value: string) {
+  const normalized = normalizeTime(value)
+  const [hourRaw, minuteRaw] = normalized.split(':')
+  const hour = toNumber(hourRaw, 0)
+  const minute = toNumber(minuteRaw, 0)
+  return hour * 60 + minute
+}
 
-  const startTotal = startHour * 60 + startMinute
-  const endTotal = endHour * 60 + endMinute
+function calculateSlotCount(row: AvailabilityRow) {
+  const startTotal = timeToMinutes(row.start_time)
+  const endTotal = timeToMinutes(row.end_time)
   const duration = toNumber(row.slot_duration_minutes, 50)
   const buffer = toNumber(row.buffer_minutes, 10)
   const step = duration + buffer
 
-  if (endTotal <= startTotal || step <= 0) return 0
+  if (endTotal <= startTotal || duration <= 0 || step <= 0) return 0
 
   return Math.max(Math.floor((endTotal - startTotal + buffer) / step), 0)
 }
@@ -100,13 +112,61 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback
 }
 
+function validateForm(form: FormState) {
+  const start = timeToMinutes(form.startTime)
+  const end = timeToMinutes(form.endTime)
+
+  if (!form.startTime || !form.endTime) {
+    return 'Başlangıç ve bitiş saati zorunludur.'
+  }
+
+  if (end <= start) {
+    return 'Bitiş saati başlangıç saatinden sonra olmalıdır.'
+  }
+
+  if (form.slotDurationMinutes < 20 || form.slotDurationMinutes > 180) {
+    return 'Seans süresi 20 ile 180 dakika arasında olmalıdır.'
+  }
+
+  if (form.bufferMinutes < 0 || form.bufferMinutes > 60) {
+    return 'Ara süresi 0 ile 60 dakika arasında olmalıdır.'
+  }
+
+  if (end - start < form.slotDurationMinutes) {
+    return 'Saat aralığı en az bir seans süresini karşılamalıdır.'
+  }
+
+  return ''
+}
+
+function hasLocalOverlap(rows: AvailabilityRow[], form: FormState) {
+  const start = timeToMinutes(form.startTime)
+  const end = timeToMinutes(form.endTime)
+
+  return rows.some((row) => {
+    if (!row.is_active || !form.isActive) return false
+    if (row.day_of_week !== form.dayOfWeek) return false
+
+    const rowStart = timeToMinutes(row.start_time)
+    const rowEnd = timeToMinutes(row.end_time)
+
+    return start < rowEnd && end > rowStart
+  })
+}
+
+function buildAvailabilityQuery(expertId: string) {
+  const params = new URLSearchParams()
+  params.set('expertId', expertId)
+  return `/api/expert/availability?${params.toString()}`
+}
+
 export default function ExpertAvailabilityPage() {
   const [availability, setAvailability] = useState<AvailabilityRow[]>([])
   const [form, setForm] = useState<FormState>(initialForm)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [notice, setNotice] = useState<NoticeState>(null)
 
   const expertId = DEFAULT_EXPERT_ID
   const hasExpertId = Boolean(expertId)
@@ -114,7 +174,8 @@ export default function ExpertAvailabilityPage() {
   const sortedAvailability = useMemo(
     () =>
       [...availability].sort((a, b) => {
-        if (a.day_of_week !== b.day_of_week) return a.day_of_week - b.day_of_week
+        const dayDiff = getDayOrder(a.day_of_week) - getDayOrder(b.day_of_week)
+        if (dayDiff !== 0) return dayDiff
         return normalizeTime(a.start_time).localeCompare(normalizeTime(b.start_time))
       }),
     [availability]
@@ -128,12 +189,14 @@ export default function ExpertAvailabilityPage() {
   const summary = useMemo(() => {
     const activeDayCount = new Set(activeRows.map((row) => row.day_of_week)).size
     const weeklySlotCount = activeRows.reduce((total, row) => total + calculateSlotCount(row), 0)
+
     const averageDuration = activeRows.length
       ? Math.round(
           activeRows.reduce((total, row) => total + toNumber(row.slot_duration_minutes, 50), 0) /
             activeRows.length
         )
       : initialForm.slotDurationMinutes
+
     const averageBuffer = activeRows.length
       ? Math.round(
           activeRows.reduce((total, row) => total + toNumber(row.buffer_minutes, 10), 0) /
@@ -149,21 +212,27 @@ export default function ExpertAvailabilityPage() {
     }
   }, [activeRows])
 
-  async function fetchAvailability() {
+  const fetchAvailability = useCallback(async () => {
     try {
       setLoading(true)
-      setError('')
-      setMessage('')
+      setNotice(null)
 
       if (!hasExpertId) {
         setAvailability([])
+        setNotice({
+          title: 'Uzman kimliği bekleniyor',
+          description:
+            'Müsaitlik kaydı oluşturmak için uzman kimliği bağlanmalıdır. Canlı sistemde bu bilgi oturumdan otomatik alınacaktır.',
+          tone: 'warning',
+        })
         return
       }
 
-      const response = await fetch(`/api/expert/availability?expertId=${expertId}`, {
+      const response = await fetch(buildAvailabilityQuery(expertId), {
         cache: 'no-store',
       })
-      const data = (await response.json()) as AvailabilityApiResponse
+
+      const data = (await response.json().catch(() => ({}))) as AvailabilityApiResponse
 
       if (!response.ok || data.ok === false) {
         throw new Error(data.error || 'Müsaitlik bilgileri alınamadı.')
@@ -172,22 +241,36 @@ export default function ExpertAvailabilityPage() {
       setAvailability(normalizeAvailabilityRows(data.availability))
     } catch (err) {
       setAvailability([])
-      setError(getErrorMessage(err, 'Müsaitlik bilgileri alınamadı.'))
+      setNotice({
+        title: 'Müsaitlikler alınamadı',
+        description: getErrorMessage(err, 'Müsaitlik bilgileri alınamadı.'),
+        tone: 'warning',
+      })
     } finally {
       setLoading(false)
     }
-  }
+  }, [expertId, hasExpertId])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     try {
       setSaving(true)
-      setError('')
-      setMessage('')
+      setNotice(null)
 
       if (!hasExpertId) {
         throw new Error('Uzman kimliği bağlanmadan müsaitlik kaydedilemez.')
+      }
+
+      const validationError = validateForm(form)
+      if (validationError) {
+        throw new Error(validationError)
+      }
+
+      if (hasLocalOverlap(sortedAvailability, form)) {
+        throw new Error(
+          'Bu gün için seçtiğiniz saat aralığı mevcut aktif müsaitliklerden biriyle çakışıyor.'
+        )
       }
 
       const response = await fetch('/api/expert/availability', {
@@ -195,17 +278,26 @@ export default function ExpertAvailabilityPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ expertId, ...form }),
       })
-      const data = (await response.json()) as AvailabilityApiResponse
+
+      const data = (await response.json().catch(() => ({}))) as AvailabilityApiResponse
 
       if (!response.ok || data.ok === false) {
         throw new Error(data.error || 'Müsaitlik kaydedilemedi.')
       }
 
-      setMessage('Müsaitlik başarıyla kaydedildi.')
+      setNotice({
+        title: 'Müsaitlik kaydedildi',
+        description: 'Yeni çalışma aralığı başarıyla takvime eklendi.',
+        tone: 'success',
+      })
       setForm(initialForm)
       await fetchAvailability()
     } catch (err) {
-      setError(getErrorMessage(err, 'Müsaitlik kaydedilemedi.'))
+      setNotice({
+        title: 'İşlem tamamlanamadı',
+        description: getErrorMessage(err, 'Müsaitlik kaydedilemedi.'),
+        tone: 'warning',
+      })
     } finally {
       setSaving(false)
     }
@@ -221,240 +313,280 @@ export default function ExpertAvailabilityPage() {
     if (!shouldDelete) return
 
     try {
-      setError('')
-      setMessage('')
+      setDeletingId(row.id)
+      setNotice(null)
 
       const response = await fetch(`/api/expert/availability/${row.id}`, {
         method: 'DELETE',
       })
+
       const data = (await response.json().catch(() => ({}))) as AvailabilityApiResponse
 
       if (!response.ok || data.ok === false) {
-        throw new Error(data.error || 'Silme işlemi için gerekli endpoint henüz hazır değil.')
+        throw new Error(data.error || 'Müsaitlik silinemedi.')
       }
 
-      setMessage('Müsaitlik silindi.')
+      setNotice({
+        title: 'Müsaitlik silindi',
+        description: 'Seçili çalışma aralığı takvimden kaldırıldı.',
+        tone: 'success',
+      })
+
       await fetchAvailability()
     } catch (err) {
-      setError(getErrorMessage(err, 'Müsaitlik silinemedi.'))
+      setNotice({
+        title: 'Silme işlemi tamamlanamadı',
+        description: getErrorMessage(err, 'Müsaitlik silinemedi.'),
+        tone: 'warning',
+      })
+    } finally {
+      setDeletingId(null)
     }
   }
 
   useEffect(() => {
-    fetchAvailability()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    void fetchAvailability()
+  }, [fetchAvailability])
 
   const summaryCards = [
-    { title: 'Aktif Gün', value: String(summary.activeDayCount), description: 'Yayınlanan müsait gün' },
-    { title: 'Haftalık Slot', value: String(summary.weeklySlotCount), description: 'Danışana açık saat' },
-    { title: 'Seans Süresi', value: `${summary.averageDuration} dk`, description: 'Ortalama görüşme' },
-    { title: 'Ara Süresi', value: `${summary.averageBuffer} dk`, description: 'Seans arası süre' },
+    {
+      title: 'Aktif Gün',
+      value: String(summary.activeDayCount),
+      description: 'Yayındaki müsait gün',
+    },
+    {
+      title: 'Haftalık Slot',
+      value: String(summary.weeklySlotCount),
+      description: 'Danışana açık randevu',
+    },
+    {
+      title: 'Seans Süresi',
+      value: `${summary.averageDuration} dk`,
+      description: 'Ortalama görüşme',
+    },
+    {
+      title: 'Ara Süresi',
+      value: `${summary.averageBuffer} dk`,
+      description: 'Seans arası süre',
+    },
   ]
 
   return (
-    <main className="space-y-8">
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.22em] text-indigo-600">
-              Uzman Paneli
-            </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              Müsaitlik Takvimi
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Haftalık uygun gün ve saatlerinizi tanımlayın. Danışanlar randevu
-              oluştururken bu saat aralıklarını görecek.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={fetchAvailability}
-              disabled={loading}
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? 'Yükleniyor...' : 'Yenile'}
-            </button>
-            <Link
-              href="/expert/dashboard/sessions"
-              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
-            >
-              Görüşmeleri Gör
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {!hasExpertId ? (
-        <NoticeCard
-          title="Uzman kimliği bekleniyor"
-          description="Müsaitlik kaydı oluşturmak için uzman kimliği bağlanmalıdır. Canlı sistemde bu bilgi oturumdan otomatik alınacaktır."
-          tone="warning"
-        />
-      ) : null}
-
-      {error ? <NoticeCard title="İşlem tamamlanamadı" description={error} tone="warning" /> : null}
-      {message ? <NoticeCard title="İşlem başarılı" description={message} tone="success" /> : null}
-
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {summaryCards.map((card) => (
-          <SummaryCard key={card.title} {...card} />
-        ))}
-      </section>
-
-      <div className="grid gap-6 xl:grid-cols-[1.25fr_1fr]">
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5">
-            <h2 className="text-lg font-semibold text-slate-950">Müsaitlik Ekle</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Aynı gün içinde çakışan saat aralıkları sistem tarafından engellenir.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Gün</span>
-              <select
-                value={form.dayOfWeek}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, dayOfWeek: Number(event.target.value) }))
-                }
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-              >
-                {weekDays.map((day) => (
-                  <option key={day.id} value={day.id}>
-                    {day.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Durum</span>
-              <select
-                value={form.isActive ? 'active' : 'passive'}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, isActive: event.target.value === 'active' }))
-                }
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-              >
-                <option value="active">Yayında</option>
-                <option value="passive">Kapalı</option>
-              </select>
-            </label>
-
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Başlangıç Saati</span>
-              <input
-                type="time"
-                value={form.startTime}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, startTime: event.target.value }))
-                }
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-              />
-            </label>
-
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Bitiş Saati</span>
-              <input
-                type="time"
-                value={form.endTime}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, endTime: event.target.value }))
-                }
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-              />
-            </label>
-
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Seans Süresi</span>
-              <select
-                value={form.slotDurationMinutes}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    slotDurationMinutes: Number(event.target.value),
-                  }))
-                }
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-              >
-                <option value={30}>30 dk</option>
-                <option value={45}>45 dk</option>
-                <option value={50}>50 dk</option>
-                <option value={60}>60 dk</option>
-                <option value={90}>90 dk</option>
-              </select>
-            </label>
-
-            <label className="space-y-2">
-              <span className="text-sm font-semibold text-slate-700">Ara Süresi</span>
-              <select
-                value={form.bufferMinutes}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, bufferMinutes: Number(event.target.value) }))
-                }
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-              >
-                <option value={0}>Ara yok</option>
-                <option value={5}>5 dk</option>
-                <option value={10}>10 dk</option>
-                <option value={15}>15 dk</option>
-                <option value={20}>20 dk</option>
-              </select>
-            </label>
-
-            <div className="sm:col-span-2">
-              <button
-                type="submit"
-                disabled={saving || !hasExpertId}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-              >
-                {saving ? 'Kaydediliyor...' : 'Müsaitlik Ekle'}
-              </button>
+    <main className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+                Mindora Uzman Paneli
+              </p>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                Müsaitlik Takvimi
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                Haftalık uygun gün ve saatlerinizi tanımlayın. Danışanlar randevu
+                oluştururken bu saat aralıklarını görecek.
+              </p>
             </div>
-          </form>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => void fetchAvailability()}
+                disabled={loading}
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? 'Yükleniyor...' : 'Yenile'}
+              </button>
+              <Link
+                href="/expert/dashboard"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/expert/dashboard/sessions"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+              >
+                Görüşmeleri Gör
+              </Link>
+            </div>
+          </div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-950">Randevu Akışı</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-500">
-            Yayındaki saat aralıkları ödeme sonrası danışanın göreceği seans seçeneklerini oluşturur.
-          </p>
+        {notice ? (
+          <NoticeCard title={notice.title} description={notice.description} tone={notice.tone} />
+        ) : null}
 
-          <div className="mt-5 space-y-3">
-            <StepItem index={1} title="Gün ve saat ekle" />
-            <StepItem index={2} title="Çakışmaları kontrol et" />
-            <StepItem index={3} title="Danışan uygun saati seçsin" />
-            <StepItem index={4} title="Görüşme otomatik panele düşsün" />
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {summaryCards.map((card) => (
+            <SummaryCard key={card.title} {...card} />
+          ))}
+        </section>
+
+        <div className="grid gap-6 xl:grid-cols-[1.25fr_1fr]">
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-5">
+              <h2 className="text-xl font-black text-slate-950">Müsaitlik Ekle</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                Aynı gün içinde çakışan saat aralıkları sistem tarafından engellenir.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-2">
+                <span className="text-sm font-black text-slate-700">Gün</span>
+                <select
+                  value={form.dayOfWeek}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, dayOfWeek: Number(event.target.value) }))
+                  }
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                >
+                  {weekDays.map((day) => (
+                    <option key={day.id} value={day.id}>
+                      {day.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-black text-slate-700">Durum</span>
+                <select
+                  value={form.isActive ? 'active' : 'passive'}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      isActive: event.target.value === 'active',
+                    }))
+                  }
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                >
+                  <option value="active">Yayında</option>
+                  <option value="passive">Kapalı</option>
+                </select>
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-black text-slate-700">Başlangıç Saati</span>
+                <input
+                  type="time"
+                  value={form.startTime}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, startTime: event.target.value }))
+                  }
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-black text-slate-700">Bitiş Saati</span>
+                <input
+                  type="time"
+                  value={form.endTime}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, endTime: event.target.value }))
+                  }
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-black text-slate-700">Seans Süresi</span>
+                <select
+                  value={form.slotDurationMinutes}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      slotDurationMinutes: Number(event.target.value),
+                    }))
+                  }
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                >
+                  <option value={30}>30 dk</option>
+                  <option value={45}>45 dk</option>
+                  <option value={50}>50 dk</option>
+                  <option value={60}>60 dk</option>
+                  <option value={90}>90 dk</option>
+                </select>
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-black text-slate-700">Ara Süresi</span>
+                <select
+                  value={form.bufferMinutes}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, bufferMinutes: Number(event.target.value) }))
+                  }
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                >
+                  <option value={0}>Ara yok</option>
+                  <option value={5}>5 dk</option>
+                  <option value={10}>10 dk</option>
+                  <option value={15}>15 dk</option>
+                  <option value={20}>20 dk</option>
+                </select>
+              </label>
+
+              <input type="hidden" value={form.timezone} readOnly />
+
+              <div className="sm:col-span-2">
+                <button
+                  type="submit"
+                  disabled={saving || !hasExpertId}
+                  className="inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                >
+                  {saving ? 'Kaydediliyor...' : 'Müsaitlik Ekle'}
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-black text-slate-950">Randevu Akışı</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              Yayındaki saat aralıkları ödeme sonrası danışanın göreceği seans seçeneklerini oluşturur.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              <StepItem index={1} title="Gün ve saat ekle" />
+              <StepItem index={2} title="Çakışmaları kontrol et" />
+              <StepItem index={3} title="Danışan uygun saati seçsin" />
+              <StepItem index={4} title="Görüşme otomatik panele düşsün" />
+            </div>
+          </section>
+        </div>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-black text-slate-950">Haftalık Müsaitlikler</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Yayındaki ve kapalı saat aralıklarını buradan takip edebilirsiniz.
+              </p>
+            </div>
           </div>
+
+          {loading ? (
+            <EmptyState
+              title="Müsaitlikler yükleniyor"
+              description="Haftalık saat aralıkları hazırlanıyor."
+            />
+          ) : sortedAvailability.length === 0 ? (
+            <EmptyState
+              title="Henüz müsaitlik tanımlanmadı"
+              description="İlk uygun gün ve saat aralığınızı eklediğinizde burada listelenecek."
+            />
+          ) : (
+            <AvailabilityTable
+              rows={sortedAvailability}
+              deletingId={deletingId}
+              onDelete={handleDelete}
+            />
+          )}
         </section>
       </div>
-
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-950">Haftalık Müsaitlikler</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Yayındaki ve kapalı saat aralıklarını buradan takip edebilirsiniz.
-            </p>
-          </div>
-        </div>
-
-        {loading ? (
-          <EmptyState title="Müsaitlikler yükleniyor" description="Haftalık saat aralıkları hazırlanıyor." />
-        ) : sortedAvailability.length === 0 ? (
-          <EmptyState
-            title="Henüz müsaitlik tanımlanmadı"
-            description="İlk uygun gün ve saat aralığınızı eklediğinizde burada listelenecek."
-          />
-        ) : (
-          <AvailabilityTable rows={sortedAvailability} onDelete={handleDelete} />
-        )}
-      </section>
     </main>
   )
 }
@@ -469,9 +601,9 @@ function SummaryCard({
   description: string
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{value}</p>
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -479,33 +611,35 @@ function SummaryCard({
 
 function AvailabilityTable({
   rows,
+  deletingId,
   onDelete,
 }: {
   rows: AvailabilityRow[]
+  deletingId: string | null
   onDelete: (row: AvailabilityRow) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200">
+    <div className="overflow-hidden rounded-3xl border border-slate-200">
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="px-5 py-4 font-semibold">Gün</th>
-              <th className="px-5 py-4 font-semibold">Saat Aralığı</th>
-              <th className="px-5 py-4 font-semibold">Seans</th>
-              <th className="px-5 py-4 font-semibold">Ara</th>
-              <th className="px-5 py-4 font-semibold">Slot</th>
-              <th className="px-5 py-4 font-semibold">Durum</th>
-              <th className="px-5 py-4 font-semibold text-right">İşlem</th>
+              <th className="px-5 py-4 font-black">Gün</th>
+              <th className="px-5 py-4 font-black">Saat Aralığı</th>
+              <th className="px-5 py-4 font-black">Seans</th>
+              <th className="px-5 py-4 font-black">Ara</th>
+              <th className="px-5 py-4 font-black">Slot</th>
+              <th className="px-5 py-4 font-black">Durum</th>
+              <th className="px-5 py-4 text-right font-black">İşlem</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
             {rows.map((row) => (
               <tr key={row.id} className="transition hover:bg-slate-50">
-                <td className="px-5 py-4 font-semibold text-slate-950">
+                <td className="px-5 py-4 font-black text-slate-950">
                   {getDayLabel(row.day_of_week)}
                 </td>
-                <td className="px-5 py-4 text-slate-700">
+                <td className="px-5 py-4 font-semibold text-slate-700">
                   {normalizeTime(row.start_time)} - {normalizeTime(row.end_time)}
                 </td>
                 <td className="px-5 py-4 text-slate-600">{row.slot_duration_minutes} dk</td>
@@ -518,9 +652,10 @@ function AvailabilityTable({
                   <button
                     type="button"
                     onClick={() => onDelete(row)}
-                    className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                    disabled={deletingId === row.id}
+                    className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Sil
+                    {deletingId === row.id ? 'Siliniyor...' : 'Sil'}
                   </button>
                 </td>
               </tr>
@@ -534,11 +669,11 @@ function AvailabilityTable({
 
 function StatusBadge({ active }: { active: boolean }) {
   return active ? (
-    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
       Yayında
     </span>
   ) : (
-    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">
+    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
       Kapalı
     </span>
   )
@@ -561,8 +696,8 @@ function NoticeCard({
         : 'border-slate-200 bg-white text-slate-700'
 
   return (
-    <section className={`rounded-2xl border p-5 shadow-sm ${className}`}>
-      <p className="text-sm font-bold">{title}</p>
+    <section className={`rounded-3xl border p-5 shadow-sm ${className}`}>
+      <p className="text-sm font-black">{title}</p>
       <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
     </section>
   )
@@ -570,8 +705,8 @@ function NoticeCard({
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <p className="text-sm font-semibold text-slate-800">{title}</p>
+    <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+      <p className="text-sm font-black text-slate-800">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
     </div>
   )
@@ -580,10 +715,10 @@ function EmptyState({ title, description }: { title: string; description: string
 function StepItem({ index, title }: { index: number; title: string }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-black text-white">
         {index}
       </span>
-      <p className="text-sm font-semibold text-slate-700">{title}</p>
+      <p className="text-sm font-black text-slate-700">{title}</p>
     </div>
   )
 }

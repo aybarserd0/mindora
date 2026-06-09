@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
-type PayoutStatus = 'unpaid' | 'scheduled' | 'paid' | 'blocked'
-type PayoutFilter = 'all' | PayoutStatus
+type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded' | 'unknown'
+type PayoutStatus = 'unpaid' | 'scheduled' | 'paid' | 'blocked' | 'unknown'
+type PayoutFilter = 'all' | 'unpaid' | 'scheduled' | 'paid' | 'blocked'
 
 type EarningPayment = {
   id: string
@@ -36,6 +37,12 @@ type EarningsApiResponse = {
   summary?: Partial<EarningsSummary>
   error?: string
 }
+
+type NoticeState = {
+  title: string
+  description: string
+  tone: 'warning' | 'success' | 'default'
+} | null
 
 const EMPTY_SUMMARY: EarningsSummary = {
   paidCount: 0,
@@ -76,6 +83,10 @@ const paymentStatusConfig: Record<PaymentStatus, { label: string; className: str
     label: 'İade Edildi',
     className: 'bg-sky-50 text-sky-700 ring-sky-200',
   },
+  unknown: {
+    label: 'Bilinmiyor',
+    className: 'bg-slate-100 text-slate-600 ring-slate-200',
+  },
 }
 
 const payoutStatusConfig: Record<PayoutStatus, { label: string; className: string }> = {
@@ -95,10 +106,14 @@ const payoutStatusConfig: Record<PayoutStatus, { label: string; className: strin
     label: 'Blokeli',
     className: 'bg-red-50 text-red-700 ring-red-200',
   },
+  unknown: {
+    label: 'Bilinmiyor',
+    className: 'bg-slate-100 text-slate-600 ring-slate-200',
+  },
 }
 
 function normalizePaymentStatus(value: unknown): PaymentStatus {
-  const status = String(value || '').toLowerCase()
+  const status = String(value || '').toLowerCase().trim()
 
   if (
     status === 'pending' ||
@@ -110,13 +125,13 @@ function normalizePaymentStatus(value: unknown): PaymentStatus {
     return status
   }
 
-  return 'pending'
+  return 'unknown'
 }
 
 function normalizePayoutStatus(value: unknown): PayoutStatus {
-  const status = String(value || '').toLowerCase()
+  const status = String(value || '').toLowerCase().trim()
 
-  if (status === 'scheduled' || status === 'paid' || status === 'blocked') {
+  if (status === 'unpaid' || status === 'scheduled' || status === 'paid' || status === 'blocked') {
     return status
   }
 
@@ -128,11 +143,23 @@ function toNumber(value: unknown) {
   return Number.isFinite(numberValue) ? numberValue : 0
 }
 
-function normalizePayment(payment: Partial<EarningPayment>): EarningPayment {
+function fallbackId(payment: Partial<EarningPayment>, index: number) {
+  return [
+    payment.id,
+    payment.clientName,
+    payment.clientEmail,
+    payment.createdAt,
+    index,
+  ]
+    .filter(Boolean)
+    .join('-')
+}
+
+function normalizePayment(payment: Partial<EarningPayment>, index: number): EarningPayment {
   return {
-    id: String(payment.id || crypto.randomUUID()),
-    clientName: String(payment.clientName || 'Danışan'),
-    clientEmail: payment.clientEmail || null,
+    id: String(payment.id || fallbackId(payment, index) || `earning-${index}`),
+    clientName: String(payment.clientName || 'Danışan').trim() || 'Danışan',
+    clientEmail: payment.clientEmail ? String(payment.clientEmail).trim() : null,
     grossAmount: toNumber(payment.grossAmount),
     commissionAmount: toNumber(payment.commissionAmount),
     expertAmount: toNumber(payment.expertAmount),
@@ -143,17 +170,27 @@ function normalizePayment(payment: Partial<EarningPayment>): EarningPayment {
   }
 }
 
+function isCurrentMonth(date: string | null | undefined) {
+  if (!date) return false
+
+  const target = new Date(date)
+
+  if (Number.isNaN(target.getTime())) return false
+
+  const now = new Date()
+
+  return target.getFullYear() === now.getFullYear() && target.getMonth() === now.getMonth()
+}
+
+function sumMoney<T extends Record<K, number>, K extends keyof T>(items: T[], key: K) {
+  return items.reduce((sum, item) => sum + Number(item[key] || 0), 0)
+}
+
 function buildFallbackSummary(payments: EarningPayment[]): EarningsSummary {
   const paidPayments = payments.filter((payment) => payment.status === 'paid')
-  const currentMonthPaidPayments = paidPayments.filter((payment) =>
-    isCurrentMonth(payment.createdAt)
-  )
-  const pendingPayouts = paidPayments.filter(
-    (payment) => payment.payoutStatus !== 'paid'
-  )
-  const completedPayouts = paidPayments.filter(
-    (payment) => payment.payoutStatus === 'paid'
-  )
+  const currentMonthPaidPayments = paidPayments.filter((payment) => isCurrentMonth(payment.createdAt))
+  const pendingPayouts = paidPayments.filter((payment) => payment.payoutStatus !== 'paid')
+  const completedPayouts = paidPayments.filter((payment) => payment.payoutStatus === 'paid')
 
   return {
     paidCount: paidPayments.length,
@@ -175,20 +212,45 @@ function mergeSummary(
   return {
     paidCount: toNumber(apiSummary.paidCount ?? fallbackSummary.paidCount),
     totalGross: toNumber(apiSummary.totalGross ?? fallbackSummary.totalGross),
-    totalCommission: toNumber(
-      apiSummary.totalCommission ?? fallbackSummary.totalCommission
-    ),
+    totalCommission: toNumber(apiSummary.totalCommission ?? fallbackSummary.totalCommission),
     totalNet: toNumber(apiSummary.totalNet ?? fallbackSummary.totalNet),
-    currentMonthNet: toNumber(
-      apiSummary.currentMonthNet ?? fallbackSummary.currentMonthNet
-    ),
-    pendingPayout: toNumber(
-      apiSummary.pendingPayout ?? fallbackSummary.pendingPayout
-    ),
-    completedPayout: toNumber(
-      apiSummary.completedPayout ?? fallbackSummary.completedPayout
-    ),
+    currentMonthNet: toNumber(apiSummary.currentMonthNet ?? fallbackSummary.currentMonthNet),
+    pendingPayout: toNumber(apiSummary.pendingPayout ?? fallbackSummary.pendingPayout),
+    completedPayout: toNumber(apiSummary.completedPayout ?? fallbackSummary.completedPayout),
   }
+}
+
+function formatMoney(value: number | null | undefined) {
+  const numberValue = Number(value)
+
+  if (!Number.isFinite(numberValue)) return '₺0'
+
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: 'TRY',
+    maximumFractionDigits: 0,
+  }).format(numberValue)
+}
+
+function formatDate(date: string | null | undefined) {
+  if (!date) return '-'
+
+  const parsed = new Date(date)
+
+  if (Number.isNaN(parsed.getTime())) return '-'
+
+  return new Intl.DateTimeFormat('tr-TR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(parsed)
+}
+
+function getSafeErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) return error.message
+  return 'Kazanç bilgileri şu anda görüntülenemiyor. Bağlantınızı kontrol edip tekrar deneyin.'
 }
 
 export default function ExpertEarningsPage() {
@@ -197,25 +259,31 @@ export default function ExpertEarningsPage() {
   const [filter, setFilter] = useState<PayoutFilter>('all')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
-  const [hasLoadIssue, setHasLoadIssue] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [notice, setNotice] = useState<NoticeState>(null)
 
-  async function fetchEarnings() {
+  const fetchEarnings = useCallback(async (mode: 'initial' | 'refresh' = 'refresh') => {
     try {
-      setLoading(true)
-      setHasLoadIssue(false)
+      if (mode === 'initial') {
+        setLoading(true)
+      } else {
+        setRefreshing(true)
+      }
+
+      setNotice(null)
 
       const response = await fetch('/api/expert/earnings', {
         method: 'GET',
         cache: 'no-store',
+        headers: {
+          Accept: 'application/json',
+        },
       })
 
-      const data = (await response.json()) as EarningsApiResponse
+      const data = (await response.json().catch(() => ({}))) as Partial<EarningsApiResponse>
 
-      if (!response.ok || !data.ok) {
-        setPayments([])
-        setSummary(EMPTY_SUMMARY)
-        setHasLoadIssue(true)
-        return
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || 'Kazanç bilgileri şu anda alınamadı.')
       }
 
       const rawPayments = data.earnings || data.payments || []
@@ -224,18 +292,23 @@ export default function ExpertEarningsPage() {
 
       setPayments(normalizedPayments)
       setSummary(mergeSummary(data.summary, fallbackSummary))
-    } catch {
+    } catch (error) {
       setPayments([])
       setSummary(EMPTY_SUMMARY)
-      setHasLoadIssue(true)
+      setNotice({
+        title: 'Kazanç bilgileri alınamadı',
+        description: getSafeErrorMessage(error),
+        tone: 'warning',
+      })
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    fetchEarnings()
-  }, [])
+    void fetchEarnings('initial')
+  }, [fetchEarnings])
 
   const filteredPayments = useMemo(() => {
     const keyword = search.trim().toLowerCase()
@@ -248,6 +321,7 @@ export default function ExpertEarningsPage() {
         payment.clientEmail,
         payment.status,
         payment.payoutStatus,
+        formatMoney(payment.expertAmount),
       ]
         .filter(Boolean)
         .join(' ')
@@ -260,136 +334,156 @@ export default function ExpertEarningsPage() {
   const hasPayments = payments.length > 0
 
   return (
-    <div className="space-y-6">
-      <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-indigo-600">Uzman Paneli</p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">
-              Kazançlar
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-              Görüşme gelirlerinizi, platform kesintisini ve ödeme durumunuzu tek
-              ekrandan takip edin.
-            </p>
+    <main className="min-h-screen bg-slate-50">
+      <section className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+                Mindora Uzman Paneli
+              </p>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                Kazançlar
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                Görüşme gelirlerinizi, platform kesintisini ve ödeme durumunuzu tek
+                ekrandan takip edin.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => void fetchEarnings('refresh')}
+                disabled={loading || refreshing}
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
+              </button>
+              <Link
+                href="/expert/dashboard"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/expert/dashboard/sessions"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+              >
+                Görüşmeleri Gör
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {notice ? (
+          <NoticeCard
+            title={notice.title}
+            description={notice.description}
+            tone={notice.tone}
+            onRetry={() => void fetchEarnings('refresh')}
+          />
+        ) : null}
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <SummaryCard
+            title="Toplam Net Kazanç"
+            value={formatMoney(summary.totalNet)}
+            description={`${summary.paidCount} başarılı ödeme`}
+          />
+          <SummaryCard
+            title="Bu Ay Kazanç"
+            value={formatMoney(summary.currentMonthNet)}
+            description="İçinde bulunduğumuz ay"
+          />
+          <SummaryCard
+            title="Bekleyen Ödeme"
+            value={formatMoney(summary.pendingPayout)}
+            description="Henüz aktarılmayan tutar"
+          />
+          <SummaryCard
+            title="Aktarılan Tutar"
+            value={formatMoney(summary.completedPayout)}
+            description="Uzmana ödenen toplam"
+          />
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-3">
+          <InfoBlock
+            title="Brüt Ödeme"
+            value={formatMoney(summary.totalGross)}
+            description="Danışanlardan tahsil edilen başarılı ödemeler."
+          />
+          <InfoBlock
+            title="Mindora Kesintisi"
+            value={formatMoney(summary.totalCommission)}
+            description="Platform hizmet bedeli olarak ayrılan tutar."
+          />
+          <InfoBlock
+            title="Net Kazanç"
+            value={formatMoney(summary.totalNet)}
+            description="Kesintiler sonrası uzman hesabına yansıyacak tutar."
+          />
+        </section>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-xl font-black text-slate-950">Ödeme Geçmişi</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Görüşme bazlı brüt tutar, kesinti, net kazanç ve aktarım durumunu
+                görüntüleyin.
+              </p>
+            </div>
+
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Danışan veya ödeme ara..."
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
+            />
           </div>
 
-          <button
-            type="button"
-            onClick={fetchEarnings}
-            disabled={loading}
-            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? 'Yükleniyor...' : 'Yenile'}
-          </button>
-        </div>
-      </header>
-
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard
-          title="Toplam Net Kazanç"
-          value={formatMoney(summary.totalNet)}
-          description={`${summary.paidCount} başarılı ödeme`}
-        />
-        <SummaryCard
-          title="Bu Ay Kazanç"
-          value={formatMoney(summary.currentMonthNet)}
-          description="İçinde bulunduğumuz ay"
-        />
-        <SummaryCard
-          title="Bekleyen Ödeme"
-          value={formatMoney(summary.pendingPayout)}
-          description="Henüz aktarılmayan tutar"
-        />
-        <SummaryCard
-          title="Aktarılan Tutar"
-          value={formatMoney(summary.completedPayout)}
-          description="Uzmana ödenen toplam"
-        />
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-3">
-        <InfoBlock
-          title="Brüt Ödeme"
-          value={formatMoney(summary.totalGross)}
-          description="Danışanlardan tahsil edilen başarılı ödemeler."
-        />
-        <InfoBlock
-          title="Mindora Kesintisi"
-          value={formatMoney(summary.totalCommission)}
-          description="Platform hizmet bedeli olarak ayrılan tutar."
-        />
-        <InfoBlock
-          title="Net Kazanç"
-          value={formatMoney(summary.totalNet)}
-          description="Kesintiler sonrası uzman hesabına yansıyacak tutar."
-        />
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-950">
-              Ödeme Geçmişi
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Görüşme bazlı brüt tutar, kesinti, net kazanç ve aktarım durumunu
-              görüntüleyin.
-            </p>
+          <div className="mt-5 grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {payoutFilters.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => setFilter(item.value)}
+                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition ${
+                  filter === item.value
+                    ? 'bg-slate-950 text-white ring-slate-950'
+                    : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
+        </section>
 
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Danışan veya ödeme ara..."
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
-          />
-        </div>
-
-        <div className="mt-5 grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          {payoutFilters.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => setFilter(item.value)}
-              className={`rounded-xl px-4 py-3 text-sm font-semibold ring-1 transition ${
-                filter === item.value
-                  ? 'bg-slate-950 text-white ring-slate-950'
-                  : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          {loading ? (
+            <EmptyState
+              title="Kazanç kayıtları yükleniyor"
+              description="Ödeme ve aktarım bilgileri hazırlanıyor."
+            />
+          ) : !hasPayments ? (
+            <EmptyState
+              title="Henüz kazanç kaydı yok"
+              description="Ödeme tamamlanmış görüşmeler oluştuğunda brüt tutar, kesinti, net kazanç ve aktarım durumu burada listelenecek."
+            />
+          ) : filteredPayments.length === 0 ? (
+            <EmptyState
+              title="Bu filtrede kayıt bulunamadı"
+              description="Arama metnini veya ödeme filtresini değiştirerek tekrar deneyin."
+            />
+          ) : (
+            <EarningsTable payments={filteredPayments} />
+          )}
+        </section>
       </section>
-
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        {loading ? (
-          <EmptyState
-            title="Kazanç kayıtları yükleniyor"
-            description="Ödeme ve aktarım bilgileri hazırlanıyor."
-          />
-        ) : hasLoadIssue && !hasPayments ? (
-          <EmptyState
-            title="Henüz görüntülenecek kazanç bulunmuyor"
-            description="İlk başarılı ödeme oluştuğunda kazanç özetiniz ve ödeme geçmişiniz burada görüntülenecek."
-          />
-        ) : !hasPayments ? (
-          <EmptyState
-            title="Henüz kazanç kaydı yok"
-            description="Ödeme tamamlanmış görüşmeler oluştuğunda brüt tutar, kesinti, net kazanç ve aktarım durumu burada listelenecek."
-          />
-        ) : filteredPayments.length === 0 ? (
-          <EmptyState
-            title="Bu filtrede kayıt bulunamadı"
-            description="Arama metnini veya ödeme filtresini değiştirerek tekrar deneyin."
-          />
-        ) : (
-          <EarningsTable payments={filteredPayments} />
-        )}
-      </section>
-    </div>
+    </main>
   )
 }
 
@@ -399,35 +493,33 @@ function EarningsTable({ payments }: { payments: EarningPayment[] }) {
       <table className="min-w-full text-left text-sm">
         <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
           <tr>
-            <th className="px-5 py-4">Tarih</th>
-            <th className="px-5 py-4">Danışan</th>
-            <th className="px-5 py-4">Brüt</th>
-            <th className="px-5 py-4">Kesinti</th>
-            <th className="px-5 py-4">Net Kazanç</th>
-            <th className="px-5 py-4">Ödeme</th>
-            <th className="px-5 py-4">Aktarım</th>
+            <th className="px-5 py-4 font-black">Tarih</th>
+            <th className="px-5 py-4 font-black">Danışan</th>
+            <th className="px-5 py-4 font-black">Brüt</th>
+            <th className="px-5 py-4 font-black">Kesinti</th>
+            <th className="px-5 py-4 font-black">Net Kazanç</th>
+            <th className="px-5 py-4 font-black">Ödeme</th>
+            <th className="px-5 py-4 font-black">Aktarım</th>
           </tr>
         </thead>
 
         <tbody className="divide-y divide-slate-100">
           {payments.map((payment) => (
             <tr key={payment.id} className="align-top transition hover:bg-slate-50">
-              <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-700">
+              <td className="whitespace-nowrap px-5 py-4 text-sm font-bold text-slate-700">
                 {formatDate(payment.createdAt)}
               </td>
               <td className="px-5 py-4">
-                <p className="font-semibold text-slate-950">{payment.clientName}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {payment.clientEmail || '-'}
-                </p>
+                <p className="font-black text-slate-950">{payment.clientName}</p>
+                <p className="mt-1 text-xs text-slate-500">{payment.clientEmail || '-'}</p>
               </td>
-              <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-950">
+              <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-950">
                 {formatMoney(payment.grossAmount)}
               </td>
-              <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-700">
+              <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-700">
                 {formatMoney(payment.commissionAmount)}
               </td>
-              <td className="whitespace-nowrap px-5 py-4 font-bold text-indigo-700">
+              <td className="whitespace-nowrap px-5 py-4 font-black text-indigo-700">
                 {formatMoney(payment.expertAmount)}
               </td>
               <td className="whitespace-nowrap px-5 py-4">
@@ -436,9 +528,7 @@ function EarningsTable({ payments }: { payments: EarningPayment[] }) {
               <td className="whitespace-nowrap px-5 py-4">
                 <PayoutBadge status={payment.payoutStatus} />
                 {payment.payoutPaidAt ? (
-                  <p className="mt-2 text-xs text-slate-500">
-                    {formatDate(payment.payoutPaidAt)}
-                  </p>
+                  <p className="mt-2 text-xs text-slate-500">{formatDate(payment.payoutPaidAt)}</p>
                 ) : null}
               </td>
             </tr>
@@ -459,11 +549,9 @@ function SummaryCard({
   description: string
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-        {value}
-      </p>
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -472,8 +560,8 @@ function SummaryCard({
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div className="px-5 py-10 text-center">
-      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-7">
-        <p className="text-sm font-semibold text-slate-800">{title}</p>
+      <div className="mx-auto max-w-md rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-7">
+        <p className="text-sm font-black text-slate-800">{title}</p>
         <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
       </div>
     </div>
@@ -490,20 +578,20 @@ function InfoBlock({
   description: string
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <p className="mt-2 text-lg font-bold text-slate-950">{value}</p>
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <p className="mt-2 text-lg font-black text-slate-950">{value}</p>
       <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
     </div>
   )
 }
 
 function PaymentBadge({ status }: { status: PaymentStatus }) {
-  const config = paymentStatusConfig[status]
+  const config = paymentStatusConfig[status] || paymentStatusConfig.unknown
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${config.className}`}
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}
     >
       {config.label}
     </span>
@@ -511,63 +599,52 @@ function PaymentBadge({ status }: { status: PaymentStatus }) {
 }
 
 function PayoutBadge({ status }: { status: PayoutStatus }) {
-  const config = payoutStatusConfig[status]
+  const config = payoutStatusConfig[status] || payoutStatusConfig.unknown
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${config.className}`}
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}
     >
       {config.label}
     </span>
   )
 }
 
-function formatMoney(value: number | null | undefined) {
-  const numberValue = Number(value)
-
-  if (!Number.isFinite(numberValue)) return '-'
-
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    maximumFractionDigits: 0,
-  }).format(numberValue)
-}
-
-function formatDate(date: string | null | undefined) {
-  if (!date) return '-'
-
-  try {
-    return new Intl.DateTimeFormat('tr-TR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date))
-  } catch {
-    return '-'
-  }
-}
-
-function isCurrentMonth(date: string | null | undefined) {
-  if (!date) return false
-
-  const target = new Date(date)
-
-  if (Number.isNaN(target.getTime())) return false
-
-  const now = new Date()
+function NoticeCard({
+  title,
+  description,
+  tone = 'default',
+  onRetry,
+}: {
+  title: string
+  description: string
+  tone?: 'default' | 'warning' | 'success'
+  onRetry?: () => void
+}) {
+  const className =
+    tone === 'warning'
+      ? 'border-amber-200 bg-amber-50 text-amber-900'
+      : tone === 'success'
+        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+        : 'border-slate-200 bg-white text-slate-700'
 
   return (
-    target.getFullYear() === now.getFullYear() &&
-    target.getMonth() === now.getMonth()
+    <section className={`rounded-3xl border p-5 shadow-sm ${className}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-black">{title}</p>
+          <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
+        </div>
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+          >
+            Tekrar Dene
+          </button>
+        ) : null}
+      </div>
+    </section>
   )
-}
-
-function sumMoney<T extends Record<K, number>, K extends keyof T>(
-  items: T[],
-  key: K
-) {
-  return items.reduce((sum, item) => sum + Number(item[key] || 0), 0)
 }

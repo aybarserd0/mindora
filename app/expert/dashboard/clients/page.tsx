@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 
-type ClientStatus = 'active' | 'scheduled' | 'completed' | 'paused'
+type ClientStatus = 'active' | 'scheduled' | 'completed' | 'paused' | 'unknown'
+type ClientStatusFilter = 'all' | ClientStatus
 
 type ApiClientRow = {
   id?: string | null
@@ -52,6 +53,12 @@ type SummaryCardItem = {
   description: string
 }
 
+type NoticeState = {
+  title: string
+  description: string
+  tone: 'warning' | 'success' | 'default'
+} | null
+
 const statusConfig: Record<ClientStatus, { label: string; className: string }> = {
   active: {
     label: 'Aktif',
@@ -69,7 +76,19 @@ const statusConfig: Record<ClientStatus, { label: string; className: string }> =
     label: 'Beklemede',
     className: 'bg-amber-50 text-amber-700 ring-amber-600/20',
   },
+  unknown: {
+    label: 'Belirsiz',
+    className: 'bg-slate-100 text-slate-600 ring-slate-600/20',
+  },
 }
+
+const statusFilters: Array<{ label: string; value: ClientStatusFilter }> = [
+  { label: 'Tümü', value: 'all' },
+  { label: 'Aktif', value: 'active' },
+  { label: 'Planlandı', value: 'scheduled' },
+  { label: 'Tamamlandı', value: 'completed' },
+  { label: 'Beklemede', value: 'paused' },
+]
 
 const infoPanels = [
   {
@@ -85,10 +104,10 @@ const infoPanels = [
   {
     title: 'Canlı Veri Bağlantısı',
     description:
-      'Bu ekran /api/expert/clients endpointinden conversations, client_applications ve bookings verilerini okuyacak şekilde hazırlandı.',
+      'Bu ekran /api/expert/clients endpointinden conversations, client_applications ve session_bookings verilerini okuyacak şekilde hazırlandı.',
     items: [
       'conversations üzerinden danışan ilişkisi',
-      'bookings üzerinden son ve gelecek seans',
+      'session_bookings üzerinden son ve gelecek seans',
       'client_applications üzerinden danışan bilgileri',
     ],
   },
@@ -97,41 +116,58 @@ const infoPanels = [
 function normalizeStatus(status: string | null | undefined): ClientStatus {
   const normalized = status?.trim().toLowerCase()
 
-  if (
-    normalized === 'completed' ||
-    normalized === 'closed' ||
-    normalized === 'finished'
-  ) {
+  if (normalized === 'completed' || normalized === 'closed' || normalized === 'finished') {
     return 'completed'
   }
 
-  if (
-    normalized === 'scheduled' ||
-    normalized === 'matched' ||
-    normalized === 'pending'
-  ) {
+  if (normalized === 'scheduled' || normalized === 'matched' || normalized === 'pending') {
     return 'scheduled'
   }
 
   if (
     normalized === 'paused' ||
     normalized === 'passive' ||
-    normalized === 'cancelled'
+    normalized === 'cancelled' ||
+    normalized === 'canceled'
   ) {
     return 'paused'
+  }
+
+  if (normalized === 'active' || normalized === 'open' || normalized === 'paid') {
+    return 'active'
   }
 
   return 'active'
 }
 
-function normalizeClient(row: ApiClientRow): ClientRow {
+function toNumber(value: unknown) {
+  const parsed = Number(value || 0)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function buildFallbackId(row: ApiClientRow, index: number) {
+  return [
+    row.id,
+    row.conversationId,
+    row.clientId,
+    row.email,
+    row.name,
+    index,
+  ]
+    .filter(Boolean)
+    .join('-')
+}
+
+function normalizeClient(row: ApiClientRow, index: number): ClientRow {
   const id =
     safeNullableText(row.id) ||
     safeNullableText(row.conversationId) ||
     safeNullableText(row.clientId) ||
-    crypto.randomUUID()
+    buildFallbackId(row, index) ||
+    `client-${index}`
 
   const conversationId = safeNullableText(row.conversationId) || id
+  const totalSessions = toNumber(row.totalSessions)
 
   return {
     id,
@@ -141,11 +177,9 @@ function normalizeClient(row: ApiClientRow): ClientRow {
     status: normalizeStatus(row.status),
     lastSessionAt: safeNullableText(row.lastSessionAt),
     nextSessionAt: safeNullableText(row.nextSessionAt),
-    totalSessions: Number.isFinite(Number(row.totalSessions))
-      ? Number(row.totalSessions)
-      : 0,
+    totalSessions,
     conversationHref:
-      safeNullableText(row.conversationHref) || `/expert/chat/${conversationId}`,
+      safeNullableText(row.conversationHref) || `/expert/chat/${encodeURIComponent(conversationId)}`,
     profileHref:
       safeNullableText(row.profileHref) ||
       `/expert/dashboard/clients?clientId=${encodeURIComponent(id)}`,
@@ -155,12 +189,8 @@ function normalizeClient(row: ApiClientRow): ClientRow {
 function buildSummaryCards(clientRows: ClientRow[]): SummaryCardItem[] {
   const total = clientRows.length
   const active = clientRows.filter((client) => client.status === 'active').length
-  const completed = clientRows.filter(
-    (client) => client.status === 'completed'
-  ).length
-  const scheduled = clientRows.filter(
-    (client) => client.status === 'scheduled'
-  ).length
+  const completed = clientRows.filter((client) => client.status === 'completed').length
+  const scheduled = clientRows.filter((client) => client.status === 'scheduled').length
 
   return [
     {
@@ -186,46 +216,66 @@ function buildSummaryCards(clientRows: ClientRow[]): SummaryCardItem[] {
   ]
 }
 
+function getSafeErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) return error.message
+  return 'Danışan bilgileri şu anda alınamadı. Bağlantınızı kontrol edip tekrar deneyin.'
+}
+
 export default function ExpertClientsPage() {
   const [clients, setClients] = useState<ClientRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
+  const [notice, setNotice] = useState<NoticeState>(null)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | ClientStatus>('all')
+  const [statusFilter, setStatusFilter] = useState<ClientStatusFilter>('all')
 
-  async function fetchClients() {
+  const fetchClients = useCallback(async (mode: 'initial' | 'refresh' = 'refresh') => {
     try {
-      setLoading(true)
-      setError('')
+      if (mode === 'initial') {
+        setLoading(true)
+      } else {
+        setRefreshing(true)
+      }
 
-      const response = await fetch('/api/expert/clients', { cache: 'no-store' })
-      const data = (await response.json()) as ClientsApiResponse
+      setNotice(null)
 
-      if (!response.ok || !data.ok) {
-        setError(data.error || 'Danışan bilgileri alınamadı.')
-        setClients([])
-        return
+      const response = await fetch('/api/expert/clients', {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+
+      const data = (await response.json().catch(() => ({}))) as ClientsApiResponse
+
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || 'Danışan bilgileri alınamadı.')
       }
 
       setClients((data.clients || []).map(normalizeClient))
-    } catch {
-      setError('Sunucuya bağlanırken hata oluştu.')
+    } catch (error) {
       setClients([])
+      setNotice({
+        title: 'Danışan verileri alınamadı',
+        description: getSafeErrorMessage(error),
+        tone: 'warning',
+      })
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    fetchClients()
-  }, [])
+    void fetchClients('initial')
+  }, [fetchClients])
 
   const filteredClients = useMemo(() => {
     const keyword = search.trim().toLowerCase()
 
     return clients.filter((client) => {
-      const statusMatch =
-        statusFilter === 'all' || client.status === statusFilter
+      const statusMatch = statusFilter === 'all' || client.status === statusFilter
 
       const searchableText = [
         client.name,
@@ -245,159 +295,160 @@ export default function ExpertClientsPage() {
   }, [clients, search, statusFilter])
 
   const summaryCards = buildSummaryCards(clients)
-  const activeClients = filteredClients.filter(
-    (client) => client.status !== 'completed'
-  )
-  const completedClients = filteredClients.filter(
-    (client) => client.status === 'completed'
-  )
+
+  const activeClients = filteredClients.filter((client) => client.status !== 'completed')
+  const completedClients = filteredClients.filter((client) => client.status === 'completed')
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-indigo-600">Uzman Paneli</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">
-            Danışanlar
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Aktif danışanlarınızı, geçmiş görüşmeleri, seans sayılarını ve danışan
-            bazlı aksiyonları tek ekrandan takip edin.
-          </p>
-        </div>
+    <main className="min-h-screen bg-slate-50">
+      <section className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+        <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+                Mindora Uzman Paneli
+              </p>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                Danışanlar
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                Aktif danışanlarınızı, geçmiş görüşmeleri, seans sayılarını ve danışan
+                bazlı aksiyonları tek ekrandan takip edin.
+              </p>
+            </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={fetchClients}
-            disabled={loading}
-            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Yenile
-          </button>
-          <Link
-            href="/expert/dashboard/sessions"
-            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Seanslara Git
-          </Link>
-          <Link
-            href="/expert/dashboard/profile"
-            className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Profilimi Düzenle
-          </Link>
-        </div>
-      </header>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => void fetchClients('refresh')}
+                disabled={loading || refreshing}
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
+              </button>
+              <Link
+                href="/expert/dashboard"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/expert/dashboard/sessions"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+              >
+                Seanslara Git
+              </Link>
+            </div>
+          </div>
+        </header>
 
-      {error ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <p className="font-semibold">Danışan verileri alınamadı.</p>
-          <p className="mt-1">{error}</p>
-        </div>
-      ) : null}
-
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {summaryCards.map((card) => (
-          <SummaryCard
-            key={card.title}
-            title={card.title}
-            value={card.value}
-            description={card.description}
+        {notice ? (
+          <NoticeCard
+            title={notice.title}
+            description={notice.description}
+            tone={notice.tone}
+            onRetry={() => void fetchClients('refresh')}
           />
-        ))}
-      </section>
+        ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-950">
-              Filtrele ve Ara
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Danışan adı, e-posta, konu veya durum bilgisine göre arama yapın.
-            </p>
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {summaryCards.map((card) => (
+            <SummaryCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              description={card.description}
+            />
+          ))}
+        </section>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-xl font-black text-slate-950">Filtrele ve Ara</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Danışan adı, e-posta, konu veya durum bilgisine göre arama yapın.
+              </p>
+            </div>
+
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Danışan ara..."
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
+            />
           </div>
 
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Danışan ara..."
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
-          />
-        </div>
-
-        <div className="mt-5 grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          {(['all', 'active', 'scheduled', 'completed', 'paused'] as const).map(
-            (status) => (
+          <div className="mt-5 grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {statusFilters.map((item) => (
               <button
-                key={status}
+                key={item.value}
                 type="button"
-                onClick={() => setStatusFilter(status)}
-                className={`rounded-xl px-4 py-3 text-sm font-semibold ring-1 transition ${
-                  statusFilter === status
+                onClick={() => setStatusFilter(item.value)}
+                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition ${
+                  statusFilter === item.value
                     ? 'bg-slate-950 text-white ring-slate-950'
                     : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
                 }`}
               >
-                {status === 'all' ? 'Tümü' : statusConfig[status].label}
+                {item.label}
               </button>
-            )
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <SectionHeader
-          title="Aktif Danışanlar"
-          description="Devam eden süreçler, son görüşmeler ve hızlı aksiyonlar."
-          badge={
-            loading
-              ? 'Yükleniyor'
-              : activeClients.length > 0
-                ? `${activeClients.length} danışan`
-                : 'Veri bekleniyor'
-          }
-        />
-
-        {loading ? (
-          <LoadingState />
-        ) : activeClients.length > 0 ? (
-          <ClientTable clients={activeClients} />
-        ) : (
-          <EmptyClientState />
-        )}
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <SectionHeader
-          title="Tamamlanan Süreçler"
-          description="Kapanan veya tamamlanan danışan süreçleri."
-          badge={completedClients.length > 0 ? `${completedClients.length} kayıt` : 'Henüz yok'}
-        />
-
-        {loading ? (
-          <LoadingState />
-        ) : completedClients.length > 0 ? (
-          <ClientTable clients={completedClients} />
-        ) : (
-          <div className="px-5 py-8 text-sm text-slate-500 sm:px-6">
-            Henüz tamamlanan danışan süreci bulunmuyor.
+            ))}
           </div>
-        )}
-      </section>
+        </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        {infoPanels.map((panel) => (
-          <InfoPanel
-            key={panel.title}
-            title={panel.title}
-            description={panel.description}
-            items={panel.items}
+        <section className="rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <SectionHeader
+            title="Aktif Danışanlar"
+            description="Devam eden süreçler, son görüşmeler ve hızlı aksiyonlar."
+            badge={
+              loading
+                ? 'Yükleniyor'
+                : activeClients.length > 0
+                  ? `${activeClients.length} danışan`
+                  : 'Veri bekleniyor'
+            }
           />
-        ))}
+
+          {loading ? (
+            <LoadingState />
+          ) : activeClients.length > 0 ? (
+            <ClientTable clients={activeClients} />
+          ) : (
+            <EmptyClientState />
+          )}
+        </section>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <SectionHeader
+            title="Tamamlanan Süreçler"
+            description="Kapanan veya tamamlanan danışan süreçleri."
+            badge={completedClients.length > 0 ? `${completedClients.length} kayıt` : 'Henüz yok'}
+          />
+
+          {loading ? (
+            <LoadingState />
+          ) : completedClients.length > 0 ? (
+            <ClientTable clients={completedClients} />
+          ) : (
+            <div className="px-5 py-8 text-sm text-slate-500 sm:px-6">
+              Henüz tamamlanan danışan süreci bulunmuyor.
+            </div>
+          )}
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-2">
+          {infoPanels.map((panel) => (
+            <InfoPanel
+              key={panel.title}
+              title={panel.title}
+              description={panel.description}
+              items={panel.items}
+            />
+          ))}
+        </section>
       </section>
-    </div>
+    </main>
   )
 }
 
@@ -421,18 +472,14 @@ function ClientTable({ clients }: { clients: ClientRow[] }) {
             <tr key={client.id} className="transition hover:bg-slate-50/80">
               <td className="whitespace-nowrap px-5 py-4 sm:px-6">
                 <div>
-                  <p className="text-sm font-semibold text-slate-950">
-                    {safeText(client.name)}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {safeText(client.email)}
-                  </p>
+                  <p className="text-sm font-black text-slate-950">{safeText(client.name)}</p>
+                  <p className="mt-1 text-xs text-slate-500">{safeText(client.email)}</p>
                 </div>
               </td>
               <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 sm:px-6">
                 {safeText(client.topic)}
               </td>
-              <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700 sm:px-6">
+              <td className="whitespace-nowrap px-5 py-4 text-sm font-black text-slate-700 sm:px-6">
                 {client.totalSessions}
               </td>
               <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 sm:px-6">
@@ -448,13 +495,13 @@ function ClientTable({ clients }: { clients: ClientRow[] }) {
                 <div className="flex justify-end gap-2">
                   <Link
                     href={client.conversationHref}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                    className="rounded-2xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
                   >
                     Chat
                   </Link>
                   <Link
                     href={client.profileHref}
-                    className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-indigo-700"
+                    className="rounded-2xl bg-indigo-600 px-3 py-2 text-xs font-black text-white transition hover:bg-indigo-700"
                   >
                     Detay
                   </Link>
@@ -480,11 +527,11 @@ function SectionHeader({
   return (
     <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
       <div>
-        <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+        <h2 className="text-xl font-black text-slate-950">{title}</h2>
         <p className="mt-1 text-sm text-slate-500">{description}</p>
       </div>
 
-      <div className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+      <div className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
         {badge}
       </div>
     </div>
@@ -501,11 +548,9 @@ function SummaryCard({
   description: string
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-        {value}
-      </p>
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -517,7 +562,7 @@ function EmptyClientState() {
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-2xl">
         👥
       </div>
-      <h3 className="mt-5 text-base font-semibold text-slate-950">
+      <h3 className="mt-5 text-base font-black text-slate-950">
         Henüz danışan bulunmuyor
       </h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
@@ -527,13 +572,13 @@ function EmptyClientState() {
       <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
         <Link
           href="/expert/dashboard/sessions"
-          className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+          className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
         >
           Seansları Gör
         </Link>
         <Link
           href="/expert/dashboard"
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
         >
           Panele Dön
         </Link>
@@ -545,9 +590,7 @@ function EmptyClientState() {
 function LoadingState() {
   return (
     <div className="px-5 py-12 text-center sm:px-6">
-      <p className="text-sm font-semibold text-slate-700">
-        Danışanlar yükleniyor...
-      </p>
+      <p className="text-sm font-black text-slate-700">Danışanlar yükleniyor...</p>
     </div>
   )
 }
@@ -562,8 +605,8 @@ function InfoPanel({
   items: string[]
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-xl font-black text-slate-950">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
       <ul className="mt-5 space-y-3">
         {items.map((item) => (
@@ -578,11 +621,11 @@ function InfoPanel({
 }
 
 function StatusBadge({ status }: { status: ClientStatus }) {
-  const config = statusConfig[status]
+  const config = statusConfig[status] || statusConfig.unknown
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${config.className}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-black ring-1 ring-inset ${config.className}`}
     >
       {config.label}
     </span>
@@ -599,12 +642,51 @@ function TableHead({
   return (
     <th
       scope="col"
-      className={`whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:px-6 ${
+      className={`whitespace-nowrap px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500 sm:px-6 ${
         align === 'right' ? 'text-right' : 'text-left'
       }`}
     >
       {children}
     </th>
+  )
+}
+
+function NoticeCard({
+  title,
+  description,
+  tone = 'default',
+  onRetry,
+}: {
+  title: string
+  description: string
+  tone?: 'default' | 'warning' | 'success'
+  onRetry?: () => void
+}) {
+  const className =
+    tone === 'warning'
+      ? 'border-amber-200 bg-amber-50 text-amber-900'
+      : tone === 'success'
+        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+        : 'border-slate-200 bg-white text-slate-700'
+
+  return (
+    <section className={`rounded-3xl border p-5 shadow-sm ${className}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-black">{title}</p>
+          <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
+        </div>
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+          >
+            Tekrar Dene
+          </button>
+        ) : null}
+      </div>
+    </section>
   )
 }
 
