@@ -58,18 +58,37 @@ function formatMoney(value: number | null | undefined) {
 }
 
 function formatDateTime(value: string | null | undefined) {
-  if (!value) return '-'
+  if (!value) return 'Tarih bekleniyor'
 
   const date = new Date(value)
-  if (!Number.isFinite(date.getTime())) return '-'
+  if (!Number.isFinite(date.getTime())) return 'Tarih bekleniyor'
 
   return new Intl.DateTimeFormat('tr-TR', {
+    weekday: 'short',
     day: '2-digit',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)
+}
+
+function formatTimeRange(startAt: string | null | undefined, endAt: string | null | undefined) {
+  if (!startAt || !endAt) return 'Saat bekleniyor'
+
+  const start = new Date(startAt)
+  const end = new Date(endAt)
+
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+    return 'Saat bekleniyor'
+  }
+
+  const formatter = new Intl.DateTimeFormat('tr-TR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  return `${formatter.format(start)} - ${formatter.format(end)}`
 }
 
 function isCurrentMonth(value: string | null | undefined) {
@@ -93,8 +112,13 @@ function sumMoney(items: PaymentRow[]) {
 }
 
 function getClientName(clientId: string | null | undefined, clientsById: Map<string, ClientRow>) {
-  if (!clientId) return 'Danışan'
-  return clientsById.get(clientId)?.name?.trim() || 'Danışan'
+  if (!clientId) return 'Danışan bilgisi bekleniyor'
+  return clientsById.get(clientId)?.name?.trim() || 'Danışan bilgisi bekleniyor'
+}
+
+function getClientEmail(clientId: string | null | undefined, clientsById: Map<string, ClientRow>) {
+  if (!clientId) return null
+  return clientsById.get(clientId)?.email?.trim() || null
 }
 
 function getStatusLabel(status: string | null | undefined) {
@@ -114,9 +138,39 @@ function getStatusLabel(status: string | null | undefined) {
     case 'cancelled':
     case 'canceled':
       return 'İptal edildi'
+    case 'paid':
+      return 'Ödeme tamamlandı'
+    case 'pending':
+      return 'Bekleniyor'
+    case 'failed':
+      return 'Başarısız'
+    case 'refunded':
+      return 'İade edildi'
     default:
-      return 'Planlandı'
+      return 'Bekleniyor'
   }
+}
+
+function getStatusBadgeClass(status: string | null | undefined) {
+  const normalized = (status || '').toLowerCase()
+
+  if (normalized === 'active' || normalized === 'confirmed' || normalized === 'paid') {
+    return 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+  }
+
+  if (normalized === 'scheduled' || normalized === 'matched' || normalized === 'open') {
+    return 'bg-indigo-50 text-indigo-700 ring-indigo-100'
+  }
+
+  if (normalized === 'cancelled' || normalized === 'canceled' || normalized === 'failed') {
+    return 'bg-rose-50 text-rose-700 ring-rose-100'
+  }
+
+  if (normalized === 'completed' || normalized === 'refunded') {
+    return 'bg-slate-100 text-slate-700 ring-slate-200'
+  }
+
+  return 'bg-amber-50 text-amber-700 ring-amber-100'
 }
 
 async function fetchClientsByIds(clientIds: string[]) {
@@ -260,9 +314,9 @@ export default async function ExpertDashboardPage() {
   ]
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+    <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
@@ -271,21 +325,28 @@ export default async function ExpertDashboardPage() {
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                 Hoş geldiniz.
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Danışanlarınızı, görüşmelerinizi, çalışma saatlerinizi ve kazançlarınızı tek ekrandan takip edin.
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+                Danışanlarınızı, görüşmelerinizi, çalışma saatlerinizi ve kazançlarınızı
+                tek ekrandan güvenli şekilde takip edin.
               </p>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <StatusPill tone="green">Panel erişimi aktif</StatusPill>
+                <StatusPill>Güvenli uzman alanı</StatusPill>
+                <StatusPill tone="blue">{data.upcomingBookings.length} yaklaşan seans</StatusPill>
+              </div>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
                 Görüşmeleri Aç
               </Link>
               <Link
                 href="/expert/dashboard/availability"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
               >
                 Müsaitlik Yönet
               </Link>
@@ -295,81 +356,43 @@ export default async function ExpertDashboardPage() {
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {cards.map((card) => (
-            <article
+            <MetricCard
               key={card.label}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <p className="text-sm font-bold text-slate-500">{card.label}</p>
-              <p className="mt-4 text-3xl font-black tracking-tight text-slate-950">
-                {card.value}
-              </p>
-              <p className="mt-1 text-sm text-slate-500">{card.helper}</p>
-            </article>
+              title={card.label}
+              value={card.value}
+              subtitle={card.helper}
+            />
           ))}
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-black text-slate-950">Yaklaşan Görüşmeler</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Bugün ve sonraki günlerdeki planlı seanslar.
-                </p>
-              </div>
-              <Link
-                href="/expert/dashboard/sessions"
-                className="text-sm font-black text-indigo-600 hover:text-indigo-700"
-              >
-                Tümünü gör
-              </Link>
-            </div>
-
+        <section className="grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
+          <Panel
+            title="Yaklaşan Görüşmeler"
+            description="Bugün ve sonraki günlerdeki planlı seanslar."
+            actionHref="/expert/dashboard/sessions"
+            actionLabel="Tümünü gör"
+          >
             {data.upcomingBookings.length > 0 ? (
               <div className="space-y-3">
                 {data.upcomingBookings.map((booking) => (
-                  <div
+                  <SessionItem
                     key={booking.id}
-                    className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-black text-slate-950">
-                        {getClientName(booking.client_id, data.clientsById)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {formatDateTime(booking.scheduled_start_at)}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      {booking.conversation_id ? (
-                        <Link
-                          href={`/expert/chat/${booking.conversation_id}`}
-                          className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
-                        >
-                          Chat
-                        </Link>
-                      ) : null}
-                      <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
-                        {getStatusLabel(booking.status)}
-                      </span>
-                    </div>
-                  </div>
+                    booking={booking}
+                    clientName={getClientName(booking.client_id, data.clientsById)}
+                    clientEmail={getClientEmail(booking.client_id, data.clientsById)}
+                  />
                 ))}
               </div>
             ) : (
               <EmptyState
                 title="Henüz yaklaşan görüşme yok"
-                description="Yeni bir seans planlandığında tarih, saat ve katılım bilgileri burada görünecek."
+                description="Yeni bir seans planlandığında tarih, saat, danışan ve katılım bilgileri burada görünecek."
               />
             )}
-          </div>
+          </Panel>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-950">Hızlı İşlemler</h2>
-            <p className="mt-1 text-sm text-slate-500">Sık kullanılan uzman paneli adımları.</p>
-
-            <div className="mt-5 space-y-3">
+          <Panel title="Hızlı İşlemler" description="Sık kullanılan uzman paneli adımları.">
+            <div className="grid gap-3">
               <QuickLink
                 href="/expert/dashboard/availability"
                 title="Müsaitlik Yönet"
@@ -391,82 +414,223 @@ export default async function ExpertDashboardPage() {
                 description="Uzman profilinizi ve görünür bilgilerinizi yönetin."
               />
             </div>
-          </div>
+          </Panel>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-black text-slate-950">Danışanlar</h2>
-                <p className="mt-1 text-sm text-slate-500">Devam eden danışan süreçleri.</p>
-              </div>
-              <Link
-                href="/expert/dashboard/clients"
-                className="text-sm font-black text-indigo-600 hover:text-indigo-700"
-              >
-                Tümünü gör
-              </Link>
-            </div>
-
+        <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+          <Panel
+            title="Danışanlar"
+            description="Devam eden danışan süreçleri."
+            actionHref="/expert/dashboard/clients"
+            actionLabel="Tümünü gör"
+          >
             {data.activeConversations.length > 0 ? (
               <div className="space-y-3">
                 {data.activeConversations.slice(0, 4).map((conversation) => (
-                  <div
+                  <ClientItem
                     key={conversation.id}
-                    className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div>
-                      <p className="text-sm font-black text-slate-950">
-                        {getClientName(conversation.client_application_id, data.clientsById)}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Durum: {getStatusLabel(conversation.status)}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/expert/chat/${conversation.id}`}
-                      className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
-                    >
-                      Mesaj
-                    </Link>
-                  </div>
+                    conversation={conversation}
+                    clientName={getClientName(conversation.client_application_id, data.clientsById)}
+                    clientEmail={getClientEmail(conversation.client_application_id, data.clientsById)}
+                  />
                 ))}
               </div>
             ) : (
               <EmptyState
                 title="Henüz aktif danışan yok"
-                description="Eşleşme tamamlandığında danışan bilgileriniz burada listelenecek."
+                description="Eşleşme tamamlandığında danışan bilgileriniz, chat bağlantınız ve süreç durumunuz burada listelenecek."
               />
             )}
-          </div>
+          </Panel>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-950">Bugünkü Öncelikler</h2>
-            <p className="mt-1 text-sm text-slate-500">Görüşme öncesi kısa kontrol listesi.</p>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <Panel title="Bugünkü Öncelikler" description="Görüşme öncesi kısa kontrol listesi.">
+            <div className="grid gap-3 sm:grid-cols-2">
               {[
                 'Kamera ve mikrofon kontrolü',
                 'Danışan notlarını gözden geçir',
                 'Görüşme sonrası kısa not bırak',
                 'Gerekirse yeni randevu planla',
               ].map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100"
-                >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-50 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
-                    ✓
-                  </span>
-                  <span className="text-sm font-bold text-slate-700">{item}</span>
-                </div>
+                <ChecklistItem key={item}>{item}</ChecklistItem>
               ))}
             </div>
-          </div>
+          </Panel>
         </section>
       </div>
-    </main>
+    </section>
+  )
+}
+
+function StatusPill({
+  children,
+  tone = 'default',
+}: {
+  children: React.ReactNode
+  tone?: 'default' | 'green' | 'blue'
+}) {
+  const className =
+    tone === 'green'
+      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+      : tone === 'blue'
+        ? 'bg-blue-50 text-blue-700 ring-blue-100'
+        : 'bg-slate-100 text-slate-700 ring-slate-200'
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>
+      {children}
+    </span>
+  )
+}
+
+function MetricCard({
+  title,
+  value,
+  subtitle,
+}: {
+  title: string
+  value: string
+  subtitle: string
+}) {
+  return (
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <p className="mt-4 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+    </article>
+  )
+}
+
+function Panel({
+  title,
+  description,
+  children,
+  actionHref,
+  actionLabel,
+}: {
+  title: string
+  description: string
+  children: React.ReactNode
+  actionHref?: string
+  actionLabel?: string
+}) {
+  return (
+    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-black text-slate-950">{title}</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+        </div>
+
+        {actionHref && actionLabel ? (
+          <Link
+            href={actionHref}
+            className="shrink-0 text-sm font-black text-indigo-600 transition hover:text-indigo-700"
+          >
+            {actionLabel}
+          </Link>
+        ) : null}
+      </div>
+
+      {children}
+    </section>
+  )
+}
+
+function SessionItem({
+  booking,
+  clientName,
+  clientEmail,
+}: {
+  booking: BookingRow
+  clientName: string
+  clientEmail: string | null
+}) {
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-md">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-black text-slate-950">{clientName}</p>
+          {clientEmail ? <p className="mt-1 text-xs font-semibold text-slate-500">{clientEmail}</p> : null}
+          <p className="mt-2 text-sm font-semibold text-slate-600">
+            {formatDateTime(booking.scheduled_start_at)}
+          </p>
+          <p className="mt-1 text-xs font-bold text-slate-500">
+            {formatTimeRange(booking.scheduled_start_at, booking.scheduled_end_at)}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {booking.conversation_id ? (
+            <Link
+              href={`/expert/chat/${booking.conversation_id}`}
+              className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
+            >
+              Chat
+            </Link>
+          ) : null}
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusBadgeClass(
+              booking.status
+            )}`}
+          >
+            {getStatusLabel(booking.status)}
+          </span>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function ClientItem({
+  conversation,
+  clientName,
+  clientEmail,
+}: {
+  conversation: ConversationRow
+  clientName: string
+  clientEmail: string | null
+}) {
+  return (
+    <article className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm font-black text-slate-950">{clientName}</p>
+        {clientEmail ? <p className="mt-1 text-xs font-semibold text-slate-500">{clientEmail}</p> : null}
+        <div className="mt-2 flex flex-wrap gap-2">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusBadgeClass(
+              conversation.status
+            )}`}
+          >
+            {getStatusLabel(conversation.status)}
+          </span>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusBadgeClass(
+              conversation.payment_status
+            )}`}
+          >
+            {getStatusLabel(conversation.payment_status)}
+          </span>
+        </div>
+      </div>
+
+      <Link
+        href={`/expert/chat/${conversation.id}`}
+        className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
+      >
+        Mesaj
+      </Link>
+    </article>
+  )
+}
+
+function ChecklistItem({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
+        ✓
+      </span>
+      <span className="text-sm font-bold text-slate-700">{children}</span>
+    </div>
   )
 }
 
@@ -491,7 +655,7 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-indigo-200 hover:bg-indigo-50"
+      className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-md"
     >
       <span>
         <span className="block text-sm font-black text-slate-950">{title}</span>
