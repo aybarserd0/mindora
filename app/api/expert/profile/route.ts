@@ -225,7 +225,7 @@ function normalizeExpert(row: UnknownRecord) {
     profileImageUrl: toNullableText(pick(row, ['profile_image_url', 'avatar_url', 'image_url'])),
     bio: toText(pick(row, ['bio', 'internal_bio', 'about'])),
     publicBio: toText(pick(row, ['public_bio', 'bio', 'about'])),
-    approach: toText(pick(row, ['therapy_approach', 'therapy_approach'])),
+    approach: toText(pick(row, ['therapy_approach', 'approach'])),
     totalClients: 0,
     completedSessions: 0,
     averageRating: null,
@@ -360,6 +360,57 @@ function hasReviewRequiredChange(current: UnknownRecord, update: UnknownRecord) 
   })
 }
 
+function getMissingColumnFromError(error: unknown) {
+  const message =
+    typeof error === 'object' && error !== null && 'message' in error
+      ? String((error as { message?: unknown }).message || '')
+      : ''
+
+  const match = message.match(/Could not find the '([^']+)' column/i)
+  return match?.[1] || null
+}
+
+async function updateExpertWithSchemaFallback({
+  supabase,
+  expertId,
+  update,
+}: {
+  supabase: ReturnType<typeof getSupabaseAdmin>
+  expertId: unknown
+  update: UnknownRecord
+}) {
+  const safeUpdate: UnknownRecord = { ...update }
+  const removedColumns: string[] = []
+
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const { data, error } = await (supabase as any)
+      .from('experts')
+      .update(safeUpdate)
+      .eq('id', expertId)
+      .select('*')
+      .single()
+
+    if (!error) {
+      return {
+        data: data as UnknownRecord,
+        removedColumns,
+      }
+    }
+
+    const missingColumn = getMissingColumnFromError(error)
+
+    if (missingColumn && Object.prototype.hasOwnProperty.call(safeUpdate, missingColumn)) {
+      delete safeUpdate[missingColumn]
+      removedColumns.push(missingColumn)
+      continue
+    }
+
+    throw error
+  }
+
+  throw new Error('Profil güncellemesi tablo şemasıyla eşleştirilemedi.')
+}
+
 export async function GET(req: NextRequest) {
   try {
     const expertIdParam = toText(req.nextUrl.searchParams.get('expertId'))
@@ -439,16 +490,13 @@ export async function PATCH(req: NextRequest) {
       update.status = 'review'
     }
 
-    const supabase = getSupabaseAdmin() as any
+    const supabase = getSupabaseAdmin()
 
-    const { data, error } = await supabase
-      .from('experts')
-      .update(update)
-      .eq('id', currentExpert.id)
-      .select('*')
-      .single()
-
-    if (error) throw error
+    const { data, removedColumns } = await updateExpertWithSchemaFallback({
+      supabase,
+      expertId: currentExpert.id,
+      update,
+    })
 
     const normalized = normalizeExpert((data || currentExpert) as UnknownRecord)
 
@@ -456,6 +504,7 @@ export async function PATCH(req: NextRequest) {
       profile: normalized.internalProfile,
       publicProfile: normalized.publicProfile,
       pendingReview,
+      skippedColumns: removedColumns,
       message: pendingReview
         ? 'Profil güncellendi. Kritik alanlar admin incelemesine alındı.'
         : 'Profil bilgileriniz başarıyla güncellendi.',
