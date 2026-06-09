@@ -30,6 +30,22 @@ type ExpertProfile = {
   profileImageUrl: string | null
 }
 
+type ProfileFormState = {
+  name: string
+  title: string
+  phone: string
+  city: string
+  specialties: string
+  focusAreas: string
+  experienceYears: string
+  sessionPrice: string
+  publicBio: string
+  approach: string
+  education: string
+  certificates: string
+  profileImageUrl: string
+}
+
 type ProfileStats = {
   totalClients: number
   completedSessions: number
@@ -44,6 +60,15 @@ type ProfileApiResponse = {
   expert?: Partial<ExpertProfile> | null
   publicProfile?: Partial<ExpertProfile> | null
   stats?: Partial<ProfileStats> | null
+}
+
+type SaveApiResponse = {
+  ok?: boolean
+  error?: string
+  profile?: Partial<ExpertProfile> | null
+  expert?: Partial<ExpertProfile> | null
+  pendingReview?: boolean
+  message?: string
 }
 
 type NoticeState = {
@@ -81,6 +106,16 @@ const DEFAULT_STATS: ProfileStats = {
   averageRating: null,
   totalEarnings: 0,
 }
+
+const REVIEW_REQUIRED_FIELDS = [
+  'Unvan',
+  'Uzmanlık alanları',
+  'Çalıştığı konular',
+  'Tanıtım metni',
+  'Çalışma yaklaşımı',
+  'Eğitim',
+  'Sertifikalar',
+]
 
 function cleanText(value: unknown, fallback = '') {
   if (value === null || value === undefined) return fallback
@@ -130,6 +165,10 @@ function textList(value: unknown): string[] {
   }
 
   return []
+}
+
+function serializeList(items: string[]) {
+  return items.join(', ')
 }
 
 function normalizeProfileStatus(value: unknown): ProfileStatus {
@@ -187,6 +226,24 @@ function normalizeProfile(input: Partial<ExpertProfile> | null | undefined): Exp
   }
 }
 
+function profileToForm(profile: ExpertProfile): ProfileFormState {
+  return {
+    name: profile.name || '',
+    title: profile.title || '',
+    phone: profile.phone || '',
+    city: profile.city || '',
+    specialties: serializeList(profile.specialties),
+    focusAreas: serializeList(profile.focusAreas),
+    experienceYears: profile.experienceYears === null ? '' : String(profile.experienceYears),
+    sessionPrice: profile.sessionPrice === null ? '' : String(profile.sessionPrice),
+    publicBio: profile.publicBio || '',
+    approach: profile.approach || profile.bio || '',
+    education: serializeList(profile.education),
+    certificates: serializeList(profile.certificates),
+    profileImageUrl: profile.profileImageUrl || '',
+  }
+}
+
 function normalizeStats(input: Partial<ProfileStats> | null | undefined): ProfileStats {
   return {
     totalClients: toNumber(input?.totalClients),
@@ -194,6 +251,66 @@ function normalizeStats(input: Partial<ProfileStats> | null | undefined): Profil
     averageRating: toNullableNumber(input?.averageRating),
     totalEarnings: toNumber(input?.totalEarnings),
   }
+}
+
+function listFromForm(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function nullableNumberFromForm(value: string) {
+  const trimmed = value.trim()
+
+  if (!trimmed) return null
+
+  const parsed = Number(trimmed.replace(',', '.'))
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function buildSavePayload(form: ProfileFormState) {
+  return {
+    name: cleanText(form.name),
+    title: cleanText(form.title),
+    phone: cleanNullableText(form.phone),
+    city: cleanNullableText(form.city),
+    specialties: listFromForm(form.specialties),
+    focusAreas: listFromForm(form.focusAreas),
+    experienceYears: nullableNumberFromForm(form.experienceYears),
+    sessionPrice: nullableNumberFromForm(form.sessionPrice),
+    publicBio: cleanNullableText(form.publicBio),
+    bio: cleanNullableText(form.publicBio),
+    approach: cleanNullableText(form.approach),
+    education: listFromForm(form.education),
+    certificates: listFromForm(form.certificates),
+    profileImageUrl: cleanNullableText(form.profileImageUrl),
+  }
+}
+
+function validateForm(form: ProfileFormState) {
+  if (!form.name.trim()) return 'Ad soyad alanı zorunludur.'
+  if (!form.title.trim()) return 'Unvan alanı zorunludur.'
+
+  const experience = nullableNumberFromForm(form.experienceYears)
+  if (form.experienceYears.trim() && (experience === null || experience < 0 || experience > 80)) {
+    return 'Deneyim yılı 0 ile 80 arasında olmalıdır.'
+  }
+
+  const price = nullableNumberFromForm(form.sessionPrice)
+  if (form.sessionPrice.trim() && (price === null || price < 0 || price > 100000)) {
+    return 'Seans ücreti geçerli bir tutar olmalıdır.'
+  }
+
+  if (form.publicBio.trim().length > 1200) {
+    return 'Kısa tanıtım metni en fazla 1200 karakter olabilir.'
+  }
+
+  if (form.approach.trim().length > 1600) {
+    return 'Çalışma yaklaşımı en fazla 1600 karakter olabilir.'
+  }
+
+  return ''
 }
 
 function formatMoney(value: number | null | undefined) {
@@ -278,9 +395,12 @@ function getSafeErrorMessage(error: unknown) {
 
 export default function ExpertProfilePage() {
   const [profile, setProfile] = useState<ExpertProfile>(DEFAULT_PROFILE)
+  const [form, setForm] = useState<ProfileFormState>(() => profileToForm(DEFAULT_PROFILE))
   const [stats, setStats] = useState<ProfileStats>(DEFAULT_STATS)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState<NoticeState>(null)
 
   const publicPreviewHref = useMemo(
@@ -339,11 +459,14 @@ export default function ExpertProfilePage() {
       }
 
       const rawProfile = data.profile || data.expert || data.publicProfile || null
+      const nextProfile = normalizeProfile(rawProfile)
 
-      setProfile(normalizeProfile(rawProfile))
+      setProfile(nextProfile)
+      setForm(profileToForm(nextProfile))
       setStats(normalizeStats(data.stats))
     } catch (error) {
       setProfile(DEFAULT_PROFILE)
+      setForm(profileToForm(DEFAULT_PROFILE))
       setStats(DEFAULT_STATS)
       setNotice({
         title: 'Profil bilgileri alınamadı',
@@ -359,6 +482,68 @@ export default function ExpertProfilePage() {
   useEffect(() => {
     void fetchProfile('initial')
   }, [fetchProfile])
+
+  function updateForm<K extends keyof ProfileFormState>(key: K, value: ProfileFormState[K]) {
+    setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  function cancelEdit() {
+    setForm(profileToForm(profile))
+    setEditing(false)
+    setNotice(null)
+  }
+
+  async function saveProfile() {
+    try {
+      setSaving(true)
+      setNotice(null)
+
+      const validationError = validateForm(form)
+      if (validationError) throw new Error(validationError)
+
+      const payload = buildSavePayload(form)
+
+      const response = await fetch('/api/expert/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const data = (await response.json().catch(() => ({}))) as SaveApiResponse
+
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || 'Profil güncellenemedi.')
+      }
+
+      const nextProfile = normalizeProfile(data.profile || data.expert || { ...profile, ...payload })
+
+      setProfile(nextProfile)
+      setForm(profileToForm(nextProfile))
+      setEditing(false)
+      setNotice({
+        title: data.pendingReview ? 'Profil güncellemesi incelemeye alındı' : 'Profil güncellendi',
+        description:
+          data.message ||
+          (data.pendingReview
+            ? 'Değişiklikler admin onayından sonra danışan görünümüne yansıtılacaktır.'
+            : 'Profil bilgileriniz başarıyla kaydedildi.'),
+        tone: 'success',
+      })
+
+      void fetchProfile('refresh')
+    } catch (error) {
+      setNotice({
+        title: 'Profil güncellenemedi',
+        description: getSafeErrorMessage(error),
+        tone: 'warning',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -397,8 +582,8 @@ export default function ExpertProfilePage() {
                   </p>
 
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                    Profiliniz; danışanların sizi tanıması, güven duyması ve doğru
-                    uzmanla eşleştiğini hissetmesi için en önemli alanlardan biridir.
+                    Profil bilgilerinizi güncel tutarak danışanların size güven duymasını ve doğru
+                    eşleşme kararını daha hızlı vermesini sağlayın.
                   </p>
                 </div>
               </div>
@@ -407,18 +592,20 @@ export default function ExpertProfilePage() {
                 <button
                   type="button"
                   onClick={() => void fetchProfile('refresh')}
-                  disabled={loading || refreshing}
+                  disabled={loading || refreshing || saving}
                   className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading || refreshing ? 'Yükleniyor...' : 'Bilgileri Yenile'}
                 </button>
 
-                <Link
-                  href="/expert/dashboard"
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
+                <button
+                  type="button"
+                  onClick={() => setEditing((current) => !current)}
+                  disabled={loading || saving}
+                  className="inline-flex items-center justify-center rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm font-black text-indigo-700 shadow-sm transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Dashboard
-                </Link>
+                  {editing ? 'Önizlemeye Dön' : 'Profili Düzenle'}
+                </button>
 
                 <Link
                   href={publicPreviewHref}
@@ -431,21 +618,12 @@ export default function ExpertProfilePage() {
           </div>
 
           {notice ? (
-            <div className="border-t border-amber-100 bg-amber-50 px-6 py-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-black text-amber-900">{notice.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-amber-800">{notice.description}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void fetchProfile('refresh')}
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
-                >
-                  Tekrar Dene
-                </button>
-              </div>
-            </div>
+            <NoticeCard
+              title={notice.title}
+              description={notice.description}
+              tone={notice.tone}
+              onRetry={notice.tone === 'warning' ? () => void fetchProfile('refresh') : undefined}
+            />
           ) : null}
         </section>
 
@@ -455,103 +633,363 @@ export default function ExpertProfilePage() {
           ))}
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-3">
-          <div className="space-y-6 xl:col-span-2">
-            <Panel
-              title="Temel Bilgiler"
-              description="Profilinizde görünen ana bilgiler ve platform içi iletişim alanları."
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <InfoRow label="Ad Soyad" value={safeText(profile.name)} />
-                <InfoRow label="Unvan" value={safeText(profile.title)} />
-                <InfoRow label="Şehir" value={safeText(profile.city)} />
-                <InfoRow
-                  label="Deneyim"
-                  value={
-                    profile.experienceYears === null
-                      ? 'Henüz eklenmedi'
-                      : `${profile.experienceYears} yıl`
-                  }
-                />
-                <InfoRow label="Seans Ücreti" value={formatMoney(profile.sessionPrice)} />
-                <InfoRow label="Hesap Durumu" value={accountStatusLabel(profile.accountStatus)} />
-                <InfoRow label="E-posta" value={safeText(profile.email)} />
-                <InfoRow label="Telefon" value={safeText(profile.phone)} />
-              </div>
-            </Panel>
+        {editing ? (
+          <section className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
+            <ProfileEditForm
+              form={form}
+              saving={saving}
+              onChange={updateForm}
+              onCancel={cancelEdit}
+              onSave={() => void saveProfile()}
+            />
 
-            <Panel
-              title="Uzmanlık Alanları"
-              description="Danışan eşleşmesi ve profil görünürlüğü için kullanılan alanlar."
-            >
-              <TagList items={profile.specialties} emptyText="Uzmanlık alanı eklenmemiş." />
-            </Panel>
+            <aside className="space-y-6">
+              <Panel
+                title="Admin Onayına Düşebilecek Alanlar"
+                description="Uzman güvenliği için bazı alanlar direkt yayına alınmayabilir."
+              >
+                <List items={REVIEW_REQUIRED_FIELDS} emptyText="Onay gerektiren alan yok." />
+              </Panel>
 
-            <Panel
-              title="Hakkımda"
-              description="Danışanların sizi ve çalışma biçiminizi anlamasına yardımcı olur."
-            >
-              <div className="grid gap-4 lg:grid-cols-2">
-                <TextBlock
-                  title="Kısa Tanıtım"
-                  text={safeText(
-                    profile.publicBio,
-                    'Danışanların göreceği kısa tanıtım metni henüz eklenmemiş.'
-                  )}
-                />
-                <TextBlock
-                  title="Çalışma Yaklaşımı"
-                  text={safeText(
-                    profile.approach || profile.bio,
-                    'Çalışma yaklaşımı henüz eklenmemiş.'
-                  )}
-                />
-              </div>
-            </Panel>
-
-            <Panel title="Çalıştığı Konular" description="Profilinizde öne çıkan destek başlıkları.">
-              <TagList items={profile.focusAreas} emptyText="Çalışılan konu başlığı eklenmemiş." />
-            </Panel>
-          </div>
-
-          <aside className="space-y-6">
-            <Panel title="Profil Durumu" description="Profilinizin platformdaki görünürlük durumu.">
-              <div className="space-y-3">
-                <StatusLine label="Durum" value={profileStatusLabel(profile.status)} />
-                <StatusLine label="Hesap" value={accountStatusLabel(profile.accountStatus)} />
-                <StatusLine label="Onay Tarihi" value={formatDate(profile.approvedAt)} />
-                <StatusLine
-                  label="Profil Adresi"
-                  value={profile.slug ? `/uzmanlar/${profile.slug}` : 'Henüz eklenmedi'}
-                />
-              </div>
-            </Panel>
-
-            <Panel title="Eğitim" description="Danışan güvenini artıran eğitim bilgileri.">
-              <List items={profile.education} emptyText="Eğitim bilgisi eklenmemiş." />
-            </Panel>
-
-            <Panel title="Sertifikalar" description="Mesleki gelişim ve uzmanlık belgeleri.">
-              <List items={profile.certificates} emptyText="Sertifika eklenmemiş." />
-            </Panel>
-
-            <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm">
-              <h2 className="text-lg font-black text-indigo-950">Profil önerisi</h2>
-              <p className="mt-2 text-sm leading-6 text-indigo-800">
-                Daha iyi dönüşüm için tanıtım metninizi sade, güven veren ve danışanın
-                anlayacağı bir dille yazın. Uzmanlık alanlarınızı kısa başlıklarla belirtin.
-              </p>
-            </section>
-          </aside>
-        </section>
+              <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm">
+                <h2 className="text-lg font-black text-indigo-950">Profil yazım önerisi</h2>
+                <p className="mt-2 text-sm leading-6 text-indigo-800">
+                  Tanıtım metninizde sade, güven veren ve danışanın anlayacağı bir dil kullanın.
+                  Akademik bilgileri kısa tutup hangi konularda destek verdiğinizi net yazın.
+                </p>
+              </section>
+            </aside>
+          </section>
+        ) : (
+          <ProfilePreview
+            profile={profile}
+            publicPreviewHref={publicPreviewHref}
+          />
+        )}
       </section>
     </main>
   )
 }
 
+function ProfilePreview({
+  profile,
+  publicPreviewHref,
+}: {
+  profile: ExpertProfile
+  publicPreviewHref: string
+}) {
+  return (
+    <section className="grid gap-6 xl:grid-cols-3">
+      <div className="space-y-6 xl:col-span-2">
+        <Panel
+          title="Temel Bilgiler"
+          description="Profilinizde görünen ana bilgiler ve platform içi iletişim alanları."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <InfoRow label="Ad Soyad" value={safeText(profile.name)} />
+            <InfoRow label="Unvan" value={safeText(profile.title)} />
+            <InfoRow label="Şehir" value={safeText(profile.city)} />
+            <InfoRow
+              label="Deneyim"
+              value={
+                profile.experienceYears === null
+                  ? 'Henüz eklenmedi'
+                  : `${profile.experienceYears} yıl`
+              }
+            />
+            <InfoRow label="Seans Ücreti" value={formatMoney(profile.sessionPrice)} />
+            <InfoRow label="Hesap Durumu" value={accountStatusLabel(profile.accountStatus)} />
+            <InfoRow label="E-posta" value={safeText(profile.email)} />
+            <InfoRow label="Telefon" value={safeText(profile.phone)} />
+          </div>
+        </Panel>
+
+        <Panel
+          title="Uzmanlık Alanları"
+          description="Danışan eşleşmesi ve profil görünürlüğü için kullanılan alanlar."
+        >
+          <TagList items={profile.specialties} emptyText="Uzmanlık alanı eklenmemiş." />
+        </Panel>
+
+        <Panel
+          title="Hakkımda"
+          description="Danışanların sizi ve çalışma biçiminizi anlamasına yardımcı olur."
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            <TextBlock
+              title="Kısa Tanıtım"
+              text={safeText(
+                profile.publicBio,
+                'Danışanların göreceği kısa tanıtım metni henüz eklenmemiş.'
+              )}
+            />
+            <TextBlock
+              title="Çalışma Yaklaşımı"
+              text={safeText(
+                profile.approach || profile.bio,
+                'Çalışma yaklaşımı henüz eklenmemiş.'
+              )}
+            />
+          </div>
+        </Panel>
+
+        <Panel title="Çalıştığı Konular" description="Profilinizde öne çıkan destek başlıkları.">
+          <TagList items={profile.focusAreas} emptyText="Çalışılan konu başlığı eklenmemiş." />
+        </Panel>
+      </div>
+
+      <aside className="space-y-6">
+        <Panel title="Profil Durumu" description="Profilinizin platformdaki görünürlük durumu.">
+          <div className="space-y-3">
+            <StatusLine label="Durum" value={profileStatusLabel(profile.status)} />
+            <StatusLine label="Hesap" value={accountStatusLabel(profile.accountStatus)} />
+            <StatusLine label="Onay Tarihi" value={formatDate(profile.approvedAt)} />
+            <StatusLine
+              label="Profil Adresi"
+              value={profile.slug ? `/uzmanlar/${profile.slug}` : 'Henüz eklenmedi'}
+            />
+          </div>
+
+          <Link
+            href={publicPreviewHref}
+            className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
+          >
+            Public Profili Aç
+          </Link>
+        </Panel>
+
+        <Panel title="Eğitim" description="Danışan güvenini artıran eğitim bilgileri.">
+          <List items={profile.education} emptyText="Eğitim bilgisi eklenmemiş." />
+        </Panel>
+
+        <Panel title="Sertifikalar" description="Mesleki gelişim ve uzmanlık belgeleri.">
+          <List items={profile.certificates} emptyText="Sertifika eklenmemiş." />
+        </Panel>
+
+        <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm">
+          <h2 className="text-lg font-black text-indigo-950">Profil önerisi</h2>
+          <p className="mt-2 text-sm leading-6 text-indigo-800">
+            Daha iyi dönüşüm için tanıtım metninizi sade, güven veren ve danışanın
+            anlayacağı bir dille yazın. Uzmanlık alanlarınızı kısa başlıklarla belirtin.
+          </p>
+        </section>
+      </aside>
+    </section>
+  )
+}
+
+function ProfileEditForm({
+  form,
+  saving,
+  onChange,
+  onCancel,
+  onSave,
+}: {
+  form: ProfileFormState
+  saving: boolean
+  onChange: <K extends keyof ProfileFormState>(key: K, value: ProfileFormState[K]) => void
+  onCancel: () => void
+  onSave: () => void
+}) {
+  return (
+    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-black text-slate-950">Profili Güncelle</h2>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+            Temel bilgilerinizi ve danışan görünümünde yer alan profil içeriklerinizi buradan
+            güncelleyebilirsiniz.
+          </p>
+        </div>
+        <div className="rounded-2xl bg-amber-50 px-4 py-3 text-xs font-black text-amber-800 ring-1 ring-amber-100">
+          Kritik alanlar admin onayına düşebilir.
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Ad Soyad" value={form.name} onChange={(value) => onChange('name', value)} />
+        <Field label="Unvan" value={form.title} onChange={(value) => onChange('title', value)} />
+        <Field label="Telefon" value={form.phone} onChange={(value) => onChange('phone', value)} />
+        <Field label="Şehir" value={form.city} onChange={(value) => onChange('city', value)} />
+        <Field
+          label="Deneyim Yılı"
+          value={form.experienceYears}
+          inputMode="numeric"
+          onChange={(value) => onChange('experienceYears', value)}
+        />
+        <Field
+          label="Seans Ücreti"
+          value={form.sessionPrice}
+          inputMode="decimal"
+          onChange={(value) => onChange('sessionPrice', value)}
+        />
+        <Field
+          label="Profil Fotoğrafı URL"
+          value={form.profileImageUrl}
+          className="sm:col-span-2"
+          onChange={(value) => onChange('profileImageUrl', value)}
+        />
+        <TextArea
+          label="Uzmanlık Alanları"
+          hint="Virgülle ayırın. Örn: Kaygı, Depresyon, İlişki Problemleri"
+          value={form.specialties}
+          onChange={(value) => onChange('specialties', value)}
+        />
+        <TextArea
+          label="Çalıştığı Konular"
+          hint="Virgülle ayırın. Örn: Overthinking, Panik, Stres Yönetimi"
+          value={form.focusAreas}
+          onChange={(value) => onChange('focusAreas', value)}
+        />
+        <TextArea
+          label="Kısa Tanıtım"
+          hint="Danışanın profilinizde göreceği ana tanıtım metni."
+          value={form.publicBio}
+          rows={6}
+          onChange={(value) => onChange('publicBio', value)}
+        />
+        <TextArea
+          label="Çalışma Yaklaşımı"
+          hint="Terapi yaklaşımınız, seans tarzınız ve çalışma biçiminiz."
+          value={form.approach}
+          rows={6}
+          onChange={(value) => onChange('approach', value)}
+        />
+        <TextArea
+          label="Eğitim"
+          hint="Virgülle ayırın."
+          value={form.education}
+          onChange={(value) => onChange('education', value)}
+        />
+        <TextArea
+          label="Sertifikalar"
+          hint="Virgülle ayırın."
+          value={form.certificates}
+          onChange={(value) => onChange('certificates', value)}
+        />
+      </div>
+
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={saving}
+          className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Vazgeç
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving}
+          className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {saving ? 'Kaydediliyor...' : 'Profili Güncelle'}
+        </button>
+      </div>
+    </section>
+  )
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  inputMode,
+  className = '',
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  inputMode?: 'text' | 'numeric' | 'decimal'
+  className?: string
+}) {
+  return (
+    <label className={`space-y-2 ${className}`}>
+      <span className="text-sm font-black text-slate-700">{label}</span>
+      <input
+        value={value}
+        inputMode={inputMode}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+      />
+    </label>
+  )
+}
+
+function TextArea({
+  label,
+  value,
+  hint,
+  rows = 4,
+  onChange,
+}: {
+  label: string
+  value: string
+  hint?: string
+  rows?: number
+  onChange: (value: string) => void
+}) {
+  return (
+    <label className="space-y-2">
+      <span className="text-sm font-black text-slate-700">{label}</span>
+      <textarea
+        value={value}
+        rows={rows}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+      />
+      {hint ? <span className="block text-xs leading-5 text-slate-500">{hint}</span> : null}
+    </label>
+  )
+}
+
+function NoticeCard({
+  title,
+  description,
+  tone = 'default',
+  onRetry,
+}: {
+  title: string
+  description: string
+  tone?: 'default' | 'warning' | 'success'
+  onRetry?: () => void
+}) {
+  const className =
+    tone === 'warning'
+      ? 'border-amber-100 bg-amber-50 text-amber-900'
+      : tone === 'success'
+        ? 'border-emerald-100 bg-emerald-50 text-emerald-900'
+        : 'border-slate-100 bg-slate-50 text-slate-700'
+
+  return (
+    <div className={`border-t px-6 py-4 ${className}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-black">{title}</p>
+          <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
+        </div>
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+          >
+            Tekrar Dene
+          </button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 function StatusBadge({ status }: { status: ProfileStatus }) {
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${profileStatusClass(status)}`}>
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${profileStatusClass(
+        status
+      )}`}
+    >
       {profileStatusLabel(status)}
     </span>
   )
