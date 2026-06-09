@@ -37,7 +37,7 @@ type NormalizedExpert = {
   totalEarnings: number
 }
 
-const ROUTE_VERSION = 'expert-profile-schema-safe-v3-no-approach-column'
+const ROUTE_VERSION = 'expert-profile-schema-safe-v4-filter-existing-columns'
 
 const REVIEW_REQUIRED_KEYS = new Set([
   'title',
@@ -345,10 +345,29 @@ function buildPatchUpdate(body: UnknownRecord) {
     updated_at: new Date().toISOString(),
   }
 
-  // Safety guard: the experts table does not have an "approach" column in the current schema.
   delete update.approach
 
   return update
+}
+
+function filterUpdateByExistingColumns(update: UnknownRecord, currentExpert: UnknownRecord) {
+  const filtered: UnknownRecord = {}
+  const skippedColumns: string[] = []
+
+  for (const [key, value] of Object.entries(update)) {
+    if (key === 'approach') {
+      skippedColumns.push(key)
+      continue
+    }
+
+    if (Object.prototype.hasOwnProperty.call(currentExpert, key)) {
+      filtered[key] = value
+    } else {
+      skippedColumns.push(key)
+    }
+  }
+
+  return { filtered, skippedColumns }
 }
 
 function hasReviewRequiredChange(current: UnknownRecord, update: UnknownRecord) {
@@ -371,11 +390,8 @@ function getMissingColumnFromError(error: unknown) {
       ? String((error as { message?: unknown }).message || '')
       : ''
 
-  const directMatch = message.match(/Could not find the '([^']+)' column/i)
-  if (directMatch?.[1]) return directMatch[1]
-
-  const schemaMatch = message.match(/column "?([a-zA-Z0-9_]+)"? (?:does not exist|of relation)/i)
-  return schemaMatch?.[1] || null
+  const match = message.match(/Could not find the '([^']+)' column/i)
+  return match?.[1] || null
 }
 
 async function updateExpertWithSchemaFallback({
@@ -491,11 +507,26 @@ export async function PATCH(req: NextRequest) {
       return jsonError('Uzman profili bulunamadı.', 404)
     }
 
-    const update = buildPatchUpdate(body)
+    const rawUpdate = buildPatchUpdate(body)
+    delete rawUpdate.approach
+
+    const { filtered: update, skippedColumns } = filterUpdateByExistingColumns(rawUpdate, currentExpert)
+
+    if (Object.keys(update).length === 0) {
+      return jsonError('Güncellenecek geçerli profil alanı bulunamadı.', 422, {
+        skippedColumns,
+        routeVersion: ROUTE_VERSION,
+      })
+    }
+
     const pendingReview = hasReviewRequiredChange(currentExpert, update)
     const currentStatus = normalizeStatus(pick(currentExpert, ['status', 'profile_status'], 'pending'))
 
-    if (pendingReview && currentStatus === 'approved') {
+    if (
+      pendingReview &&
+      currentStatus === 'approved' &&
+      Object.prototype.hasOwnProperty.call(currentExpert, 'status')
+    ) {
       update.status = 'review'
     }
 
@@ -513,14 +544,17 @@ export async function PATCH(req: NextRequest) {
       profile: normalized.internalProfile,
       publicProfile: normalized.publicProfile,
       pendingReview,
-      skippedColumns: removedColumns,
+      skippedColumns: [...skippedColumns, ...removedColumns],
       routeVersion: ROUTE_VERSION,
       message: pendingReview
         ? 'Profil güncellendi. Kritik alanlar admin incelemesine alındı.'
         : 'Profil bilgileriniz başarıyla güncellendi.',
     })
   } catch (error) {
-    console.error('EXPERT_PROFILE_PATCH_API_ERROR', error)
+    console.error('EXPERT_PROFILE_PATCH_API_ERROR', {
+      routeVersion: ROUTE_VERSION,
+      error,
+    })
 
     return jsonError(
       'Profil güncellenemedi.',
