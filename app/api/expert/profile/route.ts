@@ -45,7 +45,7 @@ const REVIEW_REQUIRED_KEYS = new Set([
   'certificates',
   'bio',
   'public_bio',
-  'approach',
+  'therapy_approach',
   'profile_image_url',
 ])
 
@@ -225,7 +225,7 @@ function normalizeExpert(row: UnknownRecord) {
     profileImageUrl: toNullableText(pick(row, ['profile_image_url', 'avatar_url', 'image_url'])),
     bio: toText(pick(row, ['bio', 'internal_bio', 'about'])),
     publicBio: toText(pick(row, ['public_bio', 'bio', 'about'])),
-    approach: toText(pick(row, ['approach', 'therapy_approach'])),
+    approach: toText(pick(row, ['therapy_approach', 'therapy_approach'])),
     totalClients: 0,
     completedSessions: 0,
     averageRating: null,
@@ -311,7 +311,7 @@ function validatePatchPayload(body: UnknownRecord) {
   const publicBio = toText(body.publicBio ?? body.public_bio)
   if (publicBio.length > 1200) return 'Kısa tanıtım metni en fazla 1200 karakter olabilir.'
 
-  const approach = toText(body.approach)
+  const approach = toText(body.approach ?? body.therapy_approach)
   if (approach.length > 1600) return 'Çalışma yaklaşımı en fazla 1600 karakter olabilir.'
 
   const profileImageUrl = toText(body.profileImageUrl ?? body.profile_image_url)
@@ -336,7 +336,7 @@ function buildPatchUpdate(body: UnknownRecord) {
     session_price: toNullableNumber(body.sessionPrice ?? body.session_price) ?? 0,
     public_bio: publicBio || '',
     bio: toNullableText(body.bio) || publicBio || '',
-    approach: toNullableText(body.approach) || '',
+    therapy_approach: toNullableText(body.approach ?? body.therapy_approach) || '',
     education: uniqueCleanList(body.education),
     certificates: uniqueCleanList(body.certificates),
     profile_image_url: toNullableText(body.profileImageUrl ?? body.profile_image_url),
