@@ -441,9 +441,9 @@ export async function PATCH(req: NextRequest) {
     const pendingReview = hasReviewRequiredChange(currentExpert, update)
     const currentStatus = normalizeStatus(pick(currentExpert, ['status', 'profile_status'], 'pending'))
 
-    if (pendingReview && currentStatus === 'approved') {
-      update.status = 'review'
-    }
+    //if (pendingReview && currentStatus === 'approved') {
+    //  update.status = 'review'
+    // }
 
     const supabase = getSupabaseAdmin() as any
 
