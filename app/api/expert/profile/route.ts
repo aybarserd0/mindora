@@ -37,7 +37,7 @@ type NormalizedExpert = {
   totalEarnings: number
 }
 
-const ROUTE_VERSION = 'expert-profile-schema-safe-v4-filter-existing-columns'
+const ROUTE_VERSION = 'expert-profile-final-v5-direct-update'
 
 const REVIEW_REQUIRED_KEYS = new Set([
   'title',
@@ -224,10 +224,10 @@ function normalizeExpert(row: UnknownRecord) {
     ),
     sessionPrice: toNumber(pick(row, ['session_price', 'price', 'session_fee']), 0),
     sessionDurationMinutes,
-    profileImageUrl: toNullableText(pick(row, ['profile_image_url', 'avatar_url', 'image_url'])),
+    profileImageUrl: toNullableText(pick(row, ['profile_image_url', 'photo_url', 'avatar_url', 'image_url'])),
     bio: toText(pick(row, ['bio', 'internal_bio', 'about'])),
     publicBio: toText(pick(row, ['public_bio', 'bio', 'about'])),
-    approach: toText(pick(row, ['therapy_approach', 'approach'])),
+    approach: toText(pick(row, ['therapy_approach'])),
     totalClients: 0,
     completedSessions: 0,
     averageRating: null,
@@ -313,8 +313,8 @@ function validatePatchPayload(body: UnknownRecord) {
   const publicBio = toText(body.publicBio ?? body.public_bio)
   if (publicBio.length > 1200) return 'Kısa tanıtım metni en fazla 1200 karakter olabilir.'
 
-  const approach = toText(body.approach ?? body.therapy_approach)
-  if (approach.length > 1600) return 'Çalışma yaklaşımı en fazla 1600 karakter olabilir.'
+  const therapyApproach = toText(body.approach ?? body.therapy_approach)
+  if (therapyApproach.length > 1600) return 'Çalışma yaklaşımı en fazla 1600 karakter olabilir.'
 
   const profileImageUrl = toText(body.profileImageUrl ?? body.profile_image_url)
   if (profileImageUrl && !/^https?:\/\/.+/i.test(profileImageUrl)) {
@@ -324,11 +324,13 @@ function validatePatchPayload(body: UnknownRecord) {
   return ''
 }
 
-function buildPatchUpdate(body: UnknownRecord) {
+function buildExpertUpdate(body: UnknownRecord) {
   const publicBio = toNullableText(body.publicBio ?? body.public_bio ?? body.bio)
-  const update: UnknownRecord = {
-    name: toText(body.name),
-    full_name: toText(body.name),
+  const name = toText(body.name)
+
+  return {
+    name,
+    full_name: name,
     title: toText(body.title),
     phone: toNullableText(body.phone),
     city: toText(body.city, 'Belirtilmedi'),
@@ -344,30 +346,6 @@ function buildPatchUpdate(body: UnknownRecord) {
     profile_image_url: toNullableText(body.profileImageUrl ?? body.profile_image_url),
     updated_at: new Date().toISOString(),
   }
-
-  delete update.approach
-
-  return update
-}
-
-function filterUpdateByExistingColumns(update: UnknownRecord, currentExpert: UnknownRecord) {
-  const filtered: UnknownRecord = {}
-  const skippedColumns: string[] = []
-
-  for (const [key, value] of Object.entries(update)) {
-    if (key === 'approach') {
-      skippedColumns.push(key)
-      continue
-    }
-
-    if (Object.prototype.hasOwnProperty.call(currentExpert, key)) {
-      filtered[key] = value
-    } else {
-      skippedColumns.push(key)
-    }
-  }
-
-  return { filtered, skippedColumns }
 }
 
 function hasReviewRequiredChange(current: UnknownRecord, update: UnknownRecord) {
@@ -382,57 +360,6 @@ function hasReviewRequiredChange(current: UnknownRecord, update: UnknownRecord) 
 
     return toText(currentValue) !== toText(value)
   })
-}
-
-function getMissingColumnFromError(error: unknown) {
-  const message =
-    typeof error === 'object' && error !== null && 'message' in error
-      ? String((error as { message?: unknown }).message || '')
-      : ''
-
-  const match = message.match(/Could not find the '([^']+)' column/i)
-  return match?.[1] || null
-}
-
-async function updateExpertWithSchemaFallback({
-  supabase,
-  expertId,
-  update,
-}: {
-  supabase: ReturnType<typeof getSupabaseAdmin>
-  expertId: unknown
-  update: UnknownRecord
-}) {
-  const safeUpdate: UnknownRecord = { ...update }
-  const removedColumns: string[] = []
-
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const { data, error } = await (supabase as any)
-      .from('experts')
-      .update(safeUpdate)
-      .eq('id', expertId)
-      .select('*')
-      .single()
-
-    if (!error) {
-      return {
-        data: data as UnknownRecord,
-        removedColumns,
-      }
-    }
-
-    const missingColumn = getMissingColumnFromError(error)
-
-    if (missingColumn && Object.prototype.hasOwnProperty.call(safeUpdate, missingColumn)) {
-      delete safeUpdate[missingColumn]
-      removedColumns.push(missingColumn)
-      continue
-    }
-
-    throw error
-  }
-
-  throw new Error('Profil güncellemesi tablo şemasıyla eşleştirilemedi.')
 }
 
 export async function GET(req: NextRequest) {
@@ -475,7 +402,10 @@ export async function GET(req: NextRequest) {
       routeVersion: ROUTE_VERSION,
     })
   } catch (error) {
-    console.error('EXPERT_PROFILE_API_ERROR', error)
+    console.error('EXPERT_PROFILE_API_ERROR', {
+      routeVersion: ROUTE_VERSION,
+      error,
+    })
 
     return jsonError(
       'Uzman profili şu anda alınamadı.',
@@ -507,36 +437,24 @@ export async function PATCH(req: NextRequest) {
       return jsonError('Uzman profili bulunamadı.', 404)
     }
 
-    const rawUpdate = buildPatchUpdate(body)
-    delete rawUpdate.approach
-
-    const { filtered: update, skippedColumns } = filterUpdateByExistingColumns(rawUpdate, currentExpert)
-
-    if (Object.keys(update).length === 0) {
-      return jsonError('Güncellenecek geçerli profil alanı bulunamadı.', 422, {
-        skippedColumns,
-        routeVersion: ROUTE_VERSION,
-      })
-    }
-
+    const update: UnknownRecord = buildExpertUpdate(body)
     const pendingReview = hasReviewRequiredChange(currentExpert, update)
     const currentStatus = normalizeStatus(pick(currentExpert, ['status', 'profile_status'], 'pending'))
 
-    if (
-      pendingReview &&
-      currentStatus === 'approved' &&
-      Object.prototype.hasOwnProperty.call(currentExpert, 'status')
-    ) {
+    if (pendingReview && currentStatus === 'approved') {
       update.status = 'review'
     }
 
-    const supabase = getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
 
-    const { data, removedColumns } = await updateExpertWithSchemaFallback({
-      supabase,
-      expertId: currentExpert.id,
-      update,
-    })
+    const { data, error } = await supabase
+      .from('experts')
+      .update(update)
+      .eq('id', currentExpert.id)
+      .select('*')
+      .single()
+
+    if (error) throw error
 
     const normalized = normalizeExpert((data || currentExpert) as UnknownRecord)
 
@@ -544,7 +462,6 @@ export async function PATCH(req: NextRequest) {
       profile: normalized.internalProfile,
       publicProfile: normalized.publicProfile,
       pendingReview,
-      skippedColumns: [...skippedColumns, ...removedColumns],
       routeVersion: ROUTE_VERSION,
       message: pendingReview
         ? 'Profil güncellendi. Kritik alanlar admin incelemesine alındı.'
