@@ -801,65 +801,81 @@ function HeroTrustCard({
   totalReviewCount: number;
   averagePlatformRating: number;
 }) {
-  const ratingText = averagePlatformRating > 0 ? averagePlatformRating.toFixed(1) : "Yeni";
-  const reviewText =
-    totalReviewCount > 0
-      ? `${totalReviewCount} doğrulanmış değerlendirme`
-      : "İlk değerlendirmeler moderasyon sonrası yayınlanır";
+  const hasRating = reviewedExpertCount > 0 && averagePlatformRating > 0;
+  const headline = hasRating ? averagePlatformRating.toFixed(1) : "Güvenli";
+  const subHeadline = hasRating
+    ? `${totalReviewCount} doğrulanmış danışan değerlendirmesi`
+    : "Uzman inceleme ve değerlendirme sistemi aktif";
 
   return (
-    <aside className="rounded-[2.25rem] border border-black/5 bg-white p-6 shadow-sm md:p-8">
-      <div className="rounded-[1.75rem] bg-black p-6 text-white">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-white/50">
-              Güvenli başlangıç
-            </p>
-            <p className="mt-3 text-4xl font-black tracking-tight">{ratingText}</p>
-            <p className="mt-1 text-sm font-semibold text-white/70">
-              {averagePlatformRating > 0 ? "Ortalama memnuniyet puanı" : "Değerlendirme altyapısı hazır"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white px-4 py-3 text-right text-black shadow-sm">
-            <p className="text-2xl font-black">★</p>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-neutral-500">
+    <aside className="rounded-[2.25rem] border border-black/5 bg-white p-5 shadow-[0_20px_60px_rgba(15,15,15,0.06)] md:p-6 lg:p-7">
+      <div className="overflow-hidden rounded-[1.9rem] bg-black text-white">
+        <div className="relative p-6 md:p-7">
+          <div className="absolute right-5 top-5 rounded-2xl bg-white px-4 py-3 text-black shadow-sm">
+            <p className="text-2xl font-black leading-none">✓</p>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-neutral-500">
               Mindora
             </p>
           </div>
-        </div>
 
-        <p className="mt-5 text-sm leading-6 text-white/70">{reviewText}</p>
+          <p className="max-w-[12rem] text-xs font-black uppercase tracking-[0.32em] text-white/45">
+            Güvenli başlangıç
+          </p>
+
+          <div className="mt-8">
+            <p className="text-4xl font-black tracking-tight md:text-5xl">{headline}</p>
+            <p className="mt-2 max-w-sm text-sm font-semibold leading-6 text-white/72">
+              {subHeadline}
+            </p>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
+              Onaylı uzmanlar
+            </span>
+            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
+              Güvenli ödeme
+            </span>
+            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
+              Online görüşme
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-5 grid gap-3">
+      <div className="mt-4 grid gap-3">
         <TrustLine
-          title="Onaylı uzman profilleri"
+          title="Profiller incelenerek yayınlanır"
           text={
-            approvedExpertCount > 0
-              ? `${approvedExpertCount} uzman profili inceleme sürecinden geçti.`
-              : "Uzman profilleri yayınlanmadan önce kontrol edilir."
+            approvedExpertCount > 1
+              ? "Mindora’da listelenen uzman profilleri yayınlanmadan önce kontrol edilir."
+              : "Uzman profilleri yayınlanmadan önce başvuru ve profil inceleme sürecinden geçer."
           }
         />
         <TrustLine
-          title="Gerçek değerlendirmeler"
+          title="Değerlendirmeler seans sonrası alınır"
           text={
             reviewedExpertCount > 0
-              ? `${reviewedExpertCount} uzman için danışan yorumu bulunuyor.`
-              : "Yorumlar yalnızca tamamlanan seanslardan sonra alınır."
+              ? "Yorumlar yalnızca tamamlanan seanslardan sonra alınır ve moderasyondan geçer."
+              : "Yorum altyapısı gerçek seans deneyimlerini görünür kılmak için hazırlanmıştır."
           }
         />
         <TrustLine
-          title="Güvenli ödeme ve online görüşme"
-          text="Randevu, ödeme, mesajlaşma ve video görüşme tek platformda ilerler."
-        />
-        <TrustLine
-          title="Kişiye özel ön eşleşme"
-          text="İhtiyacına, uygun zamanına ve beklentine göre daha doğru başlangıç yapılır."
+          title="Tüm süreç tek yerde ilerler"
+          text="Ön eşleşme, randevu, ödeme, mesajlaşma ve video görüşme aynı akışta yönetilir."
         />
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 rounded-[1.75rem] bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+        <p className="text-sm font-black text-neutral-950">
+          Rastgele uzman seçimi yerine ihtiyacına uygun başlangıç.
+        </p>
+        <p className="mt-1 text-sm leading-6 text-neutral-600">
+          Kısa ön eşleşme formu, destek konunu ve beklentini daha doğru anlamak için tasarlandı.
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <Link
           href="/eslesme"
           className="rounded-2xl bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
@@ -879,7 +895,7 @@ function HeroTrustCard({
 
 function TrustLine({ title, text }: { title: string; text: string }) {
   return (
-    <div className="flex gap-3 rounded-3xl bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+    <div className="flex gap-3 rounded-[1.35rem] bg-[#f7f2eb] p-4 ring-1 ring-black/5">
       <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-white">
         ✓
       </span>
