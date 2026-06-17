@@ -622,14 +622,14 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
               <div className="min-w-0 flex-1">
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Badge tone="success">Onaylı uzman profili</Badge>
+                  <Badge tone="success">Mindora onaylı uzman</Badge>
                   <Badge tone="dark">{expert.onlineText}</Badge>
                   {expert.reviewCount > 0 ? (
                     <Badge tone="warning">
                       ★ {expert.averageRating.toFixed(1)} · {expert.reviewCount} değerlendirme
                     </Badge>
                   ) : (
-                    <Badge tone="neutral">Yeni uzman</Badge>
+                    <Badge tone="neutral">Yeni değerlendirme</Badge>
                   )}
                 </div>
 
@@ -711,7 +711,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
                 href={matchingHref}
                 className="flex w-full items-center justify-center rounded-2xl bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-neutral-800"
               >
-                Bu uzmanla eşleşme iste
+                Ücretsiz ön eşleşme iste
               </Link>
 
               <Link
@@ -799,7 +799,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             <div className="grid gap-3 md:grid-cols-2">
               <ReasonCard title="İhtiyaç odaklı başlangıç" text="Ön eşleşme formundaki bilgilerle görüşme sürecinin daha doğru başlaması hedeflenir." />
               <ReasonCard title="Net süreç akışı" text="Eşleşme, randevu, ödeme ve online görüşme adımları Mindora içinde takip edilir." />
-              <ReasonCard title="Güvenli yönlendirme" text="Profil bilgileri, çalışma alanları ve uygunluk bilgileri daha şeffaf gösterilir." />
+              <ReasonCard title="Güvenli yönlendirme" text="Profil bilgileri, çalışma alanları, değerlendirmeler ve uygunluk bilgileri daha şeffaf gösterilir." />
               <ReasonCard title="Sosyal kanıt" text="Onaylı değerlendirmeler ve puanlar uzman seçiminde daha bilinçli karar vermeye yardımcı olur." />
             </div>
           </InfoCard>
@@ -838,7 +838,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
           <InfoCard title="Ön eşleşme notu">
             <p className="text-sm leading-7 text-neutral-600">
-              Bu profil, ilk kararını kolaylaştırmak için hazırlanır. Nihai uzman uygunluğu, destek ihtiyacın ve müsaitlik durumun ön eşleşme sonrasında netleşir.
+              Bu profil ilk kararını kolaylaştırmak için hazırlanmıştır. Nihai uzman uygunluğu, destek ihtiyacın, beklentin ve müsaitlik durumun ön eşleşme sonrasında netleşir.
             </p>
           </InfoCard>
         </div>
@@ -863,7 +863,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               href={matchingHref}
               className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-black transition hover:bg-neutral-200"
             >
-              Eşleşme Formuna Git
+              Ücretsiz Ön Eşleşmeye Başla
             </Link>
           </div>
         </div>
@@ -882,7 +882,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             href={matchingHref}
             className="shrink-0 rounded-2xl bg-black px-5 py-3 text-sm font-black text-white"
           >
-            Eşleşme iste
+            Eşleşme
           </Link>
         </div>
       </div>

@@ -217,6 +217,28 @@ function getReviewLabel(count: number) {
   return `${count} değerlendirme`;
 }
 
+function getExperienceLabel(value: string | null) {
+  const text = toText(value);
+  return text || "Deneyim eşleşmede netleşir";
+}
+
+function getSessionDurationLabel(expert: Expert) {
+  return toText(expert.sessionDuration) || "50 dk";
+}
+
+function getPriceLabel(price: number | null) {
+  if (!price) return "Ücret eşleşmede netleşir";
+  return `${formatMoney(price)} / seans`;
+}
+
+function getCardSummary(expert: Expert) {
+  const areas = splitAreas(expert.areas);
+  const firstArea = areas[0] || "Online psikolojik destek";
+  const title = formatTitle(expert.title);
+
+  return `${title} olarak ${firstArea.toLocaleLowerCase("tr-TR")} alanında destek sunar. Detaylı profilinde eğitim, yaklaşım ve uygunluk bilgilerini inceleyebilirsin.`;
+}
+
 function matchesSearch(expert: Expert, searchTerm: string) {
   const query = searchTerm.trim().toLocaleLowerCase("tr-TR");
   if (!query) return true;
@@ -692,100 +714,114 @@ function ExpertCard({ expert, priorityRank }: { expert: Expert; priorityRank: nu
   const isTopListed = priorityRank <= 3 && getRankingScore(expert) > 0;
 
   return (
-    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-md">
-      <div className="p-7 text-center">
-        <div className="relative mx-auto h-28 w-28">
+    <article className="group flex h-full min-w-0 flex-col rounded-[2rem] border border-black/5 bg-white p-5 shadow-[0_18px_45px_rgba(15,15,15,0.045)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(15,15,15,0.08)]">
+      <div className="flex items-start gap-4">
+        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[1.7rem] bg-black text-white shadow-sm ring-4 ring-[#f7f2eb]">
           {showPhoto ? (
             <Image
               src={expert.photo_url || ""}
               alt={`${expert.name} profil fotoğrafı`}
               fill
-              sizes="112px"
-              className="rounded-full object-cover shadow-lg ring-4 ring-white"
+              sizes="96px"
+              className="object-cover"
             />
           ) : (
-            <div className="flex h-28 w-28 items-center justify-center rounded-full bg-black text-3xl font-black text-white shadow-lg">
+            <div className="flex h-full w-full items-center justify-center text-2xl font-black">
               {getInitials(expert.name)}
             </div>
           )}
 
-          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#f7f2eb] px-3 py-1 text-[11px] font-black text-neutral-700 ring-1 ring-black/5">
-            Onaylı profil
+          <span className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-black text-black shadow-sm">
+            ✓
           </span>
+        </div>
 
-          {isTopListed ? (
-            <span className="absolute -right-5 -top-2 rounded-full bg-black px-3 py-1 text-[11px] font-black text-white shadow-sm">
-              Öne çıkan
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-[#f7f2eb] px-3 py-1 text-[11px] font-black text-neutral-700 ring-1 ring-black/5">
+              Onaylı profil
             </span>
-          ) : null}
-        </div>
+            {isTopListed ? (
+              <span className="rounded-full bg-black px-3 py-1 text-[11px] font-black text-white">
+                Öne çıkan
+              </span>
+            ) : null}
+          </div>
 
-        <h3 className="mt-8 text-2xl font-black tracking-tight">{expert.name}</h3>
+          <h3 className="mt-3 truncate text-2xl font-black tracking-tight text-neutral-950">
+            {expert.name}
+          </h3>
 
-        <p className="mt-1 text-sm font-bold text-neutral-500">{formatTitle(expert.title)}</p>
+          <p className="mt-1 truncate text-sm font-bold text-neutral-500">
+            {formatTitle(expert.title)}
+          </p>
 
-        <div className="mt-4 flex justify-center">
-          <StarRating rating={averageRating} reviewCount={reviewCount} />
-        </div>
-
-        <div className="mt-5 flex min-h-[2.5rem] flex-wrap justify-center gap-2">
-          {expertAreas.length > 0 ? (
-            <>
-              {expertAreas.slice(0, 3).map((area) => (
-                <span
-                  key={area}
-                  className="rounded-full bg-[#f7f2eb] px-3 py-1 text-xs font-bold text-neutral-700 ring-1 ring-black/5"
-                >
-                  {area}
-                </span>
-              ))}
-
-              {expertAreas.length > 3 ? (
-                <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600 ring-1 ring-black/5">
-                  +{expertAreas.length - 3}
-                </span>
-              ) : null}
-            </>
-          ) : (
-            <p className="text-sm text-neutral-500">Uzmanlık alanı eşleşmede netleşir.</p>
-          )}
+          <div className="mt-3">
+            <StarRating rating={averageRating} reviewCount={reviewCount} />
+          </div>
         </div>
       </div>
 
-      <div className="mx-5 flex-1 rounded-3xl bg-[#f7f2eb] p-5 text-left text-sm text-neutral-700">
-        <div className="grid gap-3">
-          <InfoLine label="Değerlendirme" value={`${formatRating(averageRating)} · ${getReviewLabel(reviewCount)}`} />
-          <InfoLine label="Deneyim" value={expert.experience || "Belirtilmedi"} />
-          <InfoLine label="Görüşme" value={normalizeOnlineStatus(expert.online)} />
-          <InfoLine label="Müsaitlik" value={expert.availability || "Eşleşmede netleşir"} />
-          <InfoLine label="Ücret" value={formatMoney(price)} />
-        </div>
+      <p className="mt-5 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-neutral-600">
+        {getCardSummary(expert)}
+      </p>
+
+      <div className="mt-5 flex min-h-[2.25rem] flex-wrap gap-2">
+        {expertAreas.length > 0 ? (
+          <>
+            {expertAreas.slice(0, 4).map((area) => (
+              <span
+                key={area}
+                className="rounded-full bg-[#f7f2eb] px-3 py-1.5 text-xs font-black text-neutral-700 ring-1 ring-black/5"
+              >
+                {area}
+              </span>
+            ))}
+
+            {expertAreas.length > 4 ? (
+              <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-black text-neutral-600 ring-1 ring-black/5">
+                +{expertAreas.length - 4}
+              </span>
+            ) : null}
+          </>
+        ) : (
+          <span className="rounded-full bg-[#f7f2eb] px-3 py-1.5 text-xs font-black text-neutral-700 ring-1 ring-black/5">
+            Uzmanlık alanı eşleşmede netleşir
+          </span>
+        )}
       </div>
 
-      <div className="grid gap-3 p-5 pt-6">
+      <div className="mt-5 grid gap-3 rounded-[1.5rem] bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+        <CompactInfo label="Deneyim" value={getExperienceLabel(expert.experience)} />
+        <CompactInfo label="Görüşme" value={normalizeOnlineStatus(expert.online)} />
+        <CompactInfo label="Seans" value={getSessionDurationLabel(expert)} />
+        <CompactInfo label="Ücret" value={getPriceLabel(price)} />
+      </div>
+
+      <div className="mt-5 grid gap-3">
         <Link
           href={profileHref}
-          className="rounded-2xl bg-black px-6 py-3 text-center text-sm font-black text-white transition hover:bg-neutral-800"
+          className="rounded-2xl bg-black px-6 py-3.5 text-center text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
         >
           Profili incele
         </Link>
 
         <Link
           href={matchHref}
-          className="rounded-2xl border border-black/10 bg-white px-6 py-3 text-center text-sm font-black text-black transition hover:bg-[#f7f2eb]"
+          className="rounded-2xl border border-black/10 bg-white px-6 py-3.5 text-center text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#f7f2eb]"
         >
-          Bu uzman için eşleşme iste
+          Ücretsiz ön eşleşme iste
         </Link>
       </div>
     </article>
   );
 }
 
-function InfoLine({ label, value }: { label: string; value: string }) {
+function CompactInfo({ label, value }: { label: string; value: string }) {
   return (
-    <p className="flex items-start justify-between gap-4 border-b border-black/5 pb-3 last:border-b-0 last:pb-0">
+    <p className="flex items-start justify-between gap-4 border-b border-black/5 pb-2.5 text-sm last:border-b-0 last:pb-0">
       <b className="shrink-0 text-neutral-950">{label}</b>
-      <span className="text-right text-neutral-600">{value}</span>
+      <span className="max-w-[62%] text-right font-semibold text-neutral-600">{value}</span>
     </p>
   );
 }
