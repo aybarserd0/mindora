@@ -383,7 +383,9 @@ export default function UzmanlarPage() {
   }, [searchTerm, selectedArea, sortOption, visibleExperts]);
 
   const hasFilters = selectedArea !== "Tümü" || searchTerm.trim().length > 0 || sortOption !== "recommended";
+  const approvedExpertCount = visibleExperts.length;
   const reviewedExpertCount = visibleExperts.filter((expert) => getReviewCount(expert) > 0).length;
+  const totalReviewCount = visibleExperts.reduce((total, expert) => total + getReviewCount(expert), 0);
   const averagePlatformRating =
     reviewedExpertCount > 0
       ? visibleExperts.reduce((total, expert) => total + getAverageRating(expert), 0) / reviewedExpertCount
@@ -427,17 +429,12 @@ export default function UzmanlarPage() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-black/5 md:p-8">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <StatCard value="Onaylı" label="Profil inceleme süreci" />
-              <StatCard value={reviewedExpertCount > 0 ? `${reviewedExpertCount}+` : "Yeni"} label="Değerlendirilen uzman" />
-              <StatCard
-                value={averagePlatformRating > 0 ? averagePlatformRating.toFixed(1) : "SEO"}
-                label="Puan ve sosyal kanıt altyapısı"
-              />
-              <StatCard value="Tek panel" label="Randevu, ödeme ve video" />
-            </div>
-          </div>
+          <HeroTrustCard
+            approvedExpertCount={approvedExpertCount}
+            reviewedExpertCount={reviewedExpertCount}
+            totalReviewCount={totalReviewCount}
+            averagePlatformRating={averagePlatformRating}
+          />
         </div>
 
         <div className="mt-12 grid gap-4 rounded-[2rem] bg-white/80 p-5 shadow-sm ring-1 ring-black/5 md:grid-cols-3 md:p-7">
@@ -793,11 +790,103 @@ function InfoLine({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatCard({ value, label }: { value: string; label: string }) {
+function HeroTrustCard({
+  approvedExpertCount,
+  reviewedExpertCount,
+  totalReviewCount,
+  averagePlatformRating,
+}: {
+  approvedExpertCount: number;
+  reviewedExpertCount: number;
+  totalReviewCount: number;
+  averagePlatformRating: number;
+}) {
+  const ratingText = averagePlatformRating > 0 ? averagePlatformRating.toFixed(1) : "Yeni";
+  const reviewText =
+    totalReviewCount > 0
+      ? `${totalReviewCount} doğrulanmış değerlendirme`
+      : "İlk değerlendirmeler moderasyon sonrası yayınlanır";
+
   return (
-    <div className="rounded-3xl bg-[#f7f2eb] p-5">
-      <p className="text-2xl font-black">{value}</p>
-      <p className="mt-1 text-sm font-semibold text-neutral-600">{label}</p>
+    <aside className="rounded-[2.25rem] border border-black/5 bg-white p-6 shadow-sm md:p-8">
+      <div className="rounded-[1.75rem] bg-black p-6 text-white">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-white/50">
+              Güvenli başlangıç
+            </p>
+            <p className="mt-3 text-4xl font-black tracking-tight">{ratingText}</p>
+            <p className="mt-1 text-sm font-semibold text-white/70">
+              {averagePlatformRating > 0 ? "Ortalama memnuniyet puanı" : "Değerlendirme altyapısı hazır"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white px-4 py-3 text-right text-black shadow-sm">
+            <p className="text-2xl font-black">★</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-neutral-500">
+              Mindora
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-5 text-sm leading-6 text-white/70">{reviewText}</p>
+      </div>
+
+      <div className="mt-5 grid gap-3">
+        <TrustLine
+          title="Onaylı uzman profilleri"
+          text={
+            approvedExpertCount > 0
+              ? `${approvedExpertCount} uzman profili inceleme sürecinden geçti.`
+              : "Uzman profilleri yayınlanmadan önce kontrol edilir."
+          }
+        />
+        <TrustLine
+          title="Gerçek değerlendirmeler"
+          text={
+            reviewedExpertCount > 0
+              ? `${reviewedExpertCount} uzman için danışan yorumu bulunuyor.`
+              : "Yorumlar yalnızca tamamlanan seanslardan sonra alınır."
+          }
+        />
+        <TrustLine
+          title="Güvenli ödeme ve online görüşme"
+          text="Randevu, ödeme, mesajlaşma ve video görüşme tek platformda ilerler."
+        />
+        <TrustLine
+          title="Kişiye özel ön eşleşme"
+          text="İhtiyacına, uygun zamanına ve beklentine göre daha doğru başlangıç yapılır."
+        />
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/eslesme"
+          className="rounded-2xl bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
+        >
+          Eşleşmeyi başlat
+        </Link>
+        <Link
+          href="#uzman-listesi"
+          className="rounded-2xl border border-black/10 bg-[#f7f2eb] px-5 py-3 text-center text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-white"
+        >
+          Uzmanları gör
+        </Link>
+      </div>
+    </aside>
+  );
+}
+
+function TrustLine({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="flex gap-3 rounded-3xl bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-white">
+        ✓
+      </span>
+      <div>
+        <p className="text-sm font-black text-neutral-950">{title}</p>
+        <p className="mt-1 text-sm leading-5 text-neutral-600">{text}</p>
+      </div>
     </div>
   );
 }
