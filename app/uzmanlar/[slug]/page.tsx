@@ -176,6 +176,21 @@ function isSafeSlug(value: string) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(value.trim());
 }
 
+function createSlug(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ı/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function absoluteUrl(path: string) {
   try {
     return new URL(path, SITE_URL).toString();
@@ -355,56 +370,39 @@ async function getExpertBySlug(slug: string) {
 
   const { data, error } = await (supabase as any)
     .from("experts")
-    .select(
-      [
-        "id",
-        "slug",
-        "name",
-        "title",
-        "areas",
-        "specialties",
-        "focus_areas",
-        "experience",
-        "experience_years",
-        "online",
-        "price",
-        "session_price",
-        "session_duration_minutes",
-        "availability",
-        "expectation",
-        "note",
-        "bio",
-        "public_bio",
-        "therapy_approach",
-        "approach",
-        "education",
-        "certificates",
-        "status",
-        "account_status",
-        "photo_url",
-        "profile_image_url",
-        "average_rating",
-        "review_count",
-        "ranking_score",
-        "city",
-        "created_at",
-        "updated_at",
-      ].join(", ")
-    )
+    .select("*")
     .eq("slug", slug)
     .limit(1)
     .maybeSingle();
 
   if (error) {
     console.error("PUBLIC_EXPERT_DETAIL_QUERY_ERROR", error);
+  }
+
+  if (data && isPublicExpert(data as ExpertRow)) {
+    return normalizeExpert(data as ExpertRow);
+  }
+
+  const { data: fallbackData, error: fallbackError } = await (supabase as any)
+    .from("experts")
+    .select("*")
+    .limit(100);
+
+  if (fallbackError) {
+    console.error("PUBLIC_EXPERT_DETAIL_FALLBACK_QUERY_ERROR", fallbackError);
     return null;
   }
 
-  if (!data || !isPublicExpert(data as ExpertRow)) {
-    return null;
-  }
+  const fallbackExpert = ((fallbackData || []) as ExpertRow[]).find((expert) => {
+    if (!isPublicExpert(expert)) return false;
 
-  return normalizeExpert(data as ExpertRow);
+    const realSlug = toText(expert.slug);
+    const generatedSlug = createSlug(toText(expert.name));
+
+    return realSlug === slug || generatedSlug === slug || toText(expert.id) === slug;
+  });
+
+  return fallbackExpert ? normalizeExpert(fallbackExpert) : null;
 }
 
 async function getPublicReviews(expertId: string) {
@@ -622,14 +620,14 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
               <div className="min-w-0 flex-1">
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Badge tone="success">Mindora onaylı uzman</Badge>
+                  <Badge tone="success">Onaylı uzman profili</Badge>
                   <Badge tone="dark">{expert.onlineText}</Badge>
                   {expert.reviewCount > 0 ? (
                     <Badge tone="warning">
                       ★ {expert.averageRating.toFixed(1)} · {expert.reviewCount} değerlendirme
                     </Badge>
                   ) : (
-                    <Badge tone="neutral">Yeni değerlendirme</Badge>
+                    <Badge tone="neutral">Yeni uzman</Badge>
                   )}
                 </div>
 
@@ -711,7 +709,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
                 href={matchingHref}
                 className="flex w-full items-center justify-center rounded-2xl bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-neutral-800"
               >
-                Ücretsiz ön eşleşme iste
+                Bu uzmanla eşleşme iste
               </Link>
 
               <Link
@@ -799,7 +797,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             <div className="grid gap-3 md:grid-cols-2">
               <ReasonCard title="İhtiyaç odaklı başlangıç" text="Ön eşleşme formundaki bilgilerle görüşme sürecinin daha doğru başlaması hedeflenir." />
               <ReasonCard title="Net süreç akışı" text="Eşleşme, randevu, ödeme ve online görüşme adımları Mindora içinde takip edilir." />
-              <ReasonCard title="Güvenli yönlendirme" text="Profil bilgileri, çalışma alanları, değerlendirmeler ve uygunluk bilgileri daha şeffaf gösterilir." />
+              <ReasonCard title="Güvenli yönlendirme" text="Profil bilgileri, çalışma alanları ve uygunluk bilgileri daha şeffaf gösterilir." />
               <ReasonCard title="Sosyal kanıt" text="Onaylı değerlendirmeler ve puanlar uzman seçiminde daha bilinçli karar vermeye yardımcı olur." />
             </div>
           </InfoCard>
@@ -838,7 +836,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
           <InfoCard title="Ön eşleşme notu">
             <p className="text-sm leading-7 text-neutral-600">
-              Bu profil ilk kararını kolaylaştırmak için hazırlanmıştır. Nihai uzman uygunluğu, destek ihtiyacın, beklentin ve müsaitlik durumun ön eşleşme sonrasında netleşir.
+              Bu profil, ilk kararını kolaylaştırmak için hazırlanır. Nihai uzman uygunluğu, destek ihtiyacın ve müsaitlik durumun ön eşleşme sonrasında netleşir.
             </p>
           </InfoCard>
         </div>
@@ -863,7 +861,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               href={matchingHref}
               className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-black transition hover:bg-neutral-200"
             >
-              Ücretsiz Ön Eşleşmeye Başla
+              Eşleşme Formuna Git
             </Link>
           </div>
         </div>
@@ -882,7 +880,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             href={matchingHref}
             className="shrink-0 rounded-2xl bg-black px-5 py-3 text-sm font-black text-white"
           >
-            Eşleşme
+            Eşleşme iste
           </Link>
         </div>
       </div>
