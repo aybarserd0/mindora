@@ -1,164 +1,225 @@
-'use client'
+"use client";
 
-import Header from '@/components/Header'
-import Image from 'next/image'
-import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import Header from "@/components/Header";
+import Image from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+type SortOption = "recommended" | "rating" | "review_count" | "newest" | "price_low" | "price_high";
 
 type Expert = {
-  id: string
-  name: string
-  slug?: string | null
-  title: string | null
-  areas: string | null
-  experience: string | null
-  online: string | null
-  availability: string | null
-  photo_url: string | null
-  price?: number | string | null
-  session_price?: number | string | null
-  sessionDuration?: string | null
-  status?: string | null
-}
+  id: string;
+  name: string;
+  slug?: string | null;
+  title: string | null;
+  areas: string | null;
+  experience: string | null;
+  online: string | null;
+  availability: string | null;
+  photo_url: string | null;
+  price?: number | string | null;
+  session_price?: number | string | null;
+  sessionDuration?: string | null;
+  status?: string | null;
+  average_rating?: number | string | null;
+  review_count?: number | string | null;
+  ranking_score?: number | string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
 
 type ExpertsResponse = {
-  ok?: boolean
-  experts?: Expert[]
-  error?: string
-}
+  ok?: boolean;
+  experts?: Expert[];
+  error?: string;
+};
 
 const SUPPORT_AREAS = [
-  'Tümü',
-  'Kaygı ve stres',
-  'İlişki problemleri',
-  'Özgüven',
-  'Depresif duygu durumu',
-  'Aile içi iletişim',
-  'Sınav ve gelecek kaygısı',
-  'Motivasyon eksikliği',
-  'Tükenmişlik',
-]
+  "Tümü",
+  "Kaygı ve stres",
+  "İlişki problemleri",
+  "Özgüven",
+  "Depresif duygu durumu",
+  "Aile içi iletişim",
+  "Sınav ve gelecek kaygısı",
+  "Motivasyon eksikliği",
+  "Tükenmişlik",
+];
+
+const SORT_OPTIONS: Array<{ label: string; value: SortOption }> = [
+  { label: "Önerilen", value: "recommended" },
+  { label: "En yüksek puan", value: "rating" },
+  { label: "En çok yorum", value: "review_count" },
+  { label: "Yeni uzmanlar", value: "newest" },
+  { label: "Ücret düşükten yükseğe", value: "price_low" },
+  { label: "Ücret yüksekten düşüğe", value: "price_high" },
+];
 
 const TRUST_ITEMS = [
   {
-    title: 'Onaylı uzman profilleri',
-    text: 'Listelenen uzmanlar Mindora başvuru ve profil inceleme sürecinden sonra görünür olur.',
+    title: "Onaylı uzman profilleri",
+    text: "Listelenen uzmanlar Mindora başvuru ve profil inceleme sürecinden sonra görünür olur.",
   },
   {
-    title: 'İhtiyaca göre seçim',
-    text: 'Destek konusu, beklenti, uygun zaman ve görüşme tercihi birlikte değerlendirilir.',
+    title: "Gerçek değerlendirme altyapısı",
+    text: "Yorumlar yalnızca tamamlanan seanslardan sonra alınır ve yayınlanmadan önce moderasyondan geçer.",
   },
   {
-    title: 'Tek yerden süreç',
-    text: 'Eşleşme, randevu, ödeme, mesajlaşma ve video görüşme akışı aynı platformda ilerler.',
+    title: "Tek yerden süreç",
+    text: "Eşleşme, randevu, ödeme, mesajlaşma ve video görüşme akışı aynı platformda ilerler.",
   },
-]
+];
 
 const PROCESS_ITEMS = [
-  'Kısa ön eşleşme formunu doldur',
-  'İhtiyacına uygun uzman profillerini incele',
-  'Randevu, ödeme ve görüşme akışını güvenli şekilde tamamla',
-]
+  "Kısa ön eşleşme formunu doldur",
+  "İhtiyacına uygun uzman profillerini incele",
+  "Randevu, ödeme ve görüşme akışını güvenli şekilde tamamla",
+];
 
-function toText(value: unknown, fallback = '') {
-  if (value === null || value === undefined) return fallback
-  const text = String(value).trim()
-  return text || fallback
+function toText(value: unknown, fallback = "") {
+  if (value === null || value === undefined) return fallback;
+  const text = String(value).trim();
+  return text || fallback;
+}
+
+function toNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function formatTitle(title: string | null) {
-  const cleanTitle = toText(title, 'Uzman Psikolog')
-  return cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)
+  const cleanTitle = toText(title, "Uzman Psikolog");
+  return cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
 }
 
 function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
+  const parts = name.trim().split(/\s+/).filter(Boolean);
 
-  if (parts.length === 0) return 'M'
-  if (parts.length === 1) return parts[0]?.charAt(0).toUpperCase() || 'M'
+  if (parts.length === 0) return "M";
+  if (parts.length === 1) return parts[0]?.charAt(0).toLocaleUpperCase("tr-TR") || "M";
 
-  const first = parts[0]?.charAt(0) || 'M'
-  const last = parts[parts.length - 1]?.charAt(0) || ''
+  const first = parts[0]?.charAt(0) || "M";
+  const last = parts[parts.length - 1]?.charAt(0) || "";
 
-  return `${first}${last}`.toUpperCase()
+  return `${first}${last}`.toLocaleUpperCase("tr-TR");
 }
 
 function createSlug(value: string) {
   return value
-    .toLocaleLowerCase('tr-TR')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ı/g, 'i')
-    .replace(/ö/g, 'o')
-    .replace(/ç/g, 'c')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ı/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function getExpertSlug(expert: Expert) {
-  const slug = toText(expert.slug)
-  if (slug) return slug
+  const slug = toText(expert.slug);
+  if (slug) return slug;
 
-  const generatedSlug = createSlug(expert.name)
-  return generatedSlug || expert.id
+  const generatedSlug = createSlug(expert.name);
+  return generatedSlug || expert.id;
 }
 
 function splitAreas(areas: string | null) {
-  if (!areas) return []
+  if (!areas) return [];
 
   return areas
-    .split(',')
+    .split(",")
     .map((area) => area.trim())
-    .filter(Boolean)
+    .filter(Boolean);
 }
 
 function isPhotoUrlValid(url: string | null) {
-  if (!url) return false
+  if (!url) return false;
 
   try {
-    const parsedUrl = new URL(url)
-    return parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:'
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === "https:" || parsedUrl.protocol === "http:";
   } catch {
-    return false
+    return false;
   }
 }
 
 function normalizeOnlineStatus(value: string | null) {
-  const normalized = value?.trim().toLowerCase()
+  const normalized = value?.trim().toLowerCase();
 
-  if (!normalized) return 'Online durum eşleşmede netleşir'
-  if (['evet', 'yes', 'true', 'online'].includes(normalized)) {
-    return 'Online görüşme yapıyor'
+  if (!normalized) return "Online durum eşleşmede netleşir";
+  if (["evet", "yes", "true", "online"].includes(normalized)) {
+    return "Online görüşme yapıyor";
   }
-  if (['hayır', 'hayir', 'no', 'false'].includes(normalized)) {
-    return 'Online durum eşleşmede netleşir'
+  if (["hayır", "hayir", "no", "false"].includes(normalized)) {
+    return "Online durum eşleşmede netleşir";
   }
 
-  return value || 'Eşleşmede netleşir'
+  return value || "Eşleşmede netleşir";
 }
 
 function getPrice(expert: Expert) {
-  const raw = expert.session_price ?? expert.price
-  const value = Number(raw)
-  return Number.isFinite(value) && value > 0 ? value : null
+  const raw = expert.session_price ?? expert.price;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function getAverageRating(expert: Expert) {
+  const rating = toNumber(expert.average_rating, 0);
+  if (rating < 0) return 0;
+  if (rating > 5) return 5;
+  return rating;
+}
+
+function getReviewCount(expert: Expert) {
+  const count = Math.round(toNumber(expert.review_count, 0));
+  return count > 0 ? count : 0;
+}
+
+function getRankingScore(expert: Expert) {
+  const score = toNumber(expert.ranking_score, 0);
+  if (score > 0) return score;
+
+  const rating = getAverageRating(expert);
+  const reviewCount = getReviewCount(expert);
+
+  return reviewCount * 0.7 + rating * 20;
+}
+
+function getCreatedTime(expert: Expert) {
+  const raw = expert.created_at || expert.updated_at;
+  if (!raw) return 0;
+
+  const time = new Date(raw).getTime();
+  return Number.isFinite(time) ? time : 0;
 }
 
 function formatMoney(value: number | null) {
-  if (!value) return 'Eşleşmede netleşir'
+  if (!value) return "Eşleşmede netleşir";
 
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(value);
+}
+
+function formatRating(value: number) {
+  if (!value) return "Yeni";
+  return value.toFixed(1);
+}
+
+function getReviewLabel(count: number) {
+  if (count <= 0) return "Henüz değerlendirme yok";
+  return `${count} değerlendirme`;
 }
 
 function matchesSearch(expert: Expert, searchTerm: string) {
-  const query = searchTerm.trim().toLowerCase()
-  if (!query) return true
+  const query = searchTerm.trim().toLocaleLowerCase("tr-TR");
+  if (!query) return true;
 
   const searchableText = [
     expert.name,
@@ -166,87 +227,167 @@ function matchesSearch(expert: Expert, searchTerm: string) {
     expert.areas,
     expert.experience,
     expert.availability,
+    getAverageRating(expert) ? `${getAverageRating(expert).toFixed(1)} puan` : "",
+    getReviewCount(expert) ? `${getReviewCount(expert)} değerlendirme` : "",
   ]
     .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
+    .join(" ")
+    .toLocaleLowerCase("tr-TR");
 
-  return searchableText.includes(query)
+  return searchableText.includes(query);
+}
+
+function sortExperts(experts: Expert[], sortOption: SortOption) {
+  return [...experts].sort((a, b) => {
+    const aPrice = getPrice(a) ?? Number.MAX_SAFE_INTEGER;
+    const bPrice = getPrice(b) ?? Number.MAX_SAFE_INTEGER;
+
+    if (sortOption === "rating") {
+      return (
+        getAverageRating(b) - getAverageRating(a) ||
+        getReviewCount(b) - getReviewCount(a) ||
+        getRankingScore(b) - getRankingScore(a) ||
+        a.name.localeCompare(b.name, "tr")
+      );
+    }
+
+    if (sortOption === "review_count") {
+      return (
+        getReviewCount(b) - getReviewCount(a) ||
+        getAverageRating(b) - getAverageRating(a) ||
+        getRankingScore(b) - getRankingScore(a) ||
+        a.name.localeCompare(b.name, "tr")
+      );
+    }
+
+    if (sortOption === "newest") {
+      return getCreatedTime(b) - getCreatedTime(a) || a.name.localeCompare(b.name, "tr");
+    }
+
+    if (sortOption === "price_low") {
+      return aPrice - bPrice || getRankingScore(b) - getRankingScore(a);
+    }
+
+    if (sortOption === "price_high") {
+      return bPrice - aPrice || getRankingScore(b) - getRankingScore(a);
+    }
+
+    return (
+      getRankingScore(b) - getRankingScore(a) ||
+      getAverageRating(b) - getAverageRating(a) ||
+      getReviewCount(b) - getReviewCount(a) ||
+      a.name.localeCompare(b.name, "tr")
+    );
+  });
+}
+
+function StarRating({ rating, reviewCount }: { rating: number; reviewCount: number }) {
+  if (reviewCount <= 0 || rating <= 0) {
+    return (
+      <div className="inline-flex items-center justify-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-600 ring-1 ring-black/5">
+        Yeni uzman
+      </div>
+    );
+  }
+
+  const roundedRating = Math.round(rating);
+
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-800 ring-1 ring-amber-100">
+      <span aria-hidden="true">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span key={star} className={star <= roundedRating ? "text-amber-400" : "text-amber-200"}>
+            ★
+          </span>
+        ))}
+      </span>
+      <span>{rating.toFixed(1)}</span>
+      <span className="text-amber-700/70">({reviewCount})</span>
+    </div>
+  );
 }
 
 export default function UzmanlarPage() {
-  const [experts, setExperts] = useState<Expert[]>([])
-  const [loading, setLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [selectedArea, setSelectedArea] = useState('Tümü')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [experts, setExperts] = useState<Expert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedArea, setSelectedArea] = useState("Tümü");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState<SortOption>("recommended");
 
   const fetchExperts = useCallback(async () => {
     try {
-      setLoading(true)
-      setErrorMessage(null)
+      setLoading(true);
+      setErrorMessage(null);
 
-      const res = await fetch('/api/experts', {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-      })
+      const res = await fetch("/api/experts", {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
 
       if (!res.ok) {
-        throw new Error(`Uzmanlar yüklenemedi. Kod: ${res.status}`)
+        throw new Error(`Uzmanlar yüklenemedi. Kod: ${res.status}`);
       }
 
-      const data = (await res.json()) as ExpertsResponse
+      const data = (await res.json()) as ExpertsResponse;
 
       if (!data.ok) {
-        throw new Error(data.error || 'Uzmanlar alınamadı.')
+        throw new Error(data.error || "Uzmanlar alınamadı.");
       }
 
-      setExperts(Array.isArray(data.experts) ? data.experts : [])
+      setExperts(Array.isArray(data.experts) ? data.experts : []);
     } catch (error) {
-      console.error('Uzmanlar alınamadı:', error)
-      setErrorMessage('Uzmanlar şu anda yüklenemedi. Lütfen biraz sonra tekrar deneyin.')
+      console.error("Uzmanlar alınamadı:", error);
+      setErrorMessage("Uzmanlar şu anda yüklenemedi. Lütfen biraz sonra tekrar deneyin.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    let isActive = true
+    let isActive = true;
 
     async function loadExperts() {
-      if (!isActive) return
-      await fetchExperts()
+      if (!isActive) return;
+      await fetchExperts();
     }
 
-    loadExperts()
+    loadExperts();
 
     return () => {
-      isActive = false
-    }
-  }, [fetchExperts])
+      isActive = false;
+    };
+  }, [fetchExperts]);
 
   const visibleExperts = useMemo(
     () =>
       experts.filter((expert) => {
-        const status = toText(expert.status).toLowerCase()
-        const isHidden = ['rejected', 'passive'].includes(status)
+        const status = toText(expert.status).toLowerCase();
+        const isHidden = ["rejected", "passive", "inactive", "hidden"].includes(status);
 
-        return Boolean(expert.id && expert.name?.trim() && !isHidden)
+        return Boolean(expert.id && expert.name?.trim() && !isHidden);
       }),
-    [experts],
-  )
+    [experts]
+  );
 
   const filteredExperts = useMemo(() => {
-    return visibleExperts.filter((expert) => {
-      const expertAreas = splitAreas(expert.areas)
-      const areaMatches = selectedArea === 'Tümü' || expertAreas.includes(selectedArea)
+    const filtered = visibleExperts.filter((expert) => {
+      const expertAreas = splitAreas(expert.areas);
+      const areaMatches = selectedArea === "Tümü" || expertAreas.includes(selectedArea);
 
-      return areaMatches && matchesSearch(expert, searchTerm)
-    })
-  }, [searchTerm, selectedArea, visibleExperts])
+      return areaMatches && matchesSearch(expert, searchTerm);
+    });
 
-  const hasFilters = selectedArea !== 'Tümü' || searchTerm.trim().length > 0
+    return sortExperts(filtered, sortOption);
+  }, [searchTerm, selectedArea, sortOption, visibleExperts]);
+
+  const hasFilters = selectedArea !== "Tümü" || searchTerm.trim().length > 0 || sortOption !== "recommended";
+  const reviewedExpertCount = visibleExperts.filter((expert) => getReviewCount(expert) > 0).length;
+  const averagePlatformRating =
+    reviewedExpertCount > 0
+      ? visibleExperts.reduce((total, expert) => total + getAverageRating(expert), 0) / reviewedExpertCount
+      : 0;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f7f2eb] text-[#171717]">
@@ -265,8 +406,8 @@ export default function UzmanlarPage() {
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
               Mindora, yalnızca uzman listeleyen bir platform değil; ihtiyacını,
-              uygun zamanını ve beklentini dikkate alan daha güvenli bir
-              başlangıç deneyimidir.
+              uygun zamanını, beklentini ve gerçek danışan değerlendirmelerini
+              birlikte dikkate alan daha güvenli bir başlangıç deneyimidir.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -289,9 +430,12 @@ export default function UzmanlarPage() {
           <div className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-black/5 md:p-8">
             <div className="grid gap-4 sm:grid-cols-2">
               <StatCard value="Onaylı" label="Profil inceleme süreci" />
-              <StatCard value="Online" label="Güvenli görüşme akışı" />
+              <StatCard value={reviewedExpertCount > 0 ? `${reviewedExpertCount}+` : "Yeni"} label="Değerlendirilen uzman" />
+              <StatCard
+                value={averagePlatformRating > 0 ? averagePlatformRating.toFixed(1) : "SEO"}
+                label="Puan ve sosyal kanıt altyapısı"
+              />
               <StatCard value="Tek panel" label="Randevu, ödeme ve video" />
-              <StatCard value="Ücretsiz" label="Ön eşleşme başlangıcı" />
             </div>
           </div>
         </div>
@@ -319,18 +463,18 @@ export default function UzmanlarPage() {
 
           <p className="text-base leading-7 text-neutral-600 lg:justify-self-end lg:text-right">
             Uzman seçimini kolaylaştırmak için destek konusu, uzmanlık alanı,
-            ücret, görüşme tipi ve uygunluk bilgileri birlikte gösterilir.
+            ücret, görüşme tipi, uygunluk bilgisi ve doğrulanmış değerlendirme verileri birlikte gösterilir.
           </p>
         </div>
 
         <div className="mb-8 rounded-[2rem] border border-black/5 bg-white/95 p-4 shadow-sm md:p-5">
-          <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div className="grid gap-4 xl:grid-cols-[0.75fr_1.1fr_0.65fr] xl:items-start">
             <label className="block">
               <span className="mb-2 block text-sm font-black text-neutral-700">Uzman ara</span>
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="İsim, alan veya deneyim ara..."
+                placeholder="İsim, alan, puan veya deneyim ara..."
                 className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold outline-none transition placeholder:text-neutral-400 focus:border-black"
               />
             </label>
@@ -345,8 +489,8 @@ export default function UzmanlarPage() {
                     onClick={() => setSelectedArea(area)}
                     className={`rounded-full px-4 py-2 text-sm font-black transition ${
                       selectedArea === area
-                        ? 'bg-black text-white'
-                        : 'bg-[#f7f2eb] text-neutral-700 hover:bg-neutral-100'
+                        ? "bg-black text-white"
+                        : "bg-[#f7f2eb] text-neutral-700 hover:bg-neutral-100"
                     }`}
                   >
                     {area}
@@ -354,6 +498,40 @@ export default function UzmanlarPage() {
                 ))}
               </div>
             </div>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-neutral-700">Sıralama</span>
+              <select
+                value={sortOption}
+                onChange={(event) => setSortOption(event.target.value as SortOption)}
+                className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-black text-neutral-800 outline-none transition focus:border-black"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-2 border-t border-black/5 pt-4 text-sm text-neutral-600 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              {loading ? "Uzmanlar yükleniyor..." : `${filteredExperts.length} uzman listeleniyor`}
+            </p>
+            {hasFilters ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedArea("Tümü");
+                  setSortOption("recommended");
+                }}
+                className="w-fit rounded-full bg-[#f7f2eb] px-4 py-2 text-xs font-black text-neutral-700 ring-1 ring-black/5 transition hover:bg-neutral-100"
+              >
+                Filtreleri temizle
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -376,21 +554,22 @@ export default function UzmanlarPage() {
         ) : filteredExperts.length === 0 ? (
           <EmptyState
             title="Bu filtreyle uzman bulunamadı."
-            text="Arama kelimesini veya destek alanı filtresini değiştirerek tekrar deneyebilirsin."
-            actionLabel={hasFilters ? 'Filtreleri temizle' : undefined}
+            text="Arama kelimesini, destek alanını veya sıralama tercihini değiştirerek tekrar deneyebilirsin."
+            actionLabel={hasFilters ? "Filtreleri temizle" : undefined}
             onAction={
               hasFilters
                 ? () => {
-                    setSearchTerm('')
-                    setSelectedArea('Tümü')
+                    setSearchTerm("");
+                    setSelectedArea("Tümü");
+                    setSortOption("recommended");
                   }
                 : undefined
             }
           />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredExperts.map((expert) => (
-              <ExpertCard key={expert.id} expert={expert} />
+            {filteredExperts.map((expert, index) => (
+              <ExpertCard key={expert.id} expert={expert} priorityRank={index + 1} />
             ))}
           </div>
         )}
@@ -455,7 +634,7 @@ export default function UzmanlarPage() {
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {SUPPORT_AREAS.filter((area) => area !== 'Tümü').map((area) => (
+          {SUPPORT_AREAS.filter((area) => area !== "Tümü").map((area) => (
             <div
               key={area}
               className="rounded-2xl bg-white/80 p-5 text-center font-bold text-neutral-700 shadow-sm ring-1 ring-black/5"
@@ -501,16 +680,19 @@ export default function UzmanlarPage() {
         </div>
       </section>
     </main>
-  )
+  );
 }
 
-function ExpertCard({ expert }: { expert: Expert }) {
-  const expertAreas = splitAreas(expert.areas)
-  const showPhoto = isPhotoUrlValid(expert.photo_url)
-  const slug = getExpertSlug(expert)
-  const profileHref = `/uzmanlar/${slug}`
-  const matchHref = `/eslesme?expert=${encodeURIComponent(slug)}`
-  const price = getPrice(expert)
+function ExpertCard({ expert, priorityRank }: { expert: Expert; priorityRank: number }) {
+  const expertAreas = splitAreas(expert.areas);
+  const showPhoto = isPhotoUrlValid(expert.photo_url);
+  const slug = getExpertSlug(expert);
+  const profileHref = `/uzmanlar/${slug}`;
+  const matchHref = `/eslesme?expert=${encodeURIComponent(slug)}`;
+  const price = getPrice(expert);
+  const averageRating = getAverageRating(expert);
+  const reviewCount = getReviewCount(expert);
+  const isTopListed = priorityRank <= 3 && getRankingScore(expert) > 0;
 
   return (
     <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-md">
@@ -518,7 +700,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
         <div className="relative mx-auto h-28 w-28">
           {showPhoto ? (
             <Image
-              src={expert.photo_url || ''}
+              src={expert.photo_url || ""}
               alt={`${expert.name} profil fotoğrafı`}
               fill
               sizes="112px"
@@ -533,11 +715,21 @@ function ExpertCard({ expert }: { expert: Expert }) {
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#f7f2eb] px-3 py-1 text-[11px] font-black text-neutral-700 ring-1 ring-black/5">
             Onaylı profil
           </span>
+
+          {isTopListed ? (
+            <span className="absolute -right-5 -top-2 rounded-full bg-black px-3 py-1 text-[11px] font-black text-white shadow-sm">
+              Öne çıkan
+            </span>
+          ) : null}
         </div>
 
         <h3 className="mt-8 text-2xl font-black tracking-tight">{expert.name}</h3>
 
         <p className="mt-1 text-sm font-bold text-neutral-500">{formatTitle(expert.title)}</p>
+
+        <div className="mt-4 flex justify-center">
+          <StarRating rating={averageRating} reviewCount={reviewCount} />
+        </div>
 
         <div className="mt-5 flex min-h-[2.5rem] flex-wrap justify-center gap-2">
           {expertAreas.length > 0 ? (
@@ -565,9 +757,10 @@ function ExpertCard({ expert }: { expert: Expert }) {
 
       <div className="mx-5 flex-1 rounded-3xl bg-[#f7f2eb] p-5 text-left text-sm text-neutral-700">
         <div className="grid gap-3">
-          <InfoLine label="Deneyim" value={expert.experience || 'Belirtilmedi'} />
+          <InfoLine label="Değerlendirme" value={`${formatRating(averageRating)} · ${getReviewLabel(reviewCount)}`} />
+          <InfoLine label="Deneyim" value={expert.experience || "Belirtilmedi"} />
           <InfoLine label="Görüşme" value={normalizeOnlineStatus(expert.online)} />
-          <InfoLine label="Müsaitlik" value={expert.availability || 'Eşleşmede netleşir'} />
+          <InfoLine label="Müsaitlik" value={expert.availability || "Eşleşmede netleşir"} />
           <InfoLine label="Ücret" value={formatMoney(price)} />
         </div>
       </div>
@@ -588,7 +781,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
         </Link>
       </div>
     </article>
-  )
+  );
 }
 
 function InfoLine({ label, value }: { label: string; value: string }) {
@@ -597,7 +790,7 @@ function InfoLine({ label, value }: { label: string; value: string }) {
       <b className="shrink-0 text-neutral-950">{label}</b>
       <span className="text-right text-neutral-600">{value}</span>
     </p>
-  )
+  );
 }
 
 function StatCard({ value, label }: { value: string; label: string }) {
@@ -606,7 +799,7 @@ function StatCard({ value, label }: { value: string; label: string }) {
       <p className="text-2xl font-black">{value}</p>
       <p className="mt-1 text-sm font-semibold text-neutral-600">{label}</p>
     </div>
-  )
+  );
 }
 
 function ExpertSkeleton() {
@@ -617,11 +810,12 @@ function ExpertSkeleton() {
           <div className="mx-auto h-28 w-28 animate-pulse rounded-full bg-neutral-200" />
           <div className="mx-auto mt-8 h-6 w-44 animate-pulse rounded-full bg-neutral-200" />
           <div className="mx-auto mt-3 h-4 w-32 animate-pulse rounded-full bg-neutral-200" />
-          <div className="mt-6 h-36 animate-pulse rounded-3xl bg-[#f7f2eb]" />
+          <div className="mx-auto mt-4 h-6 w-36 animate-pulse rounded-full bg-neutral-200" />
+          <div className="mt-6 h-44 animate-pulse rounded-3xl bg-[#f7f2eb]" />
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 function EmptyState({
@@ -631,11 +825,11 @@ function EmptyState({
   actionLabel,
   onAction,
 }: {
-  title: string
-  text: string
-  href?: string
-  actionLabel?: string
-  onAction?: () => void
+  title: string;
+  text: string;
+  href?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
   return (
     <div className="mx-auto max-w-3xl rounded-[2rem] bg-white/85 p-8 text-center shadow-sm ring-1 ring-black/5">
@@ -661,5 +855,5 @@ function EmptyState({
         </button>
       ) : null}
     </div>
-  )
+  );
 }

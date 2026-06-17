@@ -1,363 +1,415 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import Link from "next/link";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type ClientSessionStatus =
-  | 'pending'
-  | 'scheduled'
-  | 'confirmed'
-  | 'active'
-  | 'completed'
-  | 'cancelled'
-  | 'canceled'
-  | 'no_show'
-  | 'rescheduled'
-  | 'unknown'
-  | string
+  | "pending"
+  | "scheduled"
+  | "confirmed"
+  | "active"
+  | "completed"
+  | "cancelled"
+  | "canceled"
+  | "no_show"
+  | "rescheduled"
+  | "unknown"
+  | string;
 
 type NormalizedSessionStatus =
-  | 'pending'
-  | 'scheduled'
-  | 'confirmed'
-  | 'active'
-  | 'completed'
-  | 'cancelled'
-  | 'no_show'
-  | 'rescheduled'
-  | 'unknown'
+  | "pending"
+  | "scheduled"
+  | "confirmed"
+  | "active"
+  | "completed"
+  | "cancelled"
+  | "no_show"
+  | "rescheduled"
+  | "unknown";
 
 type ApiClientSession = {
-  id: string
-  conversationId?: string | null
-  expertId?: string | null
-  expertName?: string | null
-  expertTitle?: string | null
-  expertPhotoUrl?: string | null
-  scheduledStartAt?: string | null
-  scheduledEndAt?: string | null
-  timezone?: string | null
-  status?: ClientSessionStatus | null
-  sessionReady?: boolean | null
-  liveSessionId?: string | null
-  joinHref?: string | null
-  chatHref?: string | null
-  createdAt?: string | null
-}
+  id: string;
+  bookingId?: string | null;
+  sessionBookingId?: string | null;
+  conversationId?: string | null;
+  expertId?: string | null;
+  expertName?: string | null;
+  expertTitle?: string | null;
+  expertPhotoUrl?: string | null;
+  scheduledStartAt?: string | null;
+  scheduledEndAt?: string | null;
+  timezone?: string | null;
+  status?: ClientSessionStatus | null;
+  paymentStatus?: string | null;
+  payment_status?: string | null;
+  reviewId?: string | null;
+  hasReview?: boolean | null;
+  sessionReady?: boolean | null;
+  liveSessionId?: string | null;
+  joinHref?: string | null;
+  chatHref?: string | null;
+  createdAt?: string | null;
+};
 
 type ClientSessionsResponse = {
-  ok?: boolean
-  sessions?: ApiClientSession[]
-  upcomingSessions?: ApiClientSession[]
-  completedSessions?: ApiClientSession[]
-  error?: string
-}
+  ok?: boolean;
+  sessions?: ApiClientSession[];
+  upcomingSessions?: ApiClientSession[];
+  completedSessions?: ApiClientSession[];
+  error?: string;
+};
 
 type UiSession = {
-  id: string
-  conversationId: string | null
-  expertName: string
-  expertTitle: string
-  expertPhotoUrl: string | null
-  scheduledStartAt: string | null
-  scheduledEndAt: string | null
-  timezone: string
-  status: NormalizedSessionStatus
-  date: string
-  timeRange: string
-  duration: string
-  startTime: number
-  canJoin: boolean
-  joinHref: string
-  chatHref: string
-}
+  id: string;
+  bookingId: string;
+  conversationId: string | null;
+  expertName: string;
+  expertTitle: string;
+  expertPhotoUrl: string | null;
+  scheduledStartAt: string | null;
+  scheduledEndAt: string | null;
+  timezone: string;
+  status: NormalizedSessionStatus;
+  paymentStatus: string;
+  date: string;
+  timeRange: string;
+  duration: string;
+  startTime: number;
+  canJoin: boolean;
+  canReview: boolean;
+  hasReview: boolean;
+  joinHref: string;
+  chatHref: string;
+};
 
-type SessionFilter = 'all' | 'upcoming' | 'completed' | 'cancelled'
+type SessionFilter = "all" | "upcoming" | "completed" | "cancelled";
 
-const JOINABLE_STATUSES: NormalizedSessionStatus[] = ['scheduled', 'confirmed', 'active']
+type ReviewSubmitState = {
+  loading: boolean;
+  error: string;
+  success: string;
+};
+
+const JOINABLE_STATUSES: NormalizedSessionStatus[] = ["scheduled", "confirmed", "active"];
 const UPCOMING_STATUSES: NormalizedSessionStatus[] = [
-  'pending',
-  'scheduled',
-  'confirmed',
-  'active',
-  'rescheduled',
-]
-const FINISHED_STATUSES: NormalizedSessionStatus[] = ['completed', 'cancelled', 'no_show']
+  "pending",
+  "scheduled",
+  "confirmed",
+  "active",
+  "rescheduled",
+];
+const FINISHED_STATUSES: NormalizedSessionStatus[] = ["completed", "cancelled", "no_show"];
+const REVIEWABLE_STATUSES: NormalizedSessionStatus[] = ["completed"];
 
 const statusConfig: Record<NormalizedSessionStatus, { label: string; className: string }> = {
-  pending: { label: 'Beklemede', className: 'bg-amber-50 text-amber-700 ring-amber-100' },
-  scheduled: { label: 'Planlandı', className: 'bg-blue-50 text-blue-700 ring-blue-100' },
-  confirmed: { label: 'Onaylandı', className: 'bg-emerald-50 text-emerald-700 ring-emerald-100' },
-  active: { label: 'Aktif', className: 'bg-indigo-50 text-indigo-700 ring-indigo-100' },
-  completed: { label: 'Tamamlandı', className: 'bg-slate-100 text-slate-700 ring-slate-200' },
-  cancelled: { label: 'İptal', className: 'bg-rose-50 text-rose-700 ring-rose-100' },
-  no_show: { label: 'Katılmadı', className: 'bg-orange-50 text-orange-700 ring-orange-100' },
-  rescheduled: { label: 'Ertelendi', className: 'bg-purple-50 text-purple-700 ring-purple-100' },
-  unknown: { label: 'Belirlenmedi', className: 'bg-slate-100 text-slate-600 ring-slate-200' },
-}
+  pending: { label: "Beklemede", className: "bg-amber-50 text-amber-700 ring-amber-100" },
+  scheduled: { label: "Planlandı", className: "bg-blue-50 text-blue-700 ring-blue-100" },
+  confirmed: { label: "Onaylandı", className: "bg-emerald-50 text-emerald-700 ring-emerald-100" },
+  active: { label: "Aktif", className: "bg-indigo-50 text-indigo-700 ring-indigo-100" },
+  completed: { label: "Tamamlandı", className: "bg-slate-100 text-slate-700 ring-slate-200" },
+  cancelled: { label: "İptal", className: "bg-rose-50 text-rose-700 ring-rose-100" },
+  no_show: { label: "Katılmadı", className: "bg-orange-50 text-orange-700 ring-orange-100" },
+  rescheduled: { label: "Ertelendi", className: "bg-purple-50 text-purple-700 ring-purple-100" },
+  unknown: { label: "Belirlenmedi", className: "bg-slate-100 text-slate-600 ring-slate-200" },
+};
 
 const filters: Array<{ label: string; value: SessionFilter }> = [
-  { label: 'Tümü', value: 'all' },
-  { label: 'Yaklaşan', value: 'upcoming' },
-  { label: 'Tamamlanan', value: 'completed' },
-  { label: 'İptal / Katılmadı', value: 'cancelled' },
-]
+  { label: "Tümü", value: "all" },
+  { label: "Yaklaşan", value: "upcoming" },
+  { label: "Tamamlanan", value: "completed" },
+  { label: "İptal / Katılmadı", value: "cancelled" },
+];
 
 function normalizeStatus(value: string | null | undefined): NormalizedSessionStatus {
-  const normalized = String(value || '').trim().toLowerCase()
+  const normalized = String(value || "").trim().toLowerCase();
 
   if (
-    normalized === 'pending' ||
-    normalized === 'scheduled' ||
-    normalized === 'confirmed' ||
-    normalized === 'active' ||
-    normalized === 'completed' ||
-    normalized === 'no_show' ||
-    normalized === 'rescheduled'
+    normalized === "pending" ||
+    normalized === "scheduled" ||
+    normalized === "confirmed" ||
+    normalized === "active" ||
+    normalized === "completed" ||
+    normalized === "no_show" ||
+    normalized === "rescheduled"
   ) {
-    return normalized
+    return normalized;
   }
 
-  if (normalized === 'cancelled' || normalized === 'canceled') return 'cancelled'
+  if (normalized === "cancelled" || normalized === "canceled") return "cancelled";
 
-  return 'unknown'
+  return "unknown";
 }
 
 function getDate(value?: string | null) {
-  if (!value) return null
+  if (!value) return null;
 
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
 
-  return date
+  return date;
 }
 
 function getTime(value?: string | null) {
-  return getDate(value)?.getTime() || 0
+  return getDate(value)?.getTime() || 0;
 }
 
 function formatDate(value?: string | null) {
-  const date = getDate(value)
-  if (!date) return 'Tarih bekleniyor'
+  const date = getDate(value);
+  if (!date) return "Tarih bekleniyor";
 
-  return new Intl.DateTimeFormat('tr-TR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).format(date)
+  return new Intl.DateTimeFormat("tr-TR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatTimeRange(startAt?: string | null, endAt?: string | null) {
-  const start = getDate(startAt)
-  const end = getDate(endAt)
+  const start = getDate(startAt);
+  const end = getDate(endAt);
 
-  if (!start || !end) return 'Saat bekleniyor'
+  if (!start || !end) return "Saat bekleniyor";
 
-  const formatter = new Intl.DateTimeFormat('tr-TR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const formatter = new Intl.DateTimeFormat("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
-  return `${formatter.format(start)} - ${formatter.format(end)}`
+  return `${formatter.format(start)} - ${formatter.format(end)}`;
 }
 
 function calculateDuration(startAt?: string | null, endAt?: string | null) {
-  const start = getTime(startAt)
-  const end = getTime(endAt)
+  const start = getTime(startAt);
+  const end = getTime(endAt);
 
-  if (!start || !end || end <= start) return '50 dk'
+  if (!start || !end || end <= start) return "50 dk";
 
-  return `${Math.round((end - start) / 60000)} dk`
+  return `${Math.round((end - start) / 60000)} dk`;
 }
 
 function buildTokenUrl(path: string | null | undefined, token: string) {
-  if (!path) return '#'
-  if (!token) return path
+  if (!path) return "#";
+  if (!token) return path;
 
   try {
-    const isAbsolute = /^https?:\/\//i.test(path)
-    const url = isAbsolute ? new URL(path) : new URL(path, 'https://mindora.local')
+    const isAbsolute = /^https?:\/\//i.test(path);
+    const url = isAbsolute ? new URL(path) : new URL(path, "https://mindora.local");
 
-    if (!url.searchParams.get('token')) {
-      url.searchParams.set('token', token)
+    if (!url.searchParams.get("token")) {
+      url.searchParams.set("token", token);
     }
 
-    if (isAbsolute) return url.toString()
+    if (isAbsolute) return url.toString();
 
-    return `${url.pathname}${url.search}${url.hash}`
+    return `${url.pathname}${url.search}${url.hash}`;
   } catch {
-    if (path.includes('token=')) return path
+    if (path.includes("token=")) return path;
 
-    const separator = path.includes('?') ? '&' : '?'
-    return `${path}${separator}token=${encodeURIComponent(token)}`
+    const separator = path.includes("?") ? "&" : "?";
+    return `${path}${separator}token=${encodeURIComponent(token)}`;
   }
 }
 
 function fallbackId(session: ApiClientSession, index: number) {
   return [session.id, session.conversationId, session.scheduledStartAt, index]
     .filter(Boolean)
-    .join('-')
+    .join("-");
+}
+
+function getBookingId(session: ApiClientSession, fallback: string) {
+  return String(session.bookingId || session.sessionBookingId || session.id || fallback);
 }
 
 function toUiSession(session: ApiClientSession, index: number, token: string): UiSession {
-  const status = normalizeStatus(session.status)
-  const startTime = getTime(session.scheduledStartAt)
+  const status = normalizeStatus(session.status);
+  const startTime = getTime(session.scheduledStartAt);
+  const id = String(session.id || fallbackId(session, index) || `session-${index}`);
+  const bookingId = getBookingId(session, id);
   const rawJoinHref =
-    session.joinHref || (session.id ? `/client/session/${encodeURIComponent(session.id)}` : null)
+    session.joinHref || (session.id ? `/client/session/${encodeURIComponent(session.id)}` : null);
   const rawChatHref =
     session.chatHref ||
-    (session.conversationId ? `/client/chat/${encodeURIComponent(session.conversationId)}` : null)
+    (session.conversationId ? `/client/chat/${encodeURIComponent(session.conversationId)}` : null);
+  const paymentStatus = String(session.paymentStatus || session.payment_status || "").toLowerCase();
+  const hasReview = Boolean(session.hasReview || session.reviewId);
 
   const canJoin =
     JOINABLE_STATUSES.includes(status) &&
-    Boolean(session.sessionReady || session.liveSessionId || session.joinHref)
+    Boolean(session.sessionReady || session.liveSessionId || session.joinHref);
+
+  const canReview =
+    REVIEWABLE_STATUSES.includes(status) &&
+    !hasReview &&
+    Boolean(bookingId);
 
   return {
-    id: String(session.id || fallbackId(session, index) || `session-${index}`),
+    id,
+    bookingId,
     conversationId: session.conversationId || null,
-    expertName: session.expertName?.trim() || 'Uzman eşleştirme sürecinde',
-    expertTitle: session.expertTitle?.trim() || 'Mindora Uzmanı',
+    expertName: session.expertName?.trim() || "Uzman eşleştirme sürecinde",
+    expertTitle: session.expertTitle?.trim() || "Mindora Uzmanı",
     expertPhotoUrl: session.expertPhotoUrl?.trim() || null,
     scheduledStartAt: session.scheduledStartAt || null,
     scheduledEndAt: session.scheduledEndAt || null,
-    timezone: session.timezone || 'Europe/Istanbul',
+    timezone: session.timezone || "Europe/Istanbul",
     status,
+    paymentStatus,
     date: formatDate(session.scheduledStartAt),
     timeRange: formatTimeRange(session.scheduledStartAt, session.scheduledEndAt),
     duration: calculateDuration(session.scheduledStartAt, session.scheduledEndAt),
     startTime,
     canJoin,
+    canReview,
+    hasReview,
     joinHref: buildTokenUrl(rawJoinHref, token),
     chatHref: buildTokenUrl(rawChatHref, token),
-  }
+  };
 }
 
 function isUpcoming(session: UiSession) {
-  if (session.status === 'active') return true
-  if (!UPCOMING_STATUSES.includes(session.status)) return false
-  if (!session.startTime) return true
+  if (session.status === "active") return true;
+  if (!UPCOMING_STATUSES.includes(session.status)) return false;
+  if (!session.startTime) return true;
 
-  return session.startTime >= Date.now()
+  return session.startTime >= Date.now();
 }
 
 function isPast(session: UiSession) {
-  if (FINISHED_STATUSES.includes(session.status)) return true
-  if (!session.startTime) return false
+  if (FINISHED_STATUSES.includes(session.status)) return true;
+  if (!session.startTime) return false;
 
-  return session.startTime < Date.now() && session.status !== 'active'
+  return session.startTime < Date.now() && session.status !== "active";
 }
 
 function isCancelledLike(session: UiSession) {
-  return session.status === 'cancelled' || session.status === 'no_show'
+  return session.status === "cancelled" || session.status === "no_show";
 }
 
 function statusLabel(status: NormalizedSessionStatus) {
-  return statusConfig[status]?.label || statusConfig.unknown.label
+  return statusConfig[status]?.label || statusConfig.unknown.label;
 }
 
 function ClientSessionsContent() {
-  const searchParams = useSearchParams()
-  const token = searchParams.get('token') || ''
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
 
-  const [sessions, setSessions] = useState<UiSession[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [softNotice, setSoftNotice] = useState('')
-  const [filter, setFilter] = useState<SessionFilter>('all')
-  const [search, setSearch] = useState('')
+  const [sessions, setSessions] = useState<UiSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [softNotice, setSoftNotice] = useState("");
+  const [filter, setFilter] = useState<SessionFilter>("all");
+  const [search, setSearch] = useState("");
+  const [reviewSession, setReviewSession] = useState<UiSession | null>(null);
+  const [submittedReviewBookingIds, setSubmittedReviewBookingIds] = useState<Set<string>>(new Set());
 
   const fetchSessions = useCallback(
-    async (mode: 'initial' | 'refresh' = 'refresh') => {
+    async (mode: "initial" | "refresh" = "refresh") => {
       if (!token) {
-        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Size iletilen danışan paneli bağlantısını kullanabilirsiniz.')
-        setSessions([])
-        setLoading(false)
-        setRefreshing(false)
-        return
+        setSoftNotice(
+          "Güvenli erişim bağlantısı bulunamadı. Size iletilen danışan paneli bağlantısını kullanabilirsiniz."
+        );
+        setSessions([]);
+        setLoading(false);
+        setRefreshing(false);
+        return;
       }
 
       try {
-        if (mode === 'initial') setLoading(true)
-        else setRefreshing(true)
+        if (mode === "initial") setLoading(true);
+        else setRefreshing(true);
 
-        setSoftNotice('')
+        setSoftNotice("");
 
         const response = await fetch(`/api/client/sessions?token=${encodeURIComponent(token)}`, {
-          method: 'GET',
-          cache: 'no-store',
-          headers: { Accept: 'application/json' },
-        })
+          method: "GET",
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        });
 
-        const data = (await response.json().catch(() => ({}))) as ClientSessionsResponse
+        const data = (await response.json().catch(() => ({}))) as ClientSessionsResponse;
 
         if (!response.ok || data.ok === false) {
-          throw new Error(data.error || 'Henüz planlanmış seansınız bulunmuyor.')
+          throw new Error(data.error || "Henüz planlanmış seansınız bulunmuyor.");
         }
 
         const merged = [
           ...(data.sessions || []),
           ...(data.upcomingSessions || []),
           ...(data.completedSessions || []),
-        ]
+        ];
 
-        const seen = new Set<string>()
+        const seen = new Set<string>();
         const normalized = merged
           .map((session, index) => toUiSession(session, index, token))
           .filter((session) => {
-            if (seen.has(session.id)) return false
-            seen.add(session.id)
-            return true
-          })
+            if (seen.has(session.id)) return false;
+            seen.add(session.id);
+            return true;
+          });
 
-        setSessions(normalized)
+        setSessions(normalized);
       } catch (err) {
-        setSessions([])
+        setSessions([]);
         setSoftNotice(
           err instanceof Error && err.message.trim()
             ? err.message
-            : 'Henüz planlanmış seansınız bulunmuyor.'
-        )
+            : "Henüz planlanmış seansınız bulunmuyor."
+        );
       } finally {
-        setLoading(false)
-        setRefreshing(false)
+        setLoading(false);
+        setRefreshing(false);
       }
     },
     [token]
-  )
+  );
 
   useEffect(() => {
-    void fetchSessions('initial')
-  }, [fetchSessions])
+    void fetchSessions("initial");
+  }, [fetchSessions]);
+
+  const visibleSessions = useMemo(
+    () =>
+      sessions.map((session) => {
+        if (!submittedReviewBookingIds.has(session.bookingId)) return session;
+
+        return {
+          ...session,
+          hasReview: true,
+          canReview: false,
+        };
+      }),
+    [sessions, submittedReviewBookingIds]
+  );
 
   const upcomingSessions = useMemo(
     () =>
-      sessions
+      visibleSessions
         .filter(isUpcoming)
         .sort((a, b) => {
-          if (!a.startTime && !b.startTime) return 0
-          if (!a.startTime) return 1
-          if (!b.startTime) return -1
-          return a.startTime - b.startTime
+          if (!a.startTime && !b.startTime) return 0;
+          if (!a.startTime) return 1;
+          if (!b.startTime) return -1;
+          return a.startTime - b.startTime;
         }),
-    [sessions]
-  )
+    [visibleSessions]
+  );
 
   const pastSessions = useMemo(
-    () => sessions.filter(isPast).sort((a, b) => b.startTime - a.startTime),
-    [sessions]
-  )
+    () => visibleSessions.filter(isPast).sort((a, b) => b.startTime - a.startTime),
+    [visibleSessions]
+  );
 
   const filteredSessions = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
+    const keyword = search.trim().toLowerCase();
 
-    return sessions
+    return visibleSessions
       .filter((session) => {
-        if (filter === 'upcoming') return isUpcoming(session)
-        if (filter === 'completed') return session.status === 'completed'
-        if (filter === 'cancelled') return isCancelledLike(session)
-        return true
+        if (filter === "upcoming") return isUpcoming(session);
+        if (filter === "completed") return session.status === "completed";
+        if (filter === "cancelled") return isCancelledLike(session);
+        return true;
       })
       .filter((session) => {
         const text = [
@@ -369,23 +421,44 @@ function ClientSessionsContent() {
           session.date,
           session.timeRange,
         ]
-          .join(' ')
-          .toLowerCase()
+          .join(" ")
+          .toLowerCase();
 
-        return !keyword || text.includes(keyword)
+        return !keyword || text.includes(keyword);
       })
       .sort((a, b) => {
-        if (filter === 'completed' || filter === 'cancelled') return b.startTime - a.startTime
-        if (!a.startTime && !b.startTime) return 0
-        if (!a.startTime) return 1
-        if (!b.startTime) return -1
-        return a.startTime - b.startTime
-      })
-  }, [sessions, filter, search])
+        if (filter === "completed" || filter === "cancelled") return b.startTime - a.startTime;
+        if (!a.startTime && !b.startTime) return 0;
+        if (!a.startTime) return 1;
+        if (!b.startTime) return -1;
+        return a.startTime - b.startTime;
+      });
+  }, [visibleSessions, filter, search]);
 
-  const nextSession = upcomingSessions[0] || null
-  const completedCount = pastSessions.filter((session) => session.status === 'completed').length
-  const cancelledCount = pastSessions.filter(isCancelledLike).length
+  const nextSession = upcomingSessions[0] || null;
+  const completedCount = pastSessions.filter((session) => session.status === "completed").length;
+  const cancelledCount = pastSessions.filter(isCancelledLike).length;
+  const reviewableCount = visibleSessions.filter((session) => session.canReview).length;
+
+  const handleReviewSubmitted = useCallback((bookingId: string) => {
+    setSubmittedReviewBookingIds((current) => {
+      const next = new Set(current);
+      next.add(bookingId);
+      return next;
+    });
+
+    setSessions((current) =>
+      current.map((session) =>
+        session.bookingId === bookingId
+          ? {
+              ...session,
+              hasReview: true,
+              canReview: false,
+            }
+          : session
+      )
+    );
+  }, []);
 
   return (
     <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
@@ -400,22 +473,22 @@ function ClientSessionsContent() {
                 Seanslarım
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Yaklaşan ve geçmiş görüşmelerinizi takip edin. Hazır olan online
-                görüşmelere güvenli bağlantı üzerinden katılabilirsiniz.
+                Yaklaşan ve geçmiş görüşmelerinizi takip edin. Hazır olan online görüşmelere
+                güvenli bağlantı üzerinden katılabilir, tamamlanan seanslarınızı değerlendirebilirsiniz.
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() => void fetchSessions('refresh')}
+                onClick={() => void fetchSessions("refresh")}
                 disabled={loading || refreshing}
                 className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
+                {loading || refreshing ? "Yükleniyor..." : "Yenile"}
               </button>
               <Link
-                href={buildTokenUrl('/client/dashboard', token)}
+                href={buildTokenUrl("/client/dashboard", token)}
                 className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
                 Dashboard
@@ -437,15 +510,16 @@ function ClientSessionsContent() {
             title="Henüz planlanmış seansınız bulunmuyor"
             description="Yeni bir görüşme planlandığında tarih, saat ve katılım bilgileri burada görüntülenecektir."
             detail={softNotice}
-            onRetry={() => void fetchSessions('refresh')}
+            onRetry={() => void fetchSessions("refresh")}
           />
         ) : null}
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <SummaryCard title="Yaklaşan" value={String(upcomingSessions.length)} description="Bugün ve sonrası" />
           <SummaryCard title="Tamamlanan" value={String(completedCount)} description="Geçmiş görüşme" />
+          <SummaryCard title="Yorum Bekleyen" value={String(reviewableCount)} description="Değerlendirilebilir seans" />
           <SummaryCard title="İptal / Katılmadı" value={String(cancelledCount)} description="Takip gerektiren" />
-          <SummaryCard title="Toplam" value={String(sessions.length)} description="Tüm seans kayıtları" />
+          <SummaryCard title="Toplam" value={String(visibleSessions.length)} description="Tüm seans kayıtları" />
         </section>
 
         {nextSession ? (
@@ -513,8 +587,8 @@ function ClientSessionsContent() {
                 onClick={() => setFilter(item.value)}
                 className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   filter === item.value
-                    ? 'bg-slate-950 text-white ring-slate-950'
-                    : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
+                    ? "bg-slate-950 text-white ring-slate-950"
+                    : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"
                 }`}
               >
                 {item.label}
@@ -533,7 +607,7 @@ function ClientSessionsContent() {
             </div>
 
             <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-              {loading ? 'Yükleniyor' : `${filteredSessions.length} kayıt`}
+              {loading ? "Yükleniyor" : `${filteredSessions.length} kayıt`}
             </span>
           </div>
 
@@ -542,7 +616,11 @@ function ClientSessionsContent() {
           ) : filteredSessions.length > 0 ? (
             <div className="space-y-4">
               {filteredSessions.map((session) => (
-                <SessionCard key={session.id} session={session} />
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  onReview={() => setReviewSession(session)}
+                />
               ))}
             </div>
           ) : (
@@ -553,8 +631,14 @@ function ClientSessionsContent() {
           )}
         </section>
       </div>
+
+      <ReviewModal
+        session={reviewSession}
+        onClose={() => setReviewSession(null)}
+        onSubmitted={handleReviewSubmitted}
+      />
     </section>
-  )
+  );
 }
 
 function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
@@ -564,11 +648,11 @@ function SummaryCard({ title, value, description }: { title: string; value: stri
       <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
-  )
+  );
 }
 
-function SessionCard({ session }: { session: UiSession }) {
-  const config = statusConfig[session.status] || statusConfig.unknown
+function SessionCard({ session, onReview }: { session: UiSession; onReview: () => void }) {
+  const config = statusConfig[session.status] || statusConfig.unknown;
 
   return (
     <article className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-lg">
@@ -580,11 +664,11 @@ function SessionCard({ session }: { session: UiSession }) {
               <img src={session.expertPhotoUrl} alt={session.expertName} className="h-full w-full object-cover" />
             ) : (
               session.expertName
-                .split(' ')
+                .split(" ")
                 .filter(Boolean)
                 .slice(0, 2)
-                .map((part) => part[0]?.toLocaleUpperCase('tr-TR'))
-                .join('') || 'M'
+                .map((part) => part[0]?.toLocaleUpperCase("tr-TR"))
+                .join("") || "M"
             )}
           </div>
 
@@ -594,6 +678,11 @@ function SessionCard({ session }: { session: UiSession }) {
               <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}>
                 {config.label}
               </span>
+              {session.hasReview ? (
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                  Yorum gönderildi
+                </span>
+              ) : null}
             </div>
             <p className="mt-1 text-sm font-semibold text-slate-600">{session.expertTitle}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-slate-600">
@@ -612,7 +701,19 @@ function SessionCard({ session }: { session: UiSession }) {
             Sohbete Git
           </Link>
 
-          {session.canJoin ? (
+          {session.canReview ? (
+            <button
+              type="button"
+              onClick={onReview}
+              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+            >
+              Yorum Bırak
+            </button>
+          ) : session.hasReview ? (
+            <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700 ring-1 ring-emerald-100">
+              Yorumunuz Gönderildi
+            </span>
+          ) : session.canJoin ? (
             <a
               href={session.joinHref}
               className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
@@ -627,7 +728,189 @@ function SessionCard({ session }: { session: UiSession }) {
         </div>
       </div>
     </article>
-  )
+  );
+}
+
+function ReviewModal({
+  session,
+  onClose,
+  onSubmitted,
+}: {
+  session: UiSession | null;
+  onClose: () => void;
+  onSubmitted: (bookingId: string) => void;
+}) {
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [submitState, setSubmitState] = useState<ReviewSubmitState>({
+    loading: false,
+    error: "",
+    success: "",
+  });
+
+  useEffect(() => {
+    if (!session) return;
+
+    setRating(5);
+    setReviewText("");
+    setSubmitState({ loading: false, error: "", success: "" });
+  }, [session]);
+
+  if (!session) return null;
+
+  const remainingChars = 2000 - reviewText.length;
+
+  async function handleSubmit() {
+    if (!session) return;
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      setSubmitState({ loading: false, error: "Lütfen 1 ile 5 arasında puan seçin.", success: "" });
+      return;
+    }
+
+    try {
+      setSubmitState({ loading: true, error: "", success: "" });
+
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookingId: session.bookingId,
+          rating,
+          reviewText,
+        }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        message?: string;
+      };
+
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || "Yorum gönderilemedi.");
+      }
+
+      onSubmitted(session.bookingId);
+      setSubmitState({
+        loading: false,
+        error: "",
+        success: data.message || "Yorumunuz moderasyon onayına gönderildi.",
+      });
+    } catch (error) {
+      setSubmitState({
+        loading: false,
+        error: error instanceof Error ? error.message : "Yorum gönderilemedi.",
+        success: "",
+      });
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
+      <div className="w-full max-w-xl rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-slate-200">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+              Seans Değerlendirmesi
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-slate-950">Uzmanı değerlendir</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {session.expertName} ile tamamlanan seansınız için deneyiminizi paylaşabilirsiniz.
+              Yorumunuz admin onayından sonra yayınlanır.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitState.loading}
+            className="rounded-2xl bg-slate-100 px-3 py-2 text-sm font-black text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="Modalı kapat"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mt-6 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+          <p className="text-sm font-black text-slate-800">Puanınız</p>
+          <div className="mt-3 flex gap-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                disabled={submitState.loading || Boolean(submitState.success)}
+                className={`text-4xl transition hover:-translate-y-0.5 disabled:cursor-not-allowed ${
+                  star <= rating ? "text-amber-400" : "text-slate-300"
+                }`}
+                aria-label={`${star} yıldız`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs font-bold text-slate-500">{rating}/5 puan</p>
+        </div>
+
+        <label className="mt-5 block">
+          <span className="text-sm font-black text-slate-800">Yorumunuz</span>
+          <textarea
+            value={reviewText}
+            onChange={(event) => setReviewText(event.target.value.slice(0, 2000))}
+            disabled={submitState.loading || Boolean(submitState.success)}
+            placeholder="Deneyiminizi kısa ve saygılı bir şekilde yazabilirsiniz. Bu alan isteğe bağlıdır."
+            rows={5}
+            className="mt-2 w-full resize-none rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
+          />
+        </label>
+
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold text-slate-500">Yorumlar yayınlanmadan önce kontrol edilir.</p>
+          <p className={`text-xs font-black ${remainingChars < 100 ? "text-rose-600" : "text-slate-400"}`}>
+            {remainingChars} karakter
+          </p>
+        </div>
+
+        {submitState.error ? (
+          <div className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 ring-1 ring-rose-100">
+            {submitState.error}
+          </div>
+        ) : null}
+
+        {submitState.success ? (
+          <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 ring-1 ring-emerald-100">
+            {submitState.success}
+          </div>
+        ) : null}
+
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitState.loading}
+            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {submitState.success ? "Kapat" : "Vazgeç"}
+          </button>
+          {!submitState.success ? (
+            <button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={submitState.loading}
+              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitState.loading ? "Gönderiliyor..." : "Yorumu Gönder"}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function NoticeCard({
@@ -636,10 +919,10 @@ function NoticeCard({
   detail,
   onRetry,
 }: {
-  title: string
-  description: string
-  detail?: string
-  onRetry: () => void
+  title: string;
+  description: string;
+  detail?: string;
+  onRetry: () => void;
 }) {
   return (
     <section className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 text-indigo-950 shadow-sm">
@@ -647,9 +930,7 @@ function NoticeCard({
         <div>
           <p className="text-sm font-black">{title}</p>
           <p className="mt-1 text-sm leading-6 text-indigo-800">{description}</p>
-          {detail ? (
-            <p className="mt-1 text-xs font-semibold text-indigo-500">{detail}</p>
-          ) : null}
+          {detail ? <p className="mt-1 text-xs font-semibold text-indigo-500">{detail}</p> : null}
         </div>
         <button
           type="button"
@@ -660,7 +941,7 @@ function NoticeCard({
         </button>
       </div>
     </section>
-  )
+  );
 }
 
 function EmptyState({ title, description }: { title: string; description: string }) {
@@ -669,7 +950,7 @@ function EmptyState({ title, description }: { title: string; description: string
       <p className="text-sm font-black text-slate-800">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
     </div>
-  )
+  );
 }
 
 export default function ClientDashboardSessionsPage() {
@@ -685,5 +966,5 @@ export default function ClientDashboardSessionsPage() {
     >
       <ClientSessionsContent />
     </Suspense>
-  )
+  );
 }
