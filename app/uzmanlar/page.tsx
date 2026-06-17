@@ -804,74 +804,55 @@ function HeroTrustCard({
   const hasRating = reviewedExpertCount > 0 && averagePlatformRating > 0;
   const headline = hasRating ? averagePlatformRating.toFixed(1) : "Güvenli";
   const subHeadline = hasRating
-    ? `${totalReviewCount} doğrulanmış danışan değerlendirmesi`
-    : "Uzman inceleme ve değerlendirme sistemi aktif";
+    ? `${totalReviewCount} doğrulanmış değerlendirme`
+    : "Uzman inceleme ve değerlendirme altyapısı aktif";
 
   return (
-    <aside className="rounded-[2.25rem] border border-black/5 bg-white p-5 shadow-[0_20px_60px_rgba(15,15,15,0.06)] md:p-6 lg:p-7">
-      <div className="overflow-hidden rounded-[1.9rem] bg-black text-white">
-        <div className="relative p-6 md:p-7">
-          <div className="absolute right-5 top-5 rounded-2xl bg-white px-4 py-3 text-black shadow-sm">
-            <p className="text-2xl font-black leading-none">✓</p>
-            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-neutral-500">
-              Mindora
+    <aside className="rounded-[2.25rem] border border-black/5 bg-white p-5 shadow-[0_24px_70px_rgba(15,15,15,0.07)] md:p-6 lg:p-7">
+      <div className="rounded-[1.9rem] bg-black p-6 text-white md:p-7">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.32em] text-white/45">
+              Mindora güven standardı
             </p>
-          </div>
-
-          <p className="max-w-[12rem] text-xs font-black uppercase tracking-[0.32em] text-white/45">
-            Güvenli başlangıç
-          </p>
-
-          <div className="mt-8">
-            <p className="text-4xl font-black tracking-tight md:text-5xl">{headline}</p>
+            <p className="mt-5 text-4xl font-black tracking-tight md:text-5xl">
+              {headline}
+            </p>
             <p className="mt-2 max-w-sm text-sm font-semibold leading-6 text-white/72">
               {subHeadline}
             </p>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-2">
-            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
-              Onaylı uzmanlar
-            </span>
-            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
-              Güvenli ödeme
-            </span>
-            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
-              Online görüşme
-            </span>
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-3xl font-black text-black shadow-sm">
+            ✓
           </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-2">
+          <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
+            Onaylı profiller
+          </span>
+          <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
+            Gerçek yorum altyapısı
+          </span>
+          <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
+            Güvenli süreç
+          </span>
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3">
-        <TrustLine
-          title="Profiller incelenerek yayınlanır"
-          text={
-            approvedExpertCount > 1
-              ? "Mindora’da listelenen uzman profilleri yayınlanmadan önce kontrol edilir."
-              : "Uzman profilleri yayınlanmadan önce başvuru ve profil inceleme sürecinden geçer."
-          }
-        />
-        <TrustLine
-          title="Değerlendirmeler seans sonrası alınır"
-          text={
-            reviewedExpertCount > 0
-              ? "Yorumlar yalnızca tamamlanan seanslardan sonra alınır ve moderasyondan geçer."
-              : "Yorum altyapısı gerçek seans deneyimlerini görünür kılmak için hazırlanmıştır."
-          }
-        />
-        <TrustLine
-          title="Tüm süreç tek yerde ilerler"
-          text="Ön eşleşme, randevu, ödeme, mesajlaşma ve video görüşme aynı akışta yönetilir."
-        />
+      <div className="mt-5 grid gap-3">
+        <TrustLine title="Uzman profilleri incelenir" />
+        <TrustLine title="Değerlendirmeler seans sonrası alınır" />
+        <TrustLine title="Ödeme, randevu ve görüşme tek akışta ilerler" />
       </div>
 
-      <div className="mt-5 rounded-[1.75rem] bg-[#f7f2eb] p-4 ring-1 ring-black/5">
-        <p className="text-sm font-black text-neutral-950">
-          Rastgele uzman seçimi yerine ihtiyacına uygun başlangıç.
+      <div className="mt-5 rounded-[1.75rem] bg-[#f7f2eb] p-5 ring-1 ring-black/5">
+        <p className="text-base font-black leading-6 text-neutral-950">
+          Rastgele yönlendirme değil, ihtiyacına uygun başlangıç.
         </p>
-        <p className="mt-1 text-sm leading-6 text-neutral-600">
-          Kısa ön eşleşme formu, destek konunu ve beklentini daha doğru anlamak için tasarlandı.
+        <p className="mt-2 text-sm leading-6 text-neutral-600">
+          Kısa ön eşleşme formu; destek konunu, beklentini ve uygun zamanını daha anlaşılır hale getirir.
         </p>
       </div>
 
@@ -893,16 +874,13 @@ function HeroTrustCard({
   );
 }
 
-function TrustLine({ title, text }: { title: string; text: string }) {
+function TrustLine({ title }: { title: string }) {
   return (
-    <div className="flex gap-3 rounded-[1.35rem] bg-[#f7f2eb] p-4 ring-1 ring-black/5">
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-white">
+    <div className="flex items-center gap-3 rounded-[1.35rem] bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-white">
         ✓
       </span>
-      <div>
-        <p className="text-sm font-black text-neutral-950">{title}</p>
-        <p className="mt-1 text-sm leading-5 text-neutral-600">{text}</p>
-      </div>
+      <p className="text-sm font-black text-neutral-950">{title}</p>
     </div>
   );
 }
