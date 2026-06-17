@@ -250,6 +250,30 @@ function formatMoney(value: number) {
   }).format(value);
 }
 
+function hasRealProfileImage(expert: PublicExpertProfile) {
+  return Boolean(expert.profileImageUrl);
+}
+
+function getPrimaryArea(expert: PublicExpertProfile) {
+  return expert.areas[0] || "Online psikolojik destek";
+}
+
+function getRatingText(expert: PublicExpertProfile) {
+  if (expert.reviewCount > 0 && expert.averageRating > 0) {
+    return `★ ${expert.averageRating.toFixed(1)} · ${expert.reviewCount} değerlendirme`;
+  }
+
+  return "Yeni değerlendirme";
+}
+
+function getEducationPreview(expert: PublicExpertProfile) {
+  return expert.education[0] || "Eğitim bilgisi ön eşleşme sürecinde netleşir.";
+}
+
+function getCertificatePreview(expert: PublicExpertProfile) {
+  return expert.certificates[0] || "Sertifika bilgisi ön eşleşme sürecinde netleşir.";
+}
+
 function formatDate(value?: string | null) {
   if (!value) return "Tarih bilinmiyor";
 
@@ -600,62 +624,71 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-10">
-        <div className="grid gap-8 rounded-[2rem] border border-black/5 bg-white p-5 shadow-sm md:p-8 lg:grid-cols-[1fr_390px] lg:p-10">
+        <div className="grid gap-8 rounded-[2.25rem] border border-black/5 bg-white p-5 shadow-[0_24px_70px_rgba(15,15,15,0.06)] md:p-8 lg:grid-cols-[1fr_390px] lg:p-10">
           <div className="min-w-0">
             <div className="flex flex-col gap-7 md:flex-row">
-              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-[2rem] bg-black text-white shadow-sm ring-1 ring-black/10 md:h-36 md:w-36">
-                {expert.profileImageUrl ? (
+              <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-[2rem] bg-black text-white shadow-sm ring-8 ring-[#f7f2eb] md:h-40 md:w-40">
+                {hasRealProfileImage(expert) ? (
                   <img
-                    src={expert.profileImageUrl}
+                    src={expert.profileImageUrl || ""}
                     alt={`${expert.name} profil fotoğrafı`}
                     className="h-full w-full object-cover"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-4xl font-black md:text-5xl">
-                    {expert.imageInitials}
+                  <div className="flex h-full w-full flex-col items-center justify-center text-center">
+                    <span className="text-5xl font-black">{expert.imageInitials}</span>
+                    <span className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/45">
+                      Profil
+                    </span>
                   </div>
                 )}
+
+                <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-black text-black shadow-sm">
+                  ✓
+                </span>
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Badge tone="success">Onaylı uzman profili</Badge>
+                  <Badge tone="success">Mindora onaylı uzman</Badge>
                   <Badge tone="dark">{expert.onlineText}</Badge>
-                  {expert.reviewCount > 0 ? (
-                    <Badge tone="warning">
-                      ★ {expert.averageRating.toFixed(1)} · {expert.reviewCount} değerlendirme
-                    </Badge>
-                  ) : (
-                    <Badge tone="neutral">Yeni uzman</Badge>
-                  )}
+                  <Badge tone={expert.reviewCount > 0 ? "warning" : "neutral"}>
+                    {getRatingText(expert)}
+                  </Badge>
                 </div>
 
                 <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
                   {expert.name}
                 </h1>
 
-                <p className="mt-3 text-base font-bold text-neutral-600">
-                  {expert.title} • {expert.experience}
+                <p className="mt-3 text-lg font-black text-neutral-700">
+                  {expert.title}
                 </p>
 
-                <p className="mt-2 text-sm font-bold text-neutral-500">{expert.city}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-bold text-neutral-500">
+                  <span>{expert.experience}</span>
+                  <span>•</span>
+                  <span>{expert.city}</span>
+                  <span>•</span>
+                  <span>{expert.sessionDurationMinutes} dk online görüşme</span>
+                </div>
 
-                <p className="mt-5 max-w-3xl text-sm leading-7 text-neutral-600 md:text-base md:leading-8">
+                <p className="mt-6 max-w-3xl text-base leading-8 text-neutral-600">
                   {expert.bio}
                 </p>
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-4">
+                <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   <MiniStat label="Puan" value={expert.reviewCount > 0 ? expert.averageRating.toFixed(1) : "Yeni"} />
                   <MiniStat label="Yorum" value={`${expert.reviewCount}`} />
                   <MiniStat label="Seans" value={`${expert.sessionDurationMinutes} dk`} />
-                  <MiniStat label="Deneyim" value={expert.experience} />
+                  <MiniStat label="Uzmanlık" value={getPrimaryArea(expert)} />
                 </div>
               </div>
             </div>
 
             <div className="mt-8 flex flex-wrap gap-2">
-              {expert.areas.slice(0, 10).map((area) => (
+              {expert.areas.slice(0, 12).map((area) => (
                 <span
                   key={area}
                   className="rounded-full bg-[#f7f2eb] px-4 py-2 text-xs font-black text-neutral-700 ring-1 ring-black/5"
@@ -667,23 +700,15 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           </div>
 
           <aside className="self-start rounded-[2rem] bg-[#f7f2eb] p-5 ring-1 ring-black/5 md:p-6 lg:sticky lg:top-6">
-            <p className="text-sm font-bold text-neutral-500">Seans ücreti</p>
-            <p className="mt-2 text-4xl font-black text-black">{expert.priceText}</p>
-            <p className="mt-1 text-sm text-neutral-500">
-              {expert.sessionDurationMinutes} dk online görüşme
-            </p>
-
-            {expert.reviewCount > 0 ? (
-              <div className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-black/5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-black text-black">Danışan değerlendirmesi</p>
-                  <p className="text-lg font-black text-amber-500">★ {expert.averageRating.toFixed(1)}</p>
-                </div>
-                <p className="mt-1 text-sm font-semibold text-neutral-500">
-                  {expert.reviewCount} onaylı değerlendirme
-                </p>
-              </div>
-            ) : null}
+            <div className="rounded-[1.6rem] bg-black p-5 text-white">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-white/45">
+                Online görüşme
+              </p>
+              <p className="mt-3 text-4xl font-black">{expert.priceText}</p>
+              <p className="mt-1 text-sm font-semibold text-white/65">
+                {expert.sessionDurationMinutes} dakika · güvenli ödeme akışı
+              </p>
+            </div>
 
             <div className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-black/5">
               <p className="text-sm font-black text-black">Müsaitlik</p>
@@ -707,14 +732,14 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             <div className="mt-6 space-y-3">
               <Link
                 href={matchingHref}
-                className="flex w-full items-center justify-center rounded-2xl bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-neutral-800"
+                className="flex w-full items-center justify-center rounded-2xl bg-black px-5 py-3.5 text-sm font-black text-white transition hover:bg-neutral-800"
               >
-                Bu uzmanla eşleşme iste
+                Ücretsiz ön eşleşme iste
               </Link>
 
               <Link
                 href="/uzmanlar"
-                className="flex w-full items-center justify-center rounded-2xl border border-black/10 bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-[#f7f2eb]"
+                className="flex w-full items-center justify-center rounded-2xl border border-black/10 bg-white px-5 py-3.5 text-sm font-black text-black transition hover:bg-[#f7f2eb]"
               >
                 Diğer uzmanları gör
               </Link>
@@ -729,6 +754,12 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
       <section className="mx-auto grid max-w-7xl gap-6 px-5 pb-12 lg:grid-cols-[1fr_390px]">
         <div className="space-y-6">
+          <InfoCard title="Uzman Hakkında">
+            <p className="text-sm leading-7 text-neutral-600 md:text-base md:leading-8">
+              {expert.bio}
+            </p>
+          </InfoCard>
+
           <InfoCard title="Çalışma Yaklaşımı">
             <p className="text-sm leading-7 text-neutral-600 md:text-base md:leading-8">
               {expert.approach}
@@ -748,14 +779,12 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             </div>
           </InfoCard>
 
-          {expert.education.length > 0 || expert.certificates.length > 0 ? (
-            <InfoCard title="Eğitim ve Sertifikalar">
-              <div className="grid gap-4 md:grid-cols-2">
-                <ProfileList title="Eğitim" items={expert.education} empty="Eğitim bilgisi eşleşme sürecinde netleşir." />
-                <ProfileList title="Sertifikalar" items={expert.certificates} empty="Sertifika bilgisi eşleşme sürecinde netleşir." />
-              </div>
-            </InfoCard>
-          ) : null}
+          <InfoCard title="Eğitim ve Yetkinlikler">
+            <div className="grid gap-4 md:grid-cols-2">
+              <ProfileList title="Eğitim" items={expert.education} empty={getEducationPreview(expert)} />
+              <ProfileList title="Sertifikalar" items={expert.certificates} empty={getCertificatePreview(expert)} />
+            </div>
+          </InfoCard>
 
           <InfoCard title="Danışan Değerlendirmeleri">
             {expert.reviewCount > 0 ? (
@@ -781,25 +810,18 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm leading-7 text-neutral-600">
-                    Bu uzman için onaylı değerlendirme sayısı mevcut; yorum metinleri yakında burada listelenecek.
-                  </p>
+                  <TrustEmptyState
+                    title="Yorum metinleri yakında burada listelenecek."
+                    text="Bu uzman için onaylı değerlendirme sayısı mevcut. Yayınlanan yorumlar moderasyon sonrasında görünür olur."
+                  />
                 )}
               </div>
             ) : (
-              <p className="text-sm leading-7 text-neutral-600">
-                Bu uzman için henüz yayınlanmış değerlendirme yok. Tamamlanan seanslardan sonra danışanlar yorum bırakabilir.
-              </p>
+              <TrustEmptyState
+                title="İlk danışan değerlendirmeleri burada yayınlanacaktır."
+                text="Mindora yalnızca tamamlanan seanslardan sonra yorum kabul eder ve yorumları yayınlamadan önce moderasyondan geçirir."
+              />
             )}
-          </InfoCard>
-
-          <InfoCard title="Neden bu uzman?">
-            <div className="grid gap-3 md:grid-cols-2">
-              <ReasonCard title="İhtiyaç odaklı başlangıç" text="Ön eşleşme formundaki bilgilerle görüşme sürecinin daha doğru başlaması hedeflenir." />
-              <ReasonCard title="Net süreç akışı" text="Eşleşme, randevu, ödeme ve online görüşme adımları Mindora içinde takip edilir." />
-              <ReasonCard title="Güvenli yönlendirme" text="Profil bilgileri, çalışma alanları ve uygunluk bilgileri daha şeffaf gösterilir." />
-              <ReasonCard title="Sosyal kanıt" text="Onaylı değerlendirmeler ve puanlar uzman seçiminde daha bilinçli karar vermeye yardımcı olur." />
-            </div>
           </InfoCard>
 
           <InfoCard title="Sık Sorulan Sorular">
@@ -834,9 +856,17 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             <List items={PROCESS_STEPS} />
           </InfoCard>
 
+          <InfoCard title="Neden bu uzman?">
+            <div className="space-y-3">
+              <ReasonCard title="İhtiyaç odaklı başlangıç" text="Ön eşleşme formundaki bilgilerle görüşme sürecinin daha doğru başlaması hedeflenir." />
+              <ReasonCard title="Net süreç akışı" text="Eşleşme, randevu, ödeme ve online görüşme adımları Mindora içinde takip edilir." />
+              <ReasonCard title="Şeffaf profil" text="Çalışma alanları, yaklaşım, değerlendirme ve seans bilgileri açık şekilde gösterilir." />
+            </div>
+          </InfoCard>
+
           <InfoCard title="Ön eşleşme notu">
             <p className="text-sm leading-7 text-neutral-600">
-              Bu profil, ilk kararını kolaylaştırmak için hazırlanır. Nihai uzman uygunluğu, destek ihtiyacın ve müsaitlik durumun ön eşleşme sonrasında netleşir.
+              Bu profil ilk kararını kolaylaştırmak için hazırlanmıştır. Nihai uzman uygunluğu, destek ihtiyacın, beklentin ve müsaitlik durumun ön eşleşme sonrasında netleşir.
             </p>
           </InfoCard>
         </div>
@@ -861,7 +891,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               href={matchingHref}
               className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-black transition hover:bg-neutral-200"
             >
-              Eşleşme Formuna Git
+              Ücretsiz Ön Eşleşmeye Başla
             </Link>
           </div>
         </div>
@@ -880,13 +910,14 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             href={matchingHref}
             className="shrink-0 rounded-2xl bg-black px-5 py-3 text-sm font-black text-white"
           >
-            Eşleşme iste
+            Eşleşme
           </Link>
         </div>
       </div>
     </main>
   );
 }
+
 
 function Badge({
   children,
@@ -965,6 +996,22 @@ function ProfileList({ title, items, empty }: { title: string; items: string[]; 
       ) : (
         <p className="mt-3 text-sm leading-6 text-neutral-600">{empty}</p>
       )}
+    </div>
+  );
+}
+
+function TrustEmptyState({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-3xl bg-[#f7f2eb] p-5 ring-1 ring-black/5">
+      <div className="flex gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-white">
+          ✓
+        </span>
+        <div>
+          <p className="text-sm font-black text-black">{title}</p>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">{text}</p>
+        </div>
+      </div>
     </div>
   );
 }
