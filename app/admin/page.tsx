@@ -50,6 +50,55 @@ const emptyStats: DashboardStats = {
   pendingExpertPayout: 0,
 };
 
+function normalizeToken(value: unknown) {
+  return String(value || "").trim();
+}
+
+function getCookieValue(name: string) {
+  if (typeof document === "undefined") return "";
+
+  const target = `${name}=`;
+
+  return (
+    document.cookie
+      .split(";")
+      .map((item) => item.trim())
+      .find((item) => item.startsWith(target))
+      ?.slice(target.length) || ""
+  );
+}
+
+function getStoredAdminToken() {
+  if (typeof window === "undefined") return "";
+
+  return normalizeToken(
+    window.localStorage.getItem("mindora_admin_token") ||
+      window.localStorage.getItem("adminToken") ||
+      window.sessionStorage.getItem("mindora_admin_token") ||
+      ""
+  );
+}
+
+function persistAdminToken(token: string) {
+  if (typeof window === "undefined" || !token) return;
+
+  window.localStorage.setItem("mindora_admin_token", token);
+}
+
+function resolveAdminToken(queryToken: string) {
+  const safeQueryToken = normalizeToken(queryToken);
+
+  if (safeQueryToken) {
+    persistAdminToken(safeQueryToken);
+    return safeQueryToken;
+  }
+
+  const cookieToken = normalizeToken(decodeURIComponent(getCookieValue("mindora_admin")));
+  if (cookieToken) return cookieToken;
+
+  return getStoredAdminToken();
+}
+
 function buildAdminUrl(path: string, adminToken: string) {
   if (!adminToken) return path;
 
@@ -99,7 +148,8 @@ function getActivityClass(type: string) {
 
 function AdminHomeContent() {
   const searchParams = useSearchParams();
-  const adminToken = searchParams.get("adminToken") || "";
+  const queryAdminToken = searchParams.get("adminToken") || searchParams.get("token") || "";
+  const [adminToken, setAdminToken] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -107,23 +157,34 @@ function AdminHomeContent() {
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
   const [activities, setActivities] = useState<DashboardActivity[]>([]);
 
+  useEffect(() => {
+    setAdminToken(resolveAdminToken(queryAdminToken));
+  }, [queryAdminToken]);
+
   const fetchDashboard = useCallback(
-    async (mode: "initial" | "refresh" = "refresh") => {
+    async (mode: "initial" | "refresh" = "refresh", tokenOverride?: string) => {
       try {
         if (mode === "initial") setLoading(true);
         else setRefreshing(true);
 
         setNotice("");
 
-        const params = new URLSearchParams();
-        if (adminToken) params.set("adminToken", adminToken);
+        const safeAdminToken = normalizeToken(tokenOverride || adminToken || resolveAdminToken(queryAdminToken));
 
-        const response = await fetch(`/api/admin/dashboard?${params.toString()}`, {
+        const params = new URLSearchParams();
+        if (safeAdminToken) params.set("adminToken", safeAdminToken);
+
+        const endpoint = params.toString()
+          ? `/api/admin/dashboard?${params.toString()}`
+          : "/api/admin/dashboard";
+
+        const response = await fetch(endpoint, {
           method: "GET",
           cache: "no-store",
+          credentials: "include",
           headers: {
             Accept: "application/json",
-            ...(adminToken ? { "x-admin-token": adminToken } : {}),
+            ...(safeAdminToken ? { "x-admin-token": safeAdminToken } : {}),
           },
         });
 
@@ -133,23 +194,39 @@ function AdminHomeContent() {
           throw new Error(data.error || "Yönetim verileri alınamadı.");
         }
 
+        if (safeAdminToken) {
+          setAdminToken(safeAdminToken);
+          persistAdminToken(safeAdminToken);
+        }
+
         setStats(data.stats || emptyStats);
         setActivities(Array.isArray(data.recentActivities) ? data.recentActivities : []);
       } catch (error) {
         setStats(emptyStats);
         setActivities([]);
-        setNotice(error instanceof Error ? error.message : "Yönetim verileri alınamadı.");
+
+        const message = error instanceof Error ? error.message : "Yönetim verileri alınamadı.";
+
+        if (message === "Admin erişimi doğrulanamadı.") {
+          setNotice(
+            "Yönetim oturumu doğrulanamadı. Lütfen yönetim giriş sayfasından tekrar giriş yap."
+          );
+        } else {
+          setNotice(message);
+        }
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [adminToken]
+    [adminToken, queryAdminToken]
   );
 
   useEffect(() => {
-    void fetchDashboard("initial");
-  }, [fetchDashboard]);
+    const token = resolveAdminToken(queryAdminToken);
+    setAdminToken(token);
+    void fetchDashboard("initial", token);
+  }, [fetchDashboard, queryAdminToken]);
 
   const kpiCards = useMemo(
     () => [
