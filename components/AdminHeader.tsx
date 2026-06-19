@@ -1,242 +1,244 @@
-'use client'
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createMindoraRealtimeClient } from '@/lib/supabase/realtime'
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { createMindoraRealtimeClient } from "@/lib/supabase/realtime";
 
 type Conversation = {
-  id: string
-}
+  id: string;
+};
+
+const primaryNavItems = [
+  {
+    href: "/admin",
+    label: "Merkez",
+  },
+  {
+    href: "/admin/uzman-basvurulari",
+    label: "Uzmanlar",
+  },
+  {
+    href: "/admin/danisan-basvurulari",
+    label: "Danışanlar",
+  },
+  {
+    href: "/admin/payments",
+    label: "Ödemeler",
+  },
+  {
+    href: "/admin/conversations",
+    label: "Sohbetler",
+  },
+];
 
 export default function AdminHeader() {
-  const pathname = usePathname()
-  const router = useRouter()
+  const pathname = usePathname();
+  const router = useRouter();
 
-  const [totalUnread, setTotalUnread] = useState(0)
-  const [loadingUnread, setLoadingUnread] = useState(false)
+  const [totalUnread, setTotalUnread] = useState(0);
+  const [loadingUnread, setLoadingUnread] = useState(false);
 
-  const isMountedRef = useRef(true)
+  const isMountedRef = useRef(true);
   const channelRef = useRef<ReturnType<
-    ReturnType<typeof createMindoraRealtimeClient>['channel']
-  > | null>(null)
+    ReturnType<typeof createMindoraRealtimeClient>["channel"]
+  > | null>(null);
 
   const loadTotalUnread = useCallback(async () => {
     try {
-      setLoadingUnread(true)
+      setLoadingUnread(true);
 
-      const res = await fetch('/api/admin/conversations', {
-        cache: 'no-store',
-      })
+      const response = await fetch("/api/admin/conversations", {
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
-      const data = await res.json().catch(() => null)
+      const data = await response.json().catch(() => null);
 
-      if (!res.ok || !data?.ok) {
-        if (isMountedRef.current) setTotalUnread(0)
-        return
+      if (!response.ok || !data?.ok) {
+        if (isMountedRef.current) setTotalUnread(0);
+        return;
       }
 
-      const conversations: Conversation[] = data.conversations || []
+      const conversations: Conversation[] = Array.isArray(data.conversations)
+        ? data.conversations
+        : [];
 
       const unreadCounts = await Promise.all(
         conversations.map(async (conversation) => {
           try {
-            const unreadRes = await fetch(
+            const unreadResponse = await fetch(
               `/api/conversations/${conversation.id}/unread?userType=admin`,
-              { cache: 'no-store' }
-            )
+              {
+                cache: "no-store",
+                headers: {
+                  Accept: "application/json",
+                },
+              }
+            );
 
-            const unreadData = await unreadRes.json().catch(() => null)
-            return Number(unreadData?.unreadCount || 0)
+            const unreadData = await unreadResponse.json().catch(() => null);
+
+            return Number(unreadData?.unreadCount || 0);
           } catch {
-            return 0
+            return 0;
           }
         })
-      )
+      );
 
-      const total = unreadCounts.reduce((sum, count) => sum + count, 0)
+      const total = unreadCounts.reduce((sum, count) => sum + count, 0);
 
       if (isMountedRef.current) {
-        setTotalUnread(total)
+        setTotalUnread(total);
       }
     } catch {
       if (isMountedRef.current) {
-        setTotalUnread(0)
+        setTotalUnread(0);
       }
     } finally {
       if (isMountedRef.current) {
-        setLoadingUnread(false)
+        setLoadingUnread(false);
       }
     }
-  }, [])
+  }, []);
 
   async function logout() {
-    await fetch('/api/admin/logout', {
-      method: 'POST',
-    })
+    await fetch("/api/admin/logout", {
+      method: "POST",
+    });
 
-    router.push('/admin/login')
+    router.push("/admin/login");
   }
 
   useEffect(() => {
-    isMountedRef.current = true
-    loadTotalUnread()
+    isMountedRef.current = true;
+    void loadTotalUnread();
 
     return () => {
-      isMountedRef.current = false
-    }
-  }, [loadTotalUnread])
+      isMountedRef.current = false;
+    };
+  }, [loadTotalUnread]);
 
   useEffect(() => {
-    const supabase = createMindoraRealtimeClient()
+    const supabase = createMindoraRealtimeClient();
 
     const channel = supabase
-      .channel('admin-header-unread-sync')
+      .channel("admin-header-unread-sync")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
         },
-        async () => {
-          await loadTotalUnread()
+        () => {
+          void loadTotalUnread();
         }
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversation_reads',
+          event: "*",
+          schema: "public",
+          table: "conversation_reads",
         },
-        async () => {
-          await loadTotalUnread()
+        () => {
+          void loadTotalUnread();
         }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'conversation_reads',
-        },
-        async () => {
-          await loadTotalUnread()
-        }
-      )
-      .subscribe()
+      .subscribe();
 
-    channelRef.current = channel
+    channelRef.current = channel;
 
     return () => {
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
+        supabase.removeChannel(channelRef.current);
       }
 
-      channelRef.current = null
-    }
-  }, [loadTotalUnread])
-
-  const navItems = [
-    {
-      href: '/admin/uzman-basvurulari',
-      label: 'Uzman Başvuruları',
-    },
-    {
-      href: '/admin/danisan-basvurulari',
-      label: 'Danışan Başvuruları',
-    },
-    {
-      href: '/admin/payments',
-      label: 'Ödemeler',
-    },
-    {
-      href: '/admin/conversations',
-      label: 'Konuşmalar',
-      badge: totalUnread,
-    },
-  ]
+      channelRef.current = null;
+    };
+  }, [loadTotalUnread]);
 
   return (
-    <div className="mb-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div className="mb-2 text-sm font-black tracking-[0.45em] text-[#8a6a4f]">
-            MINDORA ADMIN
-          </div>
-
-          <h1 className="m-0 text-4xl font-black text-[#171717]">
-            Admin Panel
-          </h1>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#6b5c4d] ring-1 ring-[#e5d9cc]">
-              Operasyon Merkezi
-            </span>
-
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
-                totalUnread > 0
-                  ? 'bg-red-50 text-red-700 ring-red-100'
-                  : 'bg-emerald-50 text-emerald-700 ring-emerald-100'
-              }`}
-            >
-              {loadingUnread
-                ? 'Mesajlar senkronlanıyor...'
-                : totalUnread > 0
-                  ? `${totalUnread} okunmamış mesaj`
-                  : 'Tüm mesajlar okundu'}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/"
-            className="rounded-full border border-[#ddd] bg-white px-6 py-3 text-sm font-black text-[#111] no-underline transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            Siteye Dön
+    <header className="mb-5 rounded-[1.5rem] border border-slate-200 bg-white px-4 py-3 shadow-sm md:px-5">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <Link href="/admin" className="group min-w-fit no-underline">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-indigo-600">
+              Mindora Admin
+            </p>
+            <p className="mt-1 text-lg font-black leading-none text-slate-950">
+              Yönetim
+            </p>
           </Link>
 
-          <button
-            onClick={logout}
-            className="rounded-full border-none bg-black px-6 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#2b2118] hover:shadow-md"
+          <nav className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">
+            {primaryNavItems.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
+
+              const isConversation = item.href === "/admin/conversations";
+              const hasUnread = isConversation && totalUnread > 0;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative inline-flex min-w-fit items-center justify-center rounded-2xl px-4 py-2 text-sm font-black no-underline ring-1 transition hover:-translate-y-0.5 hover:shadow-sm ${
+                    isActive
+                      ? "bg-slate-950 text-white ring-slate-950"
+                      : "bg-slate-50 text-slate-700 ring-slate-200 hover:bg-white"
+                  }`}
+                >
+                  {item.label}
+
+                  {hasUnread ? (
+                    <span className="ml-2 rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-black text-white">
+                      {totalUnread}
+                    </span>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:justify-end">
+          <span
+            className={`inline-flex items-center justify-center rounded-full px-3 py-2 text-xs font-black ring-1 ${
+              totalUnread > 0
+                ? "bg-rose-50 text-rose-700 ring-rose-100"
+                : "bg-emerald-50 text-emerald-700 ring-emerald-100"
+            }`}
           >
-            Çıkış Yap
-          </button>
+            {loadingUnread
+              ? "Mesajlar kontrol ediliyor"
+              : totalUnread > 0
+                ? `${totalUnread} okunmamış mesaj`
+                : "Mesaj yok"}
+          </span>
+
+          <div className="flex gap-2">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 no-underline transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm"
+            >
+              Site
+            </Link>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-sm"
+            >
+              Çıkış
+            </button>
+          </div>
         </div>
       </div>
-
-      <nav className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {navItems.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`)
-
-          const hasBadge =
-            typeof item.badge === 'number' && item.badge > 0
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`relative flex items-center justify-center rounded-2xl border px-5 py-4 text-center text-sm font-black no-underline transition hover:-translate-y-0.5 hover:shadow-md ${
-                isActive
-                  ? 'border-black bg-black text-white'
-                  : 'border-[#ddd] bg-white text-[#111]'
-              }`}
-            >
-              <span>{item.label}</span>
-
-              {hasBadge && (
-                <span className="absolute -right-2 -top-2 min-w-7 rounded-full bg-red-500 px-2 py-1 text-xs font-black text-white shadow-md ring-2 ring-white">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          )
-        })}
-      </nav>
-    </div>
-  )
+    </header>
+  );
 }
