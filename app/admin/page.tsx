@@ -56,29 +56,46 @@ const emptyStats: DashboardStats = {
   pendingExpertPayout: 0,
 };
 
-const fallbackQuickLinks: QuickLink[] = [
-  { label: "Uzman Başvuruları", href: "/admin/uzman-basvurulari" },
-  { label: "Danışan Başvuruları", href: "/admin/danisan-basvurulari" },
-  { label: "Ödeme Yönetimi", href: "/admin/payments" },
-  { label: "Sohbet Yönetimi", href: "/admin/conversations" },
-  { label: "Yorum Moderasyonu", href: "/admin/reviews" },
-];
-
-const primaryActions = [
+const mainActions = [
   {
-    label: "Ana Operasyon Paneli",
-    description: "Günlük admin işlemlerine buradan başla.",
+    label: "Uzman Başvuruları",
+    description: "Uzmanları incele, onayla, reddet veya pasife al.",
     href: "/admin/uzman-basvurulari",
   },
   {
     label: "Danışan Başvuruları",
-    description: "Eşleşme, durum ve danışan akışını yönet.",
+    description: "Danışan akışını, eşleşmeyi ve ödeme sürecini yönet.",
     href: "/admin/danisan-basvurulari",
   },
   {
     label: "Ödeme Yönetimi",
-    description: "Ödeme, komisyon ve uzman paylarını kontrol et.",
+    description: "Ödemeleri, komisyonu ve uzman paylarını takip et.",
     href: "/admin/payments",
+  },
+  {
+    label: "Sohbet Yönetimi",
+    description: "Aktif konuşmaları, kilit durumunu ve güvenli test linklerini kontrol et.",
+    href: "/admin/conversations",
+  },
+  {
+    label: "Yorum Moderasyonu",
+    description: "Danışan yorumlarını incele, yayına al, reddet veya gizle.",
+    href: "/admin/reviews",
+  },
+];
+
+const secondaryActions = [
+  {
+    label: "Finans Yönetimi",
+    href: "/admin/finance",
+  },
+  {
+    label: "Uzman Ödemeleri",
+    href: "/admin/payouts",
+  },
+  {
+    label: "Raporlar",
+    href: "/admin/reports",
   },
 ];
 
@@ -111,6 +128,15 @@ function formatDate(value?: string | null) {
   }).format(date);
 }
 
+function getActivityLabel(type: string) {
+  if (type === "payment") return "Ödeme";
+  if (type === "review") return "Yorum";
+  if (type === "expert") return "Uzman";
+  if (type === "client") return "Danışan";
+
+  return "Kayıt";
+}
+
 function getActivityTone(type: string) {
   if (type === "payment") return "bg-emerald-50 text-emerald-700 ring-emerald-100";
   if (type === "review") return "bg-amber-50 text-amber-700 ring-amber-100";
@@ -129,7 +155,7 @@ function AdminDashboardContent() {
   const [notice, setNotice] = useState("");
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
-  const [quickLinks, setQuickLinks] = useState<QuickLink[]>(fallbackQuickLinks);
+  const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
 
   const fetchDashboard = useCallback(
     async (mode: "initial" | "refresh" = "refresh") => {
@@ -154,17 +180,17 @@ function AdminDashboardContent() {
         const data = (await response.json().catch(() => ({}))) as DashboardResponse;
 
         if (!response.ok || data.ok === false) {
-          throw new Error(data.error || "Dashboard verileri alınamadı.");
+          throw new Error(data.error || "Yönetim verileri alınamadı.");
         }
 
         setStats(data.stats || emptyStats);
         setRecentActivities(data.recentActivities || []);
-        setQuickLinks(data.quickLinks?.length ? data.quickLinks : fallbackQuickLinks);
+        setQuickLinks(data.quickLinks || []);
       } catch (error) {
         setStats(emptyStats);
         setRecentActivities([]);
-        setQuickLinks(fallbackQuickLinks);
-        setNotice(error instanceof Error ? error.message : "Dashboard verileri alınamadı.");
+        setQuickLinks([]);
+        setNotice(error instanceof Error ? error.message : "Yönetim verileri alınamadı.");
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -208,14 +234,14 @@ function AdminDashboardContent() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
-                Mindora Admin
+                Mindora Yönetim Paneli
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                Operasyon Merkezi
+                Yönetim Merkezi
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Günlük operasyon için eski admin akışını ana merkez olarak kullan; özet, gelir,
-                seans ve yorum metriklerini bu ekrandan takip et.
+                Uzman başvuruları, danışan akışı, ödeme, sohbet ve yorum yönetimini tek giriş
+                ekranından takip et. Günlük işlemlere aşağıdaki ana menüden hızlıca ulaşabilirsin.
               </p>
             </div>
 
@@ -232,7 +258,7 @@ function AdminDashboardContent() {
                 href={buildAdminUrl("/admin/uzman-basvurulari", adminToken)}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
               >
-                Ana Operasyon Paneli
+                Ana İşlem Ekranı
               </Link>
             </div>
           </div>
@@ -240,19 +266,19 @@ function AdminDashboardContent() {
 
         {notice ? (
           <section className="rounded-3xl border border-amber-100 bg-amber-50 p-5 text-amber-900 shadow-sm">
-            <p className="text-sm font-black">Dashboard yüklenemedi</p>
+            <p className="text-sm font-black">Yönetim verileri yüklenemedi</p>
             <p className="mt-1 text-sm font-semibold">{notice}</p>
           </section>
         ) : null}
 
-        <section className="grid gap-4 lg:grid-cols-3">
-          {primaryActions.map((action) => (
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          {mainActions.map((action) => (
             <Link
               key={action.href}
               href={buildAdminUrl(action.href, adminToken)}
-              className="group rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lg"
+              className="group rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:bg-indigo-50/60 hover:shadow-lg"
             >
-              <p className="text-lg font-black text-slate-950 group-hover:text-indigo-700">
+              <p className="text-base font-black text-slate-950 group-hover:text-indigo-700">
                 {action.label}
               </p>
               <p className="mt-2 text-sm leading-6 text-slate-500">{action.description}</p>
@@ -306,16 +332,16 @@ function AdminDashboardContent() {
           <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-black text-slate-950">Hızlı İşlemler</h2>
-                <p className="mt-1 text-sm text-slate-500">Sık kullanılan admin ekranları.</p>
+                <h2 className="text-xl font-black text-slate-950">Ek Yönetim Ekranları</h2>
+                <p className="mt-1 text-sm text-slate-500">Daha az kullanılan ama gerekli olan yönetim alanları.</p>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-                {quickLinks.length} bağlantı
+                {secondaryActions.length + quickLinks.length} bağlantı
               </span>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {quickLinks.map((link) => (
+              {[...quickLinks, ...secondaryActions].map((link) => (
                 <Link
                   key={link.href}
                   href={buildAdminUrl(link.href, adminToken)}
@@ -343,7 +369,7 @@ function AdminDashboardContent() {
           </div>
 
           {loading ? (
-            <EmptyState title="Dashboard yükleniyor" description="Operasyon verileri hazırlanıyor." />
+            <EmptyState title="Yönetim verileri yükleniyor" description="Operasyon verileri hazırlanıyor." />
           ) : recentActivities.length > 0 ? (
             <div className="space-y-3">
               {recentActivities.map((activity) => (
@@ -355,7 +381,7 @@ function AdminDashboardContent() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getActivityTone(activity.type)}`}>
-                        {activity.type}
+                        {getActivityLabel(activity.type)}
                       </span>
                       <p className="text-sm font-black text-slate-900">{activity.title}</p>
                     </div>
@@ -412,7 +438,7 @@ export default function AdminDashboardPage() {
       fallback={
         <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
           <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Admin dashboard yükleniyor...</p>
+            <p className="font-black text-slate-600">Yönetim merkezi yükleniyor...</p>
           </div>
         </main>
       }
