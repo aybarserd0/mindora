@@ -156,11 +156,7 @@ function isPendingExpert(expert: ExpertRow) {
 
 function hasAdminAccess(req: Request) {
   const configuredAdminToken =
-    process.env.ADMIN_DASHBOARD_TOKEN ||
-    process.env.ADMIN_TOKEN ||
-    process.env.ADMIN_PASSWORD ||
-    "";
-  
+    process.env.ADMIN_DASHBOARD_TOKEN || process.env.ADMIN_TOKEN || "";
 
   const headerToken = req.headers.get("x-admin-token") || "";
   const url = new URL(req.url);
