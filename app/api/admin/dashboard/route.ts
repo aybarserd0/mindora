@@ -86,6 +86,7 @@ function getMonthStartIso() {
 
 function isThisMonth(value?: string | null) {
   if (!value) return false;
+
   return value >= getMonthStartIso();
 }
 
@@ -154,19 +155,17 @@ function isPendingExpert(expert: ExpertRow) {
   return ["pending", "waiting", "beklemede", "review"].includes(status);
 }
 
-function hasAdminAccess(req: Request) {
-  const configuredAdminToken =
-    process.env.ADMIN_DASHBOARD_TOKEN || process.env.ADMIN_TOKEN || "";
+function isCompletedSession(session: SessionRow) {
+  const status = normalizeStatus(session.status);
 
-  const headerToken = req.headers.get("x-admin-token") || "";
-  const url = new URL(req.url);
-  const queryToken = url.searchParams.get("adminToken") || "";
-
-  if (!configuredAdminToken) {
-    return process.env.NODE_ENV !== "production";
-  }
-
-  return headerToken === configuredAdminToken || queryToken === configuredAdminToken;
+  return [
+    "completed",
+    "complete",
+    "done",
+    "finished",
+    "tamamlandi",
+    "tamamlandı",
+  ].includes(status);
 }
 
 async function safeSelect<T>(
@@ -245,12 +244,8 @@ function buildRecentActivities(params: {
     .slice(0, 12);
 }
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    if (!hasAdminAccess(req)) {
-      return jsonError("Admin erişimi doğrulanamadı.", 401);
-    }
-
     const supabase = getSupabaseAdmin();
 
     if (!supabase) {
@@ -331,9 +326,7 @@ export async function GET(req: Request) {
         pendingExperts: experts.filter(isPendingExpert).length,
         totalClients: clients.length,
         totalSessions: sessions.length,
-        completedSessions: sessions.filter(
-          (session) => normalizeStatus(session.status) === "completed"
-        ).length,
+        completedSessions: sessions.filter(isCompletedSession).length,
         pendingReviews: reviews.filter(
           (review) => normalizeStatus(review.status) === "pending"
         ).length,
@@ -344,13 +337,6 @@ export async function GET(req: Request) {
         pendingExpertPayout,
       },
       recentActivities,
-      quickLinks: [
-        { label: "Uzman Başvuruları", href: "/admin/uzman-basvurulari" },
-        { label: "Danışan Başvuruları", href: "/admin/danisan-basvurulari" },
-        { label: "Ödeme Yönetimi", href: "/admin/payments" },
-        { label: "Sohbet Yönetimi", href: "/admin/conversations" },
-        { label: "Yorum Moderasyonu", href: "/admin/reviews" },
-      ],
     });
   } catch (error) {
     console.error("GET /api/admin/dashboard error:", error);
