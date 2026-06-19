@@ -56,6 +56,32 @@ const emptyStats: DashboardStats = {
   pendingExpertPayout: 0,
 };
 
+const fallbackQuickLinks: QuickLink[] = [
+  { label: "Uzman Başvuruları", href: "/admin/uzman-basvurulari" },
+  { label: "Danışan Başvuruları", href: "/admin/danisan-basvurulari" },
+  { label: "Ödeme Yönetimi", href: "/admin/payments" },
+  { label: "Sohbet Yönetimi", href: "/admin/conversations" },
+  { label: "Yorum Moderasyonu", href: "/admin/reviews" },
+];
+
+const primaryActions = [
+  {
+    label: "Ana Operasyon Paneli",
+    description: "Günlük admin işlemlerine buradan başla.",
+    href: "/admin/uzman-basvurulari",
+  },
+  {
+    label: "Danışan Başvuruları",
+    description: "Eşleşme, durum ve danışan akışını yönet.",
+    href: "/admin/danisan-basvurulari",
+  },
+  {
+    label: "Ödeme Yönetimi",
+    description: "Ödeme, komisyon ve uzman paylarını kontrol et.",
+    href: "/admin/payments",
+  },
+];
+
 function buildAdminUrl(path: string, adminToken: string) {
   if (!adminToken) return path;
 
@@ -89,6 +115,8 @@ function getActivityTone(type: string) {
   if (type === "payment") return "bg-emerald-50 text-emerald-700 ring-emerald-100";
   if (type === "review") return "bg-amber-50 text-amber-700 ring-amber-100";
   if (type === "expert") return "bg-indigo-50 text-indigo-700 ring-indigo-100";
+  if (type === "client") return "bg-sky-50 text-sky-700 ring-sky-100";
+
   return "bg-slate-100 text-slate-700 ring-slate-200";
 }
 
@@ -101,7 +129,7 @@ function AdminDashboardContent() {
   const [notice, setNotice] = useState("");
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
-  const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
+  const [quickLinks, setQuickLinks] = useState<QuickLink[]>(fallbackQuickLinks);
 
   const fetchDashboard = useCallback(
     async (mode: "initial" | "refresh" = "refresh") => {
@@ -131,11 +159,11 @@ function AdminDashboardContent() {
 
         setStats(data.stats || emptyStats);
         setRecentActivities(data.recentActivities || []);
-        setQuickLinks(data.quickLinks || []);
+        setQuickLinks(data.quickLinks?.length ? data.quickLinks : fallbackQuickLinks);
       } catch (error) {
         setStats(emptyStats);
         setRecentActivities([]);
-        setQuickLinks([]);
+        setQuickLinks(fallbackQuickLinks);
         setNotice(error instanceof Error ? error.message : "Dashboard verileri alınamadı.");
       } finally {
         setLoading(false);
@@ -155,16 +183,19 @@ function AdminDashboardContent() {
         label: "Uzman Onay Kuyruğu",
         value: stats.pendingExperts,
         description: stats.pendingExperts > 0 ? "İncelenmesi gereken başvuru var" : "Kuyruk temiz",
+        href: "/admin/uzman-basvurulari",
       },
       {
         label: "Yorum Moderasyonu",
         value: stats.pendingReviews,
         description: stats.pendingReviews > 0 ? "Bekleyen yorum var" : "Bekleyen yorum yok",
+        href: "/admin/reviews",
       },
       {
         label: "Tamamlanan Seans",
         value: stats.completedSessions,
         description: `${stats.totalSessions} toplam seans içinde`,
+        href: "/admin/conversations",
       },
     ],
     [stats]
@@ -177,13 +208,14 @@ function AdminDashboardContent() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
-                Mindora Admin Operations
+                Mindora Admin
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                 Operasyon Merkezi
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Uzman başvuruları, danışan akışı, ödeme performansı, seanslar ve yorum moderasyonunu tek ekrandan takip edin.
+                Günlük operasyon için eski admin akışını ana merkez olarak kullan; özet, gelir,
+                seans ve yorum metriklerini bu ekrandan takip et.
               </p>
             </div>
 
@@ -197,10 +229,10 @@ function AdminDashboardContent() {
                 {loading || refreshing ? "Yükleniyor..." : "Yenile"}
               </button>
               <Link
-                href={buildAdminUrl("/admin/reviews", adminToken)}
+                href={buildAdminUrl("/admin/uzman-basvurulari", adminToken)}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
               >
-                Yorum Moderasyonu
+                Ana Operasyon Paneli
               </Link>
             </div>
           </div>
@@ -212,6 +244,24 @@ function AdminDashboardContent() {
             <p className="mt-1 text-sm font-semibold">{notice}</p>
           </section>
         ) : null}
+
+        <section className="grid gap-4 lg:grid-cols-3">
+          {primaryActions.map((action) => (
+            <Link
+              key={action.href}
+              href={buildAdminUrl(action.href, adminToken)}
+              className="group rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lg"
+            >
+              <p className="text-lg font-black text-slate-950 group-hover:text-indigo-700">
+                {action.label}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-500">{action.description}</p>
+              <span className="mt-5 inline-flex text-sm font-black text-indigo-700">
+                Aç →
+              </span>
+            </Link>
+          ))}
+        </section>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <SummaryCard title="Toplam Uzman" value={String(stats.totalExperts)} description={`${stats.activeExperts} aktif uzman`} />
@@ -234,7 +284,11 @@ function AdminDashboardContent() {
 
             <div className="mt-5 space-y-3">
               {healthItems.map((item) => (
-                <div key={item.label} className="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                <Link
+                  key={item.label}
+                  href={buildAdminUrl(item.href, adminToken)}
+                  className="block rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:ring-indigo-200"
+                >
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-black text-slate-800">{item.label}</p>
@@ -244,7 +298,7 @@ function AdminDashboardContent() {
                       {item.value}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </article>
@@ -325,7 +379,15 @@ function AdminDashboardContent() {
   );
 }
 
-function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
+function SummaryCard({
+  title,
+  value,
+  description,
+}: {
+  title: string;
+  value: string;
+  description: string;
+}) {
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <p className="text-sm font-bold text-slate-500">{title}</p>
