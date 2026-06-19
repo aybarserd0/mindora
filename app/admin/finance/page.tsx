@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import AdminHeader from "@/components/AdminHeader";
 
 type FinanceStatus = "all" | "paid" | "pending" | "refunded" | "cancelled";
 
@@ -213,17 +214,19 @@ function AdminFinanceContent() {
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
+        <AdminHeader />
+
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
-                Mindora Admin Finance
+                Yönetim Merkezi
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                 Gelir ve Komisyon Yönetimi
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Ödemeleri, Mindora komisyonunu, uzman paylarını ve iade/iptal durumlarını tek ekrandan takip edin.
+                Ödemeleri, Mindora komisyonunu, uzman paylarını, iade ve iptal durumlarını tek ekrandan takip et.
               </p>
             </div>
 
@@ -240,7 +243,7 @@ function AdminFinanceContent() {
                 href={buildAdminUrl("/admin", adminToken)}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
               >
-                Admin Dashboard
+                Yönetim Merkezi
               </Link>
             </div>
           </div>

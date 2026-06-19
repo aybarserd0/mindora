@@ -1,149 +1,142 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useState } from 'react'
-import AdminHeader from '@/components/AdminHeader'
+import { useCallback, useEffect, useMemo, useState } from "react";
+import AdminHeader from "@/components/AdminHeader";
 
-type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded'
-type PayoutStatus = 'unpaid' | 'scheduled' | 'paid' | 'blocked'
+type PaymentStatus = "pending" | "paid" | "failed" | "cancelled" | "refunded";
+type PayoutStatus = "unpaid" | "scheduled" | "paid" | "blocked";
+type PaymentFilter = "all" | PaymentStatus;
 
 type Payment = {
-  id: string
-  client_id: string | null
-  expert_id: string | null
-  amount: number
-  commission_amount: number
-  expert_amount: number
-  iyzico_token: string | null
-  iyzico_payment_id: string | null
-  iyzico_conversation_id: string | null
-  payment_page_url?: string | null
-  status: PaymentStatus
-  expert_payout_status: PayoutStatus | null
-  expert_payout_paid_at: string | null
-  created_at: string
+  id: string;
+  client_id: string | null;
+  expert_id: string | null;
+  amount: number;
+  commission_amount: number;
+  expert_amount: number;
+  iyzico_token: string | null;
+  iyzico_payment_id: string | null;
+  iyzico_conversation_id: string | null;
+  payment_page_url?: string | null;
+  status: PaymentStatus;
+  expert_payout_status: PayoutStatus | null;
+  expert_payout_paid_at: string | null;
+  created_at: string;
   client_applications?: {
-    id: string
-    name: string | null
-    email: string | null
-    phone: string | null
-  } | null
+    id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
   experts?: {
-    id: string
-    name: string | null
-    email: string | null
-  } | null
-}
+    id: string;
+    name: string | null;
+    email: string | null;
+  } | null;
+};
+
+const paymentFilters: Array<{ value: PaymentFilter; label: string }> = [
+  { value: "all", label: "Tümü" },
+  { value: "pending", label: "Bekliyor" },
+  { value: "paid", label: "Ödendi" },
+  { value: "failed", label: "Başarısız" },
+  { value: "cancelled", label: "İptal" },
+  { value: "refunded", label: "İade" },
+];
 
 function formatMoney(value: number | null | undefined) {
-  const numberValue = Number(value)
+  const numberValue = Number(value);
 
-  if (!Number.isFinite(numberValue)) return '-'
+  if (!Number.isFinite(numberValue)) return "-";
 
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
     maximumFractionDigits: 0,
-  }).format(numberValue)
+  }).format(numberValue);
 }
 
-function formatDate(date: string | null | undefined) {
-  if (!date) return '-'
+function formatDate(value: string | null | undefined) {
+  if (!value) return "-";
 
-  try {
-    return new Intl.DateTimeFormat('tr-TR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date))
-  } catch {
-    return '-'
-  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function getStatusLabel(status: PaymentStatus) {
-  switch (status) {
-    case 'pending':
-      return 'Bekliyor'
-    case 'paid':
-      return 'Ödendi'
-    case 'failed':
-      return 'Başarısız'
-    case 'cancelled':
-      return 'İptal'
-    case 'refunded':
-      return 'İade'
-    default:
-      return status
-  }
+  const labels: Record<PaymentStatus, string> = {
+    pending: "Bekliyor",
+    paid: "Ödendi",
+    failed: "Başarısız",
+    cancelled: "İptal",
+    refunded: "İade",
+  };
+
+  return labels[status] || "Bilinmiyor";
 }
 
 function getStatusStyle(status: PaymentStatus) {
-  switch (status) {
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800 ring-yellow-200'
-    case 'paid':
-      return 'bg-green-100 text-green-800 ring-green-200'
-    case 'failed':
-      return 'bg-red-100 text-red-800 ring-red-200'
-    case 'cancelled':
-      return 'bg-gray-100 text-gray-700 ring-gray-200'
-    case 'refunded':
-      return 'bg-blue-100 text-blue-800 ring-blue-200'
-    default:
-      return 'bg-gray-100 text-gray-700 ring-gray-200'
-  }
+  const styles: Record<PaymentStatus, string> = {
+    pending: "bg-amber-50 text-amber-800 ring-amber-100",
+    paid: "bg-emerald-50 text-emerald-800 ring-emerald-100",
+    failed: "bg-rose-50 text-rose-800 ring-rose-100",
+    cancelled: "bg-slate-100 text-slate-700 ring-slate-200",
+    refunded: "bg-sky-50 text-sky-800 ring-sky-100",
+  };
+
+  return styles[status] || "bg-slate-100 text-slate-700 ring-slate-200";
 }
 
 function getPayoutLabel(status: PayoutStatus | null) {
-  switch (status) {
-    case 'paid':
-      return 'Uzmana Ödendi'
-    case 'scheduled':
-      return 'Planlandı'
-    case 'blocked':
-      return 'Blokeli'
-    case 'unpaid':
-    default:
-      return 'Ödenmedi'
-  }
+  if (status === "paid") return "Uzmana Ödendi";
+  if (status === "scheduled") return "Planlandı";
+  if (status === "blocked") return "Blokeli";
+
+  return "Ödenmedi";
 }
 
 function getPayoutStyle(status: PayoutStatus | null) {
-  switch (status) {
-    case 'paid':
-      return 'bg-green-100 text-green-800 ring-green-200'
-    case 'scheduled':
-      return 'bg-blue-100 text-blue-800 ring-blue-200'
-    case 'blocked':
-      return 'bg-red-100 text-red-800 ring-red-200'
-    case 'unpaid':
-    default:
-      return 'bg-purple-100 text-purple-800 ring-purple-200'
-  }
+  if (status === "paid") return "bg-emerald-50 text-emerald-800 ring-emerald-100";
+  if (status === "scheduled") return "bg-sky-50 text-sky-800 ring-sky-100";
+  if (status === "blocked") return "bg-rose-50 text-rose-800 ring-rose-100";
+
+  return "bg-violet-50 text-violet-800 ring-violet-100";
 }
 
 function safeText(value: string | null | undefined) {
-  return value && value.trim() ? value : '-'
+  return value && value.trim() ? value : "-";
+}
+
+function normalizeText(value: unknown) {
+  return String(value || "").trim().toLowerCase();
 }
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<Payment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [filter, setFilter] = useState<'all' | PaymentStatus>('all')
-  const [search, setSearch] = useState('')
-  const [payoutLoadingId, setPayoutLoadingId] = useState<string | null>(null)
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState<PaymentFilter>("all");
+  const [search, setSearch] = useState("");
+  const [payoutLoadingId, setPayoutLoadingId] = useState<string | null>(null);
 
   const filteredPayments = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
+    const keyword = normalizeText(search);
 
     return payments.filter((payment) => {
-      const statusMatch = filter === 'all' || payment.status === filter
+      const statusMatch = filter === "all" || payment.status === filter;
 
       const text = [
         payment.id,
+        payment.payment_page_url,
+        payment.iyzico_token,
         payment.iyzico_payment_id,
         payment.iyzico_conversation_id,
         payment.client_applications?.name,
@@ -155,25 +148,23 @@ export default function PaymentsPage() {
         payment.expert_payout_status,
       ]
         .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
+        .join(" ")
+        .toLowerCase();
 
-      const searchMatch = !keyword || text.includes(keyword)
-
-      return statusMatch && searchMatch
-    })
-  }, [payments, filter, search])
+      return statusMatch && (!keyword || text.includes(keyword));
+    });
+  }, [payments, filter, search]);
 
   const summary = useMemo(() => {
-    const paidPayments = payments.filter((payment) => payment.status === 'paid')
-    const pendingPayments = payments.filter((payment) => payment.status === 'pending')
-    const failedPayments = payments.filter((payment) => payment.status === 'failed')
+    const paidPayments = payments.filter((payment) => payment.status === "paid");
+    const pendingPayments = payments.filter((payment) => payment.status === "pending");
+    const failedPayments = payments.filter((payment) => payment.status === "failed");
     const unpaidPayouts = paidPayments.filter(
-      (payment) => payment.expert_payout_status !== 'paid'
-    )
+      (payment) => payment.expert_payout_status !== "paid"
+    );
     const paidPayouts = paidPayments.filter(
-      (payment) => payment.expert_payout_status === 'paid'
-    )
+      (payment) => payment.expert_payout_status === "paid"
+    );
 
     return {
       totalCount: payments.length,
@@ -201,326 +192,334 @@ export default function PaymentsPage() {
         (sum, payment) => sum + Number(payment.expert_amount || 0),
         0
       ),
-    }
-  }, [payments])
+    };
+  }, [payments]);
 
-  async function fetchPayments() {
+  const fetchPayments = useCallback(async () => {
     try {
-      setLoading(true)
-      setError('')
+      setLoading(true);
+      setError("");
 
-      const res = await fetch('/api/admin/payments', { cache: 'no-store' })
-      const data = await res.json()
+      const response = await fetch("/api/admin/payments", {
+        method: "GET",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
 
-      if (!res.ok || !data.ok) {
-        setError(data.error || 'Ödemeler alınamadı.')
-        return
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        payments?: Payment[];
+        error?: string;
+      };
+
+      if (!response.ok || data.ok === false) {
+        setError(data.error || "Ödemeler alınamadı.");
+        return;
       }
 
-      setPayments(data.payments || [])
+      setPayments(Array.isArray(data.payments) ? data.payments : []);
     } catch {
-      setError('Sunucuya bağlanırken hata oluştu.')
+      setError("Sunucuya bağlanırken hata oluştu.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, []);
 
   async function markPayoutPaid(paymentId: string) {
     const confirmed = window.confirm(
-      'Bu uzman payını ödendi olarak işaretlemek istiyor musun?'
-    )
+      "Bu uzman payını ödendi olarak işaretlemek istiyor musun?"
+    );
 
-    if (!confirmed) return
+    if (!confirmed) return;
 
     try {
-      setPayoutLoadingId(paymentId)
+      setPayoutLoadingId(paymentId);
 
-      const res = await fetch('/api/admin/payments/payout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/payments/payout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ paymentId }),
-      })
+      });
 
-      const data = await res.json()
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
 
-      if (!res.ok || !data.ok) {
-        alert(data.error || 'Uzman payout güncellenemedi.')
-        return
+      if (!response.ok || data.ok === false) {
+        window.alert(data.error || "Uzman ödeme durumu güncellenemedi.");
+        return;
       }
 
-      await fetchPayments()
+      await fetchPayments();
     } catch {
-      alert('Uzman payout işlemi sırasında hata oluştu.')
+      window.alert("Uzman ödeme işlemi sırasında hata oluştu.");
     } finally {
-      setPayoutLoadingId(null)
+      setPayoutLoadingId(null);
     }
   }
 
   useEffect(() => {
-    fetchPayments()
-  }, [])
+    void fetchPayments();
+  }, [fetchPayments]);
 
   return (
-    <main className="min-h-screen bg-[#f7f3ee] px-6 py-10 text-[#171717]">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
+      <div className="mx-auto max-w-7xl space-y-6">
         <AdminHeader />
 
-        <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/70 p-6 shadow-sm">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
-                Finans Yönetimi
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+                Yönetim Merkezi
               </p>
-
-              <h1 className="mt-2 text-3xl font-black text-[#2b2118]">
-                Ödemeler
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                Ödeme Yönetimi
               </h1>
-
-              <p className="mt-2 max-w-2xl text-[#6b5c4d]">
-                Danışan ödemelerini, Mindora komisyonunu, uzman paylarını ve
-                payout durumlarını tek panelden takip et.
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+                Danışan ödemelerini, Mindora komisyonunu, uzman paylarını ve uzman ödeme
+                durumlarını tek ekrandan takip et.
               </p>
             </div>
 
             <button
-              onClick={fetchPayments}
+              type="button"
+              onClick={() => void fetchPayments()}
               disabled={loading}
-              className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Yenile
+              {loading ? "Yükleniyor..." : "Yenile"}
             </button>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Ödenen Toplam
-              </p>
-              <p className="mt-2 text-2xl font-black text-[#2b2118]">
-                {formatMoney(summary.paidAmount)}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Başarılı ödeme: {summary.paidCount}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Mindora Komisyonu
-              </p>
-              <p className="mt-2 text-2xl font-black text-green-700">
-                {formatMoney(summary.paidCommission)}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Sadece paid ödemeler
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Uzman Payı
-              </p>
-              <p className="mt-2 text-2xl font-black text-purple-700">
-                {formatMoney(summary.paidExpertAmount)}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Toplam uzman hakkı
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Uzmana Ödenecek
-              </p>
-              <p className="mt-2 text-2xl font-black text-orange-700">
-                {formatMoney(summary.unpaidPayoutAmount)}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Payout bekleyen
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-black/5">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
-                Bekleyen Ödeme
-              </p>
-              <p className="mt-2 text-2xl font-black text-yellow-700">
-                {formatMoney(summary.pendingAmount)}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
-                Pending: {summary.pendingCount}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            {(['all', 'pending', 'paid', 'failed', 'cancelled', 'refunded'] as const).map(
-              (status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilter(status)}
-                  className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
-                    filter === status
-                      ? 'bg-black text-white'
-                      : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
-                  }`}
-                >
-                  {status === 'all' ? 'Tümü' : getStatusLabel(status)}
-                </button>
-              )
-            )}
-          </div>
-
-          <div className="mt-5">
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Danışan, uzman, e-posta, payment id, payout veya iyzico id ara..."
-              className="h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
-            />
           </div>
         </section>
 
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <SummaryCard title="Ödenen Toplam" value={formatMoney(summary.paidAmount)} description={`Başarılı ödeme: ${summary.paidCount}`} />
+          <SummaryCard title="Mindora Komisyonu" value={formatMoney(summary.paidCommission)} description="Sadece ödenen işlemler" />
+          <SummaryCard title="Uzman Payı" value={formatMoney(summary.paidExpertAmount)} description="Toplam uzman hakkı" />
+          <SummaryCard title="Uzmana Ödenecek" value={formatMoney(summary.unpaidPayoutAmount)} description="Ödeme bekleyen uzman payı" />
+          <SummaryCard title="Bekleyen Ödeme" value={formatMoney(summary.pendingAmount)} description={`Bekleyen işlem: ${summary.pendingCount}`} />
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          {paymentFilters.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => setFilter(item.value)}
+              className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 ${
+                filter === item.value
+                  ? "bg-slate-950 text-white ring-slate-950"
+                  : "bg-white text-slate-700 ring-slate-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </section>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Danışan, uzman, e-posta, ödeme numarası, ödeme linki veya iyzico numarası ara..."
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+          />
+        </section>
+
         {loading ? (
-          <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-[#6b5c4d]">Ödemeler yükleniyor...</p>
-          </div>
+          <StateBox title="Ödemeler yükleniyor" description="Ödeme kayıtları hazırlanıyor." />
         ) : error ? (
-          <div className="mt-8 rounded-3xl bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
-            <p className="font-bold text-red-700">{error}</p>
-          </div>
+          <StateBox tone="error" title="Ödemeler alınamadı" description={error} />
         ) : filteredPayments.length === 0 ? (
-          <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-[#6b5c4d]">
-              Bu filtre veya arama için ödeme kaydı bulunmuyor.
-            </p>
-          </div>
+          <StateBox
+            title="Kayıt bulunamadı"
+            description="Bu filtre veya arama için ödeme kaydı bulunmuyor."
+          />
         ) : (
-          <div className="mt-8 overflow-hidden rounded-3xl border border-[#e5d9cc] bg-white shadow-sm">
+          <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="bg-[#faf7f2] text-xs uppercase tracking-[0.16em] text-[#8a7662]">
+                <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
                   <tr>
                     <th className="px-5 py-4">Durum</th>
-                    <th className="px-5 py-4">Payout</th>
+                    <th className="px-5 py-4">Uzman Ödemesi</th>
                     <th className="px-5 py-4">Danışan</th>
                     <th className="px-5 py-4">Uzman</th>
                     <th className="px-5 py-4">Tutar</th>
                     <th className="px-5 py-4">Komisyon</th>
                     <th className="px-5 py-4">Uzman Payı</th>
                     <th className="px-5 py-4">Tarih</th>
-                    <th className="px-5 py-4">iyzico</th>
+                    <th className="px-5 py-4">Kayıt Bilgisi</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-[#eee3d8]">
+                <tbody className="divide-y divide-slate-100">
                   {filteredPayments.map((payment) => (
-                    <tr key={payment.id} className="align-top transition hover:bg-[#faf7f2]">
+                    <tr key={payment.id} className="align-top transition hover:bg-slate-50">
                       <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusStyle(
-                            payment.status
-                          )}`}
-                        >
+                        <StatusPill className={getStatusStyle(payment.status)}>
                           {getStatusLabel(payment.status)}
-                        </span>
+                        </StatusPill>
                       </td>
 
                       <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${getPayoutStyle(
-                            payment.expert_payout_status
-                          )}`}
-                        >
+                        <StatusPill className={getPayoutStyle(payment.expert_payout_status)}>
                           {getPayoutLabel(payment.expert_payout_status)}
-                        </span>
+                        </StatusPill>
 
-                        {payment.expert_payout_paid_at && (
-                          <p className="mt-2 text-xs font-semibold text-[#6b5c4d]">
+                        {payment.expert_payout_paid_at ? (
+                          <p className="mt-2 text-xs font-semibold text-slate-500">
                             {formatDate(payment.expert_payout_paid_at)}
                           </p>
-                        )}
+                        ) : null}
 
-                        {payment.status === 'paid' &&
-                          payment.expert_payout_status !== 'paid' && (
-                            <button
-                              disabled={payoutLoadingId === payment.id}
-                              onClick={() => markPayoutPaid(payment.id)}
-                              className="mt-3 rounded-full bg-purple-700 px-3 py-2 text-xs font-black text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              {payoutLoadingId === payment.id
-                                ? 'İşleniyor...'
-                                : 'Uzmana Ödendi'}
-                            </button>
-                          )}
+                        {payment.status === "paid" && payment.expert_payout_status !== "paid" ? (
+                          <button
+                            type="button"
+                            disabled={payoutLoadingId === payment.id}
+                            onClick={() => markPayoutPaid(payment.id)}
+                            className="mt-3 rounded-2xl bg-violet-700 px-3 py-2 text-xs font-black text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {payoutLoadingId === payment.id ? "İşleniyor..." : "Uzmana Ödendi"}
+                          </button>
+                        ) : null}
                       </td>
 
                       <td className="px-5 py-4">
-                        <p className="font-black text-[#2b2118]">
+                        <p className="font-black text-slate-950">
                           {safeText(payment.client_applications?.name)}
                         </p>
-                        <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
+                        <p className="mt-1 text-xs font-semibold text-slate-500">
                           {safeText(payment.client_applications?.email)}
                         </p>
-                        <p className="mt-1 text-xs text-[#8a7662]">
+                        <p className="mt-1 text-xs text-slate-400">
                           {safeText(payment.client_applications?.phone)}
                         </p>
                       </td>
 
                       <td className="px-5 py-4">
-                        <p className="font-black text-[#2b2118]">
+                        <p className="font-black text-slate-950">
                           {safeText(payment.experts?.name)}
                         </p>
-                        <p className="mt-1 text-xs font-semibold text-[#6b5c4d]">
+                        <p className="mt-1 text-xs font-semibold text-slate-500">
                           {safeText(payment.experts?.email)}
                         </p>
                       </td>
 
-                      <td className="px-5 py-4 font-black text-[#2b2118]">
+                      <td className="px-5 py-4 font-black text-slate-950">
                         {formatMoney(payment.amount)}
                       </td>
 
-                      <td className="px-5 py-4 font-black text-green-700">
+                      <td className="px-5 py-4 font-black text-emerald-700">
                         {formatMoney(payment.commission_amount)}
                       </td>
 
-                      <td className="px-5 py-4 font-black text-purple-700">
+                      <td className="px-5 py-4 font-black text-violet-700">
                         {formatMoney(payment.expert_amount)}
                       </td>
 
-                      <td className="px-5 py-4 text-xs font-semibold text-[#6b5c4d]">
+                      <td className="px-5 py-4 text-xs font-semibold text-slate-500">
                         {formatDate(payment.created_at)}
                       </td>
 
                       <td className="px-5 py-4">
-                        <p className="text-xs font-semibold text-[#2b2118]">
-                          Payment ID:
-                        </p>
-                        <p className="max-w-[220px] break-all text-xs text-[#6b5c4d]">
+                        <p className="text-xs font-black text-slate-800">Ödeme ID</p>
+                        <p className="max-w-[220px] break-all text-xs text-slate-500">
                           {payment.id}
                         </p>
 
-                        <p className="mt-2 text-xs font-semibold text-[#2b2118]">
-                          iyzico:
-                        </p>
-                        <p className="max-w-[220px] break-all text-xs text-[#6b5c4d]">
+                        <p className="mt-2 text-xs font-black text-slate-800">iyzico</p>
+                        <p className="max-w-[220px] break-all text-xs text-slate-500">
                           {safeText(payment.iyzico_payment_id)}
                         </p>
+
+                        {payment.payment_page_url ? (
+                          <a
+                            href={payment.payment_page_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-3 inline-flex rounded-2xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 transition hover:bg-indigo-100"
+                          >
+                            Ödeme Linkini Aç
+                          </a>
+                        ) : null}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
         )}
 
-        <div className="mt-6 rounded-2xl bg-white/70 p-4 text-xs font-semibold text-[#6b5c4d] ring-1 ring-black/5">
-          Toplam kayıt: {summary.totalCount} • Başarılı: {summary.paidCount} •
-          Bekleyen: {summary.pendingCount} • Başarısız: {summary.failedCount} •
-          Uzmana ödenecek: {formatMoney(summary.unpaidPayoutAmount)}
-        </div>
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 text-xs font-semibold text-slate-500 shadow-sm">
+          Toplam kayıt: {summary.totalCount} • Başarılı: {summary.paidCount} • Bekleyen:{" "}
+          {summary.pendingCount} • Başarısız: {summary.failedCount} • Uzmana ödenecek:{" "}
+          {formatMoney(summary.unpaidPayoutAmount)} • Uzmana ödenen:{" "}
+          {formatMoney(summary.paidPayoutAmount)}
+        </section>
       </div>
     </main>
-  )
+  );
+}
+
+function SummaryCard({
+  title,
+  value,
+  description,
+}: {
+  title: string;
+  value: string;
+  description: string;
+}) {
+  return (
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <p className="mt-3 break-words text-2xl font-black tracking-tight text-slate-950">
+        {value}
+      </p>
+      <p className="mt-1 text-sm text-slate-500">{description}</p>
+    </article>
+  );
+}
+
+function StatusPill({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className: string;
+}) {
+  return (
+    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+function StateBox({
+  title,
+  description,
+  tone = "neutral",
+}: {
+  title: string;
+  description: string;
+  tone?: "neutral" | "error";
+}) {
+  const className =
+    tone === "error"
+      ? "border-rose-100 bg-rose-50 text-rose-700"
+      : "border-slate-200 bg-white text-slate-600";
+
+  return (
+    <section className={`rounded-[2rem] border p-8 text-center shadow-sm ${className}`}>
+      <p className="text-sm font-black">{title}</p>
+      <p className="mt-2 text-sm font-semibold">{description}</p>
+    </section>
+  );
 }

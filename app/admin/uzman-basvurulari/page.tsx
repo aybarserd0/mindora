@@ -1,94 +1,104 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useState } from 'react'
-import AdminHeader from '@/components/AdminHeader'
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import AdminHeader from "@/components/AdminHeader";
 
-type ExpertStatus = 'pending' | 'approved' | 'rejected' | 'passive'
+type ExpertStatus = "pending" | "approved" | "rejected" | "passive";
+type StatusFilter = "all" | ExpertStatus;
 
 type Expert = {
-  id: string
-  name: string
-  phone: string | null
-  email: string
-  title: string | null
-  areas: string | null
-  experience: string | null
-  online: string | null
-  price: string | null
-  availability: string | null
-  expectation: string | null
-  note: string | null
-  status: ExpertStatus
-  created_at: string
-}
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string;
+  title: string | null;
+  areas: string | null;
+  experience: string | null;
+  online: string | null;
+  price: string | null;
+  availability: string | null;
+  expectation: string | null;
+  note: string | null;
+  status: ExpertStatus;
+  created_at: string;
+};
+
+const statusOptions: Array<{ value: StatusFilter; label: string }> = [
+  { value: "all", label: "Tümü" },
+  { value: "pending", label: "Beklemede" },
+  { value: "approved", label: "Onaylandı" },
+  { value: "rejected", label: "Reddedildi" },
+  { value: "passive", label: "Pasif" },
+];
 
 function getStatusLabel(status: ExpertStatus) {
-  switch (status) {
-    case 'pending':
-      return 'Beklemede'
-    case 'approved':
-      return 'Onaylandı'
-    case 'rejected':
-      return 'Reddedildi'
-    case 'passive':
-      return 'Pasif'
-  }
+  const labels: Record<ExpertStatus, string> = {
+    pending: "Beklemede",
+    approved: "Onaylandı",
+    rejected: "Reddedildi",
+    passive: "Pasif",
+  };
+
+  return labels[status] || "Bilinmiyor";
 }
 
 function getStatusStyle(status: ExpertStatus) {
-  switch (status) {
-    case 'approved':
-      return 'bg-green-100 text-green-700 ring-green-200'
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-700 ring-yellow-200'
-    case 'rejected':
-      return 'bg-red-100 text-red-700 ring-red-200'
-    case 'passive':
-      return 'bg-gray-200 text-gray-700 ring-gray-300'
-  }
+  const styles: Record<ExpertStatus, string> = {
+    approved: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+    pending: "bg-amber-50 text-amber-700 ring-amber-100",
+    rejected: "bg-rose-50 text-rose-700 ring-rose-100",
+    passive: "bg-slate-100 text-slate-700 ring-slate-200",
+  };
+
+  return styles[status] || "bg-slate-100 text-slate-700 ring-slate-200";
 }
 
-function formatDate(date: string) {
-  try {
-    return new Intl.DateTimeFormat('tr-TR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date))
-  } catch {
-    return '-'
-  }
+function formatDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Tarih bilinmiyor";
+
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function safeText(value: string | null | undefined) {
-  return value && value.trim() ? value : '-'
+  return value && value.trim() ? value : "-";
+}
+
+function normalizeText(value: unknown) {
+  return String(value || "").trim().toLowerCase();
 }
 
 export default function UzmanBasvurulariPage() {
-  const [experts, setExperts] = useState<Expert[]>([])
-  const [loading, setLoading] = useState(true)
-  const [updatingId, setUpdatingId] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | ExpertStatus>('all')
-  const [search, setSearch] = useState('')
-  const [error, setError] = useState('')
+  const [experts, setExperts] = useState<Expert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [search, setSearch] = useState("");
+  const [error, setError] = useState("");
 
   const counts = useMemo(() => {
     return {
       all: experts.length,
-      pending: experts.filter((expert) => expert.status === 'pending').length,
-      approved: experts.filter((expert) => expert.status === 'approved').length,
-      rejected: experts.filter((expert) => expert.status === 'rejected').length,
-      passive: experts.filter((expert) => expert.status === 'passive').length,
-    }
-  }, [experts])
+      pending: experts.filter((expert) => expert.status === "pending").length,
+      approved: experts.filter((expert) => expert.status === "approved").length,
+      rejected: experts.filter((expert) => expert.status === "rejected").length,
+      passive: experts.filter((expert) => expert.status === "passive").length,
+    };
+  }, [experts]);
 
   const filteredExperts = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
+    const keyword = normalizeText(search);
 
     return experts.filter((expert) => {
-      const matchesStatus = filter === 'all' || expert.status === filter
+      const matchesStatus = filter === "all" || expert.status === filter;
 
       const searchableText = [
         expert.name,
@@ -99,182 +109,184 @@ export default function UzmanBasvurulariPage() {
         expert.experience,
         expert.online,
         expert.availability,
+        expert.price,
       ]
         .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
+        .join(" ")
+        .toLowerCase();
 
-      const matchesSearch = !keyword || searchableText.includes(keyword)
+      const matchesSearch = !keyword || searchableText.includes(keyword);
 
-      return matchesStatus && matchesSearch
-    })
-  }, [experts, filter, search])
+      return matchesStatus && matchesSearch;
+    });
+  }, [experts, filter, search]);
 
-  async function fetchExperts() {
+  const fetchExperts = useCallback(async () => {
     try {
-      setLoading(true)
-      setError('')
+      setLoading(true);
+      setError("");
 
-      const res = await fetch('/api/admin/experts', {
-        cache: 'no-store',
-      })
+      const response = await fetch("/api/admin/experts", {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
-      const data = await res.json()
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        experts?: Expert[];
+        error?: string;
+      };
 
-      if (!res.ok || !data.ok) {
-        setError('Uzman başvuruları alınamadı.')
-        return
+      if (!response.ok || data.ok === false) {
+        setError(data.error || "Uzman başvuruları alınamadı.");
+        return;
       }
 
-      setExperts(data.experts || [])
+      setExperts(Array.isArray(data.experts) ? data.experts : []);
     } catch {
-      setError('Sunucuya bağlanırken hata oluştu.')
+      setError("Sunucuya bağlanırken hata oluştu.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, []);
 
   async function updateStatus(id: string, status: ExpertStatus) {
     const confirmText =
-      status === 'approved'
-        ? 'Bu uzmanı onaylamak istiyor musun?'
-        : status === 'rejected'
-          ? 'Bu başvuruyu reddetmek istiyor musun?'
-          : 'Bu uzmanı pasife almak istiyor musun?'
+      status === "approved"
+        ? "Bu uzmanı onaylamak istiyor musun?"
+        : status === "rejected"
+          ? "Bu başvuruyu reddetmek istiyor musun?"
+          : "Bu uzmanı pasife almak istiyor musun?";
 
-    if (!window.confirm(confirmText)) return
+    if (!window.confirm(confirmText)) return;
 
     try {
-      setUpdatingId(id)
+      setUpdatingId(id);
 
-      const res = await fetch('/api/admin/experts/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/experts/status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ id, status }),
-      })
+      });
 
-      const data = await res.json()
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
 
-      if (!res.ok || !data.ok) {
-        alert('Uzman durumu güncellenemedi.')
-        return
+      if (!response.ok || data.ok === false) {
+        window.alert(data.error || "Uzman durumu güncellenemedi.");
+        return;
       }
 
-      await fetchExperts()
+      await fetchExperts();
     } catch {
-      alert('Durum güncellenirken hata oluştu.')
+      window.alert("Durum güncellenirken hata oluştu.");
     } finally {
-      setUpdatingId(null)
+      setUpdatingId(null);
     }
   }
 
   useEffect(() => {
-    fetchExperts()
-  }, [])
+    void fetchExperts();
+  }, [fetchExperts]);
 
   return (
-    <main className="min-h-screen bg-[#f7f3ee] px-6 py-10 text-[#171717]">
-      <div className="mx-auto max-w-6xl">
+    <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
+      <div className="mx-auto max-w-7xl space-y-6">
         <AdminHeader />
 
-        <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/70 p-6 shadow-sm">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
-                Başvuru Yönetimi
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+                Yönetim Merkezi
               </p>
-
-              <h2 className="mt-2 text-3xl font-black text-[#2b2118]">
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                 Uzman Başvuruları
-              </h2>
-
-              <p className="mt-2 max-w-2xl text-[#6b5c4d]">
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
                 Gelen uzman başvurularını incele, onayla, reddet veya pasife al.
-                Onaylanan uzmanlar otomatik olarak uzmanlar sayfasında görünür
-                ve danışan eşleştirmesinde kullanılabilir.
+                Onaylanan uzmanlar uzmanlar sayfasında görünür ve danışan
+                eşleştirme sürecinde kullanılabilir.
               </p>
             </div>
 
-            <button
-              onClick={fetchExperts}
-              disabled={loading}
-              className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Yenile
-            </button>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <button
-              onClick={() => setFilter('all')}
-              className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
-                filter === 'all'
-                  ? 'bg-black text-white'
-                  : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
-              }`}
-            >
-              Tümü ({counts.all})
-            </button>
-
-            {(['pending', 'approved', 'rejected', 'passive'] as ExpertStatus[]).map(
-              (status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilter(status)}
-                  className={`rounded-2xl px-4 py-3 text-sm font-bold ring-1 ring-black/5 transition ${
-                    filter === status
-                      ? 'bg-black text-white'
-                      : 'bg-white text-[#3c3128] hover:bg-[#f0e8df]'
-                  }`}
-                >
-                  {getStatusLabel(status)} ({counts[status]})
-                </button>
-              )
-            )}
-          </div>
-
-          <div className="mt-5">
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="İsim, e-posta, telefon, ünvan veya uzmanlık alanı ara..."
-              className="h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
-            />
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/admin"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+              >
+                Yönetim Merkezi
+              </Link>
+              <button
+                type="button"
+                onClick={() => void fetchExperts()}
+                disabled={loading}
+                className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Yükleniyor..." : "Yenile"}
+              </button>
+            </div>
           </div>
         </section>
 
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {statusOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setFilter(option.value)}
+              className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 ${
+                filter === option.value
+                  ? "bg-slate-950 text-white ring-slate-950"
+                  : "bg-white text-slate-700 ring-slate-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm"
+              }`}
+            >
+              {option.label} ({counts[option.value]})
+            </button>
+          ))}
+        </section>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="İsim, e-posta, telefon, unvan veya uzmanlık alanı ara..."
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+          />
+        </section>
+
         {loading ? (
-          <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-[#6b5c4d]">
-              Uzman başvuruları yükleniyor...
-            </p>
-          </div>
+          <StateBox title="Uzman başvuruları yükleniyor" description="Kayıtlar hazırlanıyor." />
         ) : error ? (
-          <div className="mt-8 rounded-3xl bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
-            <p className="font-bold text-red-700">{error}</p>
-          </div>
+          <StateBox tone="error" title="Başvurular alınamadı" description={error} />
         ) : filteredExperts.length === 0 ? (
-          <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-[#6b5c4d]">
-              Bu filtre veya arama için uzman başvurusu bulunmuyor.
-            </p>
-          </div>
+          <StateBox
+            title="Kayıt bulunamadı"
+            description="Bu filtre veya arama için uzman başvurusu bulunmuyor."
+          />
         ) : (
-          <div className="mt-8 grid gap-5">
+          <section className="grid gap-5">
             {filteredExperts.map((expert) => (
               <article
                 key={expert.id}
-                className="rounded-3xl border border-[#e5d9cc] bg-white p-6 shadow-sm transition hover:shadow-md"
+                className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-xl font-black text-[#2b2118]">
+                      <h2 className="text-xl font-black text-slate-950">
                         {expert.name}
-                      </h3>
-
+                      </h2>
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${getStatusStyle(
+                        className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusStyle(
                           expert.status
                         )}`}
                       >
@@ -282,82 +294,112 @@ export default function UzmanBasvurulariPage() {
                       </span>
                     </div>
 
-                    <p className="mt-1 text-sm text-[#6b5c4d]">
+                    <p className="mt-2 text-sm font-semibold text-slate-600">
                       {safeText(expert.title)} • {safeText(expert.areas)}
                     </p>
 
-                    <p className="mt-2 text-xs font-semibold text-[#8a7662]">
+                    <p className="mt-2 text-xs font-bold text-slate-400">
                       Başvuru tarihi: {formatDate(expert.created_at)}
                     </p>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     <button
-                      disabled={updatingId === expert.id}
-                      onClick={() => updateStatus(expert.id, 'approved')}
-                      className="rounded-full bg-green-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      type="button"
+                      disabled={updatingId === expert.id || expert.status === "approved"}
+                      onClick={() => updateStatus(expert.id, "approved")}
+                      className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Onayla
                     </button>
 
                     <button
-                      disabled={updatingId === expert.id}
-                      onClick={() => updateStatus(expert.id, 'rejected')}
-                      className="rounded-full bg-red-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      type="button"
+                      disabled={updatingId === expert.id || expert.status === "rejected"}
+                      onClick={() => updateStatus(expert.id, "rejected")}
+                      className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-black text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Reddet
                     </button>
 
                     <button
-                      disabled={updatingId === expert.id}
-                      onClick={() => updateStatus(expert.id, 'passive')}
-                      className="rounded-full bg-zinc-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      type="button"
+                      disabled={updatingId === expert.id || expert.status === "passive"}
+                      onClick={() => updateStatus(expert.id, "passive")}
+                      className="rounded-2xl bg-slate-700 px-4 py-2 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Pasife Al
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-6 grid gap-3 rounded-2xl bg-[#faf7f2] p-5 text-sm text-[#3c3128] md:grid-cols-2">
-                  <p>
-                    <b>Telefon:</b> {safeText(expert.phone)}
-                  </p>
-                  <p>
-                    <b>E-posta:</b> {safeText(expert.email)}
-                  </p>
-                  <p>
-                    <b>Ünvan:</b> {safeText(expert.title)}
-                  </p>
-                  <p>
-                    <b>Uzmanlık Alanları:</b> {safeText(expert.areas)}
-                  </p>
-                  <p>
-                    <b>Deneyim:</b> {safeText(expert.experience)}
-                  </p>
-                  <p>
-                    <b>Online Görüşme:</b> {safeText(expert.online)}
-                  </p>
-                  <p>
-                    <b>Seans Ücreti:</b> {safeText(expert.price)}
-                  </p>
-                  <p>
-                    <b>Müsaitlik:</b> {safeText(expert.availability)}
-                  </p>
-                  <p className="md:col-span-2">
-                    <b>Mindora’dan Beklenti:</b> {safeText(expert.expectation)}
-                  </p>
-                  <p className="md:col-span-2">
-                    <b>Ek Not:</b> {safeText(expert.note)}
-                  </p>
-                  <p className="md:col-span-2 break-all text-xs text-[#8a7662]">
-                    <b>Uzman ID:</b> {expert.id}
+                <div className="mt-6 grid gap-3 rounded-3xl bg-slate-50 p-5 text-sm text-slate-700 ring-1 ring-slate-200 md:grid-cols-2">
+                  <InfoRow label="Telefon" value={safeText(expert.phone)} />
+                  <InfoRow label="E-posta" value={safeText(expert.email)} />
+                  <InfoRow label="Unvan" value={safeText(expert.title)} />
+                  <InfoRow label="Uzmanlık Alanları" value={safeText(expert.areas)} />
+                  <InfoRow label="Deneyim" value={safeText(expert.experience)} />
+                  <InfoRow label="Online Görüşme" value={safeText(expert.online)} />
+                  <InfoRow label="Seans Ücreti" value={safeText(expert.price)} />
+                  <InfoRow label="Müsaitlik" value={safeText(expert.availability)} />
+                  <InfoRow
+                    label="Mindora’dan Beklenti"
+                    value={safeText(expert.expectation)}
+                    className="md:col-span-2"
+                  />
+                  <InfoRow
+                    label="Ek Not"
+                    value={safeText(expert.note)}
+                    className="md:col-span-2"
+                  />
+                  <p className="break-all text-xs font-semibold text-slate-400 md:col-span-2">
+                    <span className="font-black text-slate-500">Uzman ID:</span>{" "}
+                    {expert.id}
                   </p>
                 </div>
               </article>
             ))}
-          </div>
+          </section>
         )}
       </div>
     </main>
-  )
+  );
+}
+
+function InfoRow({
+  label,
+  value,
+  className = "",
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <p className={className}>
+      <span className="font-black text-slate-900">{label}:</span> {value}
+    </p>
+  );
+}
+
+function StateBox({
+  title,
+  description,
+  tone = "neutral",
+}: {
+  title: string;
+  description: string;
+  tone?: "neutral" | "error";
+}) {
+  const className =
+    tone === "error"
+      ? "border-rose-100 bg-rose-50 text-rose-700"
+      : "border-slate-200 bg-white text-slate-600";
+
+  return (
+    <section className={`rounded-[2rem] border p-8 text-center shadow-sm ${className}`}>
+      <p className="text-sm font-black">{title}</p>
+      <p className="mt-2 text-sm font-semibold">{description}</p>
+    </section>
+  );
 }

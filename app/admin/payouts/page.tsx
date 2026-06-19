@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import AdminHeader from "@/components/AdminHeader";
 
 type PayoutStatus = "all" | "pending" | "processing" | "paid" | "cancelled";
 
@@ -202,6 +203,16 @@ function AdminPayoutsContent() {
   const selectedBalance = balances.find((item) => item.expertId === selectedExpertId) || null;
 
   async function createPayout() {
+    if (!selectedExpertId) {
+      setNotice("Ödeme kaydı oluşturmak için uzman seçmelisin.");
+      return;
+    }
+
+    if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+      setNotice("Ödeme tutarı geçerli ve sıfırdan büyük olmalıdır.");
+      return;
+    }
+
     try {
       setActionLoading("create");
       setNotice("");
@@ -276,17 +287,19 @@ function AdminPayoutsContent() {
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
+        <AdminHeader />
+
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
-                Mindora Admin Payouts
+                Yönetim Merkezi
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                 Uzman Ödemeleri
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Uzman hak edişlerini takip edin, ödeme kaydı oluşturun ve ödeme durumlarını yönetin.
+                Uzman hak edişlerini takip et, ödeme kaydı oluştur ve ödeme durumlarını yönet.
               </p>
             </div>
 
@@ -303,7 +316,7 @@ function AdminPayoutsContent() {
                 href={buildAdminUrl("/admin/finance", adminToken)}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
               >
-                Finance
+                Finans Yönetimi
               </Link>
             </div>
           </div>
@@ -327,7 +340,7 @@ function AdminPayoutsContent() {
           <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-black text-slate-950">Yeni Uzman Ödemesi</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Uzman bakiyesine göre manuel ödeme kaydı oluşturun.
+              Uzman bakiyesine göre manuel ödeme kaydı oluştur.
             </p>
 
             <div className="mt-5 grid gap-4">
@@ -387,7 +400,7 @@ function AdminPayoutsContent() {
               <button
                 type="button"
                 onClick={() => void createPayout()}
-                disabled={actionLoading === "create" || !selectedExpertId || !amount}
+                disabled={actionLoading === "create" || !selectedExpertId || !amount || Number(amount) <= 0}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {actionLoading === "create" ? "Oluşturuluyor..." : "Ödeme Kaydı Oluştur"}
@@ -400,7 +413,7 @@ function AdminPayoutsContent() {
               <div>
                 <h2 className="text-xl font-black text-slate-950">Filtrele ve Ara</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Uzman, tutar, not veya ödeme durumuna göre arama yapın.
+                  Uzman, tutar, not veya ödeme durumuna göre arama yap.
                 </p>
               </div>
 

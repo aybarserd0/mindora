@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import AdminHeader from "@/components/AdminHeader";
 
 type ReportStatus = "all" | "open" | "investigating" | "resolved" | "rejected";
 
@@ -208,17 +209,19 @@ function AdminReportsContent() {
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
+        <AdminHeader />
+
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
-                Mindora Admin Reports
+                Yönetim Merkezi
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                 Raporlar ve Güvenlik İncelemeleri
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Danışan ve uzmanlardan gelen sorun bildirimlerini inceleyin, durum atayın ve operasyon notu ekleyin.
+                Danışan ve uzmanlardan gelen sorun bildirimlerini incele, durum ata ve operasyon notu ekle.
               </p>
             </div>
 
@@ -235,7 +238,7 @@ function AdminReportsContent() {
                 href={buildAdminUrl("/admin", adminToken)}
                 className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
               >
-                Admin Dashboard
+                Yönetim Merkezi
               </Link>
             </div>
           </div>
@@ -261,7 +264,7 @@ function AdminReportsContent() {
             <div>
               <h2 className="text-xl font-black text-slate-950">Filtrele ve Ara</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Kategori, kullanıcı tipi, açıklama veya durum bilgisine göre arayın.
+                Kategori, kullanıcı tipi, açıklama veya durum bilgisine göre arama yap.
               </p>
             </div>
 
@@ -390,10 +393,10 @@ function ReportCard({
           </p>
 
           <div className="mt-4 grid gap-2 text-xs font-semibold text-slate-500 md:grid-cols-2">
-            <p>Reporter ID: {report.reporterId || "-"}</p>
-            <p>Reported ID: {report.reportedUserId || "-"}</p>
-            <p>Conversation: {report.conversationId || "-"}</p>
-            <p>Session: {report.sessionId || "-"}</p>
+            <p>Bildiren ID: {report.reporterId || "-"}</p>
+            <p>Bildirilen ID: {report.reportedUserId || "-"}</p>
+            <p>Konuşma: {report.conversationId || "-"}</p>
+            <p>Seans: {report.sessionId || "-"}</p>
           </div>
 
           <label className="mt-4 block">
@@ -416,6 +419,15 @@ function ReportCard({
             >
               Konuşma
             </Link>
+          ) : null}
+
+          {report.status !== "open" ? (
+            <ActionButton
+              label="Açık"
+              loading={actionLoading === `${report.id}:open`}
+              className="bg-rose-600 text-white hover:bg-rose-700"
+              onClick={() => onStatusChange(report.id, "open")}
+            />
           ) : null}
 
           {report.status !== "investigating" ? (
