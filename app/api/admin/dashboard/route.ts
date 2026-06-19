@@ -10,12 +10,10 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 type PaymentRow = {
   id: string;
   amount?: number | string | null;
-  total_amount?: number | string | null;
-  price?: number | string | null;
   commission_amount?: number | string | null;
   expert_amount?: number | string | null;
   status?: string | null;
-  payment_status?: string | null;
+  expert_payout_status?: string | null;
   created_at?: string | null;
 };
 
@@ -35,16 +33,23 @@ type ExpertRow = {
   id: string;
   name?: string | null;
   status?: string | null;
-  account_status?: string | null;
   created_at?: string | null;
 };
 
 type ClientRow = {
   id: string;
   name?: string | null;
-  full_name?: string | null;
   status?: string | null;
   created_at?: string | null;
+};
+
+type RecentActivity = {
+  id: string;
+  type: "expert" | "client" | "payment" | "review";
+  title: string;
+  description: string;
+  createdAt: string | null;
+  href: string;
 };
 
 function jsonError(message: string, status = 400) {
@@ -73,7 +78,10 @@ function normalizeStatus(value: unknown) {
 
 function getMonthStartIso() {
   const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0)).toISOString();
+
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0)
+  ).toISOString();
 }
 
 function isThisMonth(value?: string | null) {
@@ -82,58 +90,80 @@ function isThisMonth(value?: string | null) {
 }
 
 function getPaymentAmount(payment: PaymentRow) {
-  return toNumber(payment.amount ?? payment.total_amount ?? payment.price);
+  return toNumber(payment.amount);
 }
 
 function getCommissionAmount(payment: PaymentRow) {
-  const explicit = toNumber(payment.commission_amount);
+  const explicitCommission = toNumber(payment.commission_amount);
 
-  if (explicit > 0) {
-    return explicit;
+  if (explicitCommission > 0) {
+    return explicitCommission;
   }
 
   return Math.round(getPaymentAmount(payment) * 0.3);
 }
 
 function getExpertNetAmount(payment: PaymentRow) {
-  const explicit = toNumber(payment.expert_amount);
+  const explicitExpertAmount = toNumber(payment.expert_amount);
 
-  if (explicit > 0) {
-    return explicit;
+  if (explicitExpertAmount > 0) {
+    return explicitExpertAmount;
   }
 
   return Math.max(0, getPaymentAmount(payment) - getCommissionAmount(payment));
 }
 
 function isPaid(payment: PaymentRow) {
-  const status = normalizeStatus(payment.payment_status || payment.status);
-  return ["paid", "success", "succeeded", "completed", "complete"].includes(status);
+  const status = normalizeStatus(payment.status);
+
+  return [
+    "paid",
+    "success",
+    "succeeded",
+    "completed",
+    "complete",
+    "odendi",
+    "ödendi",
+  ].includes(status);
+}
+
+function isExpertPayoutPending(payment: PaymentRow) {
+  const payoutStatus = normalizeStatus(payment.expert_payout_status);
+
+  if (!isPaid(payment)) return false;
+
+  return ![
+    "paid",
+    "paid_to_expert",
+    "completed",
+    "complete",
+    "odendi",
+    "ödendi",
+  ].includes(payoutStatus);
 }
 
 function isActiveExpert(expert: ExpertRow) {
   const status = normalizeStatus(expert.status);
-  const accountStatus = normalizeStatus(expert.account_status);
 
-  return ["approved", "active", "aktif", "onaylı", "onayli"].includes(status) ||
-    ["approved", "active", "aktif", "onaylı", "onayli"].includes(accountStatus);
+  return ["approved", "active", "aktif", "onayli", "onaylı"].includes(status);
 }
 
 function isPendingExpert(expert: ExpertRow) {
   const status = normalizeStatus(expert.status);
-  const accountStatus = normalizeStatus(expert.account_status);
 
-  return ["pending", "waiting", "beklemede", "review"].includes(status) ||
-    ["pending", "waiting", "beklemede", "review"].includes(accountStatus);
+  return ["pending", "waiting", "beklemede", "review"].includes(status);
 }
 
-async function assertAdminAccess(req: Request) {
-  const configuredAdminToken = process.env.ADMIN_DASHBOARD_TOKEN || process.env.ADMIN_TOKEN || "";
+function hasAdminAccess(req: Request) {
+  const configuredAdminToken =
+    process.env.ADMIN_DASHBOARD_TOKEN || process.env.ADMIN_TOKEN || "";
+
   const headerToken = req.headers.get("x-admin-token") || "";
   const url = new URL(req.url);
   const queryToken = url.searchParams.get("adminToken") || "";
 
   if (!configuredAdminToken) {
-    return true;
+    return process.env.NODE_ENV !== "production";
   }
 
   return headerToken === configuredAdminToken || queryToken === configuredAdminToken;
@@ -159,11 +189,65 @@ async function safeSelect<T>(
   return (data || []) as T[];
 }
 
+function buildRecentActivities(params: {
+  experts: ExpertRow[];
+  clients: ClientRow[];
+  payments: PaymentRow[];
+  reviews: ReviewRow[];
+}) {
+  const { experts, clients, payments, reviews } = params;
+
+  const activities: RecentActivity[] = [
+    ...experts.slice(0, 8).map((expert) => ({
+      id: `expert-${expert.id}`,
+      type: "expert" as const,
+      title: "Yeni uzman kaydı",
+      description: expert.name || "Uzman başvurusu",
+      createdAt: expert.created_at || null,
+      href: "/admin/uzman-basvurulari",
+    })),
+    ...clients.slice(0, 8).map((client) => ({
+      id: `client-${client.id}`,
+      type: "client" as const,
+      title: "Yeni danışan başvurusu",
+      description: client.name || "Danışan başvurusu",
+      createdAt: client.created_at || null,
+      href: "/admin/danisan-basvurulari",
+    })),
+    ...payments.slice(0, 8).map((payment) => ({
+      id: `payment-${payment.id}`,
+      type: "payment" as const,
+      title: isPaid(payment) ? "Ödeme alındı" : "Ödeme bekliyor",
+      description: `${getPaymentAmount(payment).toLocaleString("tr-TR")} TL`,
+      createdAt: payment.created_at || null,
+      href: "/admin/payments",
+    })),
+    ...reviews.slice(0, 8).map((review) => ({
+      id: `review-${review.id}`,
+      type: "review" as const,
+      title:
+        normalizeStatus(review.status) === "pending"
+          ? "Yeni yorum bekliyor"
+          : "Yorum güncellendi",
+      description: `Durum: ${review.status || "belirsiz"}`,
+      createdAt: review.created_at || null,
+      href: "/admin/reviews",
+    })),
+  ];
+
+  return activities
+    .filter((activity) => Boolean(activity.createdAt))
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime()
+    )
+    .slice(0, 12);
+}
+
 export async function GET(req: Request) {
   try {
-    const hasAdminAccess = await assertAdminAccess(req);
-
-    if (!hasAdminAccess) {
+    if (!hasAdminAccess(req)) {
       return jsonError("Admin erişimi doğrulanamadı.", 401);
     }
 
@@ -174,69 +258,70 @@ export async function GET(req: Request) {
     }
 
     const [experts, clients, payments, sessions, reviews] = await Promise.all([
-      safeSelect<ExpertRow>(supabase, "experts", "id, name, status, account_status, created_at", 1000),
-      safeSelect<ClientRow>(supabase, "client_applications", "id, name, full_name, status, created_at", 1000),
+      safeSelect<ExpertRow>(
+        supabase,
+        "experts",
+        "id, name, status, created_at",
+        1000
+      ),
+      safeSelect<ClientRow>(
+        supabase,
+        "client_applications",
+        "id, name, status, created_at",
+        1000
+      ),
       safeSelect<PaymentRow>(
         supabase,
         "payments",
-        "id, amount, total_amount, price, commission_amount, expert_amount, status, payment_status, created_at",
+        "id, amount, commission_amount, expert_amount, status, expert_payout_status, created_at",
         1000
       ),
-      safeSelect<SessionRow>(supabase, "sessions", "id, status, created_at", 1000),
-      safeSelect<ReviewRow>(supabase, "reviews", "id, status, created_at", 1000),
+      safeSelect<SessionRow>(
+        supabase,
+        "sessions",
+        "id, status, created_at",
+        1000
+      ),
+      safeSelect<ReviewRow>(
+        supabase,
+        "reviews",
+        "id, status, created_at",
+        1000
+      ),
     ]);
 
     const paidPayments = payments.filter(isPaid);
-    const thisMonthPaidPayments = paidPayments.filter((payment) => isThisMonth(payment.created_at));
+    const thisMonthPaidPayments = paidPayments.filter((payment) =>
+      isThisMonth(payment.created_at)
+    );
+    const pendingPayoutPayments = paidPayments.filter(isExpertPayoutPending);
 
-    const totalRevenue = paidPayments.reduce((total, payment) => total + getPaymentAmount(payment), 0);
-    const thisMonthRevenue = thisMonthPaidPayments.reduce((total, payment) => total + getPaymentAmount(payment), 0);
+    const totalRevenue = paidPayments.reduce(
+      (total, payment) => total + getPaymentAmount(payment),
+      0
+    );
+
+    const thisMonthRevenue = thisMonthPaidPayments.reduce(
+      (total, payment) => total + getPaymentAmount(payment),
+      0
+    );
+
     const thisMonthCommission = thisMonthPaidPayments.reduce(
       (total, payment) => total + getCommissionAmount(payment),
       0
     );
-    const pendingExpertPayout = paidPayments.reduce(
+
+    const pendingExpertPayout = pendingPayoutPayments.reduce(
       (total, payment) => total + getExpertNetAmount(payment),
       0
     );
 
-    const recentActivities = [
-      ...experts.slice(0, 8).map((expert) => ({
-        id: `expert-${expert.id}`,
-        type: "expert",
-        title: "Yeni uzman kaydı",
-        description: expert.name || "Uzman başvurusu",
-        createdAt: expert.created_at || null,
-        href: "/admin/uzman-basvurulari",
-      })),
-      ...clients.slice(0, 8).map((client) => ({
-        id: `client-${client.id}`,
-        type: "client",
-        title: "Yeni danışan başvurusu",
-        description: client.name || client.full_name || "Danışan başvurusu",
-        createdAt: client.created_at || null,
-        href: "/admin/danisan-basvurulari",
-      })),
-      ...payments.slice(0, 8).map((payment) => ({
-        id: `payment-${payment.id}`,
-        type: "payment",
-        title: isPaid(payment) ? "Ödeme alındı" : "Ödeme bekliyor",
-        description: `${getPaymentAmount(payment).toLocaleString("tr-TR")} TL`,
-        createdAt: payment.created_at || null,
-        href: "/admin/payments",
-      })),
-      ...reviews.slice(0, 8).map((review) => ({
-        id: `review-${review.id}`,
-        type: "review",
-        title: normalizeStatus(review.status) === "pending" ? "Yeni yorum bekliyor" : "Yorum güncellendi",
-        description: `Durum: ${review.status || "belirsiz"}`,
-        createdAt: review.created_at || null,
-        href: "/admin/reviews",
-      })),
-    ]
-      .filter((activity) => activity.createdAt)
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-      .slice(0, 12);
+    const recentActivities = buildRecentActivities({
+      experts,
+      clients,
+      payments,
+      reviews,
+    });
 
     return NextResponse.json({
       ok: true,
@@ -246,8 +331,12 @@ export async function GET(req: Request) {
         pendingExperts: experts.filter(isPendingExpert).length,
         totalClients: clients.length,
         totalSessions: sessions.length,
-        completedSessions: sessions.filter((session) => normalizeStatus(session.status) === "completed").length,
-        pendingReviews: reviews.filter((review) => normalizeStatus(review.status) === "pending").length,
+        completedSessions: sessions.filter(
+          (session) => normalizeStatus(session.status) === "completed"
+        ).length,
+        pendingReviews: reviews.filter(
+          (review) => normalizeStatus(review.status) === "pending"
+        ).length,
         totalReviews: reviews.length,
         totalRevenue,
         thisMonthRevenue,
