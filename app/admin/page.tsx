@@ -19,9 +19,19 @@ type DashboardStats = {
   pendingExpertPayout: number;
 };
 
+type DashboardActivity = {
+  id: string;
+  type: "expert" | "client" | "payment" | "review" | string;
+  title: string;
+  description: string;
+  createdAt?: string | null;
+  href?: string | null;
+};
+
 type DashboardResponse = {
   ok?: boolean;
   stats?: DashboardStats;
+  recentActivities?: DashboardActivity[];
   error?: string;
 };
 
@@ -40,57 +50,6 @@ const emptyStats: DashboardStats = {
   pendingExpertPayout: 0,
 };
 
-const managementLinks = [
-  {
-    title: "Uzman Başvuruları",
-    description: "Uzmanları incele, onayla veya pasife al.",
-    href: "/admin/uzman-basvurulari",
-    group: "Başvuru",
-  },
-  {
-    title: "Danışan Başvuruları",
-    description: "Danışan eşleştirme ve başvuru akışını yönet.",
-    href: "/admin/danisan-basvurulari",
-    group: "Başvuru",
-  },
-  {
-    title: "Ödeme Yönetimi",
-    description: "Ödeme kayıtları, komisyon ve uzman payı.",
-    href: "/admin/payments",
-    group: "Finans",
-  },
-  {
-    title: "Finans Özeti",
-    description: "Gelir, komisyon ve uzman hak ediş özeti.",
-    href: "/admin/finance",
-    group: "Finans",
-  },
-  {
-    title: "Uzman Ödemeleri",
-    description: "Uzmanlara yapılacak ödeme kayıtları.",
-    href: "/admin/payouts",
-    group: "Finans",
-  },
-  {
-    title: "Sohbet Yönetimi",
-    description: "Konuşmalar, ödeme kilidi ve test linkleri.",
-    href: "/admin/conversations",
-    group: "Operasyon",
-  },
-  {
-    title: "Yorum Moderasyonu",
-    description: "Yorumları onayla, reddet veya gizle.",
-    href: "/admin/reviews",
-    group: "Güven",
-  },
-  {
-    title: "Raporlar",
-    description: "Güvenlik ve sorun bildirimlerini incele.",
-    href: "/admin/reports",
-    group: "Güven",
-  },
-];
-
 function buildAdminUrl(path: string, adminToken: string) {
   if (!adminToken) return path;
 
@@ -106,6 +65,38 @@ function formatMoney(value: number) {
   }).format(Number.isFinite(value) ? value : 0);
 }
 
+function formatDate(value?: string | null) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getActivityTypeLabel(type: string) {
+  if (type === "expert") return "Uzman";
+  if (type === "client") return "Danışan";
+  if (type === "payment") return "Ödeme";
+  if (type === "review") return "Yorum";
+
+  return "Kayıt";
+}
+
+function getActivityClass(type: string) {
+  if (type === "expert") return "bg-violet-50 text-violet-700 ring-violet-100";
+  if (type === "client") return "bg-sky-50 text-sky-700 ring-sky-100";
+  if (type === "payment") return "bg-emerald-50 text-emerald-700 ring-emerald-100";
+  if (type === "review") return "bg-amber-50 text-amber-700 ring-amber-100";
+
+  return "bg-slate-100 text-slate-700 ring-slate-200";
+}
+
 function AdminHomeContent() {
   const searchParams = useSearchParams();
   const adminToken = searchParams.get("adminToken") || "";
@@ -114,6 +105,7 @@ function AdminHomeContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [notice, setNotice] = useState("");
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
+  const [activities, setActivities] = useState<DashboardActivity[]>([]);
 
   const fetchDashboard = useCallback(
     async (mode: "initial" | "refresh" = "refresh") => {
@@ -142,8 +134,10 @@ function AdminHomeContent() {
         }
 
         setStats(data.stats || emptyStats);
+        setActivities(Array.isArray(data.recentActivities) ? data.recentActivities : []);
       } catch (error) {
         setStats(emptyStats);
+        setActivities([]);
         setNotice(error instanceof Error ? error.message : "Yönetim verileri alınamadı.");
       } finally {
         setLoading(false);
@@ -157,26 +151,49 @@ function AdminHomeContent() {
     void fetchDashboard("initial");
   }, [fetchDashboard]);
 
-  const priorityItems = useMemo(
+  const kpiCards = useMemo(
     () => [
       {
-        label: "Bekleyen Uzman",
-        value: stats.pendingExperts,
+        title: "Bekleyen Uzman",
+        value: String(stats.pendingExperts),
+        description: "Onay kuyruğundaki başvurular",
         href: "/admin/uzman-basvurulari",
       },
       {
-        label: "Bekleyen Yorum",
-        value: stats.pendingReviews,
+        title: "Bekleyen Yorum",
+        value: String(stats.pendingReviews),
+        description: `${stats.totalReviews} toplam yorum`,
         href: "/admin/reviews",
       },
       {
-        label: "Tamamlanan Seans",
-        value: stats.completedSessions,
+        title: "Tamamlanan Seans",
+        value: String(stats.completedSessions),
+        description: `${stats.totalSessions} toplam seans`,
         href: "/admin/conversations",
+      },
+      {
+        title: "Bu Ay Gelir",
+        value: formatMoney(stats.thisMonthRevenue),
+        description: `${formatMoney(stats.thisMonthCommission)} komisyon`,
+        href: "/admin/payments",
+      },
+      {
+        title: "Aktif Uzman",
+        value: String(stats.activeExperts),
+        description: `${stats.totalExperts} toplam uzman`,
+        href: "/admin/uzman-basvurulari",
+      },
+      {
+        title: "Toplam Danışan",
+        value: String(stats.totalClients),
+        description: "Başvuru kayıtları",
+        href: "/admin/danisan-basvurulari",
       },
     ],
     [stats]
   );
+
+  const visibleActivities = activities.slice(0, 8);
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-8">
@@ -188,11 +205,11 @@ function AdminHomeContent() {
                 Mindora Yönetim Paneli
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
-                Yönetim Merkezi
+                Gösterge Paneli
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                Tüm admin işlemlerine tek ekrandan ulaş. Karmaşık alt menü yok; önce işlem
-                alanını seç, sonra ilgili sayfada detayları yönet.
+                Günlük operasyon durumunu, bekleyen işleri ve son hareketleri tek ekrandan takip et.
+                Detaylı işlem için sol menüden ilgili bölüme geç.
               </p>
             </div>
 
@@ -213,79 +230,136 @@ function AdminHomeContent() {
           </section>
         ) : null}
 
-        <section className="grid gap-4 md:grid-cols-3">
-          {priorityItems.map((item) => (
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {kpiCards.map((item) => (
             <Link
-              key={item.label}
+              key={item.title}
               href={buildAdminUrl(item.href, adminToken)}
               className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md"
             >
-              <p className="text-sm font-bold text-slate-500">{item.label}</p>
-              <p className="mt-2 text-4xl font-black text-slate-950">{item.value}</p>
-              <p className="mt-2 text-sm font-black text-indigo-700">İncele →</p>
+              <p className="text-sm font-bold text-slate-500">{item.title}</p>
+              <p className="mt-2 break-words text-4xl font-black tracking-tight text-slate-950">
+                {item.value}
+              </p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <p className="text-sm text-slate-500">{item.description}</p>
+                <span className="text-sm font-black text-indigo-700">Aç →</span>
+              </div>
             </Link>
           ))}
         </section>
 
-        <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-          <div className="mb-5">
-            <h2 className="text-xl font-black text-slate-950">İşlem Alanları</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Günlük yönetimde kullanacağın tüm ekranlar burada.
-            </p>
-          </div>
+        <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+          <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-950">Son Aktiviteler</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Başvuru, ödeme, yorum ve operasyon hareketleri.
+                </p>
+              </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {managementLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={buildAdminUrl(link.href, adminToken)}
-                className="group rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-md"
-              >
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
-                    {link.group}
-                  </span>
-                  <span className="text-sm font-black text-indigo-700 transition group-hover:translate-x-0.5">
-                    Aç →
-                  </span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
+                {visibleActivities.length} kayıt
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {loading ? (
+                <ActivitySkeleton />
+              ) : visibleActivities.length > 0 ? (
+                visibleActivities.map((activity) => {
+                  const href = activity.href
+                    ? buildAdminUrl(activity.href, adminToken)
+                    : "/admin";
+
+                  return (
+                    <Link
+                      key={activity.id}
+                      href={href}
+                      className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 no-underline transition hover:border-indigo-200 hover:bg-indigo-50 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getActivityClass(
+                              activity.type
+                            )}`}
+                          >
+                            {getActivityTypeLabel(activity.type)}
+                          </span>
+                          <p className="text-sm font-black text-slate-950">
+                            {activity.title}
+                          </p>
+                        </div>
+
+                        <p className="mt-2 text-sm font-semibold text-slate-600">
+                          {activity.description}
+                        </p>
+                      </div>
+
+                      <p className="min-w-fit text-xs font-bold text-slate-500">
+                        {formatDate(activity.createdAt)}
+                      </p>
+                    </Link>
+                  );
+                })
+              ) : (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                  <p className="text-sm font-black text-slate-600">Henüz aktivite yok</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Yeni başvuru, ödeme veya yorum geldiğinde burada görünecek.
+                  </p>
                 </div>
+              )}
+            </div>
+          </article>
 
-                <h3 className="text-base font-black text-slate-950">{link.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{link.description}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
+          <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+            <h2 className="text-xl font-black text-slate-950">Finans Özeti</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Özet finans görünümü. Detay için Ödemeler ekranına geç.
+            </p>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard title="Aktif Uzman" value={String(stats.activeExperts)} description={`${stats.totalExperts} toplam uzman`} />
-          <SummaryCard title="Toplam Danışan" value={String(stats.totalClients)} description="Başvuru kayıtları" />
-          <SummaryCard title="Bu Ay Gelir" value={formatMoney(stats.thisMonthRevenue)} description="Başarılı ödemeler" />
-          <SummaryCard title="Toplam Gelir" value={formatMoney(stats.totalRevenue)} description="Tüm başarılı ödemeler" />
+            <div className="mt-5 space-y-3">
+              <FinanceLine label="Toplam Gelir" value={formatMoney(stats.totalRevenue)} />
+              <FinanceLine label="Bu Ay Gelir" value={formatMoney(stats.thisMonthRevenue)} />
+              <FinanceLine label="Bu Ay Komisyon" value={formatMoney(stats.thisMonthCommission)} />
+              <FinanceLine label="Bekleyen Uzman Payı" value={formatMoney(stats.pendingExpertPayout)} />
+            </div>
+
+            <Link
+              href={buildAdminUrl("/admin/payments", adminToken)}
+              className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white no-underline transition hover:bg-slate-800"
+            >
+              Ödemeleri Aç
+            </Link>
+          </article>
         </section>
       </div>
     </main>
   );
 }
 
-function SummaryCard({
-  title,
-  value,
-  description,
-}: {
-  title: string;
-  value: string;
-  description: string;
-}) {
+function ActivitySkeleton() {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-2 break-words text-3xl font-black tracking-tight text-slate-950">
-        {value}
-      </p>
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
-    </article>
+    <>
+      {[1, 2, 3].map((item) => (
+        <div
+          key={item}
+          className="h-20 animate-pulse rounded-3xl border border-slate-200 bg-slate-50"
+        />
+      ))}
+    </>
+  );
+}
+
+function FinanceLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+      <p className="text-sm font-bold text-slate-500">{label}</p>
+      <p className="text-base font-black text-slate-950">{value}</p>
+    </div>
   );
 }
 
@@ -295,7 +369,7 @@ export default function AdminHomePage() {
       fallback={
         <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-8">
           <div className="mx-auto max-w-7xl rounded-[1.75rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Yönetim merkezi yükleniyor...</p>
+            <p className="font-black text-slate-600">Gösterge paneli yükleniyor...</p>
           </div>
         </main>
       }
