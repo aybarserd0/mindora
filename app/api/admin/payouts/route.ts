@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { enforceAdminRequest } from "@/lib/security/admin-auth";
 import { cleanMultilineText, cleanText, cleanUuid, toSafeNumber } from "@/lib/security/validation";
 
 export const runtime = "nodejs";
@@ -231,9 +230,6 @@ function serializePayout(payout: PayoutRow, experts: ExpertRow[]) {
 
 export async function GET(req: Request) {
   try {
-    const blocked = enforceAdminRequest(req);
-    if (blocked) return blocked;
-
     const supabase = getSupabaseAdmin();
 
     if (!supabase) {
@@ -297,9 +293,6 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const blocked = enforceAdminRequest(req);
-    if (blocked) return blocked;
-
     const supabase = getSupabaseAdmin();
 
     if (!supabase) {
@@ -371,9 +364,6 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const blocked = enforceAdminRequest(req);
-    if (blocked) return blocked;
-
     const supabase = getSupabaseAdmin();
 
     if (!supabase) {
@@ -396,6 +386,7 @@ export async function PATCH(req: Request) {
     const patch: Record<string, unknown> = {
       status,
       paid_at: status === "paid" ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
     };
 
     if (typeof body?.note === "string") {

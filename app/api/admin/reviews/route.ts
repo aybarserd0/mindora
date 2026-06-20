@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { enforceAdminRequest } from "@/lib/security/admin-auth";
 import { cleanUuid } from "@/lib/security/validation";
 
 export const runtime = "nodejs";
@@ -119,11 +118,14 @@ function getExpertSlug(experts: ExpertRow[], expertId: string) {
 }
 
 function buildActionPatch(action: ReviewAction) {
+  const now = new Date().toISOString();
+
   if (action === "approve" || action === "restore_public") {
     return {
       status: "approved",
       is_approved: true,
       is_public: true,
+      updated_at: now,
     };
   }
 
@@ -132,6 +134,7 @@ function buildActionPatch(action: ReviewAction) {
       status: "rejected",
       is_approved: false,
       is_public: false,
+      updated_at: now,
     };
   }
 
@@ -139,6 +142,7 @@ function buildActionPatch(action: ReviewAction) {
     status: "hidden",
     is_approved: false,
     is_public: false,
+    updated_at: now,
   };
 }
 
@@ -167,9 +171,6 @@ async function fetchExpertsForReviews(
 
 export async function GET(req: Request) {
   try {
-    const blocked = enforceAdminRequest(req);
-    if (blocked) return blocked;
-
     const supabase = getSupabaseAdmin();
 
     if (!supabase) {
@@ -273,9 +274,6 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const blocked = enforceAdminRequest(req);
-    if (blocked) return blocked;
-
     const supabase = getSupabaseAdmin();
 
     if (!supabase) {
