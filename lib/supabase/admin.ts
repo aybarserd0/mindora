@@ -38,7 +38,9 @@ function getServiceRoleKey(): string {
 }
 
 export function getSupabaseAdmin(): SupabaseAdminClient {
-  if (adminClient) return adminClient
+  if (adminClient) {
+    return adminClient
+  }
 
   adminClient = createClient<Database>(getSupabaseUrl(), getServiceRoleKey(), {
     auth: {
@@ -51,11 +53,25 @@ export function getSupabaseAdmin(): SupabaseAdminClient {
         'x-client-info': 'mindora-admin-server-client',
       },
     },
+    db: {
+      schema: 'public',
+    },
   })
 
   return adminClient
 }
 
+export function getSupabaseServiceClient(): SupabaseAdminClient {
+  return getSupabaseAdmin()
+}
+
 export function resetSupabaseAdmin() {
   adminClient = null
+}
+
+export function assertSupabaseAdminEnv() {
+  getSupabaseUrl()
+  getServiceRoleKey()
+
+  return true
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -345,6 +346,12 @@ export default async function ExpertDashboardPage() {
                 Görüşmeleri Aç
               </Link>
               <Link
+                href="/expert/dashboard/verification"
+                className="inline-flex items-center justify-center rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-3 text-sm font-black text-indigo-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-md"
+              >
+                Belgeleri Doğrula
+              </Link>
+              <Link
                 href="/expert/dashboard/availability"
                 className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
               >
@@ -413,8 +420,42 @@ export default async function ExpertDashboardPage() {
                 title="Profili Düzenle"
                 description="Uzman profilinizi ve görünür bilgilerinizi yönetin."
               />
+              <QuickLink
+                href="/expert/dashboard/verification"
+                title="Doğrulama Merkezi"
+                description="Diploma, lisans ve sertifika belgelerinizi güvenli şekilde yönetin."
+              />
             </div>
           </Panel>
+        </section>
+
+        <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-700">
+                C14 Uzman Doğrulama
+              </p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">
+                Güven rozetinizi tamamlayın.
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+                Diploma, lisans ve uzmanlık belgeleri doğrulanan profiller danışan tarafında daha güvenilir görünür.
+                Belgelerinizi yükleyip admin onay sürecini buradan takip edebilirsiniz.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[420px]">
+              <VerificationMiniCard label="Diploma" value="Yükleme" />
+              <VerificationMiniCard label="Lisans / Sertifika" value="Kontrol" />
+            </div>
+
+            <Link
+              href="/expert/dashboard/verification"
+              className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+            >
+              Doğrulama Merkezini Aç
+            </Link>
+          </div>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
@@ -450,6 +491,7 @@ export default async function ExpertDashboardPage() {
                 'Danışan notlarını gözden geçir',
                 'Görüşme sonrası kısa not bırak',
                 'Gerekirse yeni randevu planla',
+                'Eksik belge ve profil bilgilerini kontrol et',
               ].map((item) => (
                 <ChecklistItem key={item}>{item}</ChecklistItem>
               ))}
@@ -461,11 +503,20 @@ export default async function ExpertDashboardPage() {
   )
 }
 
+function VerificationMiniCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-indigo-100">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="mt-1 text-sm font-black text-slate-950">{value}</p>
+    </div>
+  )
+}
+
 function StatusPill({
   children,
   tone = 'default',
 }: {
-  children: React.ReactNode
+  children: ReactNode
   tone?: 'default' | 'green' | 'blue'
 }) {
   const className =
@@ -509,7 +560,7 @@ function Panel({
 }: {
   title: string
   description: string
-  children: React.ReactNode
+  children: ReactNode
   actionHref?: string
   actionLabel?: string
 }) {
@@ -623,7 +674,7 @@ function ClientItem({
   )
 }
 
-function ChecklistItem({ children }: { children: React.ReactNode }) {
+function ChecklistItem({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
