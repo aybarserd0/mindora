@@ -6,7 +6,7 @@ import {
   sessionReminderExpertTemplate,
 } from '@/lib/mail/templates'
 
-type ReminderType = '24h' | '1h'
+type ReminderType = '24h' | '1h' | '15m'
 
 type ReminderWindow = {
   type: ReminderType
@@ -14,7 +14,7 @@ type ReminderWindow = {
   subject: string
   minMinutesUntilStart: number
   maxMinutesUntilStart: number
-  sentColumn: 'reminder_24h_sent_at' | 'reminder_1h_sent_at'
+  sentColumn: 'reminder_24h_sent_at' | 'reminder_1h_sent_at' | 'reminder_15m_sent_at'
 }
 
 type BookingRow = {
@@ -29,10 +29,9 @@ type BookingRow = {
   session_ready: boolean | null
   client_join_url: string | null
   expert_join_url: string | null
-  client_chat_url?: string | null
-  expert_chat_url?: string | null
-  reminder_24h_sent_at?: string | null
-  reminder_1h_sent_at?: string | null
+  reminder_24h_sent_at: string | null
+  reminder_1h_sent_at: string | null
+  reminder_15m_sent_at: string | null
 }
 
 type ConversationContact = {
@@ -95,6 +94,14 @@ const REMINDER_WINDOWS: ReminderWindow[] = [
     maxMinutesUntilStart: 75,
     sentColumn: 'reminder_1h_sent_at',
   },
+  {
+    type: '15m',
+    label: '15 dakika içinde',
+    subject: 'Mindora seansınız birazdan başlıyor',
+    minMinutesUntilStart: 10,
+    maxMinutesUntilStart: 20,
+    sentColumn: 'reminder_15m_sent_at',
+  },
 ]
 
 export const runtime = 'nodejs'
@@ -142,12 +149,16 @@ function getPublicBaseUrl(req: NextRequest) {
   ).replace(/\/$/, '')
 }
 
-function normalizeJoinUrl(url: string, req: NextRequest) {
-  if (!url) return ''
-  if (url.startsWith('http://') || url.startsWith('https://')) return url
+function normalizeJoinUrl(url: string | null, req: NextRequest) {
+  const safeUrl = toText(url)
+
+  if (!safeUrl) return ''
+  if (safeUrl.startsWith('http://') || safeUrl.startsWith('https://')) {
+    return safeUrl
+  }
 
   const baseUrl = getPublicBaseUrl(req)
-  return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`
+  return `${baseUrl}${safeUrl.startsWith('/') ? safeUrl : `/${safeUrl}`}`
 }
 
 function buildChatUrl({
@@ -159,7 +170,7 @@ function buildChatUrl({
   type: 'client' | 'expert'
   conversationId: string | null
 }) {
-  if (!conversationId) return ''
+  if (!conversationId || !isValidUuid(conversationId)) return ''
 
   const baseUrl = getPublicBaseUrl(req)
   return `${baseUrl}/${type}/chat/${encodeURIComponent(conversationId)}`
@@ -217,7 +228,7 @@ async function getReminderCandidates() {
   maxWindow.setHours(maxWindow.getHours() + 25)
 
   const minWindow = new Date(now)
-  minWindow.setMinutes(minWindow.getMinutes() + 30)
+  minWindow.setMinutes(minWindow.getMinutes() + 10)
 
   const supabase = getSupabaseAdmin() as any
 
@@ -237,7 +248,8 @@ async function getReminderCandidates() {
       client_join_url,
       expert_join_url,
       reminder_24h_sent_at,
-      reminder_1h_sent_at
+      reminder_1h_sent_at,
+      reminder_15m_sent_at
       `
     )
     .in('status', ['scheduled', 'confirmed'])
@@ -334,34 +346,65 @@ async function getConversationContact(booking: BookingRow): Promise<Conversation
   }
 }
 
-async function markReminderSent({
+async function claimReminderSlot({
   bookingId,
   reminder,
-  sentAt,
+  claimedAt,
 }: {
   bookingId: string
   reminder: ReminderWindow
-  sentAt: string
+  claimedAt: string
 }) {
   const supabase = getSupabaseAdmin() as any
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('session_bookings')
     .update({
-      [reminder.sentColumn]: sentAt,
-      updated_at: sentAt,
+      [reminder.sentColumn]: claimedAt,
+      updated_at: claimedAt,
     })
     .eq('id', bookingId)
     .is(reminder.sentColumn, null)
+    .select('id')
+    .maybeSingle()
 
   if (error) {
-    console.error('SESSION_REMINDER_MARK_SENT_ERROR', {
+    console.error('SESSION_REMINDER_CLAIM_ERROR', {
       bookingId,
       reminderType: reminder.type,
       error,
     })
 
-    throw new Error('REMINDER_MARK_FAILED')
+    throw new Error('REMINDER_CLAIM_FAILED')
+  }
+
+  return Boolean(data?.id)
+}
+
+async function rollbackReminderClaim({
+  bookingId,
+  reminder,
+}: {
+  bookingId: string
+  reminder: ReminderWindow
+}) {
+  const now = new Date().toISOString()
+  const supabase = getSupabaseAdmin() as any
+
+  const { error } = await supabase
+    .from('session_bookings')
+    .update({
+      [reminder.sentColumn]: null,
+      updated_at: now,
+    })
+    .eq('id', bookingId)
+
+  if (error) {
+    console.error('SESSION_REMINDER_ROLLBACK_ERROR', {
+      bookingId,
+      reminderType: reminder.type,
+      error,
+    })
   }
 }
 
@@ -374,119 +417,140 @@ async function sendReminderForBooking({
   booking: BookingRow
   reminder: ReminderWindow
 }): Promise<ReminderResult> {
-  const contact = await getConversationContact(booking)
-
-  if (!contact) {
-    return {
-      bookingId: booking.id,
-      reminderType: reminder.type,
-      status: 'skipped',
-      reason: 'missing_conversation_contact',
-    }
-  }
-
-  const { clientName, clientEmail, expertName, expertEmail } = contact
-
-  if (!clientEmail || !expertEmail) {
-    return {
-      bookingId: booking.id,
-      reminderType: reminder.type,
-      status: 'skipped',
-      reason: 'missing_email',
-      clientEmail,
-      expertEmail,
-    }
-  }
-
-  if (!isValidEmail(clientEmail) || !isValidEmail(expertEmail)) {
-    return {
-      bookingId: booking.id,
-      reminderType: reminder.type,
-      status: 'skipped',
-      reason: 'invalid_email',
-      clientEmail,
-      expertEmail,
-    }
-  }
-
-  if (!booking.client_join_url || !booking.expert_join_url) {
-    return {
-      bookingId: booking.id,
-      reminderType: reminder.type,
-      status: 'skipped',
-      reason: 'missing_join_url',
-      clientEmail,
-      expertEmail,
-    }
-  }
-
-  const timezone = booking.timezone || DEFAULT_TIMEZONE
-  const scheduledStartText = formatSessionDate(booking.scheduled_start_at, timezone)
-  const clientJoinUrl = normalizeJoinUrl(booking.client_join_url, req)
-  const expertJoinUrl = normalizeJoinUrl(booking.expert_join_url, req)
-  const clientChatUrl = buildChatUrl({
-    req,
-    type: 'client',
-    conversationId: booking.conversation_id,
-  })
-  const expertChatUrl = buildChatUrl({
-    req,
-    type: 'expert',
-    conversationId: booking.conversation_id,
-  })
-
-  const clientText = sessionReminderClientTemplate({
-    recipientName: clientName,
-    otherPartyName: expertName,
-    scheduledStartText,
-    sessionUrl: clientJoinUrl,
-    chatUrl: clientChatUrl,
-    reminderLabel: reminder.label,
-  })
-
-  const expertText = sessionReminderExpertTemplate({
-    recipientName: expertName,
-    otherPartyName: clientName,
-    scheduledStartText,
-    sessionUrl: expertJoinUrl,
-    chatUrl: expertChatUrl,
-    reminderLabel: reminder.label,
-  })
-
-  await Promise.all([
-    sendMail({
-      to: clientEmail,
-      subject: reminder.subject,
-      text: clientText,
-    }),
-    sendMail({
-      to: expertEmail,
-      subject: reminder.subject,
-      text: expertText,
-    }),
-  ])
-
-  const sentAt = new Date().toISOString()
-
-  await markReminderSent({
+  const claimedAt = new Date().toISOString()
+  const claimed = await claimReminderSlot({
     bookingId: booking.id,
     reminder,
-    sentAt,
+    claimedAt,
   })
 
-  return {
-    bookingId: booking.id,
-    reminderType: reminder.type,
-    status: 'sent',
-    clientEmail,
-    expertEmail,
+  if (!claimed) {
+    return {
+      bookingId: booking.id,
+      reminderType: reminder.type,
+      status: 'skipped',
+      reason: 'already_claimed_or_sent',
+    }
+  }
+
+  try {
+    const contact = await getConversationContact(booking)
+
+    if (!contact) {
+      await rollbackReminderClaim({ bookingId: booking.id, reminder })
+
+      return {
+        bookingId: booking.id,
+        reminderType: reminder.type,
+        status: 'skipped',
+        reason: 'missing_conversation_contact',
+      }
+    }
+
+    const { clientName, clientEmail, expertName, expertEmail } = contact
+
+    if (!clientEmail || !expertEmail) {
+      await rollbackReminderClaim({ bookingId: booking.id, reminder })
+
+      return {
+        bookingId: booking.id,
+        reminderType: reminder.type,
+        status: 'skipped',
+        reason: 'missing_email',
+        clientEmail,
+        expertEmail,
+      }
+    }
+
+    if (!isValidEmail(clientEmail) || !isValidEmail(expertEmail)) {
+      await rollbackReminderClaim({ bookingId: booking.id, reminder })
+
+      return {
+        bookingId: booking.id,
+        reminderType: reminder.type,
+        status: 'skipped',
+        reason: 'invalid_email',
+        clientEmail,
+        expertEmail,
+      }
+    }
+
+    const clientJoinUrl = normalizeJoinUrl(booking.client_join_url, req)
+    const expertJoinUrl = normalizeJoinUrl(booking.expert_join_url, req)
+
+    if (!clientJoinUrl || !expertJoinUrl) {
+      await rollbackReminderClaim({ bookingId: booking.id, reminder })
+
+      return {
+        bookingId: booking.id,
+        reminderType: reminder.type,
+        status: 'skipped',
+        reason: 'missing_join_url',
+        clientEmail,
+        expertEmail,
+      }
+    }
+
+    const timezone = booking.timezone || DEFAULT_TIMEZONE
+    const scheduledStartText = formatSessionDate(booking.scheduled_start_at, timezone)
+    const clientChatUrl = buildChatUrl({
+      req,
+      type: 'client',
+      conversationId: booking.conversation_id,
+    })
+    const expertChatUrl = buildChatUrl({
+      req,
+      type: 'expert',
+      conversationId: booking.conversation_id,
+    })
+
+    const clientText = sessionReminderClientTemplate({
+      recipientName: clientName,
+      otherPartyName: expertName,
+      scheduledStartText,
+      sessionUrl: clientJoinUrl,
+      chatUrl: clientChatUrl,
+      reminderLabel: reminder.label,
+    })
+
+    const expertText = sessionReminderExpertTemplate({
+      recipientName: expertName,
+      otherPartyName: clientName,
+      scheduledStartText,
+      sessionUrl: expertJoinUrl,
+      chatUrl: expertChatUrl,
+      reminderLabel: reminder.label,
+    })
+
+    await Promise.all([
+      sendMail({
+        to: clientEmail,
+        subject: reminder.subject,
+        text: clientText,
+      }),
+      sendMail({
+        to: expertEmail,
+        subject: reminder.subject,
+        text: expertText,
+      }),
+    ])
+
+    return {
+      bookingId: booking.id,
+      reminderType: reminder.type,
+      status: 'sent',
+      clientEmail,
+      expertEmail,
+    }
+  } catch (error) {
+    await rollbackReminderClaim({ bookingId: booking.id, reminder })
+    throw error
   }
 }
 
 async function runSessionReminders(req: NextRequest) {
   const bookings = await getReminderCandidates()
   const now = new Date()
-
   const results: ReminderResult[] = []
 
   for (const booking of bookings) {
@@ -554,15 +618,11 @@ export async function GET(req: NextRequest) {
     console.error('SESSION_REMINDERS_CRON_ERROR', error)
 
     const message =
-      error instanceof Error && error.message === 'SMTP_MISSING'
-        ? 'SMTP ayarları eksik.'
-        : error instanceof Error && error.message === 'SMTP_PORT_INVALID'
-          ? 'SMTP_PORT geçersiz.'
-          : error instanceof Error && error.message === 'SMTP_FROM_MISSING'
-            ? 'SMTP gönderici adresi eksik.'
-            : error instanceof Error && error.message === 'REMINDER_QUERY_FAILED'
-              ? 'Reminder adayları alınamadı.'
-              : 'Session reminder cron çalıştırılamadı.'
+      error instanceof Error && error.message === 'REMINDER_QUERY_FAILED'
+        ? 'Reminder adayları alınamadı.'
+        : error instanceof Error && error.message === 'REMINDER_CLAIM_FAILED'
+          ? 'Reminder claim işlemi başarısız oldu.'
+          : 'Session reminder cron çalıştırılamadı.'
 
     return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
