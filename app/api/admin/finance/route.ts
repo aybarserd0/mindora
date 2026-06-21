@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { enforceAdminRequest } from "@/lib/security/admin-auth";
 import { toSafeNumber } from "@/lib/security/validation";
 
 export const runtime = "nodejs";
@@ -286,9 +285,6 @@ function buildTransaction(payment: PaymentRow, experts: ExpertRow[], clients: Cl
 
 export async function GET(req: Request) {
   try {
-    const blocked = enforceAdminRequest(req);
-    if (blocked) return blocked;
-
     const supabase = getSupabaseAdmin();
 
     if (!supabase) {
