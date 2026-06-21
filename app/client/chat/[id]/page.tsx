@@ -165,6 +165,7 @@ function getCleanMessageText(item: Message) {
         ''
       )
       .replace(`📎 Dosya paylaşıldı: ${fileName}`, '')
+      .replace('📎 Dosya paylaşıldı', '')
       .replace(`🎤 Sesli mesaj: ${fileName}`, '')
       .replace('🎤 Sesli mesaj gönderildi', '')
       .trim()
@@ -923,7 +924,7 @@ export default function ClientChatPage({
         (uploadedAttachment?.mime_type.startsWith('audio/')
           ? '🎤 Sesli mesaj gönderildi'
           : uploadedAttachment
-            ? `📎 Dosya paylaşıldı: ${uploadedAttachment.file_name}`
+            ? '📎 Dosya paylaşıldı'
             : '')
 
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
