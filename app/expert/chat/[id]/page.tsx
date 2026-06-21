@@ -322,7 +322,7 @@ export default function ExpertChatPage({
   }
 
   function getAttachmentSignedUrl(id: string, attachmentId: string) {
-    return `/api/conversations/${id}/attachments/${attachmentId}/signed-url?role=expert&token=${getEncodedAccessToken()}`
+    return `/api/conversations/${id}/attachments/${attachmentId}/signed?role=expert&token=${getEncodedAccessToken()}`
   }
 
   function stopRecordingStream() {

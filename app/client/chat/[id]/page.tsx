@@ -315,7 +315,7 @@ export default function ClientChatPage({
   }
 
   function getAttachmentSignedUrl(id: string, attachmentId: string) {
-    return `/api/conversations/${id}/attachments/${attachmentId}/signed-url?role=client&token=${getEncodedAccessToken()}`
+    return `/api/conversations/${id}/attachments/${attachmentId}/signed?role=client&token=${getEncodedAccessToken()}`
   }
 
   function hasValidAccessToken() {
