@@ -1,4 +1,38 @@
 import Header from '@/components/Header'
+import type { Metadata } from 'next'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mindora-delta.vercel.app'
+
+export const metadata: Metadata = {
+  title: 'Sık Sorulan Sorular | Mindora',
+  description:
+    'Mindora hakkında sık sorulan sorular: ücretsiz ön eşleşme, online psikolojik destek süreci, gizlilik, ücretlendirme, testler ve uzman başvurusu.',
+  alternates: {
+    canonical: '/sss',
+    languages: {
+      'tr-TR': '/sss',
+    },
+  },
+  openGraph: {
+    title: 'Sık Sorulan Sorular | Mindora',
+    description:
+      'Mindora’da ön eşleşme, online görüşme, gizlilik ve uzman başvurusu hakkında en çok merak edilen sorular.',
+    url: '/sss',
+    siteName: 'Mindora',
+    locale: 'tr_TR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Sık Sorulan Sorular | Mindora',
+    description:
+      'Mindora’da online psikolojik destek sürecine başlamadan önce bilmeniz gerekenler.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+}
 
 const FAQ_GROUPS = [
   {
@@ -78,10 +112,79 @@ const TRUST_ITEMS = [
   'Online destek akışı',
 ]
 
+function slugify(value: string) {
+  return value
+    .toLocaleLowerCase('tr-TR')
+    .replaceAll('ı', 'i')
+    .replaceAll('ğ', 'g')
+    .replaceAll('ü', 'u')
+    .replaceAll('ş', 's')
+    .replaceAll('ö', 'o')
+    .replaceAll('ç', 'c')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function getAllFaqItems() {
+  return FAQ_GROUPS.flatMap((group) => group.items)
+}
+
+function JsonLd() {
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: getAllFaqItems().map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
+  }
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Ana Sayfa',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Sık Sorulan Sorular',
+        item: `${SITE_URL}/sss`,
+      },
+    ],
+  }
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema).replace(/</g, '\\u003c'),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema).replace(/</g, '\\u003c'),
+        }}
+      />
+    </>
+  )
+}
+
 export default function SSS() {
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
       <Header />
+      <JsonLd />
 
       <section className="mx-auto max-w-7xl px-5 pb-14 pt-16 md:pt-20">
         <div className="mx-auto max-w-4xl text-center">
@@ -139,7 +242,7 @@ export default function SSS() {
                 {FAQ_GROUPS.map((group) => (
                   <a
                     key={group.category}
-                    href={`#${group.category.toLowerCase().replaceAll(' ', '-')}`}
+                    href={`#${slugify(group.category)}`}
                     className="block rounded-2xl bg-[#f7f2eb] px-4 py-3 text-sm font-black text-neutral-700 transition hover:bg-white"
                   >
                     {group.category}
@@ -167,7 +270,7 @@ export default function SSS() {
             {FAQ_GROUPS.map((group) => (
               <section
                 key={group.category}
-                id={group.category.toLowerCase().replaceAll(' ', '-')}
+                id={slugify(group.category)}
                 className="scroll-mt-28 rounded-[2rem] bg-white/75 p-6 shadow-sm ring-1 ring-black/5 md:p-8"
               >
                 <div className="mb-6">

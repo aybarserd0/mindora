@@ -106,7 +106,7 @@ const DEFAULT_SUPPORT_AREAS = [
 ];
 
 const TRUST_BADGES = [
-  "Mindora onaylı profil",
+  "Mindora profil kontrol süreci",
   "Tamamlanan seans sonrası yorum",
   "Güvenli ödeme akışı",
   "Online görüşme süreci",
@@ -525,7 +525,32 @@ function buildJsonLd(expert: PublicExpertProfile, reviews: PublicReview[]) {
     })),
   };
 
-  return [base, faq];
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Ana Sayfa",
+        item: SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Uzmanlar",
+        item: absoluteUrl("/uzmanlar"),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: expert.name,
+        item: profileUrl,
+      },
+    ],
+  };
+
+  return [base, faq, breadcrumb];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -535,6 +560,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: "Uzman Profili | Mindora",
       description: DEFAULT_DESCRIPTION,
+      robots: {
+        index: false,
+        follow: true,
+      },
     };
   }
 
@@ -544,6 +573,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: "Uzman Profili Bulunamadı | Mindora",
       description: DEFAULT_DESCRIPTION,
+      robots: {
+        index: false,
+        follow: true,
+      },
     };
   }
 
@@ -551,16 +584,32 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const canonical = `/uzmanlar/${expert.slug}`;
 
   return {
-    title: `${expert.name} | ${expert.title} | Mindora`,
+    title: `${expert.name} - ${expert.title} | Online Psikolojik Destek`,
     description,
     alternates: {
       canonical,
+      languages: {
+        "tr-TR": canonical,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
     },
     openGraph: {
       title: `${expert.name} | Mindora`,
       description,
       type: "profile",
       url: canonical,
+      siteName: "Mindora",
+      locale: "tr_TR",
       images: expert.profileImageUrl
         ? [
             {
@@ -605,12 +654,12 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           key={index}
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(item).replace(/</g, "\\u003c") }}
         />
       ))}
 
       <section className="mx-auto max-w-7xl px-5 py-7">
-        <nav className="flex flex-wrap items-center gap-2 text-sm font-bold text-neutral-500">
+        <nav aria-label="Sayfa yolu" className="flex flex-wrap items-center gap-2 text-sm font-bold text-neutral-500">
           <Link href="/" className="transition hover:text-black">
             Ana Sayfa
           </Link>
@@ -634,6 +683,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
                     alt={`${expert.name} profil fotoğrafı`}
                     className="h-full w-full object-cover"
                     referrerPolicy="no-referrer"
+                    decoding="async"
                   />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center text-center">
@@ -651,7 +701,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
               <div className="min-w-0 flex-1">
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Badge tone="success">Mindora onaylı uzman</Badge>
+                  <Badge tone="success">Mindora uzman profili</Badge>
                   <Badge tone="dark">{expert.onlineText}</Badge>
                   <Badge tone={expert.reviewCount > 0 ? "warning" : "neutral"}>
                     {getRatingText(expert)}
