@@ -1,8 +1,11 @@
 import crypto from 'crypto'
-import net from 'net'
-import tls from 'tls'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { sendMail } from '@/lib/mail/smtp'
+import {
+  bookingPreparedClientTemplate,
+  bookingPreparedExpertTemplate,
+} from '@/lib/mail/templates'
 
 type UserType = 'client' | 'expert' | 'admin'
 
@@ -53,18 +56,9 @@ type MailResult = {
   errors: string[]
 }
 
-type SmtpConfig = {
-  host: string
-  port: number
-  secure: boolean
-  user: string
-  pass: string
-  from: string
-}
 
 const TOKEN_TTL_HOURS = 24
 const CLOSED_BOOKING_STATUSES = new Set(['cancelled', 'canceled', 'completed', 'no_show'])
-const DEFAULT_BRAND_FROM = 'Mindora <noreply@mindora.live>'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -140,13 +134,9 @@ function formatDateTime(value: string | null | undefined) {
   }).format(date)
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
+function buildMailSubject(role: 'client' | 'expert') {
+  if (role === 'client') return 'Mindora seans bağlantınız hazır'
+  return 'Mindora uzman seans bağlantınız hazır'
 }
 
 function buildLinks({
@@ -175,244 +165,6 @@ function buildLinks({
     clientChatUrl: `${baseUrl}/client/chat/${encodedConversationId}`,
     expertChatUrl: `${baseUrl}/expert/chat/${encodedConversationId}`,
     adminConversationUrl: `${baseUrl}/admin/conversations/${encodedConversationId}`,
-  }
-}
-
-function getSmtpConfig(): SmtpConfig | null {
-  const host = cleanNullableText(process.env.SMTP_HOST)
-  const user = cleanNullableText(process.env.SMTP_USER)
-  const pass = cleanNullableText(process.env.SMTP_PASS)
-  const from = cleanNullableText(process.env.SMTP_FROM || process.env.MAIL_FROM) || DEFAULT_BRAND_FROM
-  const port = Number(process.env.SMTP_PORT || 587)
-  const secure = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true' || port === 465
-
-  if (!host || !user || !pass || !Number.isFinite(port)) return null
-
-  return {
-    host,
-    port,
-    secure,
-    user,
-    pass,
-    from,
-  }
-}
-
-function createEmailBody({
-  role,
-  recipientName,
-  otherName,
-  scheduledStartAt,
-  scheduledEndAt,
-  chatUrl,
-  sessionUrl,
-}: {
-  role: 'client' | 'expert'
-  recipientName: string
-  otherName: string
-  scheduledStartAt: string
-  scheduledEndAt: string
-  chatUrl: string
-  sessionUrl: string
-}) {
-  const safeRecipientName = escapeHtml(recipientName)
-  const safeOtherName = escapeHtml(otherName)
-  const start = escapeHtml(formatDateTime(scheduledStartAt))
-  const end = escapeHtml(formatDateTime(scheduledEndAt))
-  const roleText = role === 'client' ? 'danışan' : 'uzman'
-  const counterpartLabel = role === 'client' ? 'Uzman' : 'Danışan'
-
-  const text = [
-    `Merhaba ${recipientName},`,
-    '',
-    `Mindora seansınız hazırlanmıştır.`,
-    `${counterpartLabel}: ${otherName}`,
-    `Başlangıç: ${formatDateTime(scheduledStartAt)}`,
-    `Bitiş: ${formatDateTime(scheduledEndAt)}`,
-    '',
-    `Chat linki: ${chatUrl}`,
-    `Görüşme linki: ${sessionUrl}`,
-    '',
-    'Görüşme başlamadan önce kamera ve mikrofon izinlerinizi kontrol etmenizi öneririz.',
-    '',
-    'Mindora',
-  ].join('\n')
-
-  const html = `
-    <div style="margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
-      <div style="max-width:640px;margin:0 auto;padding:28px 16px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:24px;overflow:hidden;">
-          <div style="padding:28px;background:linear-gradient(135deg,#eef2ff,#ffffff);border-bottom:1px solid #e2e8f0;">
-            <p style="margin:0 0 8px 0;color:#4f46e5;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;">Mindora</p>
-            <h1 style="margin:0;font-size:24px;line-height:1.25;color:#020617;">Seansınız hazırlandı</h1>
-            <p style="margin:10px 0 0 0;color:#475569;font-size:14px;line-height:1.6;">Merhaba ${safeRecipientName}, ${roleText} paneliniz için chat ve görüşme bağlantıları hazırlandı.</p>
-          </div>
-
-          <div style="padding:24px;">
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:18px;padding:18px;margin-bottom:18px;">
-              <p style="margin:0 0 8px 0;color:#64748b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;">Seans Bilgileri</p>
-              <p style="margin:0;color:#0f172a;font-size:15px;line-height:1.7;"><strong>${counterpartLabel}:</strong> ${safeOtherName}</p>
-              <p style="margin:0;color:#0f172a;font-size:15px;line-height:1.7;"><strong>Başlangıç:</strong> ${start}</p>
-              <p style="margin:0;color:#0f172a;font-size:15px;line-height:1.7;"><strong>Bitiş:</strong> ${end}</p>
-            </div>
-
-            <div style="display:block;margin:20px 0;">
-              <a href="${escapeHtml(sessionUrl)}" style="display:block;text-align:center;background:#4f46e5;color:#ffffff;text-decoration:none;font-weight:800;border-radius:16px;padding:14px 18px;margin-bottom:10px;">Görüşmeye Katıl</a>
-              <a href="${escapeHtml(chatUrl)}" style="display:block;text-align:center;background:#ffffff;color:#334155;text-decoration:none;font-weight:800;border:1px solid #cbd5e1;border-radius:16px;padding:14px 18px;">Chat'i Aç</a>
-            </div>
-
-            <p style="margin:18px 0 0 0;color:#64748b;font-size:13px;line-height:1.6;">Görüşme başlamadan önce internet bağlantınızı, kamera ve mikrofon izinlerinizi kontrol edin. Bu bağlantıları üçüncü kişilerle paylaşmayın.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-
-  return { text, html }
-}
-
-function encodeBase64(value: string) {
-  return Buffer.from(value, 'utf8').toString('base64')
-}
-
-function buildMimeMessage({
-  from,
-  to,
-  subject,
-  text,
-  html,
-}: {
-  from: string
-  to: string
-  subject: string
-  text: string
-  html: string
-}) {
-  const boundary = `mindora_${crypto.randomBytes(12).toString('hex')}`
-  const encodedSubject = `=?UTF-8?B?${encodeBase64(subject)}?=`
-
-  return [
-    `From: ${from}`,
-    `To: ${to}`,
-    `Subject: ${encodedSubject}`,
-    'MIME-Version: 1.0',
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    '',
-    `--${boundary}`,
-    'Content-Type: text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
-    '',
-    text,
-    '',
-    `--${boundary}`,
-    'Content-Type: text/html; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
-    '',
-    html,
-    '',
-    `--${boundary}--`,
-    '',
-  ].join('\r\n')
-}
-
-function smtpCommand(socket: net.Socket | tls.TLSSocket, command: string, expected: number[]) {
-  return new Promise<string>((resolve, reject) => {
-    let buffer = ''
-
-    const cleanup = () => {
-      socket.off('data', onData)
-      socket.off('error', onError)
-    }
-
-    const onError = (error: Error) => {
-      cleanup()
-      reject(error)
-    }
-
-    const onData = (chunk: Buffer) => {
-      buffer += chunk.toString('utf8')
-      const lines = buffer.split(/\r?\n/).filter(Boolean)
-      const lastLine = lines[lines.length - 1]
-
-      if (!lastLine || /^\d{3}-/.test(lastLine)) return
-
-      const code = Number(lastLine.slice(0, 3))
-      if (!Number.isFinite(code)) return
-
-      cleanup()
-
-      if (expected.includes(code)) {
-        resolve(buffer)
-      } else {
-        reject(new Error(`SMTP command failed (${command || 'connect'}): ${buffer}`))
-      }
-    }
-
-    socket.on('data', onData)
-    socket.on('error', onError)
-
-    if (command) socket.write(`${command}\r\n`)
-  })
-}
-
-function connectSmtp(config: SmtpConfig) {
-  return new Promise<net.Socket | tls.TLSSocket>((resolve, reject) => {
-    const socket = config.secure
-      ? tls.connect(config.port, config.host, { servername: config.host })
-      : net.connect(config.port, config.host)
-
-    socket.once('error', reject)
-    socket.once('connect', () => {
-      socket.off('error', reject)
-      resolve(socket)
-    })
-  })
-}
-
-async function sendSmtpMail({
-  config,
-  to,
-  subject,
-  text,
-  html,
-}: {
-  config: SmtpConfig
-  to: string
-  subject: string
-  text: string
-  html: string
-}) {
-  let socket = await connectSmtp(config)
-
-  try {
-    await smtpCommand(socket, '', [220])
-    await smtpCommand(socket, `EHLO ${config.host}`, [250])
-
-    if (!config.secure) {
-      await smtpCommand(socket, 'STARTTLS', [220])
-      socket = tls.connect({ socket, servername: config.host })
-      await smtpCommand(socket, `EHLO ${config.host}`, [250])
-    }
-
-    await smtpCommand(socket, 'AUTH LOGIN', [334])
-    await smtpCommand(socket, encodeBase64(config.user), [334])
-    await smtpCommand(socket, encodeBase64(config.pass), [235])
-    await smtpCommand(socket, `MAIL FROM:<${config.user}>`, [250])
-    await smtpCommand(socket, `RCPT TO:<${to}>`, [250, 251])
-    await smtpCommand(socket, 'DATA', [354])
-
-    const message = buildMimeMessage({
-      from: config.from,
-      to,
-      subject,
-      text,
-      html,
-    })
-
-    await smtpCommand(socket, `${message}\r\n.`, [250])
-    await smtpCommand(socket, 'QUIT', [221])
-  } finally {
-    socket.destroy()
   }
 }
 
@@ -616,42 +368,40 @@ async function sendBookingPreparedEmails({
   expert: PersonInfo
   links: PreparedLinks
 }): Promise<MailResult> {
-  const config = getSmtpConfig()
   const result: MailResult = {
-    enabled: Boolean(config),
+    enabled: true,
     clientSent: false,
     expertSent: false,
     errors: [],
   }
 
-  if (!config) return result
+  const scheduledStartText = formatDateTime(booking.scheduled_start_at)
+  const scheduledEndText = formatDateTime(booking.scheduled_end_at)
 
   const jobs: Array<Promise<void>> = []
 
   if (client.email) {
-    const body = createEmailBody({
-      role: 'client',
-      recipientName: client.name,
-      otherName: expert.name,
-      scheduledStartAt: booking.scheduled_start_at,
-      scheduledEndAt: booking.scheduled_end_at,
+    const text = bookingPreparedClientTemplate({
+      clientName: client.name,
+      expertName: expert.name,
+      scheduledStartText,
+      scheduledEndText,
       chatUrl: links.clientChatUrl,
       sessionUrl: links.clientJoinUrl,
     })
 
     jobs.push(
-      sendSmtpMail({
-        config,
+      sendMail({
         to: client.email,
-        subject: 'Mindora seans bağlantınız hazır',
-        ...body,
+        subject: buildMailSubject('client'),
+        text,
       })
         .then(() => {
           result.clientSent = true
         })
         .catch((error: unknown) => {
           console.error('Client booking email error:', error)
-          result.errors.push('Danışan maili gönderilemedi.')
+          result.errors.push('Danışan seans bilgilendirme maili gönderilemedi.')
         })
     )
   } else {
@@ -659,29 +409,27 @@ async function sendBookingPreparedEmails({
   }
 
   if (expert.email) {
-    const body = createEmailBody({
-      role: 'expert',
-      recipientName: expert.name,
-      otherName: client.name,
-      scheduledStartAt: booking.scheduled_start_at,
-      scheduledEndAt: booking.scheduled_end_at,
+    const text = bookingPreparedExpertTemplate({
+      expertName: expert.name,
+      clientName: client.name,
+      scheduledStartText,
+      scheduledEndText,
       chatUrl: links.expertChatUrl,
       sessionUrl: links.expertJoinUrl,
     })
 
     jobs.push(
-      sendSmtpMail({
-        config,
+      sendMail({
         to: expert.email,
-        subject: 'Mindora uzman seans bağlantınız hazır',
-        ...body,
+        subject: buildMailSubject('expert'),
+        text,
       })
         .then(() => {
           result.expertSent = true
         })
         .catch((error: unknown) => {
           console.error('Expert booking email error:', error)
-          result.errors.push('Uzman maili gönderilemedi.')
+          result.errors.push('Uzman seans bilgilendirme maili gönderilemedi.')
         })
     )
   } else {
@@ -847,6 +595,8 @@ export async function POST(
 
     if (updateError) throw updateError
 
+    const updatedBooking = (rawUpdatedBooking as unknown as BookingRow | null) || booking
+
     const [client, expert] = await Promise.all([
       getClientInfo({
         supabase,
@@ -859,7 +609,7 @@ export async function POST(
     ])
 
     const mail = await sendBookingPreparedEmails({
-      booking,
+      booking: updatedBooking,
       client,
       expert,
       links,

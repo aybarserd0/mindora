@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import ToastProvider from '@/components/ToastProvider'
 import RootAppShell from '@/components/RootAppShell'
@@ -8,6 +9,9 @@ const siteName = 'Mindora'
 const defaultTitle = 'Mindora | Online Psikolojik Destek Platformu'
 const defaultDescription =
   'Mindora; psikolojik destek almak isteyen kişileri uygun uzmanlarla buluşturan, güvenli online görüşme ve ön eşleşme platformudur.'
+
+const googleAnalyticsId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || ''
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -85,7 +89,7 @@ export const metadata: Metadata = {
     apple: '/favicon.ico',
   },
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    google: googleSiteVerification || undefined,
   },
 }
 
@@ -100,6 +104,7 @@ function JsonLd() {
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${siteUrl}#organization`,
     name: siteName,
     url: siteUrl,
     logo: `${siteUrl}/favicon.ico`,
@@ -109,9 +114,13 @@ function JsonLd() {
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${siteUrl}#website`,
     name: siteName,
     url: siteUrl,
     inLanguage: 'tr-TR',
+    publisher: {
+      '@id': `${siteUrl}#organization`,
+    },
     potentialAction: {
       '@type': 'SearchAction',
       target: `${siteUrl}/uzmanlar?q={search_term_string}`,
@@ -122,11 +131,10 @@ function JsonLd() {
   const serviceSchema = {
     '@context': 'https://schema.org',
     '@type': 'Service',
+    '@id': `${siteUrl}#service`,
     name: 'Online Psikolojik Destek Ön Eşleşme Hizmeti',
     provider: {
-      '@type': 'Organization',
-      name: siteName,
-      url: siteUrl,
+      '@id': `${siteUrl}#organization`,
     },
     areaServed: {
       '@type': 'Country',
@@ -134,6 +142,7 @@ function JsonLd() {
     },
     serviceType: 'Online psikolojik destek ve uzman eşleştirme',
     description: defaultDescription,
+    url: siteUrl,
   }
 
   return (
@@ -160,14 +169,40 @@ function JsonLd() {
   )
 }
 
+function AnalyticsScripts() {
+  if (!googleAnalyticsId) return null
+
+  return (
+    <>
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
+        strategy="afterInteractive"
+      />
+      <Script id="mindora-google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = window.gtag || gtag;
+          gtag('js', new Date());
+          gtag('config', '${googleAnalyticsId}', {
+            anonymize_ip: true,
+            send_page_view: true
+          });
+        `}
+      </Script>
+    </>
+  )
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="tr" className="h-full antialiased">
+    <html lang="tr" className="h-full scroll-smooth antialiased">
       <body className="min-h-full bg-[#f7f2eb] text-[#171717]">
+        <AnalyticsScripts />
         <JsonLd />
         <ToastProvider>
           <RootAppShell>{children}</RootAppShell>
