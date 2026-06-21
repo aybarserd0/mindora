@@ -386,20 +386,46 @@ export default function ClientChatPage({
     setSelectedAttachment(file)
   }
 
+  function getAttachmentSignedUrlCandidates(id: string, attachmentId: string) {
+    const encodedToken = getEncodedAccessToken()
+
+    return [
+      `/api/conversations/${id}/attachments/${attachmentId}/signed?role=client&token=${encodedToken}`,
+      `/api/conversations/${id}/attachments/${attachmentId}/signed-url?role=client&token=${encodedToken}`,
+      `/api/conversations/${id}/attachments/${attachmentId}?role=client&token=${encodedToken}`,
+    ]
+  }
+
   async function getSignedAttachmentUrl(attachment: Attachment) {
     if (!conversationId) return ''
 
-    const res = await fetch(getAttachmentSignedUrl(conversationId, attachment.id), {
-      cache: 'no-store',
-    })
+    let lastError = 'Güvenli dosya bağlantısı oluşturulamadı.'
 
-    const data = await res.json().catch(() => null)
+    for (const url of getAttachmentSignedUrlCandidates(conversationId, attachment.id)) {
+      try {
+        const res = await fetch(url, {
+          cache: 'no-store',
+        })
 
-    if (!res.ok || !data?.ok || !data?.signedUrl) {
-      throw new Error(data?.error || 'Güvenli dosya bağlantısı oluşturulamadı.')
+        const data = await res.json().catch(() => null)
+
+        if (res.ok && data?.ok && data?.signedUrl) {
+          return String(data.signedUrl)
+        }
+
+        if (data?.error) {
+          lastError = String(data.error)
+        }
+      } catch (error) {
+        console.error('CLIENT ATTACHMENT SIGNED URL CANDIDATE ERROR:', {
+          attachmentId: attachment.id,
+          url,
+          error,
+        })
+      }
     }
 
-    return String(data.signedUrl)
+    throw new Error(lastError)
   }
 
   async function openAttachment(attachment: Attachment) {
