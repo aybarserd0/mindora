@@ -33,6 +33,19 @@ type PaymentRow = {
   created_at: string | null
 }
 
+type NotificationRow = {
+  id: string
+  user_type: string
+  user_id: string | null
+  title: string
+  message: string
+  type: string
+  is_read: boolean
+  link: string | null
+  created_at: string
+}
+
+
 type ClientRow = {
   id: string
   name: string | null
@@ -43,6 +56,8 @@ type DashboardData = {
   upcomingBookings: BookingRow[]
   activeConversations: ConversationRow[]
   payments: PaymentRow[]
+  notifications: NotificationRow[]
+  unreadNotificationCount: number
   clientsById: Map<string, ClientRow>
 }
 
@@ -174,6 +189,35 @@ function getStatusBadgeClass(status: string | null | undefined) {
   return 'bg-amber-50 text-amber-700 ring-amber-100'
 }
 
+function getNotificationTypeLabel(type: string | null | undefined) {
+  switch ((type || '').toLowerCase()) {
+    case 'message':
+      return 'Mesaj'
+    case 'session':
+      return 'Seans'
+    case 'payment':
+      return 'Ödeme'
+    case 'review':
+      return 'Değerlendirme'
+    case 'admin':
+      return 'Mindora'
+    case 'system':
+      return 'Sistem'
+    default:
+      return 'Bildirim'
+  }
+}
+
+function getPreview(value: string | null | undefined, maxLength = 120) {
+  const clean = String(value || '').replace(/\s+/g, ' ').trim()
+
+  if (!clean) return 'İçerik bulunmuyor.'
+  if (clean.length <= maxLength) return clean
+
+  return `${clean.slice(0, maxLength)}...`
+}
+
+
 async function fetchClientsByIds(clientIds: string[]) {
   const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)))
 
@@ -201,11 +245,71 @@ async function fetchClientsByIds(clientIds: string[]) {
   }
 }
 
+async function fetchExpertNotifications(expertId: string | null) {
+  const empty = {
+    notifications: [] as NotificationRow[],
+    unreadNotificationCount: 0,
+  }
+
+  try {
+    const supabase = getSupabaseAdmin()
+    const nowIso = new Date().toISOString()
+
+    let notificationsQuery = (supabase as any)
+      .from('notifications')
+      .select('id, user_type, user_id, title, message, type, is_read, link, created_at')
+      .eq('user_type', 'expert')
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    let unreadQuery = (supabase as any)
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_type', 'expert')
+      .eq('is_read', false)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+
+    if (expertId) {
+      notificationsQuery = notificationsQuery.or(`user_id.is.null,user_id.eq.${expertId}`)
+      unreadQuery = unreadQuery.or(`user_id.is.null,user_id.eq.${expertId}`)
+    } else {
+      notificationsQuery = notificationsQuery.is('user_id', null)
+      unreadQuery = unreadQuery.is('user_id', null)
+    }
+
+    const [notificationsResult, unreadResult] = await Promise.all([
+      notificationsQuery,
+      unreadQuery,
+    ])
+
+    if (notificationsResult.error) {
+      console.error('EXPERT_DASHBOARD_NOTIFICATIONS_ERROR', notificationsResult.error)
+      return empty
+    }
+
+    if (unreadResult.error) {
+      console.error('EXPERT_DASHBOARD_NOTIFICATIONS_COUNT_ERROR', unreadResult.error)
+    }
+
+    return {
+      notifications: (notificationsResult.data || []) as NotificationRow[],
+      unreadNotificationCount: unreadResult.error ? 0 : unreadResult.count || 0,
+    }
+  } catch (error) {
+    console.error('EXPERT_DASHBOARD_NOTIFICATIONS_RUNTIME_ERROR', error)
+    return empty
+  }
+}
+
+
 async function getDashboardData(): Promise<DashboardData> {
   const emptyData: DashboardData = {
     upcomingBookings: [],
     activeConversations: [],
     payments: [],
+    notifications: [],
+    unreadNotificationCount: 0,
     clientsById: new Map<string, ClientRow>(),
   }
 
@@ -266,11 +370,18 @@ async function getDashboardData(): Promise<DashboardData> {
       ...upcomingBookings.map((booking) => booking.client_id),
     ].filter((id): id is string => Boolean(id))
 
+    const [clientsById, notificationData] = await Promise.all([
+      fetchClientsByIds(clientIds),
+      fetchExpertNotifications(devExpertId),
+    ])
+
     return {
       upcomingBookings,
       activeConversations,
       payments,
-      clientsById: await fetchClientsByIds(clientIds),
+      notifications: notificationData.notifications,
+      unreadNotificationCount: notificationData.unreadNotificationCount,
+      clientsById,
     }
   } catch (error) {
     console.error('EXPERT_DASHBOARD_RUNTIME_ERROR', error)
@@ -312,6 +423,11 @@ export default async function ExpertDashboardPage() {
       value: formatMoney(sumMoney(pendingPayments)),
       helper: 'Aktarım bekleyen',
     },
+    {
+      label: 'Bildirim',
+      value: String(data.unreadNotificationCount),
+      helper: 'Okunmamış',
+    },
   ]
 
   return (
@@ -335,6 +451,7 @@ export default async function ExpertDashboardPage() {
                 <StatusPill tone="green">Panel erişimi aktif</StatusPill>
                 <StatusPill>Güvenli uzman alanı</StatusPill>
                 <StatusPill tone="blue">{data.upcomingBookings.length} yaklaşan seans</StatusPill>
+                <StatusPill tone="blue">{data.unreadNotificationCount} okunmamış bildirim</StatusPill>
               </div>
             </div>
 
@@ -361,7 +478,7 @@ export default async function ExpertDashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {cards.map((card) => (
             <MetricCard
               key={card.label}
@@ -425,9 +542,34 @@ export default async function ExpertDashboardPage() {
                 title="Doğrulama Merkezi"
                 description="Diploma, lisans ve sertifika belgelerinizi güvenli şekilde yönetin."
               />
+              <QuickLink
+                href="/expert/notifications"
+                title="Bildirimler"
+                description={`${data.unreadNotificationCount} okunmamış bildirim ve son sistem güncellemeleri.`}
+              />
             </div>
           </Panel>
         </section>
+
+        <Panel
+          title="Bildirimler"
+          description="Son sistem, seans, ödeme ve danışan bildirimleri."
+          actionHref="/expert/notifications"
+          actionLabel="Tümünü gör"
+        >
+          {data.notifications.length > 0 ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              {data.notifications.map((notification) => (
+                <NotificationItem key={notification.id} notification={notification} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="Henüz bildirim yok"
+              description="Yeni mesaj, seans, ödeme ve sistem bildirimleri burada görünecek."
+            />
+          )}
+        </Panel>
 
         <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -500,6 +642,50 @@ export default async function ExpertDashboardPage() {
         </section>
       </div>
     </section>
+  )
+}
+
+function NotificationItem({ notification }: { notification: NotificationRow }) {
+  const content = (
+    <article
+      className={`rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+        notification.is_read
+          ? 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+          : 'border-indigo-100 bg-indigo-50 hover:bg-indigo-100'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+            notification.is_read
+              ? 'bg-white text-slate-600 ring-slate-200'
+              : 'bg-white text-indigo-700 ring-indigo-100'
+          }`}
+        >
+          {getNotificationTypeLabel(notification.type)}
+        </span>
+        <span className="text-xs font-bold text-slate-500">
+          {formatDateTime(notification.created_at)}
+        </span>
+      </div>
+
+      <p className="mt-3 text-sm font-black text-slate-950">{notification.title}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600">
+        {getPreview(notification.message)}
+      </p>
+
+      {!notification.is_read ? (
+        <p className="mt-2 text-xs font-black text-indigo-600">Yeni bildirim</p>
+      ) : null}
+    </article>
+  )
+
+  if (!notification.link) return content
+
+  return (
+    <Link href={notification.link} className="block">
+      {content}
+    </Link>
   )
 }
 

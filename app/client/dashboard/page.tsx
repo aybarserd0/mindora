@@ -30,6 +30,23 @@ type RecentMessage = {
   created_at: string
 }
 
+type DashboardNotification = {
+  id: string
+  title: string
+  message: string
+  type: string
+  isRead: boolean
+  link: string | null
+  createdAt: string
+}
+
+type NotificationsResponse = {
+  ok: boolean
+  notifications?: DashboardNotification[]
+  unreadCount?: number
+  error?: string
+}
+
 type ClientDashboard = {
   client: {
     id?: string | null
@@ -164,6 +181,19 @@ function getPreview(message?: string | null) {
   return `${clean.slice(0, 120)}...`
 }
 
+function getNotificationTypeLabel(type?: string | null) {
+  const normalized = String(type || '').trim().toLowerCase()
+
+  if (normalized === 'message') return 'Mesaj'
+  if (normalized === 'session') return 'Seans'
+  if (normalized === 'payment') return 'Ödeme'
+  if (normalized === 'review') return 'Değerlendirme'
+  if (normalized === 'admin') return 'Mindora'
+  if (normalized === 'system') return 'Sistem'
+
+  return 'Bildirim'
+}
+
 function buildTokenUrl(path: string | null | undefined, token: string) {
   if (!path) return '#'
   if (!token) return path
@@ -213,6 +243,9 @@ function ClientDashboardContent() {
   const token = searchParams.get('token') || ''
 
   const [dashboard, setDashboard] = useState<ClientDashboard | null>(null)
+  const [notifications, setNotifications] = useState<DashboardNotification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [softNotice, setSoftNotice] = useState('')
@@ -231,6 +264,7 @@ function ClientDashboardContent() {
   const paymentsHref = useMemo(() => buildTokenUrl('/client/dashboard/payments', token), [token])
   const filesHref = useMemo(() => buildTokenUrl('/client/dashboard/files', token), [token])
   const profileHref = useMemo(() => buildTokenUrl('/client/dashboard/profile', token), [token])
+  const notificationsHref = useMemo(() => buildTokenUrl('/client/notifications', token), [token])
 
   const loadDashboard = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
@@ -281,9 +315,52 @@ function ClientDashboardContent() {
     [token]
   )
 
+  const loadNotifications = useCallback(async () => {
+    if (!token || isPlaceholderToken(token) || !dashboard?.conversation?.id) {
+      setNotifications([])
+      setUnreadCount(0)
+      return
+    }
+
+    try {
+      setNotificationsLoading(true)
+
+      const res = await fetch(
+        `/api/notifications?role=client&conversationId=${encodeURIComponent(
+          dashboard.conversation.id
+        )}&token=${encodeURIComponent(token)}&limit=5`,
+        {
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            Accept: 'application/json',
+          },
+        }
+      )
+
+      const data = (await res.json().catch(() => null)) as NotificationsResponse | null
+
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || 'Bildirimler alınamadı.')
+      }
+
+      setNotifications(data.notifications || [])
+      setUnreadCount(data.unreadCount || 0)
+    } catch {
+      setNotifications([])
+      setUnreadCount(0)
+    } finally {
+      setNotificationsLoading(false)
+    }
+  }, [dashboard?.conversation?.id, token])
+
   useEffect(() => {
     void loadDashboard('initial')
   }, [loadDashboard])
+
+  useEffect(() => {
+    void loadNotifications()
+  }, [loadNotifications])
 
   if (loading) {
     return (
@@ -389,7 +466,7 @@ function ClientDashboardContent() {
           <MetricCard title="Yaklaşan" value={String(dashboard.stats.upcomingCount)} subtitle="aktif seans" />
           <MetricCard title="Tamamlanan" value={String(dashboard.stats.completedCount)} subtitle="geçmiş seans" />
           <MetricCard title="Toplam" value={String(dashboard.stats.totalSessions)} subtitle="randevu" />
-          <MetricCard title="Mesaj" value={String(dashboard.stats.recentMessageCount)} subtitle="son kayıt" />
+          <MetricCard title="Bildirim" value={String(unreadCount)} subtitle="okunmamış" />
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -482,8 +559,21 @@ function ClientDashboardContent() {
                 <QuickLink href={paymentsHref} title="Ödemelerim" description="Ödeme geçmişi ve durumlar" />
                 <QuickLink href={filesHref} title="Dosyalarım" description="Paylaşılan dosyalar" />
                 <QuickLink href={profileHref} title="Profilim" description="Hesap ve destek bilgileri" />
+                <QuickLink href={notificationsHref} title="Bildirimler" description={`${unreadCount} okunmamış bildirim`} />
               </div>
             </section>
+
+            <ListCard
+              title="Bildirimler"
+              eyebrow="Merkez"
+              emptyText={notificationsLoading ? 'Bildirimler yükleniyor.' : 'Henüz bildirim yok.'}
+              actionHref={notificationsHref}
+              actionLabel="Tümünü gör"
+            >
+              {notifications.map((notification) => (
+                <NotificationRow key={notification.id} notification={notification} token={token} />
+              ))}
+            </ListCard>
 
             <ListCard title="Son Mesajlar" eyebrow="Chat" emptyText="Henüz mesaj görünmüyor.">
               {dashboard.recentMessages.map((message) => (
@@ -533,6 +623,7 @@ function InactiveDashboardState({
   const paymentsHref = buildTokenUrl('/client/dashboard/payments', token)
   const filesHref = buildTokenUrl('/client/dashboard/files', token)
   const profileHref = buildTokenUrl('/client/dashboard/profile', token)
+  const notificationsHref = buildTokenUrl('/client/notifications', token)
 
   return (
     <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
@@ -626,6 +717,7 @@ function InactiveDashboardState({
               <QuickLink href={paymentsHref} title="Ödemelerim" description="Ödeme geçmişi ve durumlar" />
               <QuickLink href={filesHref} title="Dosyalarım" description="Paylaşılan belgeler" />
               <QuickLink href={profileHref} title="Profilim" description="Hesap ve eşleşme bilgileri" />
+              <QuickLink href={notificationsHref} title="Bildirimler" description="Süreç ve sistem bildirimleri" />
             </div>
           </section>
         </section>
@@ -744,6 +836,62 @@ function ListCard({
         )}
       </div>
     </div>
+  )
+}
+
+function NotificationRow({
+  notification,
+  token,
+}: {
+  notification: DashboardNotification
+  token: string
+}) {
+  const href = notification.link ? buildTokenUrl(notification.link, token) : ''
+
+  const content = (
+    <div
+      className={`rounded-2xl p-4 ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+        notification.isRead
+          ? 'bg-slate-50 ring-slate-100 hover:bg-slate-100'
+          : 'bg-indigo-50 ring-indigo-100 hover:bg-indigo-100'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+            notification.isRead
+              ? 'bg-white text-slate-600 ring-slate-200'
+              : 'bg-white text-indigo-700 ring-indigo-100'
+          }`}
+        >
+          {getNotificationTypeLabel(notification.type)}
+        </span>
+
+        <span className="text-xs font-bold text-slate-500">
+          {formatDateTime(notification.createdAt)}
+        </span>
+      </div>
+
+      <p className="mt-3 text-sm font-black text-slate-950">
+        {notification.title}
+      </p>
+
+      <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+        {getPreview(notification.message)}
+      </p>
+
+      {!notification.isRead ? (
+        <p className="mt-2 text-xs font-black text-indigo-600">Yeni bildirim</p>
+      ) : null}
+    </div>
+  )
+
+  if (!href) return content
+
+  return (
+    <Link href={href} className="block">
+      {content}
+    </Link>
   )
 }
 
