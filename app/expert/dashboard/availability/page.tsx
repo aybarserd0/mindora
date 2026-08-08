@@ -40,7 +40,6 @@ type NoticeState = {
 } | null
 
 const DEFAULT_TIMEZONE = 'Europe/Istanbul'
-const DEFAULT_EXPERT_ID = process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID?.trim() || ''
 
 const weekDays = [
   { id: 1, label: 'Pazartesi' },
@@ -167,12 +166,6 @@ function hasLocalOverlap(rows: AvailabilityRow[], form: FormState) {
   })
 }
 
-function buildAvailabilityQuery(expertId: string) {
-  const params = new URLSearchParams()
-  params.set('expertId', expertId)
-  return `/api/expert/availability?${params.toString()}`
-}
-
 export default function ExpertAvailabilityPage() {
   const [availability, setAvailability] = useState<AvailabilityRow[]>([])
   const [form, setForm] = useState<FormState>(initialForm)
@@ -180,9 +173,6 @@ export default function ExpertAvailabilityPage() {
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [notice, setNotice] = useState<NoticeState>(null)
-
-  const expertId = DEFAULT_EXPERT_ID
-  const hasExpertId = Boolean(expertId)
 
   const sortedAvailability = useMemo(
     () =>
@@ -233,18 +223,7 @@ export default function ExpertAvailabilityPage() {
       setLoading(true)
       setNotice(null)
 
-      if (!hasExpertId) {
-        setAvailability([])
-        setNotice({
-          title: 'Uzman kimliği bekleniyor',
-          description:
-            'Müsaitlik kaydı oluşturmak için uzman kimliği bağlanmalıdır. Canlı sistemde bu bilgi oturumdan otomatik alınacaktır.',
-          tone: 'warning',
-        })
-        return
-      }
-
-      const response = await fetch(buildAvailabilityQuery(expertId), {
+      const response = await fetch('/api/expert/availability', {
         cache: 'no-store',
         headers: {
           Accept: 'application/json',
@@ -268,7 +247,7 @@ export default function ExpertAvailabilityPage() {
     } finally {
       setLoading(false)
     }
-  }, [expertId, hasExpertId])
+  }, [])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -276,10 +255,6 @@ export default function ExpertAvailabilityPage() {
     try {
       setSaving(true)
       setNotice(null)
-
-      if (!hasExpertId) {
-        throw new Error('Uzman kimliği bağlanmadan müsaitlik kaydedilemez.')
-      }
 
       const validationError = validateForm(form)
       if (validationError) {
@@ -295,7 +270,7 @@ export default function ExpertAvailabilityPage() {
       const response = await fetch('/api/expert/availability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expertId, ...form }),
+        body: JSON.stringify(form),
       })
 
       const data = (await response.json().catch(() => ({}))) as AvailabilityApiResponse
@@ -567,7 +542,7 @@ export default function ExpertAvailabilityPage() {
               <div className="sm:col-span-2">
                 <button
                   type="submit"
-                  disabled={saving || !hasExpertId}
+                  disabled={saving}
                   className="inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {saving ? 'Kaydediliyor...' : 'Müsaitlik Ekle'}

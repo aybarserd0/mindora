@@ -134,6 +134,41 @@ export async function verifyConversationAccessToken({
   }
 }
 
+/**
+ * Resolves a bare token to its conversation, for callers that don't
+ * already know the conversationId (e.g. a dashboard bell that only has a
+ * token in the URL). Mirrors the token-only lookup pattern already used in
+ * app/api/client/dashboard/route.ts.
+ */
+export async function resolveConversationAccessFromToken(
+  token: string,
+  role: ChatAccessRole
+) {
+  if (!token) return null
+
+  const supabase = getUntypedSupabaseAdmin()
+
+  const { data, error } = await supabase
+    .from('conversation_access_tokens')
+    .select('id, conversation_id, role, token, expires_at, revoked')
+    .eq('token', token)
+    .eq('role', role)
+    .maybeSingle()
+
+  if (error) {
+    console.error('resolveConversationAccessFromToken error:', error)
+    return null
+  }
+
+  const row = data as ConversationAccessTokenRow | null
+
+  if (!row) return null
+  if (row.revoked) return null
+  if (new Date(row.expires_at).getTime() < Date.now()) return null
+
+  return row.conversation_id
+}
+
 export async function revokeConversationAccessTokens(conversationId: string) {
   const supabase = getUntypedSupabaseAdmin()
 

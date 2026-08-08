@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getExpertIdFromRequest } from "@/lib/security/expert-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,12 +46,8 @@ function normalizeStatus(value: unknown) {
   return "pending";
 }
 
-function resolveExpertId(request: NextRequest) {
-  const headerExpertId = normalizeText(request.headers.get("x-expert-id"));
-  const queryExpertId = normalizeText(request.nextUrl.searchParams.get("expertId"));
-  const envExpertId = normalizeText(process.env.MINDORA_DEV_EXPERT_ID);
-
-  return headerExpertId || queryExpertId || envExpertId;
+async function resolveExpertId(request: NextRequest) {
+  return getExpertIdFromRequest(request);
 }
 
 function getLatestByDocumentType(rows: VerificationRow[]) {
@@ -70,7 +67,7 @@ function getLatestByDocumentType(rows: VerificationRow[]) {
 
 export async function GET(request: NextRequest) {
   try {
-    const expertId = resolveExpertId(request);
+    const expertId = await resolveExpertId(request);
 
     if (!expertId) {
       return jsonError("Uzman kimliği bulunamadı.", 401);

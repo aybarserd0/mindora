@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { applyRateLimit } from "@/lib/security/rate-limit";
+import { getExpertIdFromRequest } from "@/lib/security/expert-session";
 import {
   cleanMultilineText,
   cleanSlug,
   cleanText,
-  cleanUuid,
   toSafeNumber,
 } from "@/lib/security/validation";
 
@@ -284,15 +284,8 @@ async function findExpert({ expertId, slug }: { expertId: string | null; slug: s
     query = query.eq("id", expertId);
   } else if (slug) {
     query = query.eq("slug", slug);
-  } else if (process.env.MINDORA_DEV_EXPERT_ID && cleanUuid(process.env.MINDORA_DEV_EXPERT_ID)) {
-    query = query.eq("id", process.env.MINDORA_DEV_EXPERT_ID);
-  } else if (
-    process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID &&
-    cleanUuid(process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID)
-  ) {
-    query = query.eq("id", process.env.NEXT_PUBLIC_MINDORA_DEV_EXPERT_ID);
   } else {
-    query = query.order("created_at", { ascending: false });
+    return null;
   }
 
   const { data, error } = await query.maybeSingle();
@@ -413,23 +406,27 @@ export async function GET(req: NextRequest) {
 
     if (limited) return limited;
 
-    const expertIdRaw = req.nextUrl.searchParams.get("expertId");
     const slugRaw = req.nextUrl.searchParams.get("slug");
     const modeParam = cleanText(
       req.nextUrl.searchParams.get("mode") || req.nextUrl.searchParams.get("scope"),
       20
     ).toLowerCase();
 
-    const expertId = expertIdRaw ? cleanUuid(expertIdRaw) : null;
     const slug = slugRaw ? cleanSlug(slugRaw.toLowerCase()) : null;
     const mode = modeParam === "public" ? "public" : "internal";
 
-    if (expertIdRaw && !expertId) {
-      return jsonError("Geçerli uzman kimliği gerekli.", 400);
-    }
-
     if (slugRaw && !slug) {
       return jsonError("Geçerli profil bağlantısı gerekli.", 400);
+    }
+
+    let expertId: string | null = null;
+
+    if (mode === "internal") {
+      expertId = await getExpertIdFromRequest(req);
+
+      if (!expertId) {
+        return jsonError("Uzman oturumu bulunamadı.", 401);
+      }
     }
 
     const expert = await findExpert({ expertId, slug });
@@ -480,11 +477,10 @@ export async function PATCH(req: NextRequest) {
       return jsonError("İstek boyutu çok büyük.", 413);
     }
 
-    const expertIdRaw = req.nextUrl.searchParams.get("expertId");
-    const expertId = expertIdRaw ? cleanUuid(expertIdRaw) : null;
+    const expertId = await getExpertIdFromRequest(req);
 
-    if (expertIdRaw && !expertId) {
-      return jsonError("Geçerli uzman kimliği gerekli.", 400);
+    if (!expertId) {
+      return jsonError("Uzman oturumu bulunamadı.", 401);
     }
 
     const body = (await req.json().catch(() => ({}))) as UnknownRecord;

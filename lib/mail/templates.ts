@@ -40,6 +40,37 @@ type ExpertApplicationReceivedTemplateParams = {
   expertName: string
 }
 
+type ExpertApplicationDecisionTemplateParams = {
+  expertName: string
+  loginUrl?: string
+}
+
+type ClientApplicationCancelledTemplateParams = {
+  clientName: string
+}
+
+type PaymentFailedTemplateParams = {
+  clientName: string
+}
+
+type ExpertVerificationDecisionTemplateParams = {
+  expertName: string
+  documentLabel: string
+  adminNote?: string
+}
+
+type BookingCancelledTemplateParams = {
+  recipientName: string
+  otherPartyName: string
+  scheduledStartText: string
+  cancellationReason?: string
+}
+
+type ExpertLoginLinkTemplateParams = {
+  expertName: string
+  loginUrl: string
+}
+
 const brandName = 'Mindora'
 const emergencyNotice =
   'Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski varsa lütfen 112 ile iletişime geç ya da en yakın sağlık kuruluşuna başvur.'
@@ -104,6 +135,153 @@ ${divider()}
 3. Uygun bulunması halinde Mindora uzman ağına katılım süreciniz başlatılır.
 
 Başvuru yapmak ücretsizdir.
+
+${footer()}
+`
+}
+
+export function expertApplicationApprovedTemplate({
+  expertName,
+  loginUrl,
+}: ExpertApplicationDecisionTemplateParams) {
+  const safeExpertName = cleanText(expertName, 'Merhaba')
+
+  return `
+Merhaba ${safeExpertName},
+
+Mindora uzman başvurunuz onaylandı. Aramıza hoş geldiniz!
+
+${loginUrl ? `Uzman panelinize giriş bağlantınız:\n${loginUrl}\n\nBu bağlantı size özeldir, kimseyle paylaşmayın.\n` : ''}
+Sonraki adımlar:
+${divider()}
+1. Uzman panelinize giriş yaparak profilinizi tamamlayabilirsiniz.
+2. Kimlik/diploma doğrulama belgelerinizi yükleyerek hesabınızı tam yetkili hale getirebilirsiniz.
+3. Uygunluk takviminizi oluşturduğunuzda danışan eşleştirmeleri başlayabilir.
+
+${footer()}
+`
+}
+
+export function expertApplicationRejectedTemplate({
+  expertName,
+}: ExpertApplicationDecisionTemplateParams) {
+  const safeExpertName = cleanText(expertName, 'Merhaba')
+
+  return `
+Merhaba ${safeExpertName},
+
+Mindora uzman başvurunuzu değerlendirdik; bu aşamada başvurunuzu onaylayamadık.
+
+Bu karar; platform uygunluk kriterleri veya sağlanan bilgi/belgelerin yeterliliği doğrultusunda verilmiştir. Eksik gördüğünüz bir bilgi varsa yeniden başvuru yapabilirsiniz.
+
+${footer()}
+`
+}
+
+export function clientApplicationCancelledTemplate({
+  clientName,
+}: ClientApplicationCancelledTemplateParams) {
+  const safeClientName = cleanText(clientName, 'Merhaba')
+
+  return `
+Merhaba ${safeClientName},
+
+Mindora üzerinden yaptığınız başvuru bu aşamada sonlandırılmıştır.
+
+Destek almak isterseniz dilediğiniz zaman yeni bir ön eşleşme başvurusu yapabilirsiniz.
+
+${footer()}
+`
+}
+
+export function paymentFailedClientTemplate({
+  clientName,
+}: PaymentFailedTemplateParams) {
+  const safeClientName = cleanText(clientName, 'Merhaba')
+
+  return `
+Merhaba ${safeClientName},
+
+Mindora üzerinden başlattığınız ödeme işlemi tamamlanamadı.
+
+Kartınızdan herhangi bir tutar çekilmediyse işlem hiç gerçekleşmemiştir; çekildiyse banka/kart kuruluşunuz genellikle bu tutarı otomatik olarak iade eder.
+
+Ne yapabilirsiniz?
+${divider()}
+1. Kart bilgilerinizi ve bakiyenizi kontrol ederek tekrar deneyebilirsiniz.
+2. Sorun devam ederse farklı bir kart ile tekrar deneyebilirsiniz.
+3. Yardıma ihtiyacınız olursa Mindora destek ekibiyle iletişime geçebilirsiniz.
+
+${footer()}
+`
+}
+
+export function expertVerificationApprovedTemplate({
+  expertName,
+  documentLabel,
+}: ExpertVerificationDecisionTemplateParams) {
+  const safeExpertName = cleanText(expertName, 'Merhaba')
+
+  return `
+Merhaba ${safeExpertName},
+
+${documentLabel} belgeniz incelendi ve onaylandı.
+
+${footer()}
+`
+}
+
+export function expertVerificationRejectedTemplate({
+  expertName,
+  documentLabel,
+  adminNote,
+}: ExpertVerificationDecisionTemplateParams) {
+  const safeExpertName = cleanText(expertName, 'Merhaba')
+  const safeNote = cleanText(adminNote, '')
+
+  return `
+Merhaba ${safeExpertName},
+
+${documentLabel} belgeniz incelendi ve bu aşamada onaylanamadı.
+${safeNote ? `\nGerekçe: ${safeNote}\n` : ''}
+Lütfen belgeyi kontrol ederek uzman panelinizden yeniden yükleyin.
+
+${footer()}
+`
+}
+
+export function bookingCancelledTemplate({
+  recipientName,
+  otherPartyName,
+  scheduledStartText,
+  cancellationReason,
+}: BookingCancelledTemplateParams) {
+  const safeRecipientName = cleanText(recipientName, 'Merhaba')
+  const safeOtherPartyName = cleanText(otherPartyName, 'Mindora kullanıcısı')
+  const safeReason = cleanText(cancellationReason, '')
+
+  return `
+Merhaba ${safeRecipientName},
+
+${safeOtherPartyName} ile ${scheduledStartText} tarihine planlanan Mindora seansınız iptal edilmiştir.
+${safeReason ? `\nİptal nedeni: ${safeReason}\n` : ''}
+Yeni bir randevu planlamak için Mindora panelinizi ziyaret edebilirsiniz.
+
+${footer()}
+`
+}
+
+export function expertLoginLinkTemplate({ expertName, loginUrl }: ExpertLoginLinkTemplateParams) {
+  const safeExpertName = cleanText(expertName, 'Merhaba')
+
+  return `
+Merhaba ${safeExpertName},
+
+Mindora uzman panelinize giriş bağlantınız aşağıdadır. Bu bağlantı size özeldir, kimseyle paylaşmayın.
+
+${loginUrl}
+
+Bağlantı 30 gün geçerlidir. Talep etmediyseniz bu e-postayı yok sayabilirsiniz.
 
 ${footer()}
 `

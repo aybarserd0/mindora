@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getExpertIdFromRequest } from '@/lib/security/expert-session'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -207,14 +208,12 @@ async function fetchClientsByIds(clientIds: string[]) {
 export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabaseAdmin() as any
-    const requestedExpertId = req.nextUrl.searchParams.get('expertId')
-    const envExpertId = process.env.MINDORA_DEV_EXPERT_ID || null
-    const expertId = requestedExpertId || envExpertId
+    const expertId = await getExpertIdFromRequest(req)
 
-    if (expertId && !isValidUuid(expertId)) {
+    if (!expertId) {
       return NextResponse.json(
-        { ok: false, error: 'Geçerli expertId gerekli.' },
-        { status: 400 }
+        { ok: false, error: 'Uzman oturumu bulunamadı.' },
+        { status: 401 }
       )
     }
 

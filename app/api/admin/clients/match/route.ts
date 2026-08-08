@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { createNotification } from '@/lib/notifications'
 
 export const runtime = 'nodejs'
 
@@ -376,6 +377,27 @@ Mindora Ekibi
       text: clientText,
       logName: 'CLIENT MATCH',
     })
+
+    await Promise.all([
+      createNotification({
+        supabase,
+        userType: 'client',
+        userId: clientId,
+        title: 'Uzmanla eşleştiniz',
+        message: `${toText(expert.name)} ile eşleştirildiniz. Sonraki adım için panelinizi kontrol edin.`,
+        type: 'system',
+        link: `/client/chat/${conversation.id}`,
+      }),
+      createNotification({
+        supabase,
+        userType: 'expert',
+        userId: expertId,
+        title: 'Yeni danışan eşleştirmesi',
+        message: `${toText(client.name)} size eşleştirildi.`,
+        type: 'system',
+        link: `/expert/chat/${conversation.id}`,
+      }),
+    ])
 
     return NextResponse.json({
       ok: true,

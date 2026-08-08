@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getExpertIdFromRequest } from '@/lib/security/expert-session'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -306,22 +307,17 @@ async function fetchPayments(params: {
 
 export async function GET(req: NextRequest) {
   try {
-    const requestedExpertId = toText(req.nextUrl.searchParams.get('expertId'))
-    const envExpertId = toText(process.env.MINDORA_DEV_EXPERT_ID)
-    const expertId = requestedExpertId || envExpertId || null
+    const expertId = await getExpertIdFromRequest(req)
+
+    if (!expertId) {
+      return jsonError('Uzman oturumu bulunamadı.', 401)
+    }
+
     const status = toText(req.nextUrl.searchParams.get('status')).toLowerCase()
     const payoutStatus = toText(req.nextUrl.searchParams.get('payoutStatus')).toLowerCase()
     const startDate = normalizeDateParam(req.nextUrl.searchParams.get('startDate'))
     const endDate = normalizeDateParam(req.nextUrl.searchParams.get('endDate'))
     const limit = normalizeLimit(req.nextUrl.searchParams.get('limit'))
-
-    if (requestedExpertId && !isValidUuid(requestedExpertId)) {
-      return jsonError('Geçerli expertId gerekli.', 400)
-    }
-
-    if (envExpertId && !isValidUuid(envExpertId)) {
-      return jsonError('MINDORA_DEV_EXPERT_ID geçerli UUID olmalı.', 500)
-    }
 
     if (status && status !== 'all' && !PAYMENT_STATUSES.includes(status as PaymentStatus)) {
       return jsonError('Geçerli ödeme durumu gerekli.', 400)

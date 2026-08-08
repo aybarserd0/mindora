@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { sendMail } from '@/lib/mail/smtp'
+import {
+  expertApplicationApprovedTemplate,
+  expertApplicationRejectedTemplate,
+} from '@/lib/mail/templates'
+import { createExpertAccessToken } from '@/lib/expert-access-tokens'
+import { createNotification } from '@/lib/notifications'
+
+function cleanUrl(url?: string | null) {
+  return (url || '').replace(/\/+$/, '')
+}
 
 export const runtime = 'nodejs'
 
@@ -56,7 +67,7 @@ export async function POST(req: NextRequest) {
         status,
       })
       .eq('id', id)
-      .select('id, status')
+      .select('id, status, name, email')
       .maybeSingle()
 
     if (error) {
@@ -80,6 +91,52 @@ export async function POST(req: NextRequest) {
         },
         { status: 404 }
       )
+    }
+
+    if (status === 'approved' || status === 'rejected') {
+      let loginUrl: string | undefined
+
+      if (status === 'approved') {
+        try {
+          const siteUrl = cleanUrl(process.env.NEXT_PUBLIC_SITE_URL)
+          const { token } = await createExpertAccessToken({ expertId: data.id })
+          loginUrl = `${siteUrl}/api/expert/session/consume?token=${encodeURIComponent(token)}`
+        } catch (tokenError) {
+          console.error('EXPERT STATUS LOGIN TOKEN ERROR:', tokenError)
+        }
+      }
+
+      await createNotification({
+        supabase: supabaseAdmin,
+        userType: 'expert',
+        userId: id,
+        title: status === 'approved' ? 'Başvurunuz onaylandı' : 'Başvurunuz hakkında',
+        message:
+          status === 'approved'
+            ? 'Mindora uzman başvurunuz onaylandı. Panelinize giriş yapabilirsiniz.'
+            : 'Mindora uzman başvurunuz bu aşamada onaylanamadı.',
+        type: 'system',
+      })
+
+      if (data.email) {
+        const text =
+          status === 'approved'
+            ? expertApplicationApprovedTemplate({ expertName: data.name, loginUrl })
+            : expertApplicationRejectedTemplate({ expertName: data.name })
+
+        try {
+          await sendMail({
+            to: data.email,
+            subject:
+              status === 'approved'
+                ? 'Mindora uzman başvurunuz onaylandı'
+                : 'Mindora uzman başvurunuz hakkında',
+            text,
+          })
+        } catch (mailError) {
+          console.error('EXPERT STATUS MAIL ERROR:', mailError)
+        }
+      }
     }
 
     return NextResponse.json({

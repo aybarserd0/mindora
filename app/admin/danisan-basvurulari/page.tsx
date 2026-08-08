@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminHeader from "@/components/AdminHeader";
+import { scoreExpertMatch } from "@/lib/matching/score-expert-match";
 
 type ClientStatus =
   | "new"
@@ -64,6 +65,8 @@ type Expert = {
   name: string;
   title: string | null;
   areas: string | null;
+  availability: string | null;
+  experience: string | null;
   status: "pending" | "approved" | "rejected" | "passive";
 };
 
@@ -193,10 +196,28 @@ export default function DanisanBasvurulariPage() {
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+
+  const PAGE_SIZE = 10;
 
   const approvedExperts = useMemo(
     () => experts.filter((expert) => expert.status === "approved"),
     [experts]
+  );
+
+  const getRankedExperts = useCallback(
+    (client: Client) => {
+      return approvedExperts
+        .map((expert) => ({
+          expert,
+          match: scoreExpertMatch(
+            { topic: client.topic, availability: client.availability },
+            { areas: expert.areas, availability: expert.availability, experience: expert.experience }
+          ),
+        }))
+        .sort((a, b) => b.match.score - a.match.score);
+    },
+    [approvedExperts]
   );
 
   const counts = useMemo(() => {
@@ -289,6 +310,14 @@ export default function DanisanBasvurulariPage() {
       return statusMatch && searchMatch;
     });
   }, [clients, filter, search, experts]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+
+  const paginatedClients = useMemo(
+    () => filteredClients.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filteredClients, currentPage]
+  );
 
   const fetchData = useCallback(async () => {
     try {
@@ -528,7 +557,10 @@ export default function DanisanBasvurulariPage() {
             <button
               key={option.value}
               type="button"
-              onClick={() => setFilter(option.value)}
+              onClick={() => {
+                setFilter(option.value);
+                setPage(1);
+              }}
               className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 ${
                 filter === option.value
                   ? "bg-slate-950 text-white ring-slate-950"
@@ -543,7 +575,10 @@ export default function DanisanBasvurulariPage() {
         <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
           <input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             placeholder="İsim, telefon, e-posta, konu, uzman, ödeme numarası, konuşma numarası veya not ara..."
             className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
           />
@@ -560,7 +595,7 @@ export default function DanisanBasvurulariPage() {
           />
         ) : (
           <section className="grid gap-5">
-            {filteredClients.map((client) => {
+            {paginatedClients.map((client) => {
               const payment = client.latest_payment;
               const conversation = getClientConversation(client);
               const canCreatePayment = Boolean(client.matched_expert_id);
@@ -690,16 +725,33 @@ export default function DanisanBasvurulariPage() {
                           }
                           className="min-h-12 rounded-2xl border border-violet-100 bg-white px-4 text-sm font-semibold text-violet-950 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
                         >
-                          <option value="">Onaylı uzman seç</option>
+                          <option value="">Onaylı uzman seç (uyum skoruna göre sıralı)</option>
 
-                          {approvedExperts.map((expert) => (
+                          {getRankedExperts(client).map(({ expert, match }) => (
                             <option key={expert.id} value={expert.id}>
+                              {match.score > 0 ? `%${match.score} uyum • ` : ""}
                               {expert.name}
                               {expert.title ? ` • ${expert.title}` : ""}
                               {expert.areas ? ` • ${expert.areas}` : ""}
                             </option>
                           ))}
                         </select>
+
+                        {selectedExperts[client.id]
+                          ? (() => {
+                              const picked = getRankedExperts(client).find(
+                                ({ expert }) => expert.id === selectedExperts[client.id]
+                              );
+
+                              if (!picked || picked.match.reasons.length === 0) return null;
+
+                              return (
+                                <p className="text-xs font-semibold text-violet-800">
+                                  {picked.match.reasons.join(" • ")}
+                                </p>
+                              );
+                            })()
+                          : null}
 
                         <button
                           type="button"
@@ -879,6 +931,33 @@ export default function DanisanBasvurulariPage() {
             })}
           </section>
         )}
+
+        {!loading && !error && filteredClients.length > PAGE_SIZE ? (
+          <section className="flex flex-col items-center justify-between gap-3 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:flex-row">
+            <p className="text-sm font-semibold text-slate-500">
+              Sayfa {currentPage} / {totalPages} • Toplam {filteredClients.length} kayıt
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage <= 1}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Önceki
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage >= totalPages}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Sonraki
+              </button>
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   );

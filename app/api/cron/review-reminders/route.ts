@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendMail } from '@/lib/mail/smtp'
 import { reviewRequestClientTemplate } from '@/lib/mail/templates'
+import { isAuthorizedCronRequest } from '@/lib/security/cron-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -83,22 +84,6 @@ function normalizeStatus(value: unknown) {
 
 function isCompletedBookingStatus(value: unknown) {
   return ['completed', 'done', 'finished'].includes(normalizeStatus(value))
-}
-
-function isAuthorizedCronRequest(req: NextRequest) {
-  const secret = toText(process.env.CRON_SECRET)
-
-  if (!secret) return true
-
-  const authHeader = toText(req.headers.get('authorization'))
-  const cronHeader = toText(req.headers.get('x-cron-secret'))
-  const querySecret = toText(req.nextUrl.searchParams.get('secret'))
-
-  return (
-    authHeader === `Bearer ${secret}` ||
-    cronHeader === secret ||
-    querySecret === secret
-  )
 }
 
 function getSupabaseAdmin(): SupabaseAdminClient {

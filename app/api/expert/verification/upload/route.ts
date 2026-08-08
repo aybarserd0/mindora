@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getExpertIdFromRequest } from '@/lib/security/expert-session'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -51,13 +52,8 @@ function sanitizeFileName(value: string) {
     .slice(0, 120)
 }
 
-async function resolveExpertId(request: NextRequest, formData: FormData) {
-  const formExpertId = normalizeText(formData.get('expertId'))
-  const headerExpertId = normalizeText(request.headers.get('x-expert-id'))
-  const queryExpertId = normalizeText(request.nextUrl.searchParams.get('expertId'))
-  const envExpertId = normalizeText(process.env.MINDORA_DEV_EXPERT_ID)
-
-  return formExpertId || headerExpertId || queryExpertId || envExpertId
+async function resolveExpertId(request: NextRequest) {
+  return getExpertIdFromRequest(request)
 }
 
 export async function POST(request: NextRequest) {
@@ -73,7 +69,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
 
     const documentType = normalizeText(formData.get('documentType'))
-    const expertId = await resolveExpertId(request, formData)
+    const expertId = await resolveExpertId(request)
     const file = formData.get('file')
 
     if (!expertId) {

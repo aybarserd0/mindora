@@ -83,6 +83,9 @@ export default function UzmanBasvurulariPage() {
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+
+  const PAGE_SIZE = 10;
 
   const counts = useMemo(() => {
     return {
@@ -120,6 +123,14 @@ export default function UzmanBasvurulariPage() {
       return matchesStatus && matchesSearch;
     });
   }, [experts, filter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredExperts.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+
+  const paginatedExperts = useMemo(
+    () => filteredExperts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filteredExperts, currentPage]
+  );
 
   const fetchExperts = useCallback(async () => {
     try {
@@ -242,7 +253,10 @@ export default function UzmanBasvurulariPage() {
             <button
               key={option.value}
               type="button"
-              onClick={() => setFilter(option.value)}
+              onClick={() => {
+                setFilter(option.value);
+                setPage(1);
+              }}
               className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 ${
                 filter === option.value
                   ? "bg-slate-950 text-white ring-slate-950"
@@ -257,7 +271,10 @@ export default function UzmanBasvurulariPage() {
         <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
           <input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             placeholder="İsim, e-posta, telefon, unvan veya uzmanlık alanı ara..."
             className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
           />
@@ -274,7 +291,7 @@ export default function UzmanBasvurulariPage() {
           />
         ) : (
           <section className="grid gap-5">
-            {filteredExperts.map((expert) => (
+            {paginatedExperts.map((expert) => (
               <article
                 key={expert.id}
                 className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
@@ -361,6 +378,33 @@ export default function UzmanBasvurulariPage() {
             ))}
           </section>
         )}
+
+        {!loading && !error && filteredExperts.length > PAGE_SIZE ? (
+          <section className="flex flex-col items-center justify-between gap-3 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:flex-row">
+            <p className="text-sm font-semibold text-slate-500">
+              Sayfa {currentPage} / {totalPages} • Toplam {filteredExperts.length} kayıt
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage <= 1}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Önceki
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage >= totalPages}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Sonraki
+              </button>
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   );

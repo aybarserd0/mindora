@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { applyRateLimit } from "@/lib/security/rate-limit";
 import { cleanText, cleanUuid } from "@/lib/security/validation";
+import { createNotification } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -205,6 +206,35 @@ export async function POST(req: NextRequest) {
 
       throw error;
     }
+
+    const scheduledStartText = new Intl.DateTimeFormat("tr-TR", {
+      day: "2-digit",
+      month: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: timezone || "Europe/Istanbul",
+    }).format(scheduledStartAt);
+
+    await Promise.all([
+      clientId
+        ? createNotification({
+            supabase,
+            userType: "client",
+            userId: clientId,
+            title: "Randevunuz oluşturuldu",
+            message: `${scheduledStartText} tarihine bir seans planlandı.`,
+            type: "session",
+          })
+        : Promise.resolve(),
+      createNotification({
+        supabase,
+        userType: "expert",
+        userId: expertId,
+        title: "Yeni randevu oluşturuldu",
+        message: `${scheduledStartText} tarihine bir seans planlandı.`,
+        type: "session",
+      }),
+    ]);
 
     return NextResponse.json({
       ok: true,

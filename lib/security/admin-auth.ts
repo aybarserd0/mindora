@@ -1,24 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit } from "./rate-limit";
+import { ADMIN_COOKIE_NAME, isValidAdminSession } from "./admin-session";
 
-export function getAdminTokenFromRequest(req: Request) {
-  const url = new URL(req.url);
-
-  return {
-    configuredToken: process.env.ADMIN_DASHBOARD_TOKEN || process.env.ADMIN_TOKEN || "",
-    headerToken: req.headers.get("x-admin-token") || "",
-    queryToken: url.searchParams.get("adminToken") || "",
-  };
-}
-
-export function hasAdminAccess(req: Request) {
-  const { configuredToken, headerToken, queryToken } = getAdminTokenFromRequest(req);
-
-  if (!configuredToken) {
-    return process.env.NODE_ENV !== "production";
-  }
-
-  return headerToken === configuredToken || queryToken === configuredToken;
+export function hasAdminSession(req: NextRequest) {
+  return isValidAdminSession(req.cookies.get(ADMIN_COOKIE_NAME)?.value);
 }
 
 export function adminUnauthorizedResponse() {
@@ -31,7 +16,12 @@ export function adminUnauthorizedResponse() {
   );
 }
 
-export function enforceAdminRequest(req: Request) {
+/**
+ * Defense-in-depth guard for admin-only route handlers that live outside
+ * `/api/admin/**` (proxy.ts already blocks that whole prefix). Call at the
+ * top of the handler and return early when a response comes back.
+ */
+export function enforceAdminRequest(req: NextRequest) {
   const limited = applyRateLimit(req, {
     scope: "admin",
     limit: 120,
@@ -40,7 +30,7 @@ export function enforceAdminRequest(req: Request) {
 
   if (limited) return limited;
 
-  if (!hasAdminAccess(req)) {
+  if (!hasAdminSession(req)) {
     return adminUnauthorizedResponse();
   }
 

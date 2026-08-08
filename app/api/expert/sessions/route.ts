@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getExpertIdFromRequest } from '@/lib/security/expert-session'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -361,19 +362,14 @@ async function fetchClientsByIds(clientIds: string[]) {
 
 export async function GET(req: NextRequest) {
   try {
-    const requestedExpertId = toText(req.nextUrl.searchParams.get('expertId'))
-    const envExpertId = toText(process.env.MINDORA_DEV_EXPERT_ID)
-    const expertId = requestedExpertId || envExpertId || null
+    const expertId = await getExpertIdFromRequest(req)
+
+    if (!expertId) {
+      return jsonError('Uzman oturumu bulunamadı.', 401)
+    }
+
     const status = normalizeStatus(req.nextUrl.searchParams.get('status'))
     const limit = normalizeLimit(req.nextUrl.searchParams.get('limit'))
-
-    if (requestedExpertId && !isValidUuid(requestedExpertId)) {
-      return jsonError('Geçerli uzman kimliği gerekli.', 400)
-    }
-
-    if (envExpertId && !isValidUuid(envExpertId)) {
-      return jsonError('Geliştirme uzman kimliği geçerli UUID olmalı.', 500)
-    }
 
     const { tableName, bookings } = await fetchBookings({ expertId, status, limit })
 

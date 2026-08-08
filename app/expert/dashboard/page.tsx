@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getExpertIdFromCookies } from '@/lib/security/expert-session'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -303,7 +305,7 @@ async function fetchExpertNotifications(expertId: string | null) {
 }
 
 
-async function getDashboardData(): Promise<DashboardData> {
+async function getDashboardData(expertId: string): Promise<DashboardData> {
   const emptyData: DashboardData = {
     upcomingBookings: [],
     activeConversations: [],
@@ -316,34 +318,30 @@ async function getDashboardData(): Promise<DashboardData> {
   try {
     const supabase = getSupabaseAdmin()
     const nowIso = new Date().toISOString()
-    const devExpertId = process.env.MINDORA_DEV_EXPERT_ID?.trim() || null
 
-    let bookingsQuery = supabase
+    const bookingsQuery = supabase
       .from('session_bookings')
       .select('id, expert_id, conversation_id, client_id, scheduled_start_at, scheduled_end_at, status')
+      .eq('expert_id', expertId)
       .in('status', ['scheduled', 'confirmed', 'active'])
       .gte('scheduled_start_at', nowIso)
       .order('scheduled_start_at', { ascending: true })
       .limit(6)
 
-    let conversationsQuery = supabase
+    const conversationsQuery = supabase
       .from('conversations')
       .select('id, client_application_id, expert_id, status, payment_status, updated_at')
+      .eq('expert_id', expertId)
       .in('status', ['active', 'matched', 'open'])
       .order('updated_at', { ascending: false })
       .limit(6)
 
-    let paymentsQuery = supabase
+    const paymentsQuery = supabase
       .from('payments')
       .select('id, expert_id, expert_amount, status, expert_payout_status, created_at')
+      .eq('expert_id', expertId)
       .order('created_at', { ascending: false })
       .limit(100)
-
-    if (devExpertId) {
-      bookingsQuery = bookingsQuery.eq('expert_id', devExpertId)
-      conversationsQuery = conversationsQuery.eq('expert_id', devExpertId)
-      paymentsQuery = paymentsQuery.eq('expert_id', devExpertId)
-    }
 
     const [bookingsResult, conversationsResult, paymentsResult] = await Promise.all([
       bookingsQuery,
@@ -372,7 +370,7 @@ async function getDashboardData(): Promise<DashboardData> {
 
     const [clientsById, notificationData] = await Promise.all([
       fetchClientsByIds(clientIds),
-      fetchExpertNotifications(devExpertId),
+      fetchExpertNotifications(expertId),
     ])
 
     return {
@@ -390,7 +388,13 @@ async function getDashboardData(): Promise<DashboardData> {
 }
 
 export default async function ExpertDashboardPage() {
-  const data = await getDashboardData()
+  const expertId = await getExpertIdFromCookies()
+
+  if (!expertId) {
+    redirect('/expert/login')
+  }
+
+  const data = await getDashboardData(expertId)
 
   const paidPayments = data.payments.filter((payment) => payment.status === 'paid')
   const thisMonthPayments = paidPayments.filter((payment) => isCurrentMonth(payment.created_at))

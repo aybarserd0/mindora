@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const ADMIN_COOKIE_NAME = "mindora_admin";
+import { ADMIN_COOKIE_NAME, isValidAdminSession } from "./lib/security/admin-session";
 
 function applySecurityHeaders(response: NextResponse) {
   response.headers.set("X-Content-Type-Options", "nosniff");
@@ -32,11 +31,13 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const isAdminRoute = pathname.startsWith("/admin");
+  const isAdminPage = pathname.startsWith("/admin");
   const isAdminLoginPage = pathname === "/admin/login";
+  const isAdminApiRoute = pathname.startsWith("/api/admin");
+  const isAdminLoginApiRoute = pathname === "/api/admin/login";
 
-  if (isAdminRoute && !isAdminLoginPage) {
-    const isAdmin = req.cookies.get(ADMIN_COOKIE_NAME)?.value === "true";
+  if (isAdminPage && !isAdminLoginPage) {
+    const isAdmin = isValidAdminSession(req.cookies.get(ADMIN_COOKIE_NAME)?.value);
 
     if (!isAdmin) {
       const loginUrl = req.nextUrl.clone();
@@ -47,6 +48,19 @@ export function proxy(req: NextRequest) {
       const redirectResponse = NextResponse.redirect(loginUrl);
 
       return applySecurityHeaders(redirectResponse);
+    }
+  }
+
+  if (isAdminApiRoute && !isAdminLoginApiRoute) {
+    const isAdmin = isValidAdminSession(req.cookies.get(ADMIN_COOKIE_NAME)?.value);
+
+    if (!isAdmin) {
+      const unauthorizedResponse = NextResponse.json(
+        { ok: false, error: "Admin erişimi doğrulanamadı." },
+        { status: 401 }
+      );
+
+      return applySecurityHeaders(unauthorizedResponse);
     }
   }
 

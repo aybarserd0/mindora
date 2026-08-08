@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { applyRateLimit } from '@/lib/security/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -57,6 +58,14 @@ function normalizeAmount(value: unknown) {
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = applyRateLimit(req, {
+      scope: 'payment-create',
+      limit: 10,
+      windowMs: 60_000,
+    })
+
+    if (limited) return limited
+
     const apiKey = process.env.IYZICO_API_KEY
     const secretKey = process.env.IYZICO_SECRET_KEY
     const baseUrl = cleanSiteUrl(process.env.IYZICO_BASE_URL)
@@ -190,18 +199,38 @@ export async function POST(req: NextRequest) {
 
     const clientFullName = client.name || 'Mindora Danışan'
 
-    
-
     const { name, surname } = splitName(clientFullName)
 
-    const clientEmail = client.email || 'test@test.com'
+    const clientEmail = (client.email || '').trim()
+
+    if (!clientEmail) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            'Danışanın e-posta adresi eksik. Ödeme başlatılmadan önce başvuru kaydına geçerli bir e-posta eklenmelidir.',
+        },
+        { status: 400 }
+      )
+    }
+
     const clientPhone = cleanPhone(client.phone)
     const clientCity = 'Ankara'
     const clientAddress = 'Türkiye'
     const ip =
       req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      req.headers.get('x-real-ip') ||
-      '85.34.78.112'
+      req.headers.get('x-real-ip')?.trim() ||
+      null
+
+    if (!ip) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'İstemci IP adresi belirlenemedi, ödeme başlatılamadı.',
+        },
+        { status: 400 }
+      )
+    }
 
     const iyzicoBody = {
       locale: 'tr',

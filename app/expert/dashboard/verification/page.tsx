@@ -58,28 +58,28 @@ const initialDocuments: VerificationDocument[] = [
   {
     key: "diploma",
     title: "Diploma",
-    description: "Lisans / yüksek lisans diploma belgenizi yükleyin.",
+    description: "Lisans, yüksek lisans veya ilgili mezuniyet belgenizi yükleyin.",
     status: "missing",
     required: true,
   },
   {
     key: "license",
     title: "Lisans / Yetkinlik Belgesi",
-    description: "Mesleki yetkinlik, ruhsat veya resmi çalışma belgesi.",
+    description: "Mesleki yetkinlik, ruhsat veya resmi çalışma belgenizi yükleyin.",
     status: "missing",
     required: true,
   },
   {
     key: "certificate",
     title: "Uzmanlık Sertifikası",
-    description: "Terapi ekolü, eğitim veya uzmanlık sertifikaları.",
+    description: "Terapi ekolü, eğitim veya uzmanlık sertifikalarınızı ekleyebilirsiniz.",
     status: "missing",
     required: false,
   },
   {
     key: "identity",
     title: "Kimlik Doğrulama",
-    description: "Admin incelemesi için opsiyonel kimlik doğrulama.",
+    description: "Gerekli görülürse kimlik doğrulama belgesi yükleyebilirsiniz.",
     status: "missing",
     required: false,
   },
@@ -87,6 +87,13 @@ const initialDocuments: VerificationDocument[] = [
 
 const acceptedFileTypes = ".pdf,.png,.jpg,.jpeg";
 const maxFileSizeMb = 10;
+
+function getDocumentIcon(key: DocumentKey) {
+  if (key === "diploma") return "🎓";
+  if (key === "license") return "📄";
+  if (key === "certificate") return "📜";
+  return "🪪";
+}
 
 function getStatusLabel(status: DocumentStatus) {
   if (status === "approved") return "Onaylandı";
@@ -102,15 +109,32 @@ function getStatusClass(status: DocumentStatus) {
   return "bg-slate-100 text-slate-700 ring-slate-200";
 }
 
-function getProgressValue(items: VerificationDocument[]) {
+function getStatusMessage(status: DocumentStatus) {
+  if (status === "approved") return "Belgeniz incelendi ve onaylandı.";
+  if (status === "pending") return "Belgeniz Mindora ekibi tarafından inceleniyor.";
+  if (status === "rejected") return "Belgeniz reddedildi. Açıklamaya göre yeniden yükleyebilirsiniz.";
+  return "Bu belge henüz yüklenmedi.";
+}
+
+function getRequiredCounts(items: VerificationDocument[]) {
   const requiredItems = items.filter((item) => item.required);
-  if (requiredItems.length === 0) return 0;
+  const submitted = requiredItems.filter((item) =>
+    ["pending", "approved"].includes(item.status)
+  ).length;
+  const approved = requiredItems.filter((item) => item.status === "approved").length;
 
-  const completedItems = requiredItems.filter(
-    (item) => item.status === "approved" || item.status === "pending"
-  );
+  return {
+    total: requiredItems.length,
+    submitted,
+    approved,
+  };
+}
 
-  return Math.round((completedItems.length / requiredItems.length) * 100);
+function getProgressValue(items: VerificationDocument[]) {
+  const counts = getRequiredCounts(items);
+  if (counts.total === 0) return 0;
+
+  return Math.round((counts.submitted / counts.total) * 100);
 }
 
 function createInitialUploadState() {
@@ -203,6 +227,20 @@ export default function ExpertVerificationPage() {
     () => Number(summary?.progress ?? getProgressValue(documents)),
     [documents, summary?.progress]
   );
+
+  const requiredCounts = useMemo(() => getRequiredCounts(documents), [documents]);
+
+  const pageStatusText = useMemo(() => {
+    if (summary?.isVerified) {
+      return "Zorunlu belgeleriniz onaylandı. Süreç tamamlandı.";
+    }
+
+    if (summary?.isReadyForReview) {
+      return "Zorunlu belgeleriniz yüklendi. Mindora ekibi inceleme yapıyor.";
+    }
+
+    return "Zorunlu belgeleri yüklediğinizde inceleme süreci başlar.";
+  }, [summary?.isReadyForReview, summary?.isVerified]);
 
   const fetchVerification = useCallback(async (mode: "initial" | "refresh" = "refresh") => {
     try {
@@ -321,31 +359,30 @@ export default function ExpertVerificationPage() {
   return (
     <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div className="grid gap-0 lg:grid-cols-[1.35fr_0.65fr]">
+            <div className="p-6 lg:p-8">
               <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
-                C14 Uzman Doğrulama
+                Uzman Doğrulama
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                Doğrulama Merkezi
+                Belge Yönetimi
               </h1>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
-                Diploma, lisans ve uzmanlık belgelerinizi güvenli şekilde yükleyin.
-                Admin onayından sonra profilinizde doğrulanmış uzman güven rozeti gösterilir.
+                Mesleki belgelerinizi güvenli şekilde yükleyin. Belgeler yalnızca Mindora
+                doğrulama ekibi tarafından incelenir ve danışanlarla paylaşılmaz.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <StatusPill tone="blue">Güven artırıcı profil</StatusPill>
-                <StatusPill tone="green">Admin onay süreci</StatusPill>
+                <StatusPill tone="blue">Güvenli dosya yükleme</StatusPill>
+                <StatusPill tone="green">Admin inceleme süreci</StatusPill>
                 <StatusPill>Belgeler gizli tutulur</StatusPill>
-                {summary?.isVerified ? <StatusPill tone="green">Doğrulama tamamlandı</StatusPill> : null}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 lg:min-w-[320px]">
+            <div className="border-t border-indigo-100 bg-indigo-50 p-6 lg:border-l lg:border-t-0 lg:p-8">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-black text-indigo-700">Doğrulama İlerlemesi</p>
+                <p className="text-sm font-black text-indigo-700">Zorunlu Belge Durumu</p>
                 <button
                   type="button"
                   onClick={() => void fetchVerification("refresh")}
@@ -355,19 +392,25 @@ export default function ExpertVerificationPage() {
                   {loading || refreshing ? "..." : "Yenile"}
                 </button>
               </div>
-              <p className="mt-2 text-4xl font-black tracking-tight text-slate-950">%{loading ? "..." : progress}</p>
+
+              <div className="mt-3 flex items-end gap-2">
+                <p className="text-4xl font-black tracking-tight text-slate-950">
+                  {loading ? "..." : requiredCounts.submitted}
+                </p>
+                <p className="pb-1 text-sm font-black text-slate-500">
+                  / {requiredCounts.total} yüklendi
+                </p>
+              </div>
+
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
                 <div
                   className="h-full rounded-full bg-indigo-600"
                   style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
                 />
               </div>
+
               <p className="mt-3 text-xs font-bold leading-5 text-slate-600">
-                {summary?.isVerified
-                  ? "Zorunlu belgeleriniz onaylandı. Profiliniz doğrulanmış uzman rozeti için hazır."
-                  : summary?.isReadyForReview
-                    ? "Zorunlu belgeler yüklendi ve admin incelemesi bekleniyor."
-                    : "Zorunlu belgeler yüklendiğinde admin incelemesi başlatılır."}
+                {pageStatusText}
               </p>
             </div>
           </div>
@@ -381,7 +424,7 @@ export default function ExpertVerificationPage() {
 
         <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <Panel
-            title="Belge Yükleme"
+            title="Belgeler"
             description={`PDF, PNG veya JPG formatında en fazla ${maxFileSizeMb} MB dosya yükleyebilirsiniz.`}
           >
             <div className="grid gap-4">
@@ -397,31 +440,32 @@ export default function ExpertVerificationPage() {
           </Panel>
 
           <Panel
-            title="Onay Süreci"
-            description="Belgeleriniz admin ekibi tarafından incelendikten sonra doğrulama rozeti aktif edilir."
+            title="Süreç"
+            description="Belgeleriniz yüklendikten sonra Mindora ekibi tarafından incelenir."
           >
             <div className="space-y-3">
               <TimelineItem
-                title="1. Belgeleri yükle"
-                description="Diploma ve lisans belgesi zorunludur."
+                title="Belgeleri yükleyin"
+                description="Diploma ve lisans / yetkinlik belgesi zorunludur."
                 active
               />
               <TimelineItem
-                title="2. Admin incelemesi"
-                description="Belgelerin doğruluğu ve okunabilirliği kontrol edilir."
+                title="İnceleme"
+                description="Belgelerin okunabilirliği ve doğruluğu kontrol edilir."
                 active={Boolean(summary?.isReadyForReview)}
               />
               <TimelineItem
-                title="3. Profil rozeti"
-                description="Onay sonrası public profilinizde doğrulanmış uzman rozeti görünür."
+                title="Tamamlandı"
+                description="Zorunlu belgeler onaylandığında doğrulama süreci tamamlanır."
                 active={Boolean(summary?.isVerified)}
               />
             </div>
 
-            <div className="mt-5 rounded-3xl border border-emerald-100 bg-emerald-50 p-4">
-              <p className="text-sm font-black text-emerald-900">Gerçek durum senkronizasyonu aktif</p>
-              <p className="mt-1 text-sm font-semibold leading-6 text-emerald-800">
-                Bu sayfa artık GET /api/expert/verification ile gerçek belge durumlarını, admin notlarını ve onay sonucunu gösterir.
+            <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-black text-slate-900">Gizlilik notu</p>
+              <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+                Belge dosyaları danışanlara gösterilmez. Dosyalar sadece doğrulama amacıyla
+                yetkili ekip tarafından incelenir.
               </p>
             </div>
           </Panel>
@@ -430,10 +474,10 @@ export default function ExpertVerificationPage() {
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Gizlilik ve Güvenlik</h2>
+              <h2 className="text-xl font-black text-slate-950">Güvenli İnceleme</h2>
               <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
-                Yüklenen belgeler yalnızca doğrulama amacıyla kullanılır. Danışan tarafında belge dosyaları değil,
-                sadece doğrulama sonucu ve güven rozeti gösterilir.
+                Yüklenen belgeler private storage içinde saklanır. İnceleme süreci tamamlandığında
+                durumunuz bu sayfada güncellenir.
               </p>
             </div>
 
@@ -473,41 +517,53 @@ function DocumentCard({
   const fileSize = formatFileSize(document.fileSize);
   const createdAt = formatDate(document.createdAt);
   const reviewedAt = formatDate(document.reviewedAt);
+  const hasFileInfo = Boolean(document.fileName || fileSize || createdAt || reviewedAt);
 
   return (
-    <article className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-md">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
+    <article className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white hover:shadow-md">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-black text-slate-950">{document.title}</h3>
-            {document.required ? (
-              <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-700 ring-1 ring-rose-100">
-                Zorunlu
-              </span>
-            ) : (
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
-                Opsiyonel
-              </span>
-            )}
-            <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusClass(document.status)}`}>
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-lg ring-1 ring-slate-200">
+              {getDocumentIcon(document.key)}
+            </span>
+
+            <div className="min-w-0">
+              <h3 className="text-base font-black text-slate-950">{document.title}</h3>
+              <p className="mt-0.5 text-xs font-bold text-slate-500">
+                {document.required ? "Zorunlu belge" : "Opsiyonel belge"}
+              </p>
+            </div>
+
+            <span className={`ml-auto rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusClass(document.status)}`}>
               {getStatusLabel(document.status)}
             </span>
           </div>
 
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+          <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">
             {document.description}
           </p>
 
-          {document.fileName ? (
+          <p className="mt-3 rounded-2xl bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200">
+            {getStatusMessage(document.status)}
+          </p>
+
+          {hasFileInfo ? (
             <div className="mt-3 rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200">
-              <p className="truncate text-xs font-black text-slate-700">
-                Yüklü dosya: {document.fileName}
-              </p>
+              {document.fileName ? (
+                <p className="truncate text-xs font-black text-slate-700">
+                  Dosya: {document.fileName}
+                </p>
+              ) : null}
+
               <p className="mt-1 text-xs font-semibold text-slate-500">
-                {fileSize ? `${fileSize} · ` : ""}
+                {fileSize ? `${fileSize}` : ""}
+                {fileSize && createdAt ? " · " : ""}
                 {createdAt ? `Yüklenme: ${createdAt}` : ""}
-                {reviewedAt ? ` · İnceleme: ${reviewedAt}` : ""}
+                {(fileSize || createdAt) && reviewedAt ? " · " : ""}
+                {reviewedAt ? `İnceleme: ${reviewedAt}` : ""}
               </p>
+
               {document.adminNote ? (
                 <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-black text-amber-800 ring-1 ring-amber-100">
                   Admin notu: {document.adminNote}
@@ -535,7 +591,7 @@ function DocumentCard({
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col">
           <input
             ref={inputRef}
             type="file"
@@ -548,17 +604,13 @@ function DocumentCard({
             type="button"
             disabled={uploadState.loading}
             onClick={() => inputRef.current?.click()}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-w-[150px] items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {document.status === "missing" ? "Dosya Seç" : "Yeniden Yükle"}
-          </button>
-
-          <button
-            type="button"
-            disabled
-            className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-slate-300 px-5 py-3 text-sm font-black text-white"
-          >
-            {uploadState.loading ? "Yükleniyor..." : "Otomatik Yüklenir"}
+            {uploadState.loading
+              ? "Yükleniyor..."
+              : document.status === "missing"
+                ? "Dosya Seç"
+                : "Yeniden Yükle"}
           </button>
         </div>
       </div>

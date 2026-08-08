@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 type NavItem = {
   label: string;
@@ -29,7 +31,7 @@ const navigationItems: NavItem[] = [
     label: "Görüşmeler",
     href: "/expert/dashboard/sessions",
     description: "Seans takibi",
-    icon: "◷",
+    icon: "▷",
   },
   {
     label: "Takvim",
@@ -70,8 +72,66 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function useExpertSession() {
+  const router = useRouter();
+  const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
+  const [expertName, setExpertName] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function check() {
+      try {
+        const res = await fetch("/api/expert/session", { cache: "no-store" });
+        const data = await res.json().catch(() => null);
+
+        if (cancelled) return;
+
+        if (!res.ok || !data?.ok) {
+          setStatus("unauthorized");
+          router.replace("/expert/login");
+          return;
+        }
+
+        setExpertName(data.name || "");
+        setStatus("ready");
+      } catch {
+        if (!cancelled) {
+          setStatus("unauthorized");
+          router.replace("/expert/login");
+        }
+      }
+    }
+
+    void check();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  return { status, expertName };
+}
+
 export default function ExpertDashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/expert/dashboard";
+  const { status, expertName } = useExpertSession();
+
+  if (status === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-100">
+        <p className="text-sm font-black text-slate-600">Oturum doğrulanıyor...</p>
+      </div>
+    );
+  }
+
+  if (status === "unauthorized") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-100">
+        <p className="text-sm font-black text-slate-600">Giriş sayfasına yönlendiriliyorsunuz...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen overflow-hidden bg-slate-100 text-slate-950">
@@ -162,7 +222,9 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                   U
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-black text-slate-950">Uzman Hesabı</p>
+                  <p className="truncate text-sm font-black text-slate-950">
+                    {expertName || "Uzman Hesabı"}
+                  </p>
                   <p className="text-xs font-semibold text-emerald-600">Panel erişimi aktif</p>
                 </div>
               </div>
@@ -180,12 +242,17 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                 >
                   Belge
                 </Link>
-                <Link
-                  href="/"
-                  className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-center text-xs font-black text-slate-700 no-underline transition hover:bg-slate-100"
+                <button
+                  type="button"
+                  onClick={() => {
+                    void fetch("/api/expert/session", { method: "DELETE" }).finally(() => {
+                      window.location.href = "/expert/login";
+                    });
+                  }}
+                  className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
                 >
-                  Site
-                </Link>
+                  Çıkış
+                </button>
               </div>
             </div>
           </div>
@@ -203,19 +270,23 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                 </h1>
               </div>
 
-              <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 lg:flex">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700 ring-1 ring-indigo-200">
-                  U
-                </span>
-                <div>
-                  <p className="text-sm font-black text-slate-950">Uzman Hesabı</p>
-                  <p className="text-xs font-semibold text-slate-500">
-                    Panel erişimi aktif
-                  </p>
+              <div className="flex items-center gap-3">
+                <NotificationBell role="expert" />
+
+                <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 lg:flex">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700 ring-1 ring-indigo-200">
+                    U
+                  </span>
+                  <div>
+                    <p className="text-sm font-black text-slate-950">Uzman Hesabı</p>
+                    <p className="text-xs font-semibold text-slate-500">
+                      Panel erişimi aktif
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">
+                    Aktif
+                  </span>
                 </div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">
-                  Aktif
-                </span>
               </div>
 
               <nav className="flex gap-2 overflow-x-auto pb-1 lg:hidden">

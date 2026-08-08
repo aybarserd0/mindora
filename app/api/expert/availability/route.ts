@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getExpertIdFromRequest as getSessionExpertId } from '@/lib/security/expert-session'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -139,23 +140,18 @@ function normalizeAvailabilityRow(row: AvailabilityRow) {
   }
 }
 
-function getExpertIdFromRequest(req: NextRequest, payloadExpertId?: unknown) {
-  const queryExpertId = req.nextUrl.searchParams.get('expertId')
-  const bodyExpertId = toText(payloadExpertId)
-  const envExpertId = process.env.MINDORA_DEV_EXPERT_ID || ''
-
-  const expertId = toText(queryExpertId) || bodyExpertId || envExpertId
-
-  return expertId && isValidUuid(expertId) ? expertId : null
+async function getExpertIdFromRequest(req: NextRequest) {
+  return getSessionExpertId(req)
 }
 
-function validateAvailabilityInput(
+async function validateAvailabilityInput(
   req: NextRequest,
   body: AvailabilityPayload
-):
+): Promise<
   | { ok: true; value: AvailabilityInput }
-  | { ok: false; error: string; status: number } {
-  const expertId = getExpertIdFromRequest(req, body.expertId)
+  | { ok: false; error: string; status: number }
+> {
+  const expertId = await getExpertIdFromRequest(req)
 
   if (!expertId) {
     return { ok: false, error: 'Geçerli uzman kimliği gerekli.', status: 400 }
@@ -271,7 +267,7 @@ async function checkOverlap({
 
 export async function GET(req: NextRequest) {
   try {
-    const expertId = getExpertIdFromRequest(req)
+    const expertId = await getExpertIdFromRequest(req)
 
     if (!expertId) {
       return jsonError('Geçerli uzman kimliği gerekli.', 400)
@@ -313,7 +309,7 @@ export async function POST(req: NextRequest) {
       return jsonError('Geçerli form bilgisi gerekli.', 400)
     }
 
-    const parsed = validateAvailabilityInput(req, body)
+    const parsed = await validateAvailabilityInput(req, body)
 
     if (!parsed.ok) {
       return jsonError(parsed.error, parsed.status)
@@ -380,7 +376,7 @@ export async function PATCH(req: NextRequest) {
       return jsonError('Geçerli müsaitlik kaydı gerekli.', 400)
     }
 
-    const parsed = validateAvailabilityInput(req, body)
+    const parsed = await validateAvailabilityInput(req, body)
 
     if (!parsed.ok) {
       return jsonError(parsed.error, parsed.status)
@@ -438,7 +434,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id')?.trim()
-    const expertId = getExpertIdFromRequest(req)
+    const expertId = await getExpertIdFromRequest(req)
 
     if (!isValidUuid(id)) {
       return jsonError('Geçerli müsaitlik kaydı gerekli.', 400)

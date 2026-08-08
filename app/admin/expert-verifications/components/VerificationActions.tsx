@@ -10,8 +10,36 @@ type ActionResponse = {
   error?: string;
 };
 
+type SignedUrlResponse = {
+  ok?: boolean;
+  signedUrl?: string;
+  error?: string;
+};
+
 function normalizeText(value: string) {
   return value.trim();
+}
+
+async function openSignedUrl(verificationId: string, mode: "preview" | "download") {
+  const response = await fetch(
+    `/api/admin/expert-verifications/${verificationId}/signed-url?mode=${mode}`,
+    {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
+
+  const data = (await response.json().catch(() => ({}))) as SignedUrlResponse;
+
+  if (!response.ok || data.ok === false || !data.signedUrl) {
+    throw new Error(data.error || "Güvenli belge bağlantısı oluşturulamadı.");
+  }
+
+  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
 }
 
 export default function VerificationActions({
@@ -24,9 +52,28 @@ export default function VerificationActions({
   onChanged?: () => void;
 }) {
   const [loadingAction, setLoadingAction] = useState<VerificationStatus | "">("");
+  const [fileAction, setFileAction] = useState<"preview" | "download" | "">("");
   const [adminNote, setAdminNote] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+
+  async function handleFileAction(mode: "preview" | "download") {
+    try {
+      setNotice("");
+      setError("");
+      setFileAction(mode);
+
+      await openSignedUrl(verificationId, mode);
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Güvenli belge bağlantısı oluşturulamadı."
+      );
+    } finally {
+      setFileAction("");
+    }
+  }
 
   async function updateStatus(nextStatus: VerificationStatus) {
     try {
@@ -79,7 +126,27 @@ export default function VerificationActions({
   const isRejected = status === "rejected";
 
   return (
-    <div className="min-w-[260px] space-y-2">
+    <div className="min-w-[280px] space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          disabled={Boolean(fileAction)}
+          onClick={() => void handleFileAction("preview")}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {fileAction === "preview" ? "Açılıyor..." : "Önizle"}
+        </button>
+
+        <button
+          type="button"
+          disabled={Boolean(fileAction)}
+          onClick={() => void handleFileAction("download")}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {fileAction === "download" ? "Hazırlanıyor..." : "İndir"}
+        </button>
+      </div>
+
       <textarea
         value={adminNote}
         onChange={(event) => setAdminNote(event.target.value)}

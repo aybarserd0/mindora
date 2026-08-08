@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { sendMail } from '@/lib/mail/smtp'
+import { clientApplicationCancelledTemplate } from '@/lib/mail/templates'
+import { createNotification } from '@/lib/notifications'
 
 export const runtime = 'nodejs'
 
@@ -74,7 +77,7 @@ export async function POST(req: NextRequest) {
         status,
       })
       .eq('id', clientId)
-      .select('id, status')
+      .select('id, status, name, email')
       .maybeSingle()
 
     if (error) {
@@ -100,7 +103,30 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const client = data as ClientStatusResponse
+    const client = data as ClientStatusResponse & { name?: string; email?: string | null }
+
+    if (status === 'cancelled') {
+      await createNotification({
+        supabase,
+        userType: 'client',
+        userId: clientId,
+        title: 'Başvurunuz hakkında',
+        message: 'Mindora üzerinden yaptığınız başvuru bu aşamada sonlandırılmıştır.',
+        type: 'system',
+      })
+
+      if (client.email) {
+        try {
+          await sendMail({
+            to: client.email,
+            subject: 'Mindora başvurunuz hakkında',
+            text: clientApplicationCancelledTemplate({ clientName: client.name || 'Danışan' }),
+          })
+        } catch (mailError) {
+          console.error('CLIENT STATUS MAIL ERROR:', mailError)
+        }
+      }
+    }
 
     return NextResponse.json({
       ok: true,

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { verifyConversationAccessToken } from '@/lib/chat-access-tokens'
+import { verifyConversationAccessToken, resolveConversationAccessFromToken } from '@/lib/chat-access-tokens'
+import { resolveExpertIdFromToken } from '@/lib/expert-access-tokens'
+import { EXPERT_SESSION_COOKIE } from '@/lib/security/expert-session'
+import { ADMIN_COOKIE_NAME, isValidAdminSession } from '@/lib/security/admin-session'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -163,7 +166,6 @@ async function resolveUserAccess(req: NextRequest) {
   const role = toText(req.nextUrl.searchParams.get('role'))
   const token = toText(req.nextUrl.searchParams.get('token'))
   const conversationId = toText(req.nextUrl.searchParams.get('conversationId'))
-  const userId = toText(req.nextUrl.searchParams.get('userId'))
 
   if (!isValidUserType(role)) {
     return {
@@ -174,31 +176,42 @@ async function resolveUserAccess(req: NextRequest) {
   }
 
   if (role === 'admin') {
-    const adminSecret = toText(process.env.ADMIN_API_SECRET)
-    const authHeader = toText(req.headers.get('authorization'))
-    const adminHeader = toText(req.headers.get('x-admin-secret'))
-    const querySecret = toText(req.nextUrl.searchParams.get('adminSecret'))
+    const isAdmin = isValidAdminSession(req.cookies.get(ADMIN_COOKIE_NAME)?.value)
 
-    if (
-      adminSecret &&
-      (authHeader === `Bearer ${adminSecret}` ||
-        adminHeader === adminSecret ||
-        querySecret === adminSecret)
-    ) {
+    if (!isAdmin) {
       return {
-        ok: true as const,
-        role,
-        userId: isValidUuid(userId) ? userId : null,
+        ok: false as const,
+        status: 401,
+        error: 'Admin bildirimi için yetki gerekli.',
       }
     }
 
     return {
-      ok: false as const,
-      status: 401,
-      error: 'Admin bildirimi için yetki gerekli.',
+      ok: true as const,
+      role,
+      userId: null,
     }
   }
 
+  if (role === 'expert') {
+    const expertId = await resolveExpertIdFromToken(req.cookies.get(EXPERT_SESSION_COOKIE)?.value)
+
+    if (!expertId) {
+      return {
+        ok: false as const,
+        status: 401,
+        error: 'Uzman oturumu bulunamadı.',
+      }
+    }
+
+    return {
+      ok: true as const,
+      role,
+      userId: expertId,
+    }
+  }
+
+  // role === 'client'
   if (isValidUuid(conversationId) && token) {
     const accessResult = await verifyConversationAccessToken({
       conversationId,
@@ -217,16 +230,21 @@ async function resolveUserAccess(req: NextRequest) {
     return {
       ok: true as const,
       role,
-      userId: isValidUuid(userId) ? userId : null,
+      userId: await getClientApplicationIdForConversation(conversationId),
       conversationId,
     }
   }
 
-  if (isValidUuid(userId) && token) {
-    return {
-      ok: true as const,
-      role,
-      userId,
+  if (token) {
+    const resolvedConversationId = await resolveConversationAccessFromToken(token, role)
+
+    if (resolvedConversationId) {
+      return {
+        ok: true as const,
+        role,
+        userId: await getClientApplicationIdForConversation(resolvedConversationId),
+        conversationId: resolvedConversationId,
+      }
     }
   }
 
@@ -235,6 +253,23 @@ async function resolveUserAccess(req: NextRequest) {
     status: 401,
     error: 'Bildirimler için güvenli token veya kullanıcı bilgisi gerekli.',
   }
+}
+
+async function getClientApplicationIdForConversation(conversationId: string) {
+  const supabase = getSupabaseAdmin()
+
+  const { data, error } = await (supabase as any)
+    .from('conversations')
+    .select('client_application_id')
+    .eq('id', conversationId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('NOTIFICATIONS_CONVERSATION_CLIENT_LOOKUP_ERROR', error)
+    return null
+  }
+
+  return toText((data as { client_application_id?: string } | null)?.client_application_id) || null
 }
 
 function normalizeNotification(row: NotificationRow) {

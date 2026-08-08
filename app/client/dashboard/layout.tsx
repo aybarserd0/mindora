@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import type { ReactNode } from 'react'
+import NotificationBell from '@/components/NotificationBell'
 
 type NavItem = {
   label: string
@@ -14,7 +15,7 @@ type NavItem = {
 
 const navigationItems: NavItem[] = [
   { label: 'Genel Bakış', href: '/client/dashboard', description: 'Panel özeti', icon: '⌂' },
-  { label: 'Seanslarım', href: '/client/dashboard/sessions', description: 'Randevu takibi', icon: '◷' },
+  { label: 'Seanslarım', href: '/client/dashboard/sessions', description: 'Randevu takibi', icon: '▷' },
   { label: 'Ödemelerim', href: '/client/dashboard/payments', description: 'Ödeme geçmişi', icon: '₺' },
   { label: 'Dosyalarım', href: '/client/dashboard/files', description: 'Paylaşılan dosyalar', icon: '▦' },
   { label: 'Profilim', href: '/client/dashboard/profile', description: 'Hesap bilgileri', icon: '○' },
@@ -133,13 +134,17 @@ function ClientDashboardShell({ children }: { children: ReactNode }) {
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Destek Alanı</h1>
               </div>
 
-              <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 lg:flex">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700 ring-1 ring-indigo-200">D</span>
-                <div>
-                  <p className="text-sm font-black text-slate-950">Danışan Hesabı</p>
-                  <p className="text-xs font-semibold text-slate-500">Panel erişimi aktif</p>
+              <div className="flex items-center gap-3">
+                <NotificationBell role="client" token={token} />
+
+                <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 lg:flex">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700 ring-1 ring-indigo-200">D</span>
+                  <div>
+                    <p className="text-sm font-black text-slate-950">Danışan Hesabı</p>
+                    <p className="text-xs font-semibold text-slate-500">Panel erişimi aktif</p>
+                  </div>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">Aktif</span>
                 </div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">Aktif</span>
               </div>
 
               <nav className="flex gap-2 overflow-x-auto pb-1 lg:hidden">

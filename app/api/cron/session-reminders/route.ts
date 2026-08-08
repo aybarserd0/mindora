@@ -5,6 +5,7 @@ import {
   sessionReminderClientTemplate,
   sessionReminderExpertTemplate,
 } from '@/lib/mail/templates'
+import { isAuthorizedCronRequest } from '@/lib/security/cron-auth'
 
 type ReminderType = '24h' | '1h' | '15m'
 
@@ -123,22 +124,6 @@ function isValidUuid(value: unknown): value is string {
 
 function isValidEmail(value: string) {
   return EMAIL_REGEX.test(value)
-}
-
-function isAuthorizedCronRequest(req: NextRequest) {
-  const secret = toText(process.env.CRON_SECRET)
-
-  if (!secret) return true
-
-  const authHeader = toText(req.headers.get('authorization'))
-  const cronHeader = toText(req.headers.get('x-cron-secret'))
-  const querySecret = toText(req.nextUrl.searchParams.get('secret'))
-
-  return (
-    authHeader === `Bearer ${secret}` ||
-    cronHeader === secret ||
-    querySecret === secret
-  )
 }
 
 function getPublicBaseUrl(req: NextRequest) {
