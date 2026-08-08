@@ -1236,6 +1236,36 @@ export default function ExpertChatPage({
     }
   }, [conversationId, accessVerified, showToast])
 
+  if (!loading && accessVerified && conversation && conversation.status !== 'active') {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f7f3ee] px-4 py-10 text-[#171717]">
+        <div className="w-full max-w-md rounded-[2rem] border border-[#e5d9cc] bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 text-3xl ring-1 ring-amber-100">
+            🔒
+          </div>
+
+          <h1 className="text-2xl font-black text-[#2b2118]">Görüşme alanı kilitli</h1>
+
+          <p className="mt-3 text-sm font-semibold leading-6 text-[#6b5c4d]">
+            Danışan ödemesini tamamladığında bu görüşme alanı otomatik olarak açılacak ve
+            size bildirim gelecektir.
+          </p>
+
+          <Link
+            href="/expert/dashboard"
+            className="mt-7 block rounded-full bg-[#2b2118] px-6 py-4 text-center text-base font-black text-white transition hover:bg-[#171310]"
+          >
+            Panele Dön
+          </Link>
+
+          <p className="mt-4 text-xs font-semibold text-[#8a7662]">
+            Ödeme durumu: {getPaymentText(conversation.payment_status)}
+          </p>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f3ee] px-4 py-6 text-[#171717] md:px-6 md:py-10">
       <div className="mx-auto max-w-4xl">

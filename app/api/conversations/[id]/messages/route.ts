@@ -5,6 +5,7 @@ import {
   createConversationAccessToken,
   verifyConversationAccessToken,
 } from '@/lib/chat-access-tokens'
+import { getSiteUrl } from '@/lib/site-url'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -159,12 +160,7 @@ function isChatAccessRole(value: unknown): value is ChatAccessRole {
 }
 
 function getBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
-    'http://localhost:3000'
-  )
+  return getSiteUrl()
 }
 
 function getSmtpTransporter() {

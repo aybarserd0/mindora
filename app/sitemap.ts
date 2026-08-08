@@ -1,9 +1,10 @@
 import type { MetadataRoute } from 'next'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getSiteUrl } from '@/lib/site-url'
 
 export const dynamic = 'force-dynamic'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mindora-delta.vercel.app'
+const siteUrl = getSiteUrl()
 
 type ExpertSitemapRow = {
   slug?: string | null

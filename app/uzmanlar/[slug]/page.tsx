@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -91,7 +92,7 @@ type PublicExpertProfile = {
   createdAt: string | null;
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mindora.live";
+const SITE_URL = getSiteUrl();
 
 const DEFAULT_DESCRIPTION =
   "Mindora ile online psikolojik destek sürecine güvenli, sade ve uygun uzman eşleşmesiyle başlayın.";

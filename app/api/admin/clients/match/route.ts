@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { createNotification } from '@/lib/notifications'
+import { getSiteUrl } from '@/lib/site-url'
+import { createConversationAccessToken } from '@/lib/chat-access-tokens'
 
 export const runtime = 'nodejs'
 
@@ -19,13 +21,6 @@ type MailResult = {
 function toText(value: unknown) {
   if (value === null || value === undefined) return ''
   return String(value).trim()
-}
-
-function getBaseUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
-  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-  return 'http://localhost:3000'
 }
 
 function createTransporter() {
@@ -52,12 +47,14 @@ async function safeSendMail({
   to,
   subject,
   text,
+  html,
   logName,
 }: {
   transporter: nodemailer.Transporter | null
   to: string | null | undefined
   subject: string
   text: string
+  html?: string
   logName: string
 }): Promise<MailResult> {
   const receiver = toText(to)
@@ -73,6 +70,7 @@ async function safeSendMail({
       to: receiver,
       subject,
       text,
+      html,
     })
 
     return { ok: true, skipped: false }
@@ -80,6 +78,43 @@ async function safeSendMail({
     console.error(`${logName} MAIL ERROR:`, err)
     return { ok: false, skipped: false }
   }
+}
+
+function clientPaymentEmailHtml({
+  clientName,
+  expertName,
+  paymentUrl,
+}: {
+  clientName: string
+  expertName: string
+  paymentUrl: string
+}) {
+  return `
+<div style="font-family:Arial,sans-serif;line-height:1.6;color:#171717;background:#f7f2eb;padding:32px 16px;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
+    <div style="background:#111111;color:#ffffff;padding:24px 28px;">
+      <div style="font-size:20px;font-weight:900;">Mindora</div>
+      <div style="margin-top:4px;font-size:13px;color:rgba(255,255,255,0.68);">Online psikolojik destek platformu</div>
+    </div>
+    <div style="padding:32px 28px;text-align:center;">
+      <h1 style="margin:0 0 12px;font-size:22px;font-weight:900;color:#111111;">Eşleşmeniz hazır!</h1>
+      <p style="margin:0 0 24px;font-size:15px;color:#333333;">
+        Merhaba ${clientName}, <strong>${expertName}</strong> ile eşleştirildiniz.
+        Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
+      </p>
+      <a href="${paymentUrl}" style="display:inline-block;background:#000000;color:#ffffff;text-decoration:none;padding:18px 32px;border-radius:999px;font-weight:900;font-size:16px;">
+        Ödemeyi Yap ve Görüşmeyi Başlat
+      </a>
+      <p style="margin:24px 0 0;font-size:12px;color:#777777;">
+        Ödemeniz onaylandığı an sohbet ve görüşme alanınız otomatik olarak açılır.
+      </p>
+    </div>
+    <div style="padding:16px 28px;background:#fafafa;color:#777777;font-size:12px;">
+      Bu e-posta Mindora eşleştirme süreci kapsamında gönderilmiştir. Güvenliğiniz için ödeme ve iletişim adımlarını yalnızca Mindora üzerinden yürütün.
+    </div>
+  </div>
+</div>
+`
 }
 
 export async function POST(req: NextRequest) {
@@ -96,7 +131,7 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin() as any
-    const baseUrl = getBaseUrl()
+    const baseUrl = getSiteUrl()
 
     const { data: client, error: clientError } = await supabase
       .from('client_applications')
@@ -250,8 +285,22 @@ export async function POST(req: NextRequest) {
       conversation = createdConversation as Conversation
     }
 
+    let clientDashboardLink = `${baseUrl}/client/dashboard`
+
+    try {
+      const clientAccess = await createConversationAccessToken({
+        conversationId: conversation.id,
+        role: 'client',
+        expiresInHours: 24 * 30,
+      })
+
+      clientDashboardLink = `${baseUrl}/client/dashboard?token=${clientAccess.token}`
+    } catch (tokenError) {
+      console.error('MATCH CLIENT ACCESS TOKEN ERROR:', tokenError)
+    }
+
     const clientChatLink = `${baseUrl}/client/chat/${conversation.id}`
-    const expertChatLink = `${baseUrl}/expert/chat/${conversation.id}`
+    const expertChatLink = `${baseUrl}/expert/dashboard`
     const adminConversationLink = `${baseUrl}/admin/conversations/${conversation.id}`
 
     const transporter = createTransporter()
@@ -328,28 +377,17 @@ Mindora Ekibi
     const clientText = `
 Merhaba ${toText(client.name)},
 
-Mindora başvurunuz incelendi ve size uygun bir uzmanla eşleştirildiniz.
+Eşleşmeniz hazır! Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
 
 Eşleşen Uzman:
 ${toText(expert.name)}
 
-Uzmanlık Bilgileri:
-Ünvan: ${toText(expert.title)}
-Alanlar: ${toText(expert.areas)}
-Deneyim: ${toText(expert.experience)}
+Ödemeyi Yap ve Görüşmeyi Başlat:
+${clientDashboardLink}
 
-Güvenli Danışan Chat Linkiniz:
-${clientChatLink}
+Ödemeniz onaylandığı an sohbet ve görüşme alanınız otomatik olarak açılır.
 
-Güvenliğiniz ve sürecin sağlıklı ilerlemesi için iletişim Mindora platformu üzerinden yürütülecektir.
-
-Uzmanınızın telefon ve e-posta bilgileri gizlilik politikamız gereği paylaşılmamaktadır.
-
-Ödeme tamamlandıktan sonra platform içi iletişim alanınız aktif hale gelecektir.
-
-Lütfen platform dışı iletişim kurmayınız.
-
-Görüşme ve ödeme adımları Mindora güvencesiyle ilerleyecektir.
+Güvenliğiniz için iletişim ve ödeme adımlarını yalnızca Mindora üzerinden yürütün.
 
 Mindora Ekibi
 `
@@ -373,8 +411,13 @@ Mindora Ekibi
     const clientMail = await safeSendMail({
       transporter,
       to: client.email,
-      subject: 'Mindora Eşleşmeniz Yapıldı',
+      subject: 'Eşleşmeniz hazır — ödemenizi tamamlayın',
       text: clientText,
+      html: clientPaymentEmailHtml({
+        clientName: toText(client.name) || 'Danışan',
+        expertName: toText(expert.name) || 'Mindora Uzmanı',
+        paymentUrl: clientDashboardLink,
+      }),
       logName: 'CLIENT MATCH',
     })
 

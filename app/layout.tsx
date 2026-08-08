@@ -3,8 +3,9 @@ import Script from 'next/script'
 import './globals.css'
 import ToastProvider from '@/components/ToastProvider'
 import RootAppShell from '@/components/RootAppShell'
+import { getSiteUrl } from '@/lib/site-url'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mindora-delta.vercel.app'
+const siteUrl = getSiteUrl()
 const siteName = 'Mindora'
 const defaultTitle = 'Mindora | Online Psikolojik Destek Platformu'
 const defaultDescription =

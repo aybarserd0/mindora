@@ -249,6 +249,36 @@ function ClientDashboardContent() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [softNotice, setSoftNotice] = useState('')
+  const [payLoading, setPayLoading] = useState(false)
+  const [payError, setPayError] = useState('')
+
+  const handlePayNow = useCallback(async () => {
+    if (!dashboard?.client?.id) return
+
+    setPayLoading(true)
+    setPayError('')
+
+    try {
+      const res = await fetch('/api/payment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: dashboard.client.id }),
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok || !data?.ok || !data?.paymentPageUrl) {
+        throw new Error(data?.error || 'Ödeme bağlantısı oluşturulamadı.')
+      }
+
+      window.location.href = data.paymentPageUrl
+    } catch (err) {
+      setPayLoading(false)
+      setPayError(
+        err instanceof Error && err.message ? err.message : 'Ödeme bağlantısı oluşturulamadı.'
+      )
+    }
+  }, [dashboard?.client?.id])
 
   const chatUrl = useMemo(() => {
     if (!dashboard?.conversation?.chatUrl) return '#'
@@ -461,6 +491,36 @@ function ClientDashboardContent() {
             </div>
           </div>
         </section>
+
+        {dashboard.conversation.paymentStatus !== 'paid' ? (
+          <section className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6 text-center shadow-sm sm:p-8">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-700">
+              Son adım
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-amber-950 sm:text-3xl">
+              Eşleşmeniz hazır! Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm font-semibold leading-6 text-amber-800">
+              Ödemeniz onaylandığı an sohbet ve görüşme alanınız otomatik olarak açılır, size
+              ve uzmanınıza bildirim gider.
+            </p>
+
+            {payError ? (
+              <p className="mx-auto mt-4 max-w-xl rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-rose-700 ring-1 ring-rose-100">
+                {payError}
+              </p>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => void handlePayNow()}
+              disabled={payLoading || !dashboard.client.id}
+              className="mx-auto mt-6 block w-full max-w-sm rounded-2xl bg-amber-600 px-8 py-5 text-center text-lg font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {payLoading ? 'Ödeme bağlantısı hazırlanıyor...' : 'Ödemeyi Yap ve Görüşmeyi Başlat'}
+            </button>
+          </section>
+        ) : null}
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard title="Yaklaşan" value={String(dashboard.stats.upcomingCount)} subtitle="aktif seans" />

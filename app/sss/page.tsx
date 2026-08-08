@@ -1,7 +1,8 @@
 import Header from '@/components/Header'
 import type { Metadata } from 'next'
+import { getSiteUrl } from '@/lib/site-url'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mindora-delta.vercel.app'
+const SITE_URL = getSiteUrl()
 
 export const metadata: Metadata = {
   title: 'Sık Sorulan Sorular | Mindora',
