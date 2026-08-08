@@ -4,15 +4,17 @@ import { createExpertAccessToken } from '@/lib/expert-access-tokens'
 import { applyRateLimit } from '@/lib/security/rate-limit'
 import { sendMail } from '@/lib/mail/smtp'
 import { expertLoginLinkTemplate } from '@/lib/mail/templates'
+import { getSiteUrl } from '@/lib/site-url'
 
 export const runtime = 'nodejs'
 
-function cleanUrl(url?: string | null) {
-  return (url || '').replace(/\/+$/, '')
-}
-
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+/** Only allow redirecting back into the expert area — never an absolute/external URL. */
+function isSafeReturnTo(value: unknown): value is string {
+  return typeof value === 'string' && /^\/expert(\/[a-zA-Z0-9\-_/]*)?$/.test(value)
 }
 
 /**
@@ -37,6 +39,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null)
     const email = String(body?.email || '').trim().toLowerCase()
+    const returnTo = isSafeReturnTo(body?.returnTo) ? body.returnTo : ''
 
     if (!email || !isValidEmail(email)) {
       return NextResponse.json(
@@ -45,12 +48,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const siteUrl = cleanUrl(process.env.NEXT_PUBLIC_SITE_URL)
-
-    if (!siteUrl) {
-      console.error('EXPERT_LOGIN_MISSING_SITE_URL')
-      return genericResponse
-    }
+    const siteUrl = getSiteUrl()
 
     const supabase = getSupabaseAdmin() as any
 
@@ -71,7 +69,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { token } = await createExpertAccessToken({ expertId: expert.id })
-    const loginUrl = `${siteUrl}/api/expert/session/consume?token=${encodeURIComponent(token)}`
+    const consumeUrl = new URL(`${siteUrl}/api/expert/session/consume`)
+    consumeUrl.searchParams.set('token', token)
+    if (returnTo) consumeUrl.searchParams.set('returnTo', returnTo)
+    const loginUrl = consumeUrl.toString()
 
     await sendMail({
       to: expert.email,

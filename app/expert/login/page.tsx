@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 function ExpertLoginContent() {
   const searchParams = useSearchParams()
   const hasInvalidTokenError = searchParams.get('error') === 'invalid_token'
+  const returnTo = searchParams.get('returnTo') || ''
 
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,7 +22,7 @@ function ExpertLoginContent() {
       const res = await fetch('/api/expert/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, returnTo }),
       })
 
       const data = await res.json().catch(() => null)

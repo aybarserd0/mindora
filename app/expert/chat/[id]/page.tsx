@@ -755,20 +755,71 @@ export default function ExpertChatPage({
     }
   }
 
+  /**
+   * The chat page (and its dependent APIs) authenticate via a per-conversation
+   * `?token=` query param. An expert who signed in through the dashboard's
+   * session cookie won't have that token in the URL yet, so bootstrap one
+   * here — verified against the expert's own session, scoped to this
+   * conversation — before falling back to "no access" states.
+   */
+  async function ensureAccessToken(id: string): Promise<
+    | { ok: true; token: string }
+    | { ok: false; reason: string; error: string }
+  > {
+    const existing = getAccessToken()
+
+    if (existing) return { ok: true, token: existing }
+
+    try {
+      const res = await fetch(`/api/expert/chat-token?conversationId=${encodeURIComponent(id)}`, {
+        cache: 'no-store',
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (res.ok && data?.ok && data.token) {
+        const url = new URL(window.location.href)
+        url.searchParams.set('token', data.token)
+        router.replace(`${url.pathname}${url.search}`)
+
+        return { ok: true, token: data.token }
+      }
+
+      return {
+        ok: false,
+        reason: data?.reason || 'unknown',
+        error: data?.error || 'Erişim doğrulanamadı.',
+      }
+    } catch (err) {
+      console.error('EXPERT CHAT TOKEN BOOTSTRAP ERROR:', err)
+      return { ok: false, reason: 'network_error', error: 'Erişim doğrulanamadı.' }
+    }
+  }
+
   async function verifyAccess(id: string) {
     try {
       setAccessLoading(true)
       setAccessVerified(false)
       setError('')
 
-      const token = getAccessToken()
+      const bootstrap = await ensureAccessToken(id)
 
-      if (!token) {
-        setError(
-          'Bu güvenli görüşmeye erişim için geçerli bir token gerekiyor. Link eksik veya bozulmuş olabilir.'
-        )
+      if (!bootstrap.ok) {
+        if (bootstrap.reason === 'not_authenticated') {
+          router.replace(`/expert/login?returnTo=${encodeURIComponent(`/expert/chat/${id}`)}`)
+          setError('Oturumunuz bulunamadı. Giriş sayfasına yönlendiriliyorsunuz...')
+        } else if (bootstrap.reason === 'not_your_conversation') {
+          setError('Bu görüşme hesabınıza ait değil. Farklı bir uzman hesabıyla giriş yapmış olabilirsiniz.')
+        } else if (bootstrap.reason === 'not_found') {
+          setError('Görüşme bulunamadı. Bağlantı geçersiz olabilir.')
+        } else {
+          setError(bootstrap.error)
+        }
+
         return false
       }
+
+      const token = bootstrap.token
 
       const res = await fetch('/api/chat-access/verify', {
         method: 'POST',
@@ -1452,6 +1503,21 @@ export default function ExpertChatPage({
           <section className="rounded-[2rem] bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
             <p className="text-lg font-black text-red-700">Erişim reddedildi</p>
             <p className="mt-2 text-sm font-bold text-red-600">{error}</p>
+
+            <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+              <Link
+                href="/expert/login"
+                className="rounded-full bg-[#2b2118] px-5 py-3 text-sm font-black text-white no-underline transition hover:bg-[#171310]"
+              >
+                Giriş Yap
+              </Link>
+              <Link
+                href="/expert/dashboard"
+                className="rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-black text-[#2b2118] no-underline transition hover:bg-[#f0e8df]"
+              >
+                Panele Dön
+              </Link>
+            </div>
           </section>
         ) : (
           <section className="overflow-hidden rounded-[2rem] border border-[#e5d9cc] bg-white shadow-sm">
