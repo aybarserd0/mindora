@@ -992,6 +992,8 @@ export default function ExpertChatPage({
       return
     }
 
+    let optimisticId = ''
+
     try {
       setSending(true)
       setBlockedError('')
@@ -1013,6 +1015,24 @@ export default function ExpertChatPage({
             ? '📎 Dosya paylaşıldı'
             : '')
 
+      // Optimistic: show the message immediately instead of waiting on the
+      // round trip (send -> refetch). Replaced by the real row once loadMessages resolves.
+      optimisticId = `optimistic-${Date.now()}`
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: optimisticId,
+          conversation_id: conversationId,
+          sender_type: 'expert',
+          sender_name: 'Uzman',
+          message: finalMessage,
+          is_flagged: false,
+          flag_reason: null,
+          created_at: new Date().toISOString(),
+          attachments: uploadedAttachment ? [uploadedAttachment] : undefined,
+        },
+      ])
+
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1030,6 +1050,7 @@ export default function ExpertChatPage({
       const data = await res.json().catch(() => null)
 
       if (!res.ok || !data?.ok) {
+        setMessages((prev) => prev.filter((item) => item.id !== optimisticId))
         setBlockedError(data?.error || 'Mesaj gönderilemedi.')
         await loadMessages(conversationId, false)
         return
@@ -1052,6 +1073,9 @@ export default function ExpertChatPage({
 
       await loadMessages(conversationId, false)
     } catch {
+      if (optimisticId) {
+        setMessages((prev) => prev.filter((item) => item.id !== optimisticId))
+      }
       setBlockedError('Mesaj gönderilirken hata oluştu.')
     } finally {
       setSending(false)
@@ -1091,6 +1115,32 @@ export default function ExpertChatPage({
   useEffect(() => {
     scrollToBottom()
   }, [messages, typingUser])
+
+  // Polling fallback: realtime (Supabase postgres_changes) delivers instantly
+  // when it's connected, but a network hiccup or a dropped channel shouldn't
+  // mean messages stop arriving without a manual refresh.
+  useEffect(() => {
+    if (!conversationId || !accessVerified) return
+
+    const interval = window.setInterval(() => {
+      void loadMessages(conversationId, false)
+    }, 4000)
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        void loadMessages(conversationId, false)
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('focus', onVisibilityChange)
+
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('focus', onVisibilityChange)
+    }
+  }, [conversationId, accessVerified])
 
   useEffect(() => {
     return () => {
