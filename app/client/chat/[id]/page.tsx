@@ -76,6 +76,15 @@ const ALLOWED_ATTACHMENT_TYPES = new Set([
   'audio/x-wav',
 ])
 
+function haveSameMessages(prev: Message[], next: Message[]) {
+  if (prev.length !== next.length) return false
+  if (prev.length === 0) return true
+
+  return prev[prev.length - 1]?.id === next[next.length - 1]?.id
+}
+
+const NEAR_BOTTOM_THRESHOLD_PX = 120
+
 function formatDate(date?: string | null) {
   if (!date) return '-'
 
@@ -234,6 +243,8 @@ export default function ClientChatPage({
   })
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null)
+  const isNearBottomRef = useRef(true)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const localTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -293,6 +304,14 @@ export default function ClientChatPage({
       behavior: 'smooth',
       block: 'end',
     })
+  }
+
+  function handleMessagesScroll() {
+    const el = messagesContainerRef.current
+    if (!el) return
+
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    isNearBottomRef.current = distanceFromBottom <= NEAR_BOTTOM_THRESHOLD_PX
   }
 
   function getAccessToken() {
@@ -875,7 +894,9 @@ export default function ClientChatPage({
       }
 
       setConversation(data.conversation)
-      setMessages(data.messages || [])
+
+      const nextMessages: Message[] = data.messages || []
+      setMessages((prev) => (haveSameMessages(prev, nextMessages) ? prev : nextMessages))
 
       await markConversationAsRead(id)
     } catch {
@@ -957,6 +978,8 @@ export default function ClientChatPage({
 
       // Optimistic: show the message immediately instead of waiting on the
       // round trip (send -> refetch). Replaced by the real row once loadMessages resolves.
+      // Sending a message always snaps the view to it, regardless of prior scroll position.
+      isNearBottomRef.current = true
       optimisticId = `optimistic-${Date.now()}`
       setMessages((prev) => [
         ...prev,
@@ -1053,6 +1076,7 @@ export default function ClientChatPage({
   }, [params, searchParams])
 
   useEffect(() => {
+    if (!isNearBottomRef.current) return
     scrollToBottom()
   }, [messages, typingUser])
 
@@ -1512,7 +1536,11 @@ export default function ClientChatPage({
               </div>
             )}
 
-            <div className="flex h-[520px] flex-col overflow-y-auto bg-[#faf7f2] p-4 md:p-6">
+            <div
+              ref={messagesContainerRef}
+              onScroll={handleMessagesScroll}
+              className="flex h-[520px] flex-col overflow-y-auto bg-[#faf7f2] p-4 md:p-6"
+            >
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="max-w-md rounded-3xl bg-white p-6 text-center ring-1 ring-black/5">
