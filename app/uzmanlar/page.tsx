@@ -108,7 +108,7 @@ function createSlug(value: string) {
   return value
     .toLocaleLowerCase("tr-TR")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/ğ/g, "g")
     .replace(/ü/g, "u")
     .replace(/ş/g, "s")
@@ -207,11 +207,6 @@ function formatMoney(value: number | null) {
   }).format(value);
 }
 
-function formatRating(value: number) {
-  if (!value) return "Yeni";
-  return value.toFixed(1);
-}
-
 function getReviewLabel(count: number) {
   if (count <= 0) return "Henüz değerlendirme yok";
   return `${count} değerlendirme`;
@@ -303,29 +298,16 @@ function sortExperts(experts: Expert[], sortOption: SortOption) {
   });
 }
 
-function StarRating({ rating, reviewCount }: { rating: number; reviewCount: number }) {
+function RatingLine({ rating, reviewCount }: { rating: number; reviewCount: number }) {
   if (reviewCount <= 0 || rating <= 0) {
-    return (
-      <div className="inline-flex items-center justify-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-600 ring-1 ring-black/5">
-        Yeni uzman
-      </div>
-    );
+    return <p className="text-xs font-medium text-slate-400">Yeni uzman — henüz değerlendirme yok</p>;
   }
 
-  const roundedRating = Math.round(rating);
-
   return (
-    <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-800 ring-1 ring-amber-100">
-      <span aria-hidden="true">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <span key={star} className={star <= roundedRating ? "text-amber-400" : "text-amber-200"}>
-            ★
-          </span>
-        ))}
-      </span>
-      <span>{rating.toFixed(1)}</span>
-      <span className="text-amber-700/70">({reviewCount})</span>
-    </div>
+    <p className="text-xs font-medium text-slate-500">
+      <span className="font-semibold text-slate-900">{rating.toFixed(1)}</span> ortalama değerlendirme ·{" "}
+      {getReviewLabel(reviewCount)}
+    </p>
   );
 }
 
@@ -406,110 +388,103 @@ export default function UzmanlarPage() {
 
   const hasFilters = selectedArea !== "Tümü" || searchTerm.trim().length > 0 || sortOption !== "recommended";
   const approvedExpertCount = visibleExperts.length;
-  const reviewedExpertCount = visibleExperts.filter((expert) => getReviewCount(expert) > 0).length;
-  const totalReviewCount = visibleExperts.reduce((total, expert) => total + getReviewCount(expert), 0);
-  const averagePlatformRating =
-    reviewedExpertCount > 0
-      ? visibleExperts.reduce((total, expert) => total + getAverageRating(expert), 0) / reviewedExpertCount
-      : 0;
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f7f2eb] text-[#171717]">
+    <main className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      <section className="mx-auto w-full max-w-7xl px-5 pb-10 pt-12 sm:px-6 md:pb-14 md:pt-16 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.35em] text-neutral-500">
+      <section className="border-b border-slate-200/80 bg-slate-50">
+        <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 md:py-20 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Mindora Uzman Ağı
             </p>
 
-            <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[1.02] tracking-tight md:text-7xl">
+            <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-6xl">
               Sana uygun uzmanı güvenle bul.
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-500">
               Mindora, yalnızca uzman listeleyen bir platform değil; ihtiyacını,
-              uygun zamanını, beklentini ve gerçek danışan değerlendirmelerini
-              birlikte dikkate alan daha güvenli bir başlangıç deneyimidir.
+              uygun zamanını ve beklentini birlikte dikkate alan daha güvenli bir
+              başlangıç deneyimidir.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/eslesme"
-                className="rounded-2xl bg-black px-8 py-4 text-center font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
+                className="rounded-lg bg-slate-900 px-8 py-4 text-center font-semibold text-white transition hover:bg-slate-800"
               >
                 Ücretsiz ön eşleşme başlat
               </Link>
 
               <Link
                 href="#uzman-listesi"
-                className="rounded-2xl border border-black/10 bg-white px-8 py-4 text-center font-black text-black transition hover:-translate-y-0.5 hover:bg-white/80"
+                className="rounded-lg border border-slate-200 bg-white px-8 py-4 text-center font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
               >
                 Uzmanları incele
               </Link>
             </div>
+
+            {approvedExpertCount > 0 ? (
+              <p className="mt-6 text-sm font-medium text-slate-400">
+                Şu anda {approvedExpertCount} onaylı uzman profili listeleniyor.
+              </p>
+            ) : null}
           </div>
 
-          <HeroTrustCard
-            approvedExpertCount={approvedExpertCount}
-            reviewedExpertCount={reviewedExpertCount}
-            totalReviewCount={totalReviewCount}
-            averagePlatformRating={averagePlatformRating}
-          />
-        </div>
-
-        <div className="mt-12 grid gap-4 rounded-[2rem] bg-white/80 p-5 shadow-sm ring-1 ring-black/5 md:grid-cols-3 md:p-7">
-          {TRUST_ITEMS.map((item) => (
-            <div key={item.title} className="rounded-3xl bg-[#f7f2eb] p-5">
-              <h2 className="text-lg font-black">{item.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-neutral-600">{item.text}</p>
-            </div>
-          ))}
+          <div className="mt-14 grid gap-4 md:grid-cols-3">
+            {TRUST_ITEMS.map((item) => (
+              <div key={item.title} className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
+                <h2 className="text-base font-semibold text-slate-900">{item.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">{item.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section id="uzman-listesi" className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 md:py-14 lg:px-8">
+      <section id="uzman-listesi" className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
         <div className="mb-8 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.35em] text-neutral-500">
+            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Uzmanlar
             </p>
-            <h2 className="mt-3 text-4xl font-black tracking-tight md:text-6xl">
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
               Onaylı uzman profilleri.
             </h2>
           </div>
 
-          <p className="text-base leading-7 text-neutral-600 lg:justify-self-end lg:text-right">
+          <p className="text-base leading-7 text-slate-500 lg:justify-self-end lg:text-right">
             Uzman seçimini kolaylaştırmak için destek konusu, uzmanlık alanı,
-            ücret, görüşme tipi, uygunluk bilgisi ve doğrulanmış değerlendirme verileri birlikte gösterilir.
+            ücret, görüşme tipi ve uygunluk bilgisi birlikte gösterilir.
           </p>
         </div>
 
-        <div className="mb-8 rounded-[2rem] border border-black/5 bg-white/95 p-4 shadow-sm md:p-5">
+        <div className="mb-8 rounded-xl border border-slate-200/80 bg-white p-5">
           <div className="grid gap-4 xl:grid-cols-[0.75fr_1.1fr_0.65fr] xl:items-start">
             <label className="block">
-              <span className="mb-2 block text-sm font-black text-neutral-700">Uzman ara</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Uzman ara</span>
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="İsim, alan, puan veya deneyim ara..."
-                className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold outline-none transition placeholder:text-neutral-400 focus:border-black"
+                placeholder="İsim, alan veya deneyim ara..."
+                className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none transition placeholder:text-slate-400 focus:border-slate-400"
               />
             </label>
 
             <div>
-              <p className="mb-2 text-sm font-black text-neutral-700">Destek alanı</p>
+              <p className="mb-2 text-sm font-semibold text-slate-700">Destek alanı</p>
               <div className="flex flex-wrap gap-2">
                 {SUPPORT_AREAS.map((area) => (
                   <button
                     key={area}
                     type="button"
                     onClick={() => setSelectedArea(area)}
-                    className={`rounded-full px-4 py-2 text-sm font-black transition ${
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                       selectedArea === area
-                        ? "bg-black text-white"
-                        : "bg-[#f7f2eb] text-neutral-700 hover:bg-neutral-100"
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                     }`}
                   >
                     {area}
@@ -519,11 +494,11 @@ export default function UzmanlarPage() {
             </div>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-black text-neutral-700">Sıralama</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Sıralama</span>
               <select
                 value={sortOption}
                 onChange={(event) => setSortOption(event.target.value as SortOption)}
-                className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-black text-neutral-800 outline-none transition focus:border-black"
+                className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-slate-400"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -534,7 +509,7 @@ export default function UzmanlarPage() {
             </label>
           </div>
 
-          <div className="mt-4 flex flex-col gap-2 border-t border-black/5 pt-4 text-sm text-neutral-600 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-col gap-2 border-t border-slate-200/80 pt-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
             <p>
               {loading ? "Uzmanlar yükleniyor..." : `${filteredExperts.length} uzman listeleniyor`}
             </p>
@@ -546,7 +521,7 @@ export default function UzmanlarPage() {
                   setSelectedArea("Tümü");
                   setSortOption("recommended");
                 }}
-                className="w-fit rounded-full bg-[#f7f2eb] px-4 py-2 text-xs font-black text-neutral-700 ring-1 ring-black/5 transition hover:bg-neutral-100"
+                className="w-fit rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300"
               >
                 Filtreleri temizle
               </button>
@@ -587,66 +562,68 @@ export default function UzmanlarPage() {
           />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredExperts.map((expert, index) => (
-              <ExpertCard key={expert.id} expert={expert} priorityRank={index + 1} />
+            {filteredExperts.map((expert) => (
+              <ExpertCard key={expert.id} expert={expert} />
             ))}
           </div>
         )}
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 md:py-14 lg:px-8">
-        <div className="grid gap-8 rounded-[2rem] bg-black p-8 text-white md:grid-cols-2 md:p-14">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400">
-              Eşleşme mantığı
-            </p>
+      <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
+        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-14">
+          <div className="grid gap-8 md:grid-cols-2">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                Eşleşme mantığı
+              </p>
 
-            <h2 className="mt-4 text-4xl font-black md:text-5xl">
-              Herkes için aynı uzman değil, sana uygun başlangıç.
-            </h2>
-          </div>
-
-          <div className="space-y-5 text-lg leading-8 text-neutral-300">
-            <p>
-              Mindora’da amaç rastgele yönlendirme yapmak değil; kişinin ihtiyacını
-              anlayarak uygun uzmanla daha güvenli bir başlangıç yapmasını sağlamaktır.
-            </p>
-
-            <div className="space-y-3">
-              {PROCESS_ITEMS.map((item, index) => (
-                <div
-                  key={item}
-                  className="flex gap-3 rounded-2xl bg-white/10 p-4 text-sm font-bold text-white"
-                >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-black">
-                    {index + 1}
-                  </span>
-                  <span>{item}</span>
-                </div>
-              ))}
+              <h2 className="mt-4 text-3xl font-bold md:text-4xl">
+                Herkes için aynı uzman değil, sana uygun başlangıç.
+              </h2>
             </div>
 
-            <Link
-              href="/eslesme"
-              className="inline-block rounded-2xl bg-white px-7 py-3 text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
-            >
-              Eşleşme formunu doldur
-            </Link>
+            <div className="space-y-5 text-lg leading-8 text-slate-300">
+              <p>
+                Mindora’da amaç rastgele yönlendirme yapmak değil; kişinin ihtiyacını
+                anlayarak uygun uzmanla daha güvenli bir başlangıç yapmasını sağlamaktır.
+              </p>
+
+              <div className="space-y-3">
+                {PROCESS_ITEMS.map((item, index) => (
+                  <div
+                    key={item}
+                    className="flex gap-3 rounded-lg border border-white/10 p-4 text-sm font-medium text-white"
+                  >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-900">
+                      {index + 1}
+                    </span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Link
+                href="/eslesme"
+                className="inline-block rounded-lg bg-white px-7 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              >
+                Eşleşme formunu doldur
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 md:py-14 lg:px-8">
+      <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Destek alanları
           </p>
 
-          <h2 className="mt-3 text-4xl font-black md:text-5xl">
+          <h2 className="mt-3 text-3xl font-bold text-slate-900 md:text-4xl">
             Hangi konuda destek alabilirsin?
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl leading-7 text-neutral-600">
+          <p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-500">
             Konunu tam tarif edemesen bile ön eşleşme formu ihtiyacını daha anlaşılır
             hale getirmek için tasarlanmıştır.
           </p>
@@ -656,7 +633,7 @@ export default function UzmanlarPage() {
           {SUPPORT_AREAS.filter((area) => area !== "Tümü").map((area) => (
             <div
               key={area}
-              className="rounded-2xl bg-white/80 p-5 text-center font-bold text-neutral-700 shadow-sm ring-1 ring-black/5"
+              className="rounded-lg border border-slate-200/80 p-5 text-center font-medium text-slate-600"
             >
               {area}
             </div>
@@ -664,13 +641,13 @@ export default function UzmanlarPage() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-6 md:py-16 lg:px-8">
-        <div className="rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-black/5 md:p-14">
-          <h2 className="text-4xl font-black md:text-5xl">
+      <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm md:p-14">
+          <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
             Sana uygun uzmanı birlikte bulalım.
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-neutral-600">
+          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-500">
             Kısa formu doldur, ihtiyacına uygun psikolojik destek süreci için ücretsiz
             ön eşleşmeyi başlat.
           </p>
@@ -678,20 +655,20 @@ export default function UzmanlarPage() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="/eslesme"
-              className="rounded-2xl bg-black px-9 py-4 font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
+              className="rounded-lg bg-slate-900 px-9 py-4 font-semibold text-white transition hover:bg-slate-800"
             >
               Ücretsiz ön eşleşme başlat
             </Link>
 
             <Link
               href="/uzman-basvuru"
-              className="rounded-2xl border border-black/10 bg-[#f7f2eb] px-9 py-4 font-black text-black transition hover:-translate-y-0.5 hover:bg-white"
+              className="rounded-lg border border-slate-200 bg-white px-9 py-4 font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
             >
               Uzman olarak başvur
             </Link>
           </div>
 
-          <p className="mx-auto mt-6 max-w-3xl text-xs leading-6 text-neutral-500">
+          <p className="mx-auto mt-6 max-w-3xl text-xs leading-6 text-slate-400">
             Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme
             riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da 112 ile
             iletişime geç.
@@ -702,7 +679,7 @@ export default function UzmanlarPage() {
   );
 }
 
-function ExpertCard({ expert, priorityRank }: { expert: Expert; priorityRank: number }) {
+function ExpertCard({ expert }: { expert: Expert }) {
   const expertAreas = splitAreas(expert.areas);
   const showPhoto = isPhotoUrlValid(expert.photo_url);
   const slug = getExpertSlug(expert);
@@ -711,104 +688,91 @@ function ExpertCard({ expert, priorityRank }: { expert: Expert; priorityRank: nu
   const price = getPrice(expert);
   const averageRating = getAverageRating(expert);
   const reviewCount = getReviewCount(expert);
-  const isTopListed = priorityRank <= 3 && getRankingScore(expert) > 0;
 
   return (
-    <article className="group flex h-full min-w-0 flex-col rounded-[2rem] border border-black/5 bg-white p-5 shadow-[0_18px_45px_rgba(15,15,15,0.045)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(15,15,15,0.08)]">
+    <article className="flex h-full min-w-0 flex-col rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
       <div className="flex items-start gap-4">
-        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[1.7rem] bg-black text-white shadow-sm ring-4 ring-[#f7f2eb]">
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-slate-900 text-white">
           {showPhoto ? (
             <Image
               src={expert.photo_url || ""}
               alt={`${expert.name} profil fotoğrafı`}
               fill
-              sizes="96px"
+              sizes="64px"
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-2xl font-black">
+            <div className="flex h-full w-full items-center justify-center text-lg font-semibold">
               {getInitials(expert.name)}
             </div>
           )}
-
-          <span className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-black text-black shadow-sm">
-            ✓
-          </span>
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-[#f7f2eb] px-3 py-1 text-[11px] font-black text-neutral-700 ring-1 ring-black/5">
-              Onaylı profil
-            </span>
-            {isTopListed ? (
-              <span className="rounded-full bg-black px-3 py-1 text-[11px] font-black text-white">
-                Öne çıkan
-              </span>
-            ) : null}
+          <div className="flex items-center gap-2">
+            <h3 className="truncate text-lg font-semibold text-slate-900">{expert.name}</h3>
           </div>
 
-          <h3 className="mt-3 truncate text-2xl font-black tracking-tight text-neutral-950">
-            {expert.name}
-          </h3>
+          <p className="truncate text-sm font-medium text-slate-500">{formatTitle(expert.title)}</p>
 
-          <p className="mt-1 truncate text-sm font-bold text-neutral-500">
-            {formatTitle(expert.title)}
-          </p>
-
-          <div className="mt-3">
-            <StarRating rating={averageRating} reviewCount={reviewCount} />
-          </div>
+          <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-500">
+            <span aria-hidden="true">✓</span>
+            Kimlik/diploma doğrulandı
+          </span>
         </div>
       </div>
 
-      <p className="mt-5 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-neutral-600">
+      <div className="mt-4">
+        <RatingLine rating={averageRating} reviewCount={reviewCount} />
+      </div>
+
+      <p className="mt-4 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-slate-500">
         {getCardSummary(expert)}
       </p>
 
-      <div className="mt-5 flex min-h-[2.25rem] flex-wrap gap-2">
+      <div className="mt-4 flex min-h-[2.25rem] flex-wrap gap-2">
         {expertAreas.length > 0 ? (
           <>
             {expertAreas.slice(0, 4).map((area) => (
               <span
                 key={area}
-                className="rounded-full bg-[#f7f2eb] px-3 py-1.5 text-xs font-black text-neutral-700 ring-1 ring-black/5"
+                className="rounded-md border border-slate-200/80 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600"
               >
                 {area}
               </span>
             ))}
 
             {expertAreas.length > 4 ? (
-              <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-black text-neutral-600 ring-1 ring-black/5">
+              <span className="rounded-md border border-slate-200/80 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
                 +{expertAreas.length - 4}
               </span>
             ) : null}
           </>
         ) : (
-          <span className="rounded-full bg-[#f7f2eb] px-3 py-1.5 text-xs font-black text-neutral-700 ring-1 ring-black/5">
+          <span className="rounded-md border border-slate-200/80 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
             Uzmanlık alanı eşleşmede netleşir
           </span>
         )}
       </div>
 
-      <div className="mt-5 grid gap-3 rounded-[1.5rem] bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+      <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
         <CompactInfo label="Deneyim" value={getExperienceLabel(expert.experience)} />
         <CompactInfo label="Görüşme" value={normalizeOnlineStatus(expert.online)} />
-        <CompactInfo label="Seans" value={getSessionDurationLabel(expert)} />
+        <CompactInfo label="Seans süresi" value={getSessionDurationLabel(expert)} />
         <CompactInfo label="Ücret" value={getPriceLabel(price)} />
       </div>
 
-      <div className="mt-5 grid gap-3">
+      <div className="mt-5 grid gap-2.5">
         <Link
           href={profileHref}
-          className="rounded-2xl bg-black px-6 py-3.5 text-center text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
+          className="rounded-lg bg-slate-900 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
         >
           Profili incele
         </Link>
 
         <Link
           href={matchHref}
-          className="rounded-2xl border border-black/10 bg-white px-6 py-3.5 text-center text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-[#f7f2eb]"
+          className="rounded-lg border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
         >
           Ücretsiz ön eşleşme iste
         </Link>
@@ -819,105 +783,10 @@ function ExpertCard({ expert, priorityRank }: { expert: Expert; priorityRank: nu
 
 function CompactInfo({ label, value }: { label: string; value: string }) {
   return (
-    <p className="flex items-start justify-between gap-4 border-b border-black/5 pb-2.5 text-sm last:border-b-0 last:pb-0">
-      <b className="shrink-0 text-neutral-950">{label}</b>
-      <span className="max-w-[62%] text-right font-semibold text-neutral-600">{value}</span>
+    <p className="flex items-start justify-between gap-4 text-sm">
+      <span className="shrink-0 font-medium text-slate-500">{label}</span>
+      <span className="max-w-[62%] text-right font-semibold text-slate-900">{value}</span>
     </p>
-  );
-}
-
-function HeroTrustCard({
-  approvedExpertCount,
-  reviewedExpertCount,
-  totalReviewCount,
-  averagePlatformRating,
-}: {
-  approvedExpertCount: number;
-  reviewedExpertCount: number;
-  totalReviewCount: number;
-  averagePlatformRating: number;
-}) {
-  const hasRating = reviewedExpertCount > 0 && averagePlatformRating > 0;
-  const headline = hasRating ? averagePlatformRating.toFixed(1) : "Güvenli";
-  const subHeadline = hasRating
-    ? `${totalReviewCount} doğrulanmış değerlendirme`
-    : "Uzman inceleme ve değerlendirme altyapısı aktif";
-
-  return (
-    <aside className="rounded-[2.25rem] border border-black/5 bg-white p-5 shadow-[0_24px_70px_rgba(15,15,15,0.07)] md:p-6 lg:p-7">
-      <div className="rounded-[1.9rem] bg-black p-6 text-white md:p-7">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.32em] text-white/45">
-              Mindora güven standardı
-            </p>
-            <p className="mt-5 text-4xl font-black tracking-tight md:text-5xl">
-              {headline}
-            </p>
-            <p className="mt-2 max-w-sm text-sm font-semibold leading-6 text-white/72">
-              {subHeadline}
-            </p>
-          </div>
-
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-3xl font-black text-black shadow-sm">
-            ✓
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-2">
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
-            Onaylı profiller
-          </span>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
-            Gerçek yorum altyapısı
-          </span>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/10">
-            Güvenli süreç
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-3">
-        <TrustLine title="Uzman profilleri incelenir" />
-        <TrustLine title="Değerlendirmeler seans sonrası alınır" />
-        <TrustLine title="Ödeme, randevu ve görüşme tek akışta ilerler" />
-      </div>
-
-      <div className="mt-5 rounded-[1.75rem] bg-[#f7f2eb] p-5 ring-1 ring-black/5">
-        <p className="text-base font-black leading-6 text-neutral-950">
-          Rastgele yönlendirme değil, ihtiyacına uygun başlangıç.
-        </p>
-        <p className="mt-2 text-sm leading-6 text-neutral-600">
-          Kısa ön eşleşme formu; destek konunu, beklentini ve uygun zamanını daha anlaşılır hale getirir.
-        </p>
-      </div>
-
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <Link
-          href="/eslesme"
-          className="rounded-2xl bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
-        >
-          Eşleşmeyi başlat
-        </Link>
-        <Link
-          href="#uzman-listesi"
-          className="rounded-2xl border border-black/10 bg-[#f7f2eb] px-5 py-3 text-center text-sm font-black text-black transition hover:-translate-y-0.5 hover:bg-white"
-        >
-          Uzmanları gör
-        </Link>
-      </div>
-    </aside>
-  );
-}
-
-function TrustLine({ title }: { title: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-[1.35rem] bg-[#f7f2eb] p-4 ring-1 ring-black/5">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-white">
-        ✓
-      </span>
-      <p className="text-sm font-black text-neutral-950">{title}</p>
-    </div>
   );
 }
 
@@ -925,12 +794,11 @@ function ExpertSkeleton() {
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
       {[1, 2, 3].map((item) => (
-        <div key={item} className="rounded-[2rem] bg-white/75 p-7 shadow-sm ring-1 ring-black/5">
-          <div className="mx-auto h-28 w-28 animate-pulse rounded-full bg-neutral-200" />
-          <div className="mx-auto mt-8 h-6 w-44 animate-pulse rounded-full bg-neutral-200" />
-          <div className="mx-auto mt-3 h-4 w-32 animate-pulse rounded-full bg-neutral-200" />
-          <div className="mx-auto mt-4 h-6 w-36 animate-pulse rounded-full bg-neutral-200" />
-          <div className="mt-6 h-44 animate-pulse rounded-3xl bg-[#f7f2eb]" />
+        <div key={item} className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
+          <div className="h-16 w-16 animate-pulse rounded-full bg-slate-100" />
+          <div className="mt-6 h-5 w-40 animate-pulse rounded-full bg-slate-100" />
+          <div className="mt-3 h-4 w-28 animate-pulse rounded-full bg-slate-100" />
+          <div className="mt-6 h-32 animate-pulse rounded-lg bg-slate-50" />
         </div>
       ))}
     </div>
@@ -951,14 +819,14 @@ function EmptyState({
   onAction?: () => void;
 }) {
   return (
-    <div className="mx-auto max-w-3xl rounded-[2rem] bg-white/85 p-8 text-center shadow-sm ring-1 ring-black/5">
-      <h2 className="text-2xl font-black">{title}</h2>
-      <p className="mt-3 leading-7 text-neutral-600">{text}</p>
+    <div className="mx-auto max-w-3xl rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+      <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+      <p className="mt-3 leading-7 text-slate-500">{text}</p>
 
       {href && actionLabel ? (
         <Link
           href={href}
-          className="mt-6 inline-block rounded-2xl bg-black px-7 py-3 font-black text-white transition hover:bg-neutral-800"
+          className="mt-6 inline-block rounded-lg bg-slate-900 px-7 py-3 font-semibold text-white transition hover:bg-slate-800"
         >
           {actionLabel}
         </Link>
@@ -968,7 +836,7 @@ function EmptyState({
         <button
           type="button"
           onClick={onAction}
-          className="mt-6 rounded-2xl bg-black px-7 py-3 font-black text-white transition hover:bg-neutral-800"
+          className="mt-6 rounded-lg bg-slate-900 px-7 py-3 font-semibold text-white transition hover:bg-slate-800"
         >
           {actionLabel}
         </button>

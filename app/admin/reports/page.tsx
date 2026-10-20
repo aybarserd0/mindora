@@ -80,12 +80,12 @@ function formatDate(value?: string | null) {
 }
 
 function getStatusConfig(status: string) {
-  if (status === "open") return { label: "Açık", className: "bg-rose-50 text-rose-700 ring-rose-100" };
-  if (status === "investigating") return { label: "İnceleniyor", className: "bg-amber-50 text-amber-700 ring-amber-100" };
-  if (status === "resolved") return { label: "Çözüldü", className: "bg-emerald-50 text-emerald-700 ring-emerald-100" };
-  if (status === "rejected") return { label: "Reddedildi", className: "bg-slate-100 text-slate-700 ring-slate-200" };
+  if (status === "open") return { label: "Açık", className: "border-rose-200 bg-rose-50 text-rose-700" };
+  if (status === "investigating") return { label: "İnceleniyor", className: "border-amber-200 bg-amber-50 text-amber-700" };
+  if (status === "resolved") return { label: "Çözüldü", className: "border-emerald-200 bg-emerald-50 text-emerald-700" };
+  if (status === "rejected") return { label: "Reddedildi", className: "border-slate-200 bg-slate-100 text-slate-700" };
 
-  return { label: "Belirsiz", className: "bg-slate-100 text-slate-700 ring-slate-200" };
+  return { label: "Belirsiz", className: "border-slate-200 bg-slate-100 text-slate-700" };
 }
 
 function AdminReportsContent() {
@@ -207,20 +207,20 @@ function AdminReportsContent() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
         <AdminHeader />
 
-        <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Yönetim Merkezi
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Raporlar ve Güvenlik İncelemeleri
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
                 Danışan ve uzmanlardan gelen sorun bildirimlerini incele, durum ata ve operasyon notu ekle.
               </p>
             </div>
@@ -230,13 +230,13 @@ function AdminReportsContent() {
                 type="button"
                 onClick={() => void fetchReports("refresh")}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? "Yükleniyor..." : "Yenile"}
               </button>
               <Link
                 href={buildAdminUrl("/admin", adminToken)}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800"
               >
                 Yönetim Merkezi
               </Link>
@@ -245,8 +245,8 @@ function AdminReportsContent() {
         </header>
 
         {notice ? (
-          <section className="rounded-3xl border border-amber-100 bg-amber-50 p-5 text-amber-900 shadow-sm">
-            <p className="text-sm font-black">Bilgilendirme</p>
+          <section className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-700 shadow-sm">
+            <p className="text-sm font-semibold">Bilgilendirme</p>
             <p className="mt-1 text-sm font-semibold">{notice}</p>
           </section>
         ) : null}
@@ -259,10 +259,10 @@ function AdminReportsContent() {
           <SummaryCard title="Güvenlik" value={String(stats.safetyReports)} description="Risk kategorisi" />
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Filtrele ve Ara</h2>
+              <h2 className="text-xl font-bold text-slate-900">Filtrele ve Ara</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Kategori, kullanıcı tipi, açıklama veya durum bilgisine göre arama yap.
               </p>
@@ -272,7 +272,7 @@ function AdminReportsContent() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Rapor ara..."
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
+              className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100 lg:w-80"
             />
           </div>
 
@@ -282,10 +282,10 @@ function AdminReportsContent() {
                 key={item.value}
                 type="button"
                 onClick={() => setStatusFilter(item.value)}
-                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
                   statusFilter === item.value
-                    ? "bg-slate-950 text-white ring-slate-950"
-                    : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:text-slate-900"
                 }`}
               >
                 {item.label}
@@ -294,16 +294,16 @@ function AdminReportsContent() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Rapor Listesi</h2>
+              <h2 className="text-xl font-bold text-slate-900">Rapor Listesi</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Bildirim detayları ve admin inceleme aksiyonları.
               </p>
             </div>
 
-            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
               {loading ? "Yükleniyor" : `${filteredReports.length} kayıt`}
             </span>
           </div>
@@ -343,9 +343,9 @@ function AdminReportsContent() {
 
 function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 hover:border-slate-300">
       <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   );
@@ -369,26 +369,26 @@ function ReportCard({
   const config = getStatusConfig(report.status);
 
   return (
-    <article className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-lg">
+    <article className="rounded-xl border border-slate-200/80 bg-slate-50 p-5 transition-all duration-200 hover:border-slate-300">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}>
+            <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${config.className}`}>
               {config.label}
             </span>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
+            <span className="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
               {report.categoryLabel}
             </span>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
+            <span className="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
               {formatDate(report.createdAt)}
             </span>
           </div>
 
-          <h3 className="mt-4 text-base font-black text-slate-950">
+          <h3 className="mt-4 text-base font-semibold text-slate-900">
             {report.reporterType} → {report.reportedUserType}
           </h3>
 
-          <p className="mt-3 text-sm leading-6 text-slate-700">
+          <p className="mt-3 text-sm leading-6 text-slate-600">
             {report.description || "Açıklama girilmemiş."}
           </p>
 
@@ -400,13 +400,13 @@ function ReportCard({
           </div>
 
           <label className="mt-4 block">
-            <span className="mb-2 block text-sm font-black text-slate-700">Admin notu</span>
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Admin notu</span>
             <textarea
               value={note}
               onChange={(event) => onNoteChange(event.target.value)}
               rows={3}
               placeholder="İnceleme notu ekle..."
-              className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
           </label>
         </div>
@@ -415,7 +415,7 @@ function ReportCard({
           {report.conversationId ? (
             <Link
               href={buildAdminUrl(`/admin/conversations/${encodeURIComponent(report.conversationId)}`, adminToken)}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-slate-300 hover:text-slate-900"
             >
               Konuşma
             </Link>
@@ -478,7 +478,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={loading}
-      className={`inline-flex items-center justify-center rounded-2xl px-4 py-2 text-sm font-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     >
       {loading ? "İşleniyor..." : label}
     </button>
@@ -487,8 +487,8 @@ function ActionButton({
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <p className="text-sm font-black text-slate-800">{title}</p>
+    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
     </div>
   );
@@ -498,9 +498,9 @@ export default function AdminReportsPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
-          <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Raporlar yükleniyor...</p>
+        <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-10">
+          <div className="mx-auto max-w-7xl rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="font-semibold text-slate-500">Raporlar yükleniyor...</p>
           </div>
         </main>
       }

@@ -255,16 +255,12 @@ function hasRealProfileImage(expert: PublicExpertProfile) {
   return Boolean(expert.profileImageUrl);
 }
 
-function getPrimaryArea(expert: PublicExpertProfile) {
-  return expert.areas[0] || "Online psikolojik destek";
-}
-
 function getRatingText(expert: PublicExpertProfile) {
   if (expert.reviewCount > 0 && expert.averageRating > 0) {
-    return `★ ${expert.averageRating.toFixed(1)} · ${expert.reviewCount} değerlendirme`;
+    return `${expert.averageRating.toFixed(1)} ortalama · ${expert.reviewCount} değerlendirme`;
   }
 
-  return "Yeni değerlendirme";
+  return "Yeni uzman";
 }
 
 function getEducationPreview(expert: PublicExpertProfile) {
@@ -647,7 +643,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
   const jsonLd = buildJsonLd(expert, reviews);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f7f2eb] pb-24 text-[#171717] lg:pb-0">
+    <main className="min-h-screen overflow-x-hidden bg-white pb-24 text-slate-900 lg:pb-0">
       <Header />
 
       {jsonLd.map((item, index) => (
@@ -660,24 +656,24 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
       ))}
 
       <section className="mx-auto max-w-7xl px-5 py-7">
-        <nav aria-label="Sayfa yolu" className="flex flex-wrap items-center gap-2 text-sm font-bold text-neutral-500">
-          <Link href="/" className="transition hover:text-black">
+        <nav aria-label="Sayfa yolu" className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500">
+          <Link href="/" className="transition-colors duration-200 hover:text-slate-900">
             Ana Sayfa
           </Link>
           <span>/</span>
-          <Link href="/uzmanlar" className="transition hover:text-black">
+          <Link href="/uzmanlar" className="transition-colors duration-200 hover:text-slate-900">
             Uzmanlar
           </Link>
           <span>/</span>
-          <span className="text-black">{expert.name}</span>
+          <span className="text-slate-900">{expert.name}</span>
         </nav>
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-10">
-        <div className="grid gap-8 rounded-[2.25rem] border border-black/5 bg-white p-5 shadow-[0_24px_70px_rgba(15,15,15,0.06)] md:p-8 lg:grid-cols-[1fr_390px] lg:p-10">
+        <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-8 lg:grid-cols-[1fr_390px] lg:p-10">
           <div className="min-w-0">
             <div className="flex flex-col gap-7 md:flex-row">
-              <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-[2rem] bg-black text-white shadow-sm ring-8 ring-[#f7f2eb] md:h-40 md:w-40">
+              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-slate-900 text-white md:h-36 md:w-36">
                 {hasRealProfileImage(expert) ? (
                   <img
                     src={expert.profileImageUrl || ""}
@@ -688,36 +684,26 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
                   />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center text-center">
-                    <span className="text-5xl font-black">{expert.imageInitials}</span>
-                    <span className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/45">
-                      Profil
-                    </span>
+                    <span className="text-4xl font-semibold">{expert.imageInitials}</span>
                   </div>
                 )}
-
-                <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-black text-black shadow-sm">
-                  ✓
-                </span>
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Badge tone="success">Mindora uzman profili</Badge>
-                  <Badge tone="dark">{expert.onlineText}</Badge>
-                  <Badge tone={expert.reviewCount > 0 ? "warning" : "neutral"}>
-                    {getRatingText(expert)}
-                  </Badge>
+                  <Badge tone="success">Kimlik/diploma doğrulandı</Badge>
+                  <Badge tone="neutral">{expert.onlineText}</Badge>
                 </div>
 
-                <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
+                <h1 className="max-w-3xl text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl">
                   {expert.name}
                 </h1>
 
-                <p className="mt-3 text-lg font-black text-neutral-700">
+                <p className="mt-3 text-lg font-semibold text-slate-600">
                   {expert.title}
                 </p>
 
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-bold text-neutral-500">
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500">
                   <span>{expert.experience}</span>
                   <span>•</span>
                   <span>{expert.city}</span>
@@ -725,16 +711,11 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
                   <span>{expert.sessionDurationMinutes} dk online görüşme</span>
                 </div>
 
-                <p className="mt-6 max-w-3xl text-base leading-8 text-neutral-600">
+                <p className="mt-6 max-w-3xl text-base leading-8 text-slate-500">
                   {expert.bio}
                 </p>
 
-                <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <MiniStat label="Puan" value={expert.reviewCount > 0 ? expert.averageRating.toFixed(1) : "Yeni"} />
-                  <MiniStat label="Yorum" value={`${expert.reviewCount}`} />
-                  <MiniStat label="Seans" value={`${expert.sessionDurationMinutes} dk`} />
-                  <MiniStat label="Uzmanlık" value={getPrimaryArea(expert)} />
-                </div>
+                <p className="mt-4 text-sm font-medium text-slate-500">{getRatingText(expert)}</p>
               </div>
             </div>
 
@@ -742,7 +723,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               {expert.areas.slice(0, 12).map((area) => (
                 <span
                   key={area}
-                  className="rounded-full bg-[#f7f2eb] px-4 py-2 text-xs font-black text-neutral-700 ring-1 ring-black/5"
+                  className="rounded-md border border-slate-200/80 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-600 transition-all duration-200 ease-out hover:border-slate-300"
                 >
                   {area}
                 </span>
@@ -750,31 +731,29 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <aside className="self-start rounded-[2rem] bg-[#f7f2eb] p-5 ring-1 ring-black/5 md:p-6 lg:sticky lg:top-6">
-            <div className="rounded-[1.6rem] bg-black p-5 text-white">
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-white/45">
+          <aside className="self-start rounded-xl border border-slate-200/80 bg-slate-50 p-5 md:p-6 lg:sticky lg:top-6">
+            <div className="rounded-lg bg-slate-900 p-5 text-white">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Online görüşme
               </p>
-              <p className="mt-3 text-4xl font-black">{expert.priceText}</p>
-              <p className="mt-1 text-sm font-semibold text-white/65">
+              <p className="mt-3 text-3xl font-bold">{expert.priceText}</p>
+              <p className="mt-1 text-sm font-medium text-slate-300">
                 {expert.sessionDurationMinutes} dakika · güvenli ödeme akışı
               </p>
             </div>
 
-            <div className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-black/5">
-              <p className="text-sm font-black text-black">Müsaitlik</p>
-              <p className="mt-1 text-sm leading-6 text-neutral-600">{expert.availabilityText}</p>
+            <div className="mt-5 rounded-lg border border-slate-200/80 bg-white p-4">
+              <p className="text-sm font-semibold text-slate-900">Müsaitlik</p>
+              <p className="mt-1 text-sm leading-6 text-slate-500">{expert.availabilityText}</p>
             </div>
 
             <div className="mt-5 grid gap-2">
               {TRUST_BADGES.map((item) => (
                 <div
                   key={item}
-                  className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-neutral-700 ring-1 ring-black/5"
+                  className="flex items-center gap-3 rounded-lg border border-slate-200/80 bg-white px-4 py-3 text-sm font-medium text-slate-600"
                 >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs text-white">
-                    ✓
-                  </span>
+                  <span aria-hidden="true" className="shrink-0 text-slate-400">✓</span>
                   <span>{item}</span>
                 </div>
               ))}
@@ -783,20 +762,20 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             <div className="mt-6 space-y-3">
               <Link
                 href={matchingHref}
-                className="flex w-full items-center justify-center rounded-2xl bg-black px-5 py-3.5 text-sm font-black text-white transition hover:bg-neutral-800"
+                className="flex w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Ücretsiz ön eşleşme iste
               </Link>
 
               <Link
                 href="/uzmanlar"
-                className="flex w-full items-center justify-center rounded-2xl border border-black/10 bg-white px-5 py-3.5 text-sm font-black text-black transition hover:bg-[#f7f2eb]"
+                className="flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Diğer uzmanları gör
               </Link>
             </div>
 
-            <p className="mt-5 text-xs leading-5 text-neutral-500">
+            <p className="mt-5 text-xs leading-5 text-slate-400">
               Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski varsa en yakın sağlık kuruluşuna başvur ya da 112 ile iletişime geç.
             </p>
           </aside>
@@ -806,13 +785,13 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
       <section className="mx-auto grid max-w-7xl gap-6 px-5 pb-12 lg:grid-cols-[1fr_390px]">
         <div className="space-y-6">
           <InfoCard title="Uzman Hakkında">
-            <p className="text-sm leading-7 text-neutral-600 md:text-base md:leading-8">
+            <p className="text-sm leading-7 text-slate-500 md:text-base md:leading-8">
               {expert.bio}
             </p>
           </InfoCard>
 
           <InfoCard title="Çalışma Yaklaşımı">
-            <p className="text-sm leading-7 text-neutral-600 md:text-base md:leading-8">
+            <p className="text-sm leading-7 text-slate-500 md:text-base md:leading-8">
               {expert.approach}
             </p>
           </InfoCard>
@@ -822,7 +801,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               {expert.areas.map((area) => (
                 <div
                   key={area}
-                  className="rounded-2xl border border-black/5 bg-[#f7f2eb] px-4 py-4 text-sm font-black text-neutral-700"
+                  className="rounded-lg border border-slate-200/80 bg-slate-50 px-4 py-4 text-sm font-medium text-slate-600"
                 >
                   {area}
                 </div>
@@ -840,15 +819,15 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           <InfoCard title="Danışan Değerlendirmeleri">
             {expert.reviewCount > 0 ? (
               <div className="space-y-5">
-                <div className="rounded-3xl bg-[#f7f2eb] p-5 ring-1 ring-black/5">
+                <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-4xl font-black text-black">★ {expert.averageRating.toFixed(1)}</p>
-                      <p className="mt-1 text-sm font-bold text-neutral-600">
+                      <p className="text-3xl font-bold text-slate-900">{expert.averageRating.toFixed(1)}</p>
+                      <p className="mt-1 text-sm font-medium text-slate-500">
                         {expert.reviewCount} onaylı değerlendirme
                       </p>
                     </div>
-                    <p className="max-w-md text-sm leading-6 text-neutral-600">
+                    <p className="max-w-md text-sm leading-6 text-slate-500">
                       Yorumlar yalnızca tamamlanan seanslardan sonra alınır ve yayınlanmadan önce moderasyondan geçer.
                     </p>
                   </div>
@@ -878,11 +857,11 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           <InfoCard title="Sık Sorulan Sorular">
             <div className="space-y-3">
               {FAQ_ITEMS.map((item) => (
-                <details key={item.question} className="rounded-2xl bg-[#f7f2eb] p-4 ring-1 ring-black/5">
-                  <summary className="cursor-pointer text-sm font-black text-black">
+                <details key={item.question} className="group rounded-lg border border-slate-200/80 bg-slate-50 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-slate-900 transition-colors duration-200 group-open:text-slate-900">
                     {item.question}
                   </summary>
-                  <p className="mt-3 text-sm leading-6 text-neutral-600">{item.answer}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-500">{item.answer}</p>
                 </details>
               ))}
             </div>
@@ -897,7 +876,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
               <InfoRow label="Süre" value={`${expert.sessionDurationMinutes} dk`} />
               <InfoRow label="Ücret" value={expert.priceText} />
               <InfoRow
-                label="Puan"
+                label="Değerlendirme"
                 value={expert.reviewCount > 0 ? `${expert.averageRating.toFixed(1)} / 5` : "Yeni"}
               />
             </div>
@@ -916,7 +895,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           </InfoCard>
 
           <InfoCard title="Ön eşleşme notu">
-            <p className="text-sm leading-7 text-neutral-600">
+            <p className="text-sm leading-7 text-slate-500">
               Bu profil ilk kararını kolaylaştırmak için hazırlanmıştır. Nihai uzman uygunluğu, destek ihtiyacın, beklentin ve müsaitlik durumun ön eşleşme sonrasında netleşir.
             </p>
           </InfoCard>
@@ -924,23 +903,23 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-16">
-        <div className="rounded-[2rem] bg-black p-8 text-white shadow-sm md:p-12">
+        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-12">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.25em] text-neutral-400">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Ücretsiz ön eşleşme
               </p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
+              <h2 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">
                 Bu uzman senin için uygun mu birlikte değerlendirelim.
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-300">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
                 Kısa formu doldur. Mindora ekibi ihtiyacına, beklentine ve uygun zamanına göre süreci güvenli şekilde başlatsın.
               </p>
             </div>
 
             <Link
               href={matchingHref}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-black transition hover:bg-neutral-200"
+              className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100"
             >
               Ücretsiz Ön Eşleşmeye Başla
             </Link>
@@ -948,18 +927,18 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
         </div>
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 px-4 py-3 shadow-lg backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-black text-black">{expert.name}</p>
-            <p className="text-xs font-bold text-neutral-500">
-              {expert.reviewCount > 0 ? `★ ${expert.averageRating.toFixed(1)} · ` : ""}
+            <p className="truncate text-sm font-semibold text-slate-900">{expert.name}</p>
+            <p className="text-xs font-medium text-slate-500">
+              {expert.reviewCount > 0 ? `${expert.averageRating.toFixed(1)} · ` : ""}
               {expert.priceText}
             </p>
           </div>
           <Link
             href={matchingHref}
-            className="shrink-0 rounded-2xl bg-black px-5 py-3 text-sm font-black text-white"
+            className="shrink-0 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
           >
             Eşleşme
           </Link>
@@ -969,33 +948,19 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
   );
 }
 
-
 function Badge({
   children,
   tone,
 }: {
   children: ReactNode;
-  tone: "success" | "dark" | "warning" | "neutral";
+  tone: "success" | "neutral";
 }) {
   const className =
     tone === "success"
-      ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
-      : tone === "warning"
-        ? "bg-amber-50 text-amber-800 ring-amber-100"
-        : tone === "neutral"
-          ? "bg-neutral-100 text-neutral-700 ring-neutral-200"
-          : "bg-black text-white ring-black";
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-slate-200 bg-slate-50 text-slate-600";
 
-  return <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>{children}</span>;
-}
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-[#f7f2eb] px-4 py-3 ring-1 ring-black/5">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-neutral-500">{label}</p>
-      <p className="mt-1 line-clamp-2 text-sm font-black text-black">{value}</p>
-    </div>
-  );
+  return <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${className}`}>{children}</span>;
 }
 
 function InfoCard({
@@ -1006,8 +971,8 @@ function InfoCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-black tracking-tight text-black">{title}</h2>
+    <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
+      <h2 className="text-lg font-semibold tracking-tight text-slate-900">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -1015,37 +980,37 @@ function InfoCard({
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#f7f2eb] px-4 py-3 text-sm ring-1 ring-black/5">
-      <span className="text-neutral-600">{label}</span>
-      <span className="text-right font-black text-black">{value}</span>
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right font-semibold text-slate-900">{value}</span>
     </div>
   );
 }
 
 function ReasonCard({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-2xl bg-[#f7f2eb] p-4 ring-1 ring-black/5">
-      <h3 className="text-sm font-black text-black">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-neutral-600">{text}</p>
+    <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4">
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-500">{text}</p>
     </div>
   );
 }
 
 function ProfileList({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
-    <div className="rounded-2xl bg-[#f7f2eb] p-4 ring-1 ring-black/5">
-      <h3 className="text-sm font-black text-black">{title}</h3>
+    <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4">
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       {items.length > 0 ? (
         <ul className="mt-3 space-y-2">
           {items.map((item) => (
-            <li key={item} className="flex gap-2 text-sm leading-6 text-neutral-600">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-black" />
+            <li key={item} className="flex gap-2 text-sm leading-6 text-slate-500">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
               <span>{item}</span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm leading-6 text-neutral-600">{empty}</p>
+        <p className="mt-3 text-sm leading-6 text-slate-500">{empty}</p>
       )}
     </div>
   );
@@ -1053,14 +1018,12 @@ function ProfileList({ title, items, empty }: { title: string; items: string[]; 
 
 function TrustEmptyState({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-3xl bg-[#f7f2eb] p-5 ring-1 ring-black/5">
+    <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-5">
       <div className="flex gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-xs font-black text-white">
-          ✓
-        </span>
+        <span aria-hidden="true" className="shrink-0 text-slate-400">✓</span>
         <div>
-          <p className="text-sm font-black text-black">{title}</p>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">{text}</p>
+          <p className="text-sm font-semibold text-slate-900">{title}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-500">{text}</p>
         </div>
       </div>
     </div>
@@ -1071,18 +1034,18 @@ function ReviewCard({ review }: { review: PublicReview }) {
   const roundedRating = Math.round(review.rating);
 
   return (
-    <article className="rounded-2xl bg-[#f7f2eb] p-4 ring-1 ring-black/5">
+    <article className="rounded-lg border border-slate-200/80 bg-slate-50 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-0.5 text-lg" aria-label={`${review.rating} yıldız`}>
+        <div className="flex items-center gap-0.5 text-base" aria-label={`${review.rating} yıldız`}>
           {[1, 2, 3, 4, 5].map((star) => (
-            <span key={star} className={star <= roundedRating ? "text-amber-400" : "text-neutral-300"}>
+            <span key={star} className={star <= roundedRating ? "text-amber-400" : "text-slate-300"}>
               ★
             </span>
           ))}
         </div>
-        <span className="text-xs font-bold text-neutral-500">{formatDate(review.createdAt)}</span>
+        <span className="text-xs font-medium text-slate-400">{formatDate(review.createdAt)}</span>
       </div>
-      <p className="mt-3 text-sm leading-6 text-neutral-700">{review.reviewText}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{review.reviewText}</p>
     </article>
   );
 }
@@ -1090,11 +1053,13 @@ function ReviewCard({ review }: { review: PublicReview }) {
 function List({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3">
-      {items.map((item) => (
-        <li key={item} className="flex gap-3 text-sm leading-6 text-neutral-600">
-          <span className="mt-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black text-[10px] font-black text-white">
-            ✓
-          </span>
+      {items.map((item, index) => (
+        <li
+          key={item}
+          style={{ animationDelay: `${index * 80}ms` }}
+          className="animate-fade-in-up flex gap-3 text-sm leading-6 text-slate-500"
+        >
+          <span aria-hidden="true" className="mt-0.5 shrink-0 text-slate-400">✓</span>
           <span>{item}</span>
         </li>
       ))}

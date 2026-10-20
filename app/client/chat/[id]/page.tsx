@@ -1309,27 +1309,27 @@ export default function ClientChatPage({
     }`
 
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f7f3ee] px-4 py-10 text-[#171717]">
-        <div className="w-full max-w-md rounded-[2rem] border border-[#e5d9cc] bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 text-3xl ring-1 ring-amber-100">
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10 text-slate-900">
+        <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm animate-fade-in-up">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-3xl">
             🔒
           </div>
 
-          <h1 className="text-2xl font-black text-[#2b2118]">Görüşme alanı kilitli</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Görüşme alanı kilitli</h1>
 
-          <p className="mt-3 text-sm font-semibold leading-6 text-[#6b5c4d]">
+          <p className="mt-3 text-sm font-medium leading-6 text-slate-500">
             Eşleşmeniz hazır! Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
             Ödemeniz onaylandığı an bu alan otomatik olarak açılacaktır.
           </p>
 
           <Link
             href={dashboardHref}
-            className="mt-7 block rounded-full bg-[#2b2118] px-6 py-4 text-center text-base font-black text-white transition hover:bg-[#171310]"
+            className="mt-7 block rounded-lg bg-slate-900 px-6 py-4 text-center text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
           >
             Ödemeyi Tamamla
           </Link>
 
-          <p className="mt-4 text-xs font-semibold text-[#8a7662]">
+          <p className="mt-4 text-xs font-medium text-slate-400">
             Ödeme durumu: {getPaymentText(conversation.payment_status)}
           </p>
         </div>
@@ -1338,85 +1338,85 @@ export default function ClientChatPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f3ee] px-4 py-6 text-[#171717] md:px-6 md:py-10">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-10">
       <div className="mx-auto max-w-4xl">
-        <header className="mb-6 rounded-[2rem] border border-[#e5d9cc] bg-white/80 p-5 shadow-sm">
+        <header className="mb-6 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-[#8a7662]">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Mindora Güvenli Görüşme
               </p>
 
-              <h1 className="mt-2 text-2xl font-black text-[#2b2118] md:text-3xl">
+              <h1 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
                 Danışan Chat Alanı
               </h1>
 
-              <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
+              <p className="mt-2 text-sm font-medium text-slate-500">
                 Uzmanınızla iletişim yalnızca Mindora üzerinden yürütülür.
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                     accessVerified
-                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
-                      : 'bg-orange-50 text-orange-700 ring-orange-100'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-orange-200 bg-orange-50 text-orange-700'
                   }`}
                 >
                   Erişim: {accessVerified ? 'Doğrulandı' : 'Kontrol ediliyor'}
                 </span>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-black ${
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                     realtimeReady
-                      ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
-                      : 'bg-orange-50 text-orange-700 ring-1 ring-orange-100'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-orange-200 bg-orange-50 text-orange-700'
                   }`}
                 >
                   Realtime: {realtimeReady ? 'Aktif' : 'Bağlanıyor'}
                 </span>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                     onlineUsers.expert
-                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
-                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-slate-200 bg-slate-100 text-slate-500'
                   }`}
                 >
                   {onlineUsers.expert ? 'Uzman çevrimiçi' : 'Uzman çevrimdışı'}
                 </span>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                     onlineUsers.admin
-                      ? 'bg-purple-50 text-purple-700 ring-purple-100'
-                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                      ? 'border-purple-200 bg-purple-50 text-purple-700'
+                      : 'border-slate-200 bg-slate-100 text-slate-500'
                   }`}
                 >
                   {onlineUsers.admin ? 'Mindora aktif' : 'Mindora çevrimdışı'}
                 </span>
 
-                <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
+                <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
                   Secure Token Aktif
                 </span>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                     readSynced
-                      ? 'bg-blue-50 text-blue-700 ring-blue-100'
-                      : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                      ? 'border-blue-200 bg-blue-50 text-blue-700'
+                      : 'border-slate-200 bg-slate-100 text-slate-500'
                   }`}
                 >
                   {readSynced ? 'Okundu senkron' : 'Okundu bekliyor'}
                 </span>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                     notificationsEnabled
-                      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                       : notificationPermission === 'denied'
-                        ? 'bg-red-50 text-red-700 ring-red-100'
-                        : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+                        ? 'border-red-200 bg-red-50 text-red-700'
+                        : 'border-slate-200 bg-slate-100 text-slate-500'
                   }`}
                 >
                   {notificationStatusText}
@@ -1430,14 +1430,14 @@ export default function ClientChatPage({
                     type="button"
                     onClick={handleEnableNotifications}
                     disabled={notificationLoading}
-                    className="mt-4 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-4 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {notificationLoading ? 'Bildirim izni alınıyor...' : '🔔 Bildirimleri Aç'}
                   </button>
                 )}
 
               {notificationPermission === 'denied' && (
-                <p className="mt-3 max-w-xl text-xs font-semibold leading-5 text-red-600">
+                <p className="mt-3 max-w-xl text-xs font-medium leading-5 text-red-600">
                   Bildirim izni tarayıcı tarafından engellenmiş. Bildirim almak
                   için tarayıcı site ayarlarından Mindora bildirim iznini açmanız
                   gerekir.
@@ -1452,18 +1452,18 @@ export default function ClientChatPage({
                 disabled={!canStartVideoSession || videoSessionLoading}
                 title={videoButtonTitle}
                 data-ready={String(isConversationReady)}
-                className="rounded-full bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {videoSessionLoading ? 'Seans hazırlanıyor...' : '🎥 Video Görüşmeye Katıl'}
               </button>
 
-              <p className="max-w-[260px] text-right text-xs font-semibold leading-5 text-[#8a7662]">
+              <p className="max-w-[260px] text-right text-xs font-medium leading-5 text-slate-400">
                 Video görüşme güvenli token ile doğrulanarak açılır.
               </p>
 
               <Link
                 href="/"
-                className="rounded-full border border-black/10 bg-white px-5 py-3 text-center text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df]"
+                className="rounded-full border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Ana Sayfa
               </Link>
@@ -1472,11 +1472,11 @@ export default function ClientChatPage({
 
           {conversation && (
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-[#faf7f2] p-4 ring-1 ring-black/5">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                   Chat
                 </p>
-                <p className="mt-2 text-lg font-black text-[#2b2118]">
+                <p className="mt-2 text-lg font-bold text-slate-900">
                   {conversation.status === 'active'
                     ? 'Aktif'
                     : conversation.status === 'locked'
@@ -1485,21 +1485,21 @@ export default function ClientChatPage({
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-[#faf7f2] p-4 ring-1 ring-black/5">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                   Ödeme
                 </p>
-                <p className="mt-2 text-lg font-black text-green-700">
+                <p className="mt-2 text-lg font-bold text-green-700">
                   {getPaymentText(conversation.payment_status)}
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-[#faf7f2] p-4 ring-1 ring-black/5">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a7662]">
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                   Video
                 </p>
                 <p
-                  className={`mt-2 text-lg font-black ${
+                  className={`mt-2 text-lg font-bold ${
                     canStartVideoSession ? 'text-emerald-700' : 'text-orange-700'
                   }`}
                 >
@@ -1511,25 +1511,25 @@ export default function ClientChatPage({
         </header>
 
         {loading || accessLoading ? (
-          <section className="rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-[#6b5c4d]">
+          <section className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="font-semibold text-slate-500">
               Güvenli erişim doğrulanıyor...
             </p>
           </section>
         ) : error ? (
-          <section className="rounded-[2rem] bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
-            <p className="text-lg font-black text-red-700">Erişim reddedildi</p>
-            <p className="mt-2 text-sm font-bold text-red-600">{error}</p>
+          <section className="rounded-xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+            <p className="text-lg font-bold text-red-700">Erişim reddedildi</p>
+            <p className="mt-2 text-sm font-medium text-red-600">{error}</p>
           </section>
         ) : (
-          <section className="overflow-hidden rounded-[2rem] border border-[#e5d9cc] bg-white shadow-sm">
+          <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
             {showChatLockedBanner && (
-              <div className="border-b border-orange-100 bg-orange-50 p-5">
-                <p className="text-lg font-black text-orange-800">
+              <div className="border-b border-orange-200 bg-orange-50 p-5">
+                <p className="text-lg font-bold text-orange-800">
                   🔒 Chat şu anda kilitli
                 </p>
 
-                <p className="mt-2 text-sm font-semibold text-orange-700">
+                <p className="mt-2 text-sm font-medium text-orange-700">
                   Platform içi mesajlaşma güvenli erişim ve görüşme durumuna göre
                   açılır. Video görüşme erişimi backend tarafından ayrıca doğrulanır.
                 </p>
@@ -1539,15 +1539,15 @@ export default function ClientChatPage({
             <div
               ref={messagesContainerRef}
               onScroll={handleMessagesScroll}
-              className="flex h-[520px] flex-col overflow-y-auto bg-[#faf7f2] p-4 md:p-6"
+              className="flex h-[520px] flex-col overflow-y-auto bg-slate-50 p-4 md:p-6"
             >
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
-                  <div className="max-w-md rounded-3xl bg-white p-6 text-center ring-1 ring-black/5">
-                    <p className="text-lg font-black text-[#2b2118]">
+                  <div className="max-w-md rounded-xl border border-slate-200/80 bg-white p-6 text-center shadow-sm animate-fade-in-up">
+                    <p className="text-lg font-bold text-slate-900">
                       Henüz mesaj yok
                     </p>
-                    <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
+                    <p className="mt-2 text-sm font-medium text-slate-500">
                       Uzmanınızla güvenli şekilde buradan mesajlaşabilirsiniz.
                     </p>
                   </div>
@@ -1567,15 +1567,15 @@ export default function ClientChatPage({
                         className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[82%] rounded-2xl p-4 text-sm shadow-sm ${
+                          className={`max-w-[82%] rounded-lg p-4 text-sm shadow-sm ${
                             isMine
-                              ? 'bg-black text-white'
+                              ? 'bg-slate-900 text-white'
                               : isAdmin
-                                ? 'bg-purple-50 text-purple-950 ring-1 ring-purple-100'
-                                : 'bg-white text-[#2b2118] ring-1 ring-black/10'
+                                ? 'border border-purple-200 bg-purple-50 text-purple-900'
+                                : 'border border-slate-200/80 bg-white text-slate-900'
                           }`}
                         >
-                          <p className="mb-2 text-xs font-black uppercase tracking-[0.15em] opacity-70">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide opacity-70">
                             {getSenderName(item)}
                           </p>
 
@@ -1594,15 +1594,15 @@ export default function ClientChatPage({
                                 return (
                                   <div
                                     key={attachment.id}
-                                    className={`rounded-2xl p-3 ring-1 ${
+                                    className={`rounded-lg border p-3 ${
                                       isMine
-                                        ? 'bg-white/10 ring-white/15'
-                                        : 'bg-[#faf7f2] ring-black/5'
+                                        ? 'border-white/15 bg-white/10'
+                                        : 'border-slate-200/80 bg-slate-50'
                                     }`}
                                   >
                                     <div className="flex items-start gap-3">
                                       <div
-                                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
+                                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg ${
                                           isMine ? 'bg-white/15' : 'bg-white'
                                         }`}
                                       >
@@ -1610,10 +1610,10 @@ export default function ClientChatPage({
                                       </div>
 
                                       <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-black">
+                                        <p className="truncate text-sm font-semibold">
                                           {isAudio ? 'Sesli mesaj' : attachment.file_name}
                                         </p>
-                                        <p className="mt-1 text-[11px] font-bold opacity-70">
+                                        <p className="mt-1 text-[11px] font-medium opacity-70">
                                           {formatFileSize(attachment.file_size)} · Güvenli dosya
                                         </p>
                                       </div>
@@ -1632,10 +1632,10 @@ export default function ClientChatPage({
                                       type="button"
                                       onClick={() => openAttachment(attachment)}
                                       disabled={openingAttachmentId === attachment.id}
-                                      className={`mt-3 w-full rounded-xl px-3 py-2 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                      className={`mt-3 w-full rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60 ${
                                         isMine
-                                          ? 'bg-white text-black hover:bg-white/90'
-                                          : 'bg-black text-white hover:bg-[#2b2118]'
+                                          ? 'bg-white text-slate-900 hover:bg-white/90'
+                                          : 'bg-slate-900 text-white hover:bg-slate-800'
                                       }`}
                                     >
                                       {openingAttachmentId === attachment.id
@@ -1659,7 +1659,7 @@ export default function ClientChatPage({
 
                             {messageStatus && (
                               <span
-                                className={`font-black ${
+                                className={`font-semibold ${
                                   messageStatus === 'Görüldü'
                                     ? 'text-emerald-300'
                                     : 'text-white/70'
@@ -1676,13 +1676,13 @@ export default function ClientChatPage({
 
                   {typingUser && (
                     <div className="flex justify-start">
-                      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-[#6b5c4d] shadow-sm ring-1 ring-black/10">
+                      <div className="rounded-lg border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
                         <span className="inline-flex items-center gap-1">
                           {getTypingText(typingUser.senderType)}
                           <span className="ml-1 inline-flex gap-1">
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662]" />
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662] [animation-delay:120ms]" />
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662] [animation-delay:240ms]" />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:120ms]" />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:240ms]" />
                           </span>
                         </span>
                       </div>
@@ -1695,24 +1695,24 @@ export default function ClientChatPage({
             </div>
 
             {blockedError && (
-              <div className="border-t border-red-100 bg-red-50 p-4">
-                <p className="text-sm font-bold text-red-700">{blockedError}</p>
+              <div className="border-t border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-medium text-red-700">{blockedError}</p>
               </div>
             )}
 
-            <div className="border-t border-black/10 bg-white p-4">
-              <div className="mb-3 rounded-2xl bg-[#faf7f2] p-3 text-xs font-semibold text-[#6b5c4d] ring-1 ring-black/5">
+            <div className="border-t border-slate-200/80 bg-white p-4">
+              <div className="mb-3 rounded-lg border border-slate-200/80 bg-slate-50 p-3 text-xs font-medium text-slate-500">
                 Telefon, e-posta, WhatsApp, Instagram, Telegram, IBAN veya
                 platform dışı ödeme bilgisi paylaşmayınız.
               </div>
 
               {isRecording && (
-                <div className="mb-3 flex flex-col gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 md:flex-row md:items-center md:justify-between">
+                <div className="mb-3 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 p-4 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <p className="text-sm font-black text-red-700">
+                    <p className="text-sm font-semibold text-red-700">
                       🎙️ Ses kaydediliyor
                     </p>
-                    <p className="mt-1 text-xs font-bold text-red-600">
+                    <p className="mt-1 text-xs font-medium text-red-600">
                       Süre: {formatDuration(recordingSeconds)} / {formatDuration(MAX_RECORDING_SECONDS)}
                     </p>
                   </div>
@@ -1721,7 +1721,7 @@ export default function ClientChatPage({
                     <button
                       type="button"
                       onClick={cancelVoiceRecording}
-                      className="rounded-full bg-white px-4 py-2 text-xs font-black text-red-600 ring-1 ring-red-100 transition hover:bg-red-50"
+                      className="rounded-full border border-red-200 bg-white px-4 py-2 text-xs font-semibold text-red-600 transition-all duration-200 ease-out hover:bg-red-50"
                     >
                       İptal
                     </button>
@@ -1729,7 +1729,7 @@ export default function ClientChatPage({
                     <button
                       type="button"
                       onClick={stopVoiceRecording}
-                      className="rounded-full bg-black px-4 py-2 text-xs font-black text-white transition hover:bg-[#2b2118]"
+                      className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
                     >
                       Kaydı Bitir
                     </button>
@@ -1738,19 +1738,19 @@ export default function ClientChatPage({
               )}
 
               {selectedAttachment && (
-                <div className="mb-3 flex flex-col gap-3 rounded-2xl border border-dashed border-black/15 bg-[#faf7f2] p-4 md:flex-row md:items-center md:justify-between">
+                <div className="mb-3 flex flex-col gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between">
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl ring-1 ring-black/5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-white text-xl">
                       {getFileIcon(selectedAttachment.type)}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-black text-[#2b2118]">
+                      <p className="truncate text-sm font-semibold text-slate-900">
                         {selectedAttachment.type.startsWith('audio/')
                           ? 'Sesli mesaj hazır'
                           : selectedAttachment.name}
                       </p>
-                      <p className="mt-1 text-xs font-bold text-[#8a7662]">
+                      <p className="mt-1 text-xs font-medium text-slate-400">
                         {formatFileSize(selectedAttachment.size)} · Güvenli
                         yükleme için hazır
                       </p>
@@ -1770,7 +1770,7 @@ export default function ClientChatPage({
                     type="button"
                     onClick={clearSelectedAttachment}
                     disabled={sending || uploadingAttachment}
-                    className="rounded-full bg-white px-4 py-2 text-xs font-black text-red-600 ring-1 ring-red-100 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full border border-red-200 bg-white px-4 py-2 text-xs font-semibold text-red-600 transition-all duration-200 ease-out hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Kaldır
                   </button>
@@ -1789,7 +1789,7 @@ export default function ClientChatPage({
                       ? 'Mesajınızı yazın...'
                       : 'Güvenli erişim doğrulandıktan sonra mesajlaşma açılır.'
                   }
-                  className="min-h-24 flex-1 resize-none rounded-2xl border border-black/10 bg-[#faf7f2] p-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-24 flex-1 resize-none rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-900 outline-none transition-all duration-200 ease-out placeholder:text-slate-400 focus:border-slate-400 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
                 />
 
                 <div className="flex gap-2 md:w-56 md:flex-col">
@@ -1805,7 +1805,7 @@ export default function ClientChatPage({
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={!canUseChat || sending || isRecording}
-                    className="flex-1 rounded-2xl border border-black/10 bg-white px-4 py-4 text-sm font-black text-[#2b2118] transition hover:bg-[#f0e8df] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-4 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     📎 Dosya
                   </button>
@@ -1819,10 +1819,10 @@ export default function ClientChatPage({
                       uploadingAttachment ||
                       Boolean(selectedAttachment && !isRecording)
                     }
-                    className={`flex-1 rounded-2xl px-4 py-4 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                    className={`flex-1 rounded-lg px-4 py-4 text-sm font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50 ${
                       isRecording
                         ? 'bg-red-600 text-white hover:bg-red-700'
-                        : 'border border-black/10 bg-white text-[#2b2118] hover:bg-[#f0e8df]'
+                        : 'border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:text-slate-900'
                     }`}
                   >
                     {isRecording ? '⏹️ Bitir' : '🎤 Ses'}
@@ -1838,7 +1838,7 @@ export default function ClientChatPage({
                       isRecording ||
                       (!message.trim() && !selectedAttachment)
                     }
-                    className="flex-1 rounded-2xl bg-black px-6 py-4 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-lg bg-slate-900 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {uploadingAttachment
                       ? 'Yükleniyor...'
@@ -1849,7 +1849,7 @@ export default function ClientChatPage({
                 </div>
               </div>
 
-              <div className="mt-2 flex flex-col gap-1 text-xs font-semibold text-[#8a7662] md:flex-row md:items-center md:justify-between">
+              <div className="mt-2 flex flex-col gap-1 text-xs font-medium text-slate-400 md:flex-row md:items-center md:justify-between">
                 <p>{message.length}/2000 karakter</p>
                 <p>PDF, DOC, DOCX, görsel veya ses · Maksimum 10 MB</p>
               </div>

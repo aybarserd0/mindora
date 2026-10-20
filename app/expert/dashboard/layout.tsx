@@ -119,31 +119,31 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
 
   if (status === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-100">
-        <p className="text-sm font-black text-slate-600">Oturum doğrulanıyor...</p>
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm font-semibold text-slate-600">Oturum doğrulanıyor...</p>
       </div>
     );
   }
 
   if (status === "unauthorized") {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-100">
-        <p className="text-sm font-black text-slate-600">Giriş sayfasına yönlendiriliyorsunuz...</p>
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm font-semibold text-slate-600">Giriş sayfasına yönlendiriliyorsunuz...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-100 text-slate-950">
+    <div className="h-screen overflow-hidden bg-slate-50 text-slate-900">
       <div className="flex h-full min-w-0">
-        <aside className="hidden h-full w-[280px] shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
-          <div className="flex h-20 items-center gap-3 border-b border-slate-100 px-5">
+        <aside className="hidden h-full w-[280px] shrink-0 border-r border-slate-200/80 bg-white lg:flex lg:flex-col">
+          <div className="flex h-20 items-center gap-3 border-b border-slate-200/80 px-5">
             <Link href="/expert/dashboard" className="flex items-center gap-3 no-underline">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-sm font-black text-white shadow-sm">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
                 M
               </span>
               <span>
-                <span className="block text-base font-black tracking-tight text-slate-950">
+                <span className="block text-base font-bold tracking-tight text-slate-900">
                   Mindora
                 </span>
                 <span className="block text-xs font-semibold text-slate-500">
@@ -154,8 +154,8 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
           </div>
 
           <nav className="flex-1 overflow-y-auto px-3 py-4">
-            <div className="mb-4 rounded-2xl bg-indigo-50 px-4 py-4 ring-1 ring-indigo-100">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-700">
+            <div className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-4">
+              <p className="text-sm font-semibold uppercase tracking-wide text-indigo-700">
                 Çalışma Alanı
               </p>
               <p className="mt-2 text-sm font-semibold leading-5 text-slate-900">
@@ -171,14 +171,14 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`group flex items-center gap-3 rounded-2xl px-3 py-3 no-underline transition ${
+                    className={`group flex items-center gap-3 rounded-xl px-3 py-3 no-underline transition-all duration-200 ease-out ${
                       active
-                        ? "bg-slate-950 text-white shadow-sm"
-                        : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
                     <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${
                         active
                           ? "bg-white/10 text-white"
                           : "bg-slate-100 text-slate-600 group-hover:bg-white"
@@ -187,14 +187,14 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                       {item.icon}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-2 text-sm font-black leading-5">
+                      <span className="flex items-center gap-2 text-sm font-semibold leading-5">
                         {item.label}
                         {item.badge ? (
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                               active
                                 ? "bg-white/10 text-white"
-                                : "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100"
+                                : "border border-indigo-200 bg-indigo-50 text-indigo-700"
                             }`}
                           >
                             {item.badge}
@@ -215,14 +215,14 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
             </div>
           </nav>
 
-          <div className="border-t border-slate-100 p-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <div className="border-t border-slate-200/80 p-3">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
                   U
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-black text-slate-950">
+                  <p className="truncate text-sm font-semibold text-slate-900">
                     {expertName || "Uzman Hesabı"}
                   </p>
                   <p className="text-xs font-semibold text-emerald-600">Panel erişimi aktif</p>
@@ -232,13 +232,13 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
               <div className="mt-3 grid grid-cols-3 gap-2">
                 <Link
                   href="/expert/dashboard/profile"
-                  className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-center text-xs font-black text-slate-700 no-underline transition hover:bg-slate-100"
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-center text-xs font-semibold text-slate-700 no-underline transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50"
                 >
                   Profil
                 </Link>
                 <Link
                   href="/expert/dashboard/verification"
-                  className="rounded-xl border border-indigo-100 bg-indigo-50 px-2 py-2 text-center text-xs font-black text-indigo-700 no-underline transition hover:bg-indigo-100"
+                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-2 text-center text-xs font-semibold text-indigo-700 no-underline transition-all duration-200 ease-out hover:bg-indigo-100"
                 >
                   Belge
                 </Link>
@@ -249,7 +249,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                       window.location.href = "/expert/login";
                     });
                   }}
-                  className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-center text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50"
                 >
                   Çıkış
                 </button>
@@ -259,13 +259,13 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <header className="z-20 border-b border-slate-200/80 bg-white">
             <div className="flex min-h-20 flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+                <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
                   Uzman Paneli
                 </p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
                   Yönetim Alanı
                 </h1>
               </div>
@@ -273,17 +273,17 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
               <div className="flex items-center gap-3">
                 <NotificationBell role="expert" />
 
-                <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 lg:flex">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700 ring-1 ring-indigo-200">
+                <div className="hidden items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3 lg:flex">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-indigo-200 bg-indigo-100 text-sm font-semibold text-indigo-700">
                     U
                   </span>
                   <div>
-                    <p className="text-sm font-black text-slate-950">Uzman Hesabı</p>
+                    <p className="text-sm font-semibold text-slate-900">Uzman Hesabı</p>
                     <p className="text-xs font-semibold text-slate-500">
                       Panel erişimi aktif
                     </p>
                   </div>
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                     Aktif
                   </span>
                 </div>
@@ -297,9 +297,9 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`shrink-0 rounded-full px-4 py-2 text-sm font-black no-underline transition ${
+                      className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold no-underline transition-all duration-200 ease-out ${
                         active
-                          ? "bg-slate-950 text-white"
+                          ? "bg-slate-900 text-white"
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                       }`}
                     >

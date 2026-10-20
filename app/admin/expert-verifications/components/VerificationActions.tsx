@@ -132,7 +132,7 @@ export default function VerificationActions({
           type="button"
           disabled={Boolean(fileAction)}
           onClick={() => void handleFileAction("preview")}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {fileAction === "preview" ? "Açılıyor..." : "Önizle"}
         </button>
@@ -141,7 +141,7 @@ export default function VerificationActions({
           type="button"
           disabled={Boolean(fileAction)}
           onClick={() => void handleFileAction("download")}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {fileAction === "download" ? "Hazırlanıyor..." : "İndir"}
         </button>
@@ -152,7 +152,7 @@ export default function VerificationActions({
         onChange={(event) => setAdminNote(event.target.value)}
         rows={2}
         placeholder="Admin notu"
-        className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50"
+        className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50"
       />
 
       <div className="flex justify-end gap-2">
@@ -160,7 +160,7 @@ export default function VerificationActions({
           type="button"
           disabled={Boolean(loadingAction) || isApproved}
           onClick={() => void updateStatus("approved")}
-          className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loadingAction === "approved" ? "Onaylanıyor..." : "Onayla"}
         </button>
@@ -169,7 +169,7 @@ export default function VerificationActions({
           type="button"
           disabled={Boolean(loadingAction) || isRejected}
           onClick={() => void updateStatus("rejected")}
-          className="rounded-xl bg-rose-600 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loadingAction === "rejected" ? "Reddediliyor..." : "Reddet"}
         </button>
@@ -178,20 +178,20 @@ export default function VerificationActions({
           type="button"
           disabled={Boolean(loadingAction) || status === "pending"}
           onClick={() => void updateStatus("pending")}
-          className="rounded-xl bg-slate-700 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loadingAction === "pending" ? "Alınıyor..." : "İnceleme"}
         </button>
       </div>
 
       {notice ? (
-        <p className="rounded-2xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
           {notice}
         </p>
       ) : null}
 
       {error ? (
-        <p className="rounded-2xl bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-100">
+        <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
           {error}
         </p>
       ) : null}

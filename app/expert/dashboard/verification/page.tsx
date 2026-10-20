@@ -103,10 +103,10 @@ function getStatusLabel(status: DocumentStatus) {
 }
 
 function getStatusClass(status: DocumentStatus) {
-  if (status === "approved") return "bg-emerald-50 text-emerald-700 ring-emerald-100";
-  if (status === "pending") return "bg-amber-50 text-amber-700 ring-amber-100";
-  if (status === "rejected") return "bg-rose-50 text-rose-700 ring-rose-100";
-  return "bg-slate-100 text-slate-700 ring-slate-200";
+  if (status === "approved") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (status === "pending") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (status === "rejected") return "border-rose-200 bg-rose-50 text-rose-700";
+  return "border-slate-200 bg-slate-100 text-slate-700";
 }
 
 function getStatusMessage(status: DocumentStatus) {
@@ -357,18 +357,18 @@ export default function ExpertVerificationPage() {
   }
 
   return (
-    <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+    <section className="px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[1.35fr_0.65fr]">
             <div className="p-6 lg:p-8">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Uzman Doğrulama
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Belge Yönetimi
               </h1>
-              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
                 Mesleki belgelerinizi güvenli şekilde yükleyin. Belgeler yalnızca Mindora
                 doğrulama ekibi tarafından incelenir ve danışanlarla paylaşılmaz.
               </p>
@@ -380,36 +380,36 @@ export default function ExpertVerificationPage() {
               </div>
             </div>
 
-            <div className="border-t border-indigo-100 bg-indigo-50 p-6 lg:border-l lg:border-t-0 lg:p-8">
+            <div className="border-t border-slate-200/80 bg-slate-50 p-6 lg:border-l lg:border-t-0 lg:p-8">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-black text-indigo-700">Zorunlu Belge Durumu</p>
+                <p className="text-sm font-semibold text-slate-700">Zorunlu Belge Durumu</p>
                 <button
                   type="button"
                   onClick={() => void fetchVerification("refresh")}
                   disabled={loading || refreshing}
-                  className="rounded-full bg-white px-3 py-1 text-xs font-black text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading || refreshing ? "..." : "Yenile"}
                 </button>
               </div>
 
               <div className="mt-3 flex items-end gap-2">
-                <p className="text-4xl font-black tracking-tight text-slate-950">
+                <p className="text-4xl font-bold tracking-tight text-slate-900">
                   {loading ? "..." : requiredCounts.submitted}
                 </p>
-                <p className="pb-1 text-sm font-black text-slate-500">
+                <p className="pb-1 text-sm font-semibold text-slate-500">
                   / {requiredCounts.total} yüklendi
                 </p>
               </div>
 
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
                 <div
-                  className="h-full rounded-full bg-indigo-600"
+                  className="h-full rounded-full bg-slate-900"
                   style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
                 />
               </div>
 
-              <p className="mt-3 text-xs font-bold leading-5 text-slate-600">
+              <p className="mt-3 text-xs font-semibold leading-5 text-slate-500">
                 {pageStatusText}
               </p>
             </div>
@@ -417,7 +417,7 @@ export default function ExpertVerificationPage() {
         </section>
 
         {notice ? (
-          <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-black text-amber-900">
+          <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
             {notice}
           </section>
         ) : null}
@@ -461,9 +461,9 @@ export default function ExpertVerificationPage() {
               />
             </div>
 
-            <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-black text-slate-900">Gizlilik notu</p>
-              <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+            <div className="mt-5 rounded-xl border border-slate-200/80 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-900">Gizlilik notu</p>
+              <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
                 Belge dosyaları danışanlara gösterilmez. Dosyalar sadece doğrulama amacıyla
                 yetkili ekip tarafından incelenir.
               </p>
@@ -471,10 +471,10 @@ export default function ExpertVerificationPage() {
           </Panel>
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Güvenli İnceleme</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Güvenli İnceleme</h2>
               <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
                 Yüklenen belgeler private storage içinde saklanır. İnceleme süreci tamamlandığında
                 durumunuz bu sayfada güncellenir.
@@ -483,7 +483,7 @@ export default function ExpertVerificationPage() {
 
             <Link
               href="/expert/dashboard/profile"
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
             >
               Profile Dön
             </Link>
@@ -520,38 +520,38 @@ function DocumentCard({
   const hasFileInfo = Boolean(document.fileName || fileSize || createdAt || reviewedAt);
 
   return (
-    <article className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white hover:shadow-md">
+    <article className="rounded-xl border border-slate-200/80 bg-slate-50 p-5 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-white">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-lg ring-1 ring-slate-200">
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-lg">
               {getDocumentIcon(document.key)}
             </span>
 
             <div className="min-w-0">
-              <h3 className="text-base font-black text-slate-950">{document.title}</h3>
+              <h3 className="text-base font-semibold text-slate-900">{document.title}</h3>
               <p className="mt-0.5 text-xs font-bold text-slate-500">
                 {document.required ? "Zorunlu belge" : "Opsiyonel belge"}
               </p>
             </div>
 
-            <span className={`ml-auto rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusClass(document.status)}`}>
+            <span className={`ml-auto rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(document.status)}`}>
               {getStatusLabel(document.status)}
             </span>
           </div>
 
-          <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">
+          <p className="mt-3 text-sm font-semibold leading-6 text-slate-500">
             {document.description}
           </p>
 
-          <p className="mt-3 rounded-2xl bg-white px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-200">
+          <p className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600">
             {getStatusMessage(document.status)}
           </p>
 
           {hasFileInfo ? (
-            <div className="mt-3 rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200">
+            <div className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
               {document.fileName ? (
-                <p className="truncate text-xs font-black text-slate-700">
+                <p className="truncate text-xs font-semibold text-slate-700">
                   Dosya: {document.fileName}
                 </p>
               ) : null}
@@ -565,7 +565,7 @@ function DocumentCard({
               </p>
 
               {document.adminNote ? (
-                <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-black text-amber-800 ring-1 ring-amber-100">
+                <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
                   Admin notu: {document.adminNote}
                 </p>
               ) : null}
@@ -579,13 +579,13 @@ function DocumentCard({
           ) : null}
 
           {uploadState.message ? (
-            <p className="mt-2 rounded-2xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+            <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
               {uploadState.message}
             </p>
           ) : null}
 
           {uploadState.error ? (
-            <p className="mt-2 rounded-2xl bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-100">
+            <p className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
               {uploadState.error}
             </p>
           ) : null}
@@ -604,7 +604,7 @@ function DocumentCard({
             type="button"
             disabled={uploadState.loading}
             onClick={() => inputRef.current?.click()}
-            className="inline-flex min-w-[150px] items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-w-[150px] items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {uploadState.loading
               ? "Yükleniyor..."
@@ -628,9 +628,9 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
       <div className="mb-5">
-        <h2 className="text-xl font-black text-slate-950">{title}</h2>
+        <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
       </div>
 
@@ -649,18 +649,18 @@ function TimelineItem({
   active?: boolean;
 }) {
   return (
-    <div className="flex gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+    <div className="flex gap-3 rounded-lg border border-slate-200/80 bg-slate-50 p-4">
       <span
-        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ring-1 ${
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold ${
           active
-            ? "bg-indigo-50 text-indigo-700 ring-indigo-100"
-            : "bg-white text-slate-500 ring-slate-200"
+            ? "border-slate-300 bg-slate-100 text-slate-900"
+            : "border-slate-200 bg-white text-slate-500"
         }`}
       >
         ✓
       </span>
       <div>
-        <p className="text-sm font-black text-slate-950">{title}</p>
+        <p className="text-sm font-semibold text-slate-900">{title}</p>
         <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
       </div>
     </div>
@@ -676,13 +676,13 @@ function StatusPill({
 }) {
   const className =
     tone === "green"
-      ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : tone === "blue"
-        ? "bg-blue-50 text-blue-700 ring-blue-100"
-        : "bg-slate-100 text-slate-700 ring-slate-200";
+        ? "border-blue-200 bg-blue-50 text-blue-700"
+        : "border-slate-200 bg-slate-100 text-slate-700";
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>
+    <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${className}`}>
       {children}
     </span>
   );

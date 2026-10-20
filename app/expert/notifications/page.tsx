@@ -209,25 +209,25 @@ function NotificationsContent() {
   }, [loadNotifications])
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
       <section className="mx-auto max-w-5xl space-y-6">
-        <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
                 Mindora Notification Center
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
                 Uzman Bildirimleri
               </h1>
-              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
                 Mesaj, seans, ödeme, değerlendirme ve sistem bildirimlerini tek yerden takip edin.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
+                <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                   {unreadCount} okunmamış
                 </span>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                   Güvenli erişim
                 </span>
               </div>
@@ -238,7 +238,7 @@ function NotificationsContent() {
                 type="button"
                 onClick={() => void loadNotifications('refresh')}
                 disabled={refreshing}
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
@@ -246,13 +246,13 @@ function NotificationsContent() {
                 type="button"
                 onClick={() => void markAllAsRead()}
                 disabled={refreshing || unreadCount === 0}
-                className="rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Tümünü Okundu Yap
               </button>
               <Link
                 href={dashboardHref}
-                className="rounded-2xl bg-slate-950 px-5 py-3 text-center text-sm font-black text-white shadow-sm transition hover:bg-slate-800"
+                className="rounded-lg bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Panele Dön
               </Link>
@@ -261,18 +261,18 @@ function NotificationsContent() {
         </header>
 
         {loading ? (
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
-            <p className="font-black text-slate-600">Bildirimler yükleniyor...</p>
+          <section className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="font-semibold text-slate-600">Bildirimler yükleniyor...</p>
           </section>
         ) : error ? (
-          <section className="rounded-[2rem] border border-red-100 bg-red-50 p-8 text-center shadow-sm">
-            <p className="text-lg font-black text-red-700">Bildirimler alınamadı</p>
-            <p className="mt-2 text-sm font-bold text-red-600">{error}</p>
+          <section className="rounded-xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+            <p className="text-lg font-semibold text-red-700">Bildirimler alınamadı</p>
+            <p className="mt-2 text-sm font-semibold text-red-600">{error}</p>
           </section>
         ) : notifications.length === 0 ? (
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
-            <p className="text-lg font-black text-slate-950">Henüz bildirim yok</p>
-            <p className="mt-2 text-sm font-semibold text-slate-600">
+          <section className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="text-lg font-semibold text-slate-900">Henüz bildirim yok</p>
+            <p className="mt-2 text-sm font-semibold text-slate-500">
               Yeni mesaj, seans veya sistem güncellemesi olduğunda burada görünecek.
             </p>
           </section>
@@ -306,34 +306,34 @@ function NotificationCard({
 
   return (
     <article
-      className={`rounded-[1.5rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
-        notification.isRead ? 'border-slate-200 bg-white' : 'border-indigo-100 bg-indigo-50'
+      className={`rounded-xl border p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 ${
+        notification.isRead ? 'border-slate-200/80 bg-white' : 'border-indigo-200 bg-indigo-50'
       }`}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+              className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                 notification.isRead
-                  ? 'bg-slate-50 text-slate-600 ring-slate-200'
-                  : 'bg-white text-indigo-700 ring-indigo-100'
+                  ? 'border-slate-200 bg-slate-50 text-slate-600'
+                  : 'border-indigo-200 bg-white text-indigo-700'
               }`}
             >
               {getNotificationTypeLabel(notification.type)}
             </span>
             {!notification.isRead ? (
-              <span className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-black text-white">
+              <span className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white">
                 Yeni
               </span>
             ) : null}
-            <span className="text-xs font-bold text-slate-500">
+            <span className="text-xs font-semibold text-slate-500">
               {formatDateTime(notification.createdAt)}
             </span>
           </div>
 
-          <h2 className="mt-3 text-lg font-black text-slate-950">{notification.title}</h2>
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+          <h2 className="mt-3 text-lg font-semibold text-slate-900">{notification.title}</h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
             {getPreview(notification.message, 260)}
           </p>
         </div>
@@ -343,7 +343,7 @@ function NotificationCard({
             <Link
               href={href}
               onClick={() => !notification.isRead && onMarkRead(notification.id)}
-              className="rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-black text-white transition hover:bg-slate-800"
+              className="rounded-lg bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
             >
               Aç
             </Link>
@@ -353,7 +353,7 @@ function NotificationCard({
             <button
               type="button"
               onClick={() => onMarkRead(notification.id)}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50"
             >
               Okundu Yap
             </button>
@@ -369,8 +369,8 @@ export default function NotificationsPage() {
     <Suspense
       fallback={
         <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
-          <section className="mx-auto max-w-5xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Bildirimler yükleniyor...</p>
+          <section className="mx-auto max-w-5xl rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="font-semibold text-slate-600">Bildirimler yükleniyor...</p>
           </section>
         </main>
       }

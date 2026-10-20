@@ -95,15 +95,15 @@ function getStatusLabel(status: ClientStatus) {
 
 function getStatusStyle(status: ClientStatus) {
   const styles: Record<ClientStatus, string> = {
-    new: "bg-sky-50 text-sky-700 ring-sky-100",
-    reviewing: "bg-amber-50 text-amber-700 ring-amber-100",
-    matched: "bg-violet-50 text-violet-700 ring-violet-100",
-    contacted: "bg-indigo-50 text-indigo-700 ring-indigo-100",
-    completed: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-    cancelled: "bg-rose-50 text-rose-700 ring-rose-100",
+    new: "border-sky-200 bg-sky-50 text-sky-700",
+    reviewing: "border-amber-200 bg-amber-50 text-amber-700",
+    matched: "border-violet-200 bg-violet-50 text-violet-700",
+    contacted: "border-indigo-200 bg-indigo-50 text-indigo-700",
+    completed: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    cancelled: "border-rose-200 bg-rose-50 text-rose-700",
   };
 
-  return styles[status] || "bg-slate-100 text-slate-700 ring-slate-200";
+  return styles[status] || "border-slate-200 bg-slate-100 text-slate-700";
 }
 
 function getPaymentLabel(status: PaymentStatus) {
@@ -120,14 +120,14 @@ function getPaymentLabel(status: PaymentStatus) {
 
 function getPaymentStyle(status: PaymentStatus) {
   const styles: Record<PaymentStatus, string> = {
-    pending: "bg-amber-50 text-amber-800 ring-amber-100",
-    paid: "bg-emerald-50 text-emerald-800 ring-emerald-100",
-    failed: "bg-rose-50 text-rose-800 ring-rose-100",
-    cancelled: "bg-slate-100 text-slate-700 ring-slate-200",
-    refunded: "bg-sky-50 text-sky-800 ring-sky-100",
+    pending: "border-amber-200 bg-amber-50 text-amber-800",
+    paid: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    failed: "border-rose-200 bg-rose-50 text-rose-800",
+    cancelled: "border-slate-200 bg-slate-100 text-slate-700",
+    refunded: "border-sky-200 bg-sky-50 text-sky-800",
   };
 
-  return styles[status] || "bg-slate-100 text-slate-700 ring-slate-200";
+  return styles[status] || "border-slate-200 bg-slate-100 text-slate-700";
 }
 
 function getConversationLabel(status?: ConversationStatus | null) {
@@ -139,11 +139,11 @@ function getConversationLabel(status?: ConversationStatus | null) {
 }
 
 function getConversationStyle(status?: ConversationStatus | null) {
-  if (status === "locked") return "bg-orange-50 text-orange-800 ring-orange-100";
-  if (status === "active") return "bg-emerald-50 text-emerald-800 ring-emerald-100";
-  if (status === "closed") return "bg-slate-100 text-slate-700 ring-slate-200";
+  if (status === "locked") return "border-orange-200 bg-orange-50 text-orange-800";
+  if (status === "active") return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (status === "closed") return "border-slate-200 bg-slate-100 text-slate-700";
 
-  return "bg-slate-100 text-slate-700 ring-slate-200";
+  return "border-slate-200 bg-slate-100 text-slate-700";
 }
 
 function formatDate(value: string | null | undefined) {
@@ -507,17 +507,17 @@ export default function DanisanBasvurulariPage() {
   }, [fetchData]);
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
         <AdminHeader />
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Yönetim Merkezi
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Danışan Başvuruları
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
@@ -529,7 +529,7 @@ export default function DanisanBasvurulariPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/admin"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-300 hover:text-slate-900"
               >
                 Yönetim Merkezi
               </Link>
@@ -537,7 +537,7 @@ export default function DanisanBasvurulariPage() {
                 type="button"
                 onClick={() => void fetchData()}
                 disabled={loading}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Yükleniyor..." : "Yenile"}
               </button>
@@ -561,10 +561,10 @@ export default function DanisanBasvurulariPage() {
                 setFilter(option.value);
                 setPage(1);
               }}
-              className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 ${
+              className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
                 filter === option.value
-                  ? "bg-slate-950 text-white ring-slate-950"
-                  : "bg-white text-slate-700 ring-slate-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm"
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:text-slate-900"
               }`}
             >
               {option.label} ({counts[option.value]})
@@ -572,7 +572,7 @@ export default function DanisanBasvurulariPage() {
           ))}
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <input
             value={search}
             onChange={(event) => {
@@ -580,7 +580,7 @@ export default function DanisanBasvurulariPage() {
               setPage(1);
             }}
             placeholder="İsim, telefon, e-posta, konu, uzman, ödeme numarası, konuşma numarası veya not ara..."
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+            className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
           />
         </section>
 
@@ -607,17 +607,17 @@ export default function DanisanBasvurulariPage() {
               return (
                 <article
                   key={client.id}
-                  className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                  className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:border-slate-300"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3">
-                        <h2 className="text-xl font-black text-slate-950">
+                        <h2 className="text-xl font-semibold text-slate-900">
                           {safeText(client.name)}
                         </h2>
 
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusStyle(
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusStyle(
                             client.status
                           )}`}
                         >
@@ -626,24 +626,24 @@ export default function DanisanBasvurulariPage() {
 
                         {payment ? (
                           <span
-                            className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getPaymentStyle(
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold ${getPaymentStyle(
                               payment.status
                             )}`}
                           >
                             {getPaymentLabel(payment.status)}
                           </span>
                         ) : canCreatePayment ? (
-                          <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-black text-orange-700 ring-1 ring-orange-100">
+                          <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">
                             Ödeme Linki Yok
                           </span>
                         ) : (
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
+                          <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                             Önce Uzman Ata
                           </span>
                         )}
 
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getConversationStyle(
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold ${getConversationStyle(
                             conversation?.status
                           )}`}
                         >
@@ -689,7 +689,7 @@ export default function DanisanBasvurulariPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 grid gap-3 rounded-3xl bg-slate-50 p-5 text-sm text-slate-700 ring-1 ring-slate-200 md:grid-cols-2">
+                  <div className="mt-6 grid gap-3 rounded-xl border border-slate-200/80 bg-slate-50 p-5 text-sm text-slate-700 md:grid-cols-2">
                     <InfoRow label="Telefon" value={safeText(client.phone)} />
                     <InfoRow label="E-posta" value={safeText(client.email)} />
                     <InfoRow label="Yaş" value={safeText(client.age)} />
@@ -708,8 +708,8 @@ export default function DanisanBasvurulariPage() {
                   </div>
 
                   <div className="mt-5 grid gap-5 xl:grid-cols-3">
-                    <section className="rounded-3xl border border-violet-100 bg-violet-50 p-4">
-                      <p className="text-sm font-black text-violet-950">Uzman Eşleştirme</p>
+                    <section className="rounded-xl border border-violet-200 bg-violet-50 p-4">
+                      <p className="text-sm font-semibold text-violet-900">Uzman Eşleştirme</p>
                       <p className="mt-1 text-xs font-semibold text-violet-800">
                         Danışanı onaylı bir uzmanla eşleştir.
                       </p>
@@ -723,7 +723,7 @@ export default function DanisanBasvurulariPage() {
                               [client.id]: event.target.value,
                             }))
                           }
-                          className="min-h-12 rounded-2xl border border-violet-100 bg-white px-4 text-sm font-semibold text-violet-950 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+                          className="min-h-12 rounded-lg border border-violet-200 bg-white px-4 text-sm font-semibold text-violet-900 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
                         >
                           <option value="">Onaylı uzman seç (uyum skoruna göre sıralı)</option>
 
@@ -761,7 +761,7 @@ export default function DanisanBasvurulariPage() {
                             approvedExperts.length === 0
                           }
                           onClick={() => matchClient(client.id)}
-                          className="rounded-2xl bg-violet-700 px-5 py-3 text-sm font-black text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-lg bg-violet-700 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Uzman Ata
                         </button>
@@ -774,10 +774,10 @@ export default function DanisanBasvurulariPage() {
                       ) : null}
                     </section>
 
-                    <section className="rounded-3xl border border-emerald-100 bg-emerald-50 p-4">
+                    <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-black text-emerald-950">
+                          <p className="text-sm font-semibold text-emerald-900">
                             Ödeme Yönetimi
                           </p>
                           <p className="mt-1 text-xs font-semibold text-emerald-800">
@@ -785,7 +785,7 @@ export default function DanisanBasvurulariPage() {
                           </p>
                         </div>
 
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                        <span className="rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-semibold text-emerald-700">
                           {payment ? getPaymentLabel(payment.status) : canCreatePayment ? "Link Yok" : "Kapalı"}
                         </span>
                       </div>
@@ -798,7 +798,7 @@ export default function DanisanBasvurulariPage() {
                             <InfoAmount label="Uzman Payı" value={formatMoney(payment.expert_amount)} />
                           </div>
 
-                          <div className="rounded-2xl bg-white p-3 text-xs font-semibold text-emerald-950 ring-1 ring-emerald-100">
+                          <div className="rounded-lg border border-emerald-200 bg-white p-3 text-xs font-semibold text-emerald-900">
                             <InfoRow label="Durum" value={getPaymentLabel(payment.status)} />
                             <InfoRow label="Tarih" value={formatDate(payment.created_at)} />
                             <InfoRow label="iyzico" value={safeText(payment.iyzico_payment_id)} className="break-all" />
@@ -813,7 +813,7 @@ export default function DanisanBasvurulariPage() {
                                 <button
                                   type="button"
                                   onClick={() => copyPaymentLink(client)}
-                                  className="rounded-2xl bg-emerald-700 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-800"
+                                  className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-800"
                                 >
                                   {copiedClientId === client.id ? "Kopyalandı" : "Linki Kopyala"}
                                 </button>
@@ -822,7 +822,7 @@ export default function DanisanBasvurulariPage() {
                                   href={payment.payment_page_url || "#"}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="rounded-2xl border border-emerald-200 bg-white px-4 py-2 text-center text-sm font-black text-emerald-800 transition hover:bg-emerald-100"
+                                  className="rounded-lg border border-emerald-200 bg-white px-4 py-2 text-center text-sm font-semibold text-emerald-800 transition-all duration-200 ease-out hover:bg-emerald-100"
                                 >
                                   Linki Aç
                                 </a>
@@ -834,7 +834,7 @@ export default function DanisanBasvurulariPage() {
                                 type="button"
                                 disabled={!canCreatePayment || paymentLoadingId === client.id}
                                 onClick={() => createPaymentLink(client)}
-                                className="rounded-2xl bg-emerald-700 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 Yeni Link Oluştur
                               </button>
@@ -847,7 +847,7 @@ export default function DanisanBasvurulariPage() {
                             type="button"
                             disabled={!canCreatePayment || paymentLoadingId === client.id}
                             onClick={() => createPaymentLink(client)}
-                            className="w-full rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full rounded-lg bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {paymentLoadingId === client.id
                               ? "Ödeme Linki Oluşturuluyor..."
@@ -863,17 +863,17 @@ export default function DanisanBasvurulariPage() {
                       )}
                     </section>
 
-                    <section className="rounded-3xl border border-sky-100 bg-sky-50 p-4">
+                    <section className="rounded-xl border border-sky-200 bg-sky-50 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-black text-sky-950">Platform İçi Sohbet</p>
+                          <p className="text-sm font-semibold text-sky-900">Platform İçi Sohbet</p>
                           <p className="mt-1 text-xs font-semibold text-sky-800">
                             Ödeme sonrası danışan ve uzman iletişimini takip et.
                           </p>
                         </div>
 
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getConversationStyle(
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold ${getConversationStyle(
                             conversation?.status
                           )}`}
                         >
@@ -881,7 +881,7 @@ export default function DanisanBasvurulariPage() {
                         </span>
                       </div>
 
-                      <div className="mt-4 rounded-2xl bg-white p-3 text-xs font-semibold text-sky-950 ring-1 ring-sky-100">
+                      <div className="mt-4 rounded-lg border border-sky-200 bg-white p-3 text-xs font-semibold text-sky-900">
                         <InfoRow label="Konuşma ID" value={conversation?.id || "-"} className="break-all" />
                         <InfoRow label="Sohbet Durumu" value={getConversationLabel(conversation?.status)} />
                         <InfoRow
@@ -897,7 +897,7 @@ export default function DanisanBasvurulariPage() {
                         <InfoRow label="Son Güncelleme" value={formatDate(conversation?.updated_at)} />
                       </div>
 
-                      <div className="mt-4 rounded-2xl bg-white/80 p-3 text-xs font-semibold text-sky-900 ring-1 ring-sky-100">
+                      <div className="mt-4 rounded-lg border border-sky-200 bg-white/80 p-3 text-xs font-semibold text-sky-900">
                         {conversation ? (
                           chatShouldBeActive && conversation.status === "active" ? (
                             <p>✅ Sohbet aktif. Danışan ve uzman platform içinden görüşmeye hazır.</p>
@@ -919,7 +919,7 @@ export default function DanisanBasvurulariPage() {
                       {conversation?.id ? (
                         <Link
                           href={`/admin/conversations/${conversation.id}`}
-                          className="mt-4 block rounded-2xl bg-sky-700 px-4 py-2 text-center text-sm font-black text-white transition hover:bg-sky-800"
+                          className="mt-4 block rounded-lg bg-sky-700 px-4 py-2 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-sky-800"
                         >
                           Konuşmayı Aç
                         </Link>
@@ -933,7 +933,7 @@ export default function DanisanBasvurulariPage() {
         )}
 
         {!loading && !error && filteredClients.length > PAGE_SIZE ? (
-          <section className="flex flex-col items-center justify-between gap-3 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:flex-row">
+          <section className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm sm:flex-row">
             <p className="text-sm font-semibold text-slate-500">
               Sayfa {currentPage} / {totalPages} • Toplam {filteredClients.length} kayıt
             </p>
@@ -943,7 +943,7 @@ export default function DanisanBasvurulariPage() {
                 type="button"
                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage <= 1}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Önceki
               </button>
@@ -951,7 +951,7 @@ export default function DanisanBasvurulariPage() {
                 type="button"
                 onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage >= totalPages}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Sonraki
               </button>
@@ -973,9 +973,9 @@ function SummaryCard({
   description: string;
 }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 break-words text-3xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="mt-3 break-words text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   );
@@ -992,7 +992,7 @@ function InfoRow({
 }) {
   return (
     <p className={className}>
-      <span className="font-black text-slate-900">{label}:</span> {value}
+      <span className="font-semibold text-slate-900">{label}:</span> {value}
     </p>
   );
 }
@@ -1000,7 +1000,7 @@ function InfoRow({
 function InfoAmount({ label, value }: { label: string; value: string }) {
   return (
     <p>
-      <span className="font-black">{label}:</span>
+      <span className="font-semibold">{label}:</span>
       <br />
       {value}
     </p>
@@ -1021,14 +1021,14 @@ function StatusButton({
   const className =
     tone === "danger"
       ? "bg-rose-600 hover:bg-rose-700"
-      : "bg-slate-700 hover:bg-slate-800";
+      : "bg-slate-900 hover:bg-slate-800";
 
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`rounded-2xl px-4 py-2 text-sm font-black text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {children}
     </button>
@@ -1046,12 +1046,12 @@ function StateBox({
 }) {
   const className =
     tone === "error"
-      ? "border-rose-100 bg-rose-50 text-rose-700"
+      ? "border-rose-200 bg-rose-50 text-rose-700"
       : "border-slate-200 bg-white text-slate-600";
 
   return (
-    <section className={`rounded-[2rem] border p-8 text-center shadow-sm ${className}`}>
-      <p className="text-sm font-black">{title}</p>
+    <section className={`rounded-xl border p-8 text-center shadow-sm ${className}`}>
+      <p className="text-sm font-semibold">{title}</p>
       <p className="mt-2 text-sm font-semibold">{description}</p>
     </section>
   );

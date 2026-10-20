@@ -74,33 +74,33 @@ export default function PublicExpertProfilePage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950">
-      <section className="border-b border-slate-200 bg-white">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <section className="border-b border-slate-200/80 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-14">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-3xl bg-indigo-100 text-3xl font-black text-indigo-700 ring-1 ring-indigo-200">
+            <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-100 text-3xl font-bold text-indigo-700">
               {expert.imageInitials}
             </div>
 
             <div>
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                   {expert.isAvailableThisWeek ? "Bu hafta uygun" : "Yakında uygun"}
                 </span>
-                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200">
+                <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                   Online görüşme
                 </span>
               </div>
 
-              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 {expert.name}
               </h1>
-              <p className="mt-2 text-base font-semibold text-slate-600">
+              <p className="mt-2 text-base font-semibold text-slate-500">
                 {expert.title} • {expert.experienceYears} yıl deneyim
               </p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-600">
-                <span>⭐ {expert.rating.toFixed(1)}</span>
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-500">
+                <span className="text-amber-400">⭐ {expert.rating.toFixed(1)}</span>
                 <span className="text-slate-300">•</span>
                 <span>{expert.reviewCount} danışan yorumu</span>
                 <span className="text-slate-300">•</span>
@@ -111,7 +111,7 @@ export default function PublicExpertProfilePage({
                 {expert.specialties.map((item) => (
                   <span
                     key={item}
-                    className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 ring-1 ring-slate-200"
+                    className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"
                   >
                     {item}
                   </span>
@@ -120,9 +120,9 @@ export default function PublicExpertProfilePage({
             </div>
           </div>
 
-          <aside className="w-full rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm lg:max-w-sm">
+          <aside className="w-full rounded-xl border border-slate-200/80 bg-slate-50 p-5 shadow-sm lg:max-w-sm">
             <p className="text-sm font-semibold text-slate-500">Seans ücreti</p>
-            <p className="mt-2 text-3xl font-black text-slate-950">
+            <p className="mt-2 text-3xl font-bold text-slate-900">
               {formatMoney(expert.sessionPrice)}
             </p>
             <p className="mt-1 text-sm text-slate-500">
@@ -132,13 +132,13 @@ export default function PublicExpertProfilePage({
             <div className="mt-5 space-y-3">
               <Link
                 href="/eslesme"
-                className="flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700"
+                className="flex w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Randevu Talep Et
               </Link>
               <Link
                 href="/uzmanlar"
-                className="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100"
+                className="flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Diğer Uzmanları Gör
               </Link>
@@ -154,11 +154,11 @@ export default function PublicExpertProfilePage({
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-3 lg:px-8">
         <div className="space-y-6 lg:col-span-2">
           <InfoCard title="Hakkında">
-            <p className="text-sm leading-7 text-slate-600">{expert.bio}</p>
+            <p className="text-sm leading-7 text-slate-500">{expert.bio}</p>
           </InfoCard>
 
           <InfoCard title="Çalışma Yaklaşımı">
-            <p className="text-sm leading-7 text-slate-600">{expert.approach}</p>
+            <p className="text-sm leading-7 text-slate-500">{expert.approach}</p>
           </InfoCard>
 
           <InfoCard title="Çalıştığı Konular">
@@ -166,7 +166,7 @@ export default function PublicExpertProfilePage({
               {expert.focusAreas.map((area) => (
                 <div
                   key={area}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"
+                  className="rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"
                 >
                   {area}
                 </div>
@@ -185,8 +185,8 @@ export default function PublicExpertProfilePage({
           </InfoCard>
 
           <InfoCard title="Müsaitlik Özeti">
-            <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
-              <p className="text-sm font-bold text-emerald-800">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <p className="text-sm font-semibold text-emerald-800">
                 {expert.isAvailableThisWeek ? "Bu hafta seans alınabilir" : "Şu an sınırlı müsaitlik"}
               </p>
               <p className="mt-1 text-sm text-emerald-700">
@@ -198,20 +198,20 @@ export default function PublicExpertProfilePage({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-indigo-600 p-8 text-white shadow-sm sm:p-10">
+        <div className="rounded-xl bg-slate-900 p-8 text-white shadow-sm sm:p-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-2xl font-black tracking-tight">
+              <h2 className="text-2xl font-bold tracking-tight">
                 Bu uzmanla görüşmek ister misiniz?
               </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-indigo-100">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
                 Kısa eşleşme formunu doldurun. Mindora ekibi ihtiyacınıza göre sizi uygun uzman ve seans akışıyla yönlendirsin.
               </p>
             </div>
 
             <Link
               href="/eslesme"
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-indigo-700 transition hover:bg-indigo-50"
+              className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100"
             >
               Eşleşme Formuna Git
             </Link>
@@ -230,8 +230,8 @@ function InfoCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>
+    <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
+      <h2 className="text-lg font-bold tracking-tight text-slate-900">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -241,7 +241,7 @@ function List({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3">
       {items.map((item) => (
-        <li key={item} className="flex gap-3 text-sm leading-6 text-slate-600">
+        <li key={item} className="flex gap-3 text-sm leading-6 text-slate-500">
           <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
           <span>{item}</span>
         </li>

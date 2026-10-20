@@ -49,24 +49,24 @@ function ClientDashboardShell({ children }: { children: ReactNode }) {
   const profileHref = buildTokenUrl('/client/dashboard/profile', token)
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-100 text-slate-950">
+    <div className="h-screen overflow-hidden bg-slate-50 text-slate-900">
       <div className="flex h-full min-w-0">
-        <aside className="hidden h-full w-[260px] shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
-          <div className="flex h-20 items-center gap-3 border-b border-slate-100 px-5">
+        <aside className="hidden h-full w-[260px] shrink-0 border-r border-slate-200/80 bg-white lg:flex lg:flex-col">
+          <div className="flex h-20 items-center gap-3 border-b border-slate-200/80 px-5">
             <Link href={dashboardHref} className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-sm font-black text-white shadow-sm">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white shadow-sm">
                 M
               </span>
               <span>
-                <span className="block text-base font-black tracking-tight text-slate-950">Mindora</span>
+                <span className="block text-base font-bold tracking-tight text-slate-900">Mindora</span>
                 <span className="block text-xs font-semibold text-slate-500">Danışan Paneli</span>
               </span>
             </Link>
           </div>
 
           <nav className="flex-1 overflow-y-auto px-3 py-4">
-            <div className="mb-4 rounded-2xl bg-indigo-50 px-4 py-4 ring-1 ring-indigo-100">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-700">Destek Alanı</p>
+            <div className="mb-4 rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-4">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">Destek Alanı</p>
               <p className="mt-2 text-sm font-semibold leading-5 text-slate-900">
                 Seanslarınızı, ödemelerinizi ve uzman görüşmelerinizi yönetin.
               </p>
@@ -81,19 +81,19 @@ function ClientDashboardShell({ children }: { children: ReactNode }) {
                   <Link
                     key={item.href}
                     href={href}
-                    className={`group flex items-center gap-3 rounded-2xl px-3 py-3 transition ${
-                      active ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
+                    className={`group flex items-center gap-3 rounded-lg px-3 py-3 transition-all duration-200 ease-out ${
+                      active ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${
                         active ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-white'
                       }`}
                     >
                       {item.icon}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm font-black leading-5">{item.label}</span>
+                      <span className="block text-sm font-semibold leading-5">{item.label}</span>
                       <span className={`block truncate text-xs leading-4 ${active ? 'text-slate-300' : 'text-slate-500'}`}>
                         {item.description}
                       </span>
@@ -104,21 +104,27 @@ function ClientDashboardShell({ children }: { children: ReactNode }) {
             </div>
           </nav>
 
-          <div className="border-t border-slate-100 p-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <div className="border-t border-slate-200/80 p-3">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700">D</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">D</span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-black text-slate-950">Danışan Hesabı</p>
+                  <p className="truncate text-sm font-semibold text-slate-900">Danışan Hesabı</p>
                   <p className="text-xs font-semibold text-emerald-600">Aktif</p>
                 </div>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <Link href={profileHref} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100">
+                <Link
+                  href={profileHref}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+                >
                   Profil
                 </Link>
-                <Link href="/" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100">
+                <Link
+                  href="/"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+                >
                   Site
                 </Link>
               </div>
@@ -127,23 +133,23 @@ function ClientDashboardShell({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <header className="z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur">
             <div className="flex min-h-20 flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">Danışan Paneli</p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Destek Alanı</h1>
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">Danışan Paneli</p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Destek Alanı</h1>
               </div>
 
               <div className="flex items-center gap-3">
                 <NotificationBell role="client" token={token} />
 
-                <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 lg:flex">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700 ring-1 ring-indigo-200">D</span>
+                <div className="hidden items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3 lg:flex">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">D</span>
                   <div>
-                    <p className="text-sm font-black text-slate-950">Danışan Hesabı</p>
+                    <p className="text-sm font-semibold text-slate-900">Danışan Hesabı</p>
                     <p className="text-xs font-semibold text-slate-500">Panel erişimi aktif</p>
                   </div>
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">Aktif</span>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Aktif</span>
                 </div>
               </div>
 
@@ -156,8 +162,8 @@ function ClientDashboardShell({ children }: { children: ReactNode }) {
                     <Link
                       key={item.href}
                       href={href}
-                      className={`shrink-0 rounded-full px-4 py-2 text-sm font-black transition ${
-                        active ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ease-out ${
+                        active ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
                       {item.label}
@@ -179,8 +185,8 @@ export default function ClientDashboardLayout({ children }: { children: ReactNod
   return (
     <Suspense
       fallback={
-        <div className="h-screen bg-slate-100 p-6 text-slate-950">
-          <div className="rounded-3xl bg-white p-6 text-sm font-black text-slate-600 shadow-sm ring-1 ring-slate-200">
+        <div className="h-screen bg-slate-50 p-6 text-slate-900">
+          <div className="rounded-xl border border-slate-200/80 bg-white p-6 text-sm font-semibold text-slate-600 shadow-sm">
             Panel yükleniyor...
           </div>
         </div>

@@ -206,12 +206,12 @@ function getBookingStatusLabel(status?: string) {
 }
 
 function getBookingStatusClass(status?: string) {
-  if (status === 'completed') return 'bg-emerald-50 text-emerald-700 ring-emerald-100'
-  if (status === 'active') return 'bg-blue-50 text-blue-700 ring-blue-100'
-  if (status === 'confirmed') return 'bg-purple-50 text-purple-700 ring-purple-100'
-  if (status === 'scheduled') return 'bg-amber-50 text-amber-700 ring-amber-100'
-  if (status === 'cancelled' || status === 'no_show') return 'bg-red-50 text-red-700 ring-red-100'
-  return 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+  if (status === 'completed') return 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+  if (status === 'active') return 'border border-blue-200 bg-blue-50 text-blue-700'
+  if (status === 'confirmed') return 'border border-purple-200 bg-purple-50 text-purple-700'
+  if (status === 'scheduled') return 'border border-amber-200 bg-amber-50 text-amber-700'
+  if (status === 'cancelled' || status === 'no_show') return 'border border-red-200 bg-red-50 text-red-700'
+  return 'border border-slate-200 bg-slate-100 text-slate-600'
 }
 
 function getSessionTimingState(booking?: Booking | null) {
@@ -259,12 +259,12 @@ function getTypingText(senderType: SenderType) {
 }
 
 function getSenderStyle(sender: SenderType) {
-  if (sender === 'admin') return 'ml-auto bg-black text-white'
+  if (sender === 'admin') return 'ml-auto bg-slate-900 text-white'
   if (sender === 'expert') {
-    return 'mr-auto bg-purple-50 text-purple-950 ring-1 ring-purple-100'
+    return 'mr-auto border border-purple-200 bg-purple-50 text-purple-950'
   }
 
-  return 'mr-auto bg-white text-[#2b2118] ring-1 ring-black/10'
+  return 'mr-auto border border-slate-200/80 bg-white text-slate-900'
 }
 
 function getDayName(day: number) {
@@ -1032,31 +1032,31 @@ export default function AdminConversationPage({
     }, [conversationId, safeExpertId])
 
   return (
-    <main className="min-h-screen bg-[#f7f3ee] px-4 py-8 text-[#171717] sm:px-6 sm:py-10">
+    <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-7xl">
         <AdminHeader />
 
         <div className="mb-6">
           <Link
             href="/admin/danisan-basvurulari"
-            className="text-sm font-black text-[#6b5c4d] underline underline-offset-4"
+            className="text-sm font-semibold text-slate-500 underline underline-offset-4 transition-all duration-200 ease-out hover:text-slate-900"
           >
             ← Danışan başvurularına dön
           </Link>
         </div>
 
-        <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/80 p-5 shadow-sm sm:p-6">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#8a7662]">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Mindora Moderasyon
               </p>
 
-              <h1 className="mt-2 text-3xl font-black text-[#2b2118]">
+              <h1 className="mt-2 text-3xl font-bold text-slate-900">
                 Konuşma Detayı
               </h1>
 
-              <p className="mt-2 max-w-2xl break-all text-sm font-semibold text-[#6b5c4d]">
+              <p className="mt-2 max-w-2xl break-all text-sm font-medium text-slate-500">
                 Conversation ID: {conversationId || '-'}
               </p>
 
@@ -1079,7 +1079,7 @@ export default function AdminConversationPage({
                   inactiveText="Uzman çevrimdışı"
                 />
 
-                <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-100">
+                <span className="rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
                   Mindora Aktif
                 </span>
 
@@ -1095,7 +1095,7 @@ export default function AdminConversationPage({
             <button
               onClick={() => conversationId && loadMessages(conversationId)}
               disabled={loading}
-              className="rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Yenile
             </button>
@@ -1116,7 +1116,7 @@ export default function AdminConversationPage({
               <MetricCard
                 title="Randevu"
                 value={upcomingBooking ? getBookingStatusLabel(upcomingBooking.status) : 'Yok'}
-                valueClassName={upcomingBooking ? 'text-purple-700' : 'text-[#2b2118]'}
+                valueClassName={upcomingBooking ? 'text-purple-700' : 'text-slate-900'}
               />
               <MetricCard
                 title="Flagged"
@@ -1128,31 +1128,31 @@ export default function AdminConversationPage({
         </section>
 
         {loading ? (
-          <div className="mt-8 rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
-            <p className="font-bold text-[#6b5c4d]">Konuşma yükleniyor...</p>
+          <div className="mt-8 rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="font-medium text-slate-500">Konuşma yükleniyor...</p>
           </div>
         ) : error ? (
-          <div className="mt-8 rounded-3xl bg-red-50 p-8 text-center shadow-sm ring-1 ring-red-100">
-            <p className="font-bold text-red-700">{error}</p>
+          <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+            <p className="font-medium text-red-700">{error}</p>
           </div>
         ) : (
           <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_380px]">
-            <section className="rounded-[2rem] border border-[#e5d9cc] bg-white/80 p-5 shadow-sm">
-              <div className="flex items-center justify-between border-b border-black/10 pb-4">
+            <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-200/80 pb-4">
                 <div>
-                  <h2 className="text-xl font-black text-[#2b2118]">
+                  <h2 className="text-xl font-bold text-slate-900">
                     Mesaj Akışı
                   </h2>
-                  <p className="mt-1 text-sm font-semibold text-[#6b5c4d]">
+                  <p className="mt-1 text-sm font-medium text-slate-500">
                     Platform içi iletişim ve kaçak iletişim kontrolleri.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-5 flex max-h-[560px] min-h-[420px] flex-col overflow-y-auto rounded-2xl bg-[#faf7f2] p-4">
+              <div className="mt-5 flex max-h-[560px] min-h-[420px] flex-col overflow-y-auto rounded-xl bg-slate-50 p-4">
                 {messages.length === 0 ? (
-                  <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-black/5">
-                    <p className="font-bold text-[#6b5c4d]">
+                  <div className="rounded-xl border border-slate-200/80 bg-white p-6 text-center">
+                    <p className="font-medium text-slate-500">
                       Henüz mesaj yok.
                     </p>
                   </div>
@@ -1161,23 +1161,23 @@ export default function AdminConversationPage({
                     {messages.map((item) => (
                       <div key={item.id} className="flex">
                         <div
-                          className={`max-w-[82%] rounded-2xl p-4 text-sm shadow-sm ${getSenderStyle(
+                          className={`max-w-[82%] rounded-xl p-4 text-sm shadow-sm ${getSenderStyle(
                             item.sender_type
                           )}`}
                         >
                           <div className="mb-2 flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-black uppercase tracking-[0.15em] opacity-80">
+                            <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
                               {getSenderLabel(item.sender_type)}
                             </span>
 
                             {item.sender_name && (
-                              <span className="text-xs font-bold opacity-70">
+                              <span className="text-xs font-medium opacity-70">
                                 {item.sender_name}
                               </span>
                             )}
 
                             {item.is_flagged && (
-                              <span className="rounded-full bg-red-600 px-2 py-1 text-[10px] font-black text-white">
+                              <span className="rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold text-white">
                                 🚨 FLAGGED
                               </span>
                             )}
@@ -1188,12 +1188,12 @@ export default function AdminConversationPage({
                           </p>
 
                           {item.is_flagged && (
-                            <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700 ring-1 ring-red-100">
+                            <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700">
                               Sebep: {item.flag_reason || 'contact_leak'}
                             </div>
                           )}
 
-                          <p className="mt-3 text-[11px] font-semibold opacity-60">
+                          <p className="mt-3 text-[11px] font-medium opacity-60">
                             {formatDate(item.created_at)}
                           </p>
                         </div>
@@ -1202,13 +1202,13 @@ export default function AdminConversationPage({
 
                     {typingUser && (
                       <div className="flex">
-                        <div className="mr-auto rounded-2xl bg-white px-4 py-3 text-sm font-black text-[#6b5c4d] shadow-sm ring-1 ring-black/10">
+                        <div className="mr-auto rounded-xl border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
                           <span className="inline-flex items-center gap-1">
                             {getTypingText(typingUser.senderType)}
                             <span className="ml-1 inline-flex gap-1">
-                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662]" />
-                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662] [animation-delay:120ms]" />
-                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8a7662] [animation-delay:240ms]" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:120ms]" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:240ms]" />
                             </span>
                           </span>
                         </div>
@@ -1220,7 +1220,7 @@ export default function AdminConversationPage({
                 )}
               </div>
 
-              <div className="mt-5 rounded-2xl border border-black/10 bg-white p-4">
+              <div className="mt-5 rounded-xl border border-slate-200/80 bg-white p-4">
                 <div className="mb-3 flex flex-col gap-3 md:flex-row">
                   <select
                     value={senderType}
@@ -1228,7 +1228,7 @@ export default function AdminConversationPage({
                       broadcastTyping(senderType, false)
                       setSenderType(event.target.value as SenderType)
                     }}
-                    className="h-11 rounded-full border border-black/10 bg-[#faf7f2] px-4 text-sm font-black outline-none"
+                    className="h-11 rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                   >
                     <option value="admin">Admin olarak gönder</option>
                     <option value="client">Danışan gibi test et</option>
@@ -1238,7 +1238,7 @@ export default function AdminConversationPage({
                   <button
                     onClick={sendMessage}
                     disabled={sending || !message.trim()}
-                    className="rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#2b2118] disabled:cursor-not-allowed disabled:opacity-50 md:ml-auto"
+                    className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 md:ml-auto"
                   >
                     {sending ? 'Gönderiliyor...' : 'Mesaj Gönder'}
                   </button>
@@ -1250,10 +1250,10 @@ export default function AdminConversationPage({
                   placeholder="Admin mesajı yaz... Telefon, e-posta, WhatsApp, IBAN gibi bilgiler client/expert testinde flaglenir."
                   rows={4}
                   maxLength={2000}
-                  className="w-full resize-none rounded-2xl border border-black/10 bg-[#faf7f2] p-4 text-sm font-semibold text-[#2b2118] outline-none transition placeholder:text-[#9b8b7c] focus:border-black/30"
+                  className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-900 outline-none transition-all duration-200 ease-out placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
                 />
 
-                <p className="mt-2 text-xs font-semibold text-[#8a7662]">
+                <p className="mt-2 text-xs font-medium text-slate-400">
                   {message.length}/2000 karakter
                 </p>
               </div>
@@ -1278,58 +1278,58 @@ export default function AdminConversationPage({
                 onSendLinks={sendBookingLinks}
               />
 
-              <div className="rounded-[2rem] border border-[#d8c8b8] bg-[#2b2118] p-5 text-white shadow-sm">
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 text-white shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c9b8a7]">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                       C7 Scheduling
                     </p>
-                    <h3 className="mt-2 text-xl font-black">
+                    <h3 className="mt-2 text-xl font-semibold">
                       Randevu Planla
                     </h3>
-                    <p className="mt-2 text-sm font-semibold leading-6 text-[#e7d8c8]">
+                    <p className="mt-2 text-sm font-medium leading-6 text-slate-300">
                       Uzmanın müsait slotlarını çek, danışan için güvenli randevu oluştur.
                     </p>
                     {safeExpertId && (
-                      <p className="mt-2 break-all text-[11px] font-bold text-[#c9b8a7]">
+                      <p className="mt-2 break-all text-[11px] font-medium text-slate-400">
                         Expert: {safeExpertId}
                       </p>
                     )}
                   </div>
 
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white ring-1 ring-white/10">
+                  <span className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-semibold text-white">
                     Admin
                   </span>
                 </div>
 
                 {!canUseScheduling ? (
-                  <div className="mt-5 rounded-2xl border border-yellow-300/20 bg-yellow-300/10 p-4 text-sm font-bold text-yellow-100">
+                  <div className="mt-5 rounded-xl border border-amber-800/40 bg-amber-950/40 p-4 text-sm font-medium text-amber-200">
                     Bu konuşmaya bağlı expert_id bulunamadı. Randevu planlamak için konuşmanın bir uzmana atanmış olması gerekir.
                   </div>
                 ) : (
                   <>
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="mb-2 block text-xs font-black uppercase tracking-[0.15em] text-[#c9b8a7]">
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
                           Başlangıç
                         </label>
                         <input
                           type="date"
                           value={slotStartDate}
                           onChange={(event) => setSlotStartDate(event.target.value)}
-                          className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none"
+                          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-medium text-white outline-none transition-all duration-200 ease-out focus:border-slate-500"
                         />
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-xs font-black uppercase tracking-[0.15em] text-[#c9b8a7]">
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
                           Bitiş
                         </label>
                         <input
                           type="date"
                           value={slotEndDate}
                           onChange={(event) => setSlotEndDate(event.target.value)}
-                          className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none"
+                          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-medium text-white outline-none transition-all duration-200 ease-out focus:border-slate-500"
                         />
                       </div>
                     </div>
@@ -1337,19 +1337,19 @@ export default function AdminConversationPage({
                     <button
                       onClick={() => loadSlots(safeExpertId)}
                       disabled={slotsLoading}
-                      className="mt-4 w-full rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#2b2118] transition hover:bg-[#f3eadf] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="mt-4 w-full rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {slotsLoading ? 'Slotlar yükleniyor...' : 'Uygun Slotları Getir'}
                     </button>
 
                     {scheduleError && (
-                      <div className="mt-4 rounded-2xl border border-red-300/20 bg-red-500/15 p-4 text-sm font-bold text-red-100">
+                      <div className="mt-4 rounded-xl border border-red-800/40 bg-red-950/40 p-4 text-sm font-medium text-red-200">
                         {scheduleError}
                       </div>
                     )}
 
                     {scheduleSuccess && (
-                      <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/15 p-4 text-sm font-bold text-emerald-100">
+                      <div className="mt-4 rounded-xl border border-emerald-800/40 bg-emerald-950/40 p-4 text-sm font-medium text-emerald-200">
                         {scheduleSuccess}
                         {lastBookingId && (
                           <p className="mt-1 break-all text-xs opacity-80">
@@ -1359,20 +1359,20 @@ export default function AdminConversationPage({
                       </div>
                     )}
 
-                    <div className="mt-5 max-h-[360px] overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-3">
+                    <div className="mt-5 max-h-[360px] overflow-y-auto rounded-xl border border-slate-700 bg-slate-950/40 p-3">
                       {slotsLoading ? (
-                        <p className="p-4 text-center text-sm font-bold text-[#e7d8c8]">
+                        <p className="p-4 text-center text-sm font-medium text-slate-300">
                           Slotlar hesaplanıyor...
                         </p>
                       ) : slots.length === 0 ? (
-                        <p className="p-4 text-center text-sm font-bold text-[#e7d8c8]">
+                        <p className="p-4 text-center text-sm font-medium text-slate-300">
                           Bu tarih aralığında uygun slot yok.
                         </p>
                       ) : (
                         <div className="space-y-4">
                           {Object.entries(groupedSlots).map(([dateKey, daySlots]) => (
                             <div key={dateKey}>
-                              <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-[#c9b8a7]">
+                              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 {dateKey}
                               </p>
 
@@ -1385,10 +1385,10 @@ export default function AdminConversationPage({
                                     <button
                                       key={`${slot.startAt}-${slot.endAt}`}
                                       onClick={() => setSelectedSlot(slot)}
-                                      className={`rounded-2xl px-3 py-3 text-left text-xs font-black transition ring-1 ${
+                                      className={`rounded-lg border px-3 py-3 text-left text-xs font-semibold transition-all duration-200 ease-out ${
                                         isSelected
-                                          ? 'bg-white text-[#2b2118] ring-white'
-                                          : 'bg-white/10 text-white ring-white/10 hover:bg-white/15'
+                                          ? 'border-white bg-white text-slate-900'
+                                          : 'border-slate-700 bg-slate-800 text-white hover:border-slate-500'
                                       }`}
                                     >
                                       <span className="block">
@@ -1410,7 +1410,7 @@ export default function AdminConversationPage({
                     <button
                       onClick={createBooking}
                       disabled={!selectedSlot || bookingLoading}
-                      className="mt-4 w-full rounded-2xl bg-emerald-500 px-5 py-4 text-sm font-black text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="mt-4 w-full rounded-lg bg-emerald-500 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {bookingLoading
                         ? 'Randevu oluşturuluyor...'
@@ -1422,27 +1422,27 @@ export default function AdminConversationPage({
                 )}
               </div>
 
-              <div className="rounded-[2rem] border border-[#e5d9cc] bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-black text-[#2b2118]">
+              <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                <h3 className="text-lg font-semibold text-slate-900">
                   Uzman Müsaitliği
                 </h3>
 
-                <p className="mt-2 text-sm font-semibold text-[#6b5c4d]">
+                <p className="mt-2 text-sm font-medium text-slate-500">
                   Aktif müsaitlik aralıkları booking engine tarafından slotlara dönüştürülür.
                 </p>
 
                 <div className="mt-4 space-y-2">
                   {activeAvailability.length === 0 ? (
-                    <p className="rounded-2xl bg-[#faf7f2] p-4 text-sm font-bold text-[#6b5c4d] ring-1 ring-black/5">
+                    <p className="rounded-xl border border-slate-200/80 bg-slate-50 p-4 text-sm font-medium text-slate-500">
                       Aktif müsaitlik bulunamadı.
                     </p>
                   ) : (
                     activeAvailability.map((item) => (
                       <div
                         key={item.id}
-                        className="rounded-2xl bg-[#faf7f2] p-3 text-xs font-bold text-[#6b5c4d] ring-1 ring-black/5"
+                        className="rounded-xl border border-slate-200/80 bg-slate-50 p-3 text-xs font-medium text-slate-500"
                       >
-                        <p className="font-black text-[#2b2118]">
+                        <p className="font-semibold text-slate-900">
                           {getDayName(item.day_of_week)} • {item.start_time.slice(0, 5)} - {item.end_time.slice(0, 5)}
                         </p>
                         <p className="mt-1">
@@ -1454,21 +1454,21 @@ export default function AdminConversationPage({
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-red-100 bg-red-50 p-5 shadow-sm">
-                <h3 className="text-lg font-black text-red-800">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-5 shadow-sm">
+                <h3 className="text-lg font-semibold text-red-800">
                   Moderasyon Özeti
                 </h3>
 
-                <p className="mt-2 text-sm font-semibold text-red-700">
+                <p className="mt-2 text-sm font-medium text-red-700">
                   Flagged mesajlar platform dışı kaçış veya ödeme bypass
                   girişimi olabilir.
                 </p>
 
-                <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-red-100">
-                  <p className="text-sm font-black text-red-800">
+                <div className="mt-4 rounded-xl border border-red-200 bg-white p-4">
+                  <p className="text-sm font-semibold text-red-800">
                     Flagged Mesaj Sayısı
                   </p>
-                  <p className="mt-2 text-3xl font-black text-red-700">
+                  <p className="mt-2 text-3xl font-bold text-red-700">
                     {flaggedMessages.length}
                   </p>
                 </div>
@@ -1478,9 +1478,9 @@ export default function AdminConversationPage({
                     {flaggedMessages.slice(0, 5).map((item) => (
                       <div
                         key={item.id}
-                        className="rounded-2xl bg-white p-3 text-xs font-semibold text-red-900 ring-1 ring-red-100"
+                        className="rounded-xl border border-red-200 bg-white p-3 text-xs font-medium text-red-900"
                       >
-                        <p className="font-black">
+                        <p className="font-semibold">
                           {getSenderLabel(item.sender_type)} •{' '}
                           {item.flag_reason || 'contact_leak'}
                         </p>
@@ -1491,12 +1491,12 @@ export default function AdminConversationPage({
                 )}
               </div>
 
-              <div className="rounded-[2rem] border border-[#e5d9cc] bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-black text-[#2b2118]">
+              <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                <h3 className="text-lg font-semibold text-slate-900">
                   Sistem Kuralları
                 </h3>
 
-                <div className="mt-4 space-y-3 text-sm font-semibold text-[#6b5c4d]">
+                <div className="mt-4 space-y-3 text-sm font-medium text-slate-500">
                   <p>✅ Admin her zaman mesaj gönderebilir.</p>
                   <p>🔒 Danışan/uzman mesajı için ödeme paid olmalı.</p>
                   <p>📅 Randevu slotları uzman müsaitliğinden üretilir.</p>
@@ -1517,12 +1517,12 @@ export default function AdminConversationPage({
               </div>
 
               {conversation && (
-                <div className="rounded-[2rem] border border-[#e5d9cc] bg-white p-5 shadow-sm">
-                  <h3 className="text-lg font-black text-[#2b2118]">
+                <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                  <h3 className="text-lg font-semibold text-slate-900">
                     Teknik Bilgi
                   </h3>
 
-                  <div className="mt-4 space-y-2 text-xs font-semibold text-[#6b5c4d]">
+                  <div className="mt-4 space-y-2 text-xs font-medium text-slate-500">
                     <p className="break-all">
                       <b>Client Application:</b>{' '}
                       {conversation.client_application_id || '-'}
@@ -1582,13 +1582,13 @@ function UpcomingSessionCard({
   const timingState = getSessionTimingState(booking)
 
   return (
-    <div className="rounded-[2rem] border border-[#d8c8b8] bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#8a7662]">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Scheduled Session
           </p>
-          <h3 className="mt-2 text-xl font-black text-[#2b2118]">
+          <h3 className="mt-2 text-xl font-semibold text-slate-900">
             Yaklaşan Seans
           </h3>
         </div>
@@ -1596,32 +1596,32 @@ function UpcomingSessionCard({
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="rounded-full bg-[#faf7f2] px-4 py-2 text-xs font-black text-[#6b5c4d] ring-1 ring-black/5 transition hover:bg-[#f3eadf] disabled:opacity-50"
+          className="rounded-full border border-slate-200/80 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-100 disabled:opacity-50"
         >
           Yenile
         </button>
       </div>
 
       {loading ? (
-        <div className="mt-5 rounded-2xl bg-[#faf7f2] p-4 text-sm font-bold text-[#6b5c4d] ring-1 ring-black/5">
+        <div className="mt-5 rounded-xl border border-slate-200/80 bg-slate-50 p-4 text-sm font-medium text-slate-500">
           Randevular yükleniyor...
         </div>
       ) : error ? (
-        <div className="mt-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 ring-1 ring-red-100">
+        <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
           {error}
         </div>
       ) : !booking ? (
-        <div className="mt-5 rounded-2xl bg-[#faf7f2] p-4 text-sm font-bold text-[#6b5c4d] ring-1 ring-black/5">
+        <div className="mt-5 rounded-xl border border-slate-200/80 bg-slate-50 p-4 text-sm font-medium text-slate-500">
           Bu konuşma için yaklaşan randevu yok.
         </div>
       ) : (
-        <div className="mt-5 rounded-3xl bg-[#2b2118] p-5 text-white">
+        <div className="mt-5 rounded-xl bg-slate-900 p-5 text-white">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-bold text-[#c9b8a7]">
+              <p className="text-sm font-semibold text-slate-400">
                 {formatCompactDate(booking.scheduled_start_at)}
               </p>
-              <h4 className="mt-2 text-2xl font-black">
+              <h4 className="mt-2 text-2xl font-semibold">
                 {formatTimeRange(
                   booking.scheduled_start_at,
                   booking.scheduled_end_at
@@ -1630,7 +1630,7 @@ function UpcomingSessionCard({
             </div>
 
             <span
-              className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getBookingStatusClass(
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${getBookingStatusClass(
                 booking.status
               )}`}
             >
@@ -1656,19 +1656,19 @@ function UpcomingSessionCard({
             />
           </div>
 
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/10 p-3 text-xs font-bold text-[#e7d8c8]">
+          <div className="mt-4 rounded-xl border border-slate-700 bg-slate-800 p-3 text-xs font-medium text-slate-300">
             Booking ID: <span className="break-all">{booking.id || '-'}</span>
             {!isValidUuid(booking.id) && (
-              <p className="mt-2 text-red-200">
+              <p className="mt-2 text-red-300">
                 Uyarı: Booking ID UUID formatında değil. Mail gönderimi engellendi.
               </p>
             )}
           </div>
 
-          <div className="mt-3 rounded-2xl border border-white/10 bg-white/10 p-3 text-xs font-bold text-[#e7d8c8]">
+          <div className="mt-3 rounded-xl border border-slate-700 bg-slate-800 p-3 text-xs font-medium text-slate-300">
             <div className="flex items-center justify-between gap-3">
               <span>Video Session</span>
-              <span className={booking.session_ready ? 'text-emerald-200' : 'text-yellow-100'}>
+              <span className={booking.session_ready ? 'text-emerald-300' : 'text-amber-200'}>
                 {booking.session_ready ? 'Hazır' : 'Hazır değil'}
               </span>
             </div>
@@ -1685,8 +1685,8 @@ function UpcomingSessionCard({
           </div>
 
           {booking.session_ready && (
-            <div className="mt-3 space-y-2 rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-50">
-              <p className="font-black">Join Linkleri</p>
+            <div className="mt-3 space-y-2 rounded-xl border border-emerald-800/40 bg-emerald-950/40 p-3 text-xs font-medium text-emerald-100">
+              <p className="font-semibold">Join Linkleri</p>
               {booking.client_join_url && (
                 <a
                   href={booking.client_join_url}
@@ -1721,13 +1721,13 @@ function UpcomingSessionCard({
           )}
 
           {actionError && (
-            <div className="mt-4 rounded-2xl border border-red-300/20 bg-red-500/15 p-3 text-xs font-bold text-red-100">
+            <div className="mt-4 rounded-xl border border-red-800/40 bg-red-950/40 p-3 text-xs font-medium text-red-200">
               {actionError}
             </div>
           )}
 
           {actionSuccess && (
-            <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/15 p-3 text-xs font-bold text-emerald-100">
+            <div className="mt-4 rounded-xl border border-emerald-800/40 bg-emerald-950/40 p-3 text-xs font-medium text-emerald-200">
               {actionSuccess}
             </div>
           )}
@@ -1745,7 +1745,7 @@ function UpcomingSessionCard({
 
           <Link
             href={`/admin/conversations/${conversationId}`}
-            className="mt-3 block rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+            className="mt-3 block rounded-lg border border-slate-700 px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
           >
             Chat Akışı
           </Link>
@@ -1754,7 +1754,7 @@ function UpcomingSessionCard({
 
       {bookings.length > 0 && (
         <div className="mt-5">
-          <h4 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-[#8a7662]">
+          <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
             Son Randevular
           </h4>
 
@@ -1762,14 +1762,14 @@ function UpcomingSessionCard({
             {bookings.map((item) => (
               <div
                 key={item.id}
-                className="rounded-2xl bg-[#faf7f2] p-3 text-xs font-bold text-[#6b5c4d] ring-1 ring-black/5"
+                className="rounded-xl border border-slate-200/80 bg-slate-50 p-3 text-xs font-medium text-slate-500"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-black text-[#2b2118]">
+                  <p className="font-semibold text-slate-900">
                     {formatCompactDate(item.scheduled_start_at)}
                   </p>
                   <span
-                    className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ring-1 ${getBookingStatusClass(
+                    className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${getBookingStatusClass(
                       item.status
                     )}`}
                   >
@@ -1815,7 +1815,7 @@ function BookingLifecycleActions({
 
   if (isClosed) {
     return (
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/10 p-3 text-xs font-bold text-[#e7d8c8]">
+      <div className="mt-4 rounded-xl border border-slate-700 bg-slate-800 p-3 text-xs font-medium text-slate-300">
         Bu randevu operasyonel olarak kapalı durumda.
       </div>
     )
@@ -1827,7 +1827,7 @@ function BookingLifecycleActions({
         type="button"
         disabled={prepareLoading || loading || Boolean(booking.session_ready)}
         onClick={() => onPrepareSession(booking)}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-black text-[#2b2118] transition hover:bg-[#f3eadf] disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-lg bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {prepareLoading
           ? 'Görüşme hazırlanıyor...'
@@ -1847,7 +1847,7 @@ function BookingLifecycleActions({
             !booking.expert_join_url
           }
           onClick={() => onSendLinks(booking)}
-          className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {sendLinksLoading ? 'Mail gönderiliyor...' : 'Linkleri Mail Gönder'}
         </button>
@@ -1858,7 +1858,7 @@ function BookingLifecycleActions({
           type="button"
           disabled={loading}
           onClick={() => onStatusChange(booking, 'confirmed')}
-          className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-black text-[#2b2118] transition hover:bg-[#f3eadf] disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? 'Güncelleniyor...' : 'Randevuyu Onayla'}
         </button>
@@ -1869,7 +1869,7 @@ function BookingLifecycleActions({
           type="button"
           disabled={loading}
           onClick={() => onStatusChange(booking, 'active')}
-          className="w-full rounded-2xl bg-blue-500 px-4 py-3 text-sm font-black text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {timingState === 'joinable'
             ? 'Görüşmeyi Aktif Başlat'
@@ -1882,7 +1882,7 @@ function BookingLifecycleActions({
           type="button"
           disabled={loading}
           onClick={() => onStatusChange(booking, 'completed')}
-          className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Seansı Tamamlandı Yap
         </button>
@@ -1893,7 +1893,7 @@ function BookingLifecycleActions({
           type="button"
           disabled={loading}
           onClick={() => onStatusChange(booking, 'cancelled')}
-          className="rounded-2xl border border-red-300/20 bg-red-500/15 px-4 py-3 text-xs font-black text-red-100 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-red-800/40 bg-red-950/40 px-4 py-3 text-xs font-semibold text-red-200 transition-all duration-200 ease-out hover:bg-red-950/60 disabled:cursor-not-allowed disabled:opacity-50"
         >
           İptal Et
         </button>
@@ -1902,7 +1902,7 @@ function BookingLifecycleActions({
           type="button"
           disabled={loading}
           onClick={() => onStatusChange(booking, 'no_show')}
-          className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-xs font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Katılmadı
         </button>
@@ -1914,11 +1914,11 @@ function BookingLifecycleActions({
 
 function MiniSessionMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#c9b8a7]">
+    <div className="rounded-xl border border-slate-700 bg-slate-800 p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </p>
-      <p className="mt-1 truncate text-sm font-black text-white">{value}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
     </div>
   )
 }
@@ -1937,13 +1937,13 @@ function StatusPill({
 }) {
   const activeClass =
     tone === 'blue'
-      ? 'bg-blue-50 text-blue-700 ring-blue-100'
-      : 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+      ? 'border border-blue-200 bg-blue-50 text-blue-700'
+      : 'border border-emerald-200 bg-emerald-50 text-emerald-700'
 
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
-        active ? activeClass : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+        active ? activeClass : 'border border-slate-200 bg-slate-100 text-slate-600'
       }`}
     >
       {active ? activeText : inactiveText}
@@ -1954,7 +1954,7 @@ function StatusPill({
 function MetricCard({
   title,
   value,
-  valueClassName = 'text-[#2b2118]',
+  valueClassName = 'text-slate-900',
   variant = 'default',
 }: {
   title: string
@@ -1966,19 +1966,19 @@ function MetricCard({
 
   return (
     <div
-      className={`rounded-2xl p-4 ring-1 ${
-        danger ? 'bg-red-50 ring-red-100' : 'bg-[#faf7f2] ring-black/5'
+      className={`rounded-xl border p-4 ${
+        danger ? 'border-red-200 bg-red-50' : 'border-slate-200/80 bg-slate-50'
       }`}
     >
       <p
-        className={`text-xs font-black uppercase tracking-[0.2em] ${
-          danger ? 'text-red-700' : 'text-[#8a7662]'
+        className={`text-sm font-semibold uppercase tracking-wide ${
+          danger ? 'text-red-700' : 'text-slate-400'
         }`}
       >
         {title}
       </p>
       <p
-        className={`mt-2 text-xl font-black ${
+        className={`mt-2 text-xl font-bold ${
           danger ? 'text-red-700' : valueClassName
         }`}
       >

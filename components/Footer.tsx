@@ -20,7 +20,7 @@ export default function Footer() {
   ]
 
   return (
-    <footer className="border-t border-black/10 bg-[#f7f2eb] px-5 py-12 text-[#171717]">
+    <footer className="border-t border-slate-200/80 bg-white px-5 py-12 text-slate-900">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr]">
           <div>
@@ -28,17 +28,17 @@ export default function Footer() {
               <img
                 src="/logo.png"
                 alt="Mindora"
-                className="h-11 w-11 rounded-2xl object-cover"
+                className="h-10 w-10 rounded-xl object-cover ring-1 ring-slate-200"
               />
               <div>
-                <p className="text-lg font-black leading-none">Mindora</p>
-                <p className="mt-1 text-xs font-semibold text-neutral-500">
+                <p className="text-base font-bold leading-none">Mindora</p>
+                <p className="mt-1 text-xs font-medium text-slate-500">
                   Online psikolojik destek platformu
                 </p>
               </div>
             </a>
 
-            <p className="mt-5 max-w-sm text-sm leading-7 text-neutral-600">
+            <p className="mt-5 max-w-sm text-sm leading-7 text-slate-500">
               Mindora, psikolojik destek almak isteyen kişilerin ihtiyaçlarını
               daha iyi anlamayı ve uygun uzmanlarla güvenli bir başlangıç
               yapmasını kolaylaştırmayı hedefler.
@@ -48,7 +48,7 @@ export default function Footer() {
               {trustItems.map((item) => (
                 <span
                   key={item}
-                  className="rounded-full bg-white/70 px-3 py-1.5 text-xs font-bold text-neutral-700 ring-1 ring-black/5"
+                  className="rounded-md border border-slate-200/80 px-3 py-1.5 text-xs font-medium text-slate-600"
                 >
                   {item}
                 </span>
@@ -57,14 +57,14 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-neutral-500">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
               Platform
             </p>
 
-            <nav className="space-y-3 text-sm font-bold text-neutral-700">
+            <nav className="space-y-3 text-sm font-medium text-slate-600">
               {platformLinks.map((link) => (
                 <p key={link.href}>
-                  <a href={link.href} className="transition hover:text-black">
+                  <a href={link.href} className="transition hover:text-slate-900">
                     {link.label}
                   </a>
                 </p>
@@ -73,14 +73,14 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-neutral-500">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
               Başvuru
             </p>
 
-            <nav className="space-y-3 text-sm font-bold text-neutral-700">
+            <nav className="space-y-3 text-sm font-medium text-slate-600">
               {actionLinks.map((link) => (
                 <p key={link.href}>
-                  <a href={link.href} className="transition hover:text-black">
+                  <a href={link.href} className="transition hover:text-slate-900">
                     {link.label}
                   </a>
                 </p>
@@ -89,16 +89,16 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-neutral-500">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
               İletişim
             </p>
 
-            <div className="space-y-3 text-sm font-semibold text-neutral-700">
+            <div className="space-y-3 text-sm font-medium text-slate-600">
               <p>Instagram: @mindora.live</p>
               <p>Mail: mindora.live@gmail.com</p>
             </div>
 
-            <div className="mt-6 rounded-3xl bg-white/70 p-5 text-xs leading-6 text-neutral-500 ring-1 ring-black/5">
+            <div className="mt-6 rounded-lg border border-slate-200/80 p-5 text-xs leading-6 text-slate-500">
               Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar
               verme riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da
               112 ile iletişime geç.
@@ -106,7 +106,13 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col justify-between gap-4 border-t border-black/10 pt-6 text-xs font-semibold text-neutral-500 md:flex-row md:items-center">
+        <div className="mt-10 rounded-lg border border-slate-200/80 p-5 text-xs leading-6 text-slate-500">
+          Mindora, fiziksel bir ofise bağlı olmadan tamamen online yürütülen bir
+          psikolojik destek eşleştirme hizmetidir. Danışan ve uzman iletişimi
+          yalnızca platform üzerinden, yukarıdaki resmi kanallardan yürütülür.
+        </div>
+
+        <div className="mt-6 flex flex-col justify-between gap-4 border-t border-slate-200/80 pt-6 text-xs font-medium text-slate-400 md:flex-row md:items-center">
           <p>© {new Date().getFullYear()} Mindora. Tüm hakları saklıdır.</p>
 
           <div className="flex flex-wrap gap-4">

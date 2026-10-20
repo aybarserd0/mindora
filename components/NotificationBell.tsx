@@ -251,26 +251,26 @@ export default function NotificationBell({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-lg shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-indigo-100"
+        className="relative flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-lg shadow-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus:border-slate-400"
         aria-label="Bildirimler"
         aria-expanded={open}
       >
         <span aria-hidden="true">🔔</span>
 
         {unreadCount > 0 ? (
-          <span className="absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-center text-[10px] font-black leading-none text-white ring-2 ring-white">
+          <span className="absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white ring-2 ring-white">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         ) : null}
       </button>
 
       {open ? (
-        <div className="absolute right-0 mt-3 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5">
-          <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
+        <div className="animate-fade-in-up absolute right-0 mt-3 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+          <div className="border-b border-slate-200/80 bg-slate-50 px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-black text-slate-950">Bildirimler</p>
-                <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                <p className="text-sm font-semibold text-slate-900">Bildirimler</p>
+                <p className="mt-0.5 text-xs font-medium text-slate-500">
                   {unreadCount > 0 ? `${unreadCount} okunmamış bildirim` : 'Okunmamış bildirim yok'}
                 </p>
               </div>
@@ -279,7 +279,7 @@ export default function NotificationBell({
                 type="button"
                 onClick={markAllRead}
                 disabled={markingAllRead || unreadCount <= 0}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {markingAllRead ? 'İşleniyor...' : 'Tümünü okundu yap'}
               </button>
@@ -287,18 +287,18 @@ export default function NotificationBell({
           </div>
 
           {errorMessage ? (
-            <div className="border-b border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">
+            <div className="border-b border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">
               {errorMessage}
             </div>
           ) : null}
 
           <div className="max-h-[22rem] overflow-y-auto p-2">
             {loading ? (
-              <div className="rounded-2xl bg-slate-50 px-4 py-5 text-sm font-bold text-slate-500">
+              <div className="rounded-lg bg-slate-50 px-4 py-5 text-sm font-medium text-slate-500">
                 Bildirimler yükleniyor...
               </div>
             ) : notifications.length === 0 ? (
-              <div className="rounded-2xl bg-slate-50 px-4 py-5 text-sm font-bold text-slate-500">
+              <div className="rounded-lg bg-slate-50 px-4 py-5 text-sm font-medium text-slate-500">
                 Henüz bildirim bulunmuyor.
               </div>
             ) : (
@@ -306,15 +306,15 @@ export default function NotificationBell({
                 {notifications.slice(0, 5).map((notification) => {
                   const content = (
                     <div
-                      className={`rounded-2xl border px-3 py-3 transition hover:bg-slate-50 ${
+                      className={`rounded-lg border px-3 py-3 transition-all duration-200 ease-out hover:border-slate-300 ${
                         notification.isRead
-                          ? 'border-slate-100 bg-white'
+                          ? 'border-slate-200/80 bg-white'
                           : 'border-indigo-100 bg-indigo-50/60'
                       }`}
                     >
                       <div className="flex gap-3">
                         <span
-                          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-black ${
+                          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${
                             notification.isRead
                               ? 'bg-slate-100 text-slate-600'
                               : 'bg-indigo-600 text-white'
@@ -325,7 +325,7 @@ export default function NotificationBell({
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="line-clamp-1 text-sm font-black text-slate-950">
+                            <p className="line-clamp-1 text-sm font-semibold text-slate-900">
                               {notification.title}
                             </p>
                             {!notification.isRead ? (
@@ -333,11 +333,11 @@ export default function NotificationBell({
                             ) : null}
                           </div>
 
-                          <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-slate-600">
+                          <p className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-slate-500">
                             {notification.message}
                           </p>
 
-                          <p className="mt-2 text-[11px] font-bold text-slate-400">
+                          <p className="mt-2 text-[11px] font-medium text-slate-400">
                             {formatDate(notification.createdAt)}
                           </p>
                         </div>
@@ -364,11 +364,11 @@ export default function NotificationBell({
             )}
           </div>
 
-          <div className="border-t border-slate-100 bg-slate-50 px-4 py-3">
+          <div className="border-t border-slate-200/80 bg-slate-50 px-4 py-3">
             <Link
               href={notificationsPageHref}
               onClick={() => setOpen(false)}
-              className="block rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-black text-white no-underline transition hover:bg-slate-800"
+              className="block rounded-lg bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-slate-800"
             >
               Tüm bildirimleri gör
             </Link>

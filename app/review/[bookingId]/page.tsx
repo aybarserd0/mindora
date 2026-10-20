@@ -155,19 +155,19 @@ export default function ReviewBookingPage() {
 
   if (!bookingId) {
     return (
-      <main className="min-h-screen bg-[#f7f2eb] px-4 py-12 text-neutral-950">
-        <section className="mx-auto max-w-xl rounded-[32px] border border-black/10 bg-white p-8 shadow-sm">
-          <p className="text-sm font-semibold text-red-700">Geçersiz bağlantı</p>
-          <h1 className="mt-3 text-2xl font-black tracking-tight">
+      <main className="min-h-screen bg-slate-50 px-4 py-12 text-slate-900">
+        <section className="mx-auto max-w-xl rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm">
+          <p className="text-sm font-semibold text-rose-600">Geçersiz bağlantı</p>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">
             Değerlendirme bağlantısı doğrulanamadı.
           </h1>
-          <p className="mt-4 text-sm leading-6 text-neutral-600">
+          <p className="mt-4 text-sm leading-6 text-slate-500">
             Bu bağlantı hatalı, eksik veya artık geçerli olmayabilir. Mindora
             destek ekibiyle iletişime geçebilirsiniz.
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-full bg-neutral-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-neutral-800"
+            className="mt-6 inline-flex rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
           >
             Ana sayfaya dön
           </Link>
@@ -177,16 +177,16 @@ export default function ReviewBookingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f2eb] px-4 py-10 text-neutral-950">
-      <section className="mx-auto max-w-2xl overflow-hidden rounded-[36px] border border-black/10 bg-white shadow-sm">
-        <div className="bg-neutral-950 px-6 py-7 text-white sm:px-8">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-white/55">
+    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+      <section className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+        <div className="bg-slate-900 px-6 py-7 text-white sm:px-8">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Mindora Değerlendirme
           </p>
-          <h1 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">
+          <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
             Seans deneyiminizi değerlendirir misiniz?
           </h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-white/68">
+          <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">
             Geri bildiriminiz, Mindora deneyimini geliştirmemize ve diğer
             danışanların daha bilinçli seçim yapmasına yardımcı olur.
           </p>
@@ -194,19 +194,19 @@ export default function ReviewBookingPage() {
 
         <div className="px-6 py-7 sm:px-8 sm:py-8">
           {state.status === 'success' ? (
-            <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-xl font-black text-white">
+            <div className="animate-fade-in-up rounded-xl border border-emerald-200 bg-emerald-50 p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-xl font-bold text-white">
                 ✓
               </div>
-              <h2 className="mt-5 text-xl font-black tracking-tight">
+              <h2 className="mt-5 text-xl font-bold tracking-tight text-slate-900">
                 Değerlendirmeniz alındı
               </h2>
-              <p className="mt-3 text-sm leading-6 text-neutral-700">
+              <p className="mt-3 text-sm leading-6 text-slate-600">
                 {state.message}
               </p>
               <Link
                 href="/"
-                className="mt-6 inline-flex rounded-full bg-neutral-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-neutral-800"
+                className="mt-6 inline-flex rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Ana sayfaya dön
               </Link>
@@ -214,7 +214,7 @@ export default function ReviewBookingPage() {
           ) : (
             <div className="space-y-7">
               <div>
-                <label className="text-sm font-black text-neutral-900">
+                <label className="text-sm font-semibold text-slate-900">
                   Puanınız
                 </label>
                 <div
@@ -233,10 +233,10 @@ export default function ReviewBookingPage() {
                         onBlur={() => setHoverRating(0)}
                         onClick={() => setRating(item)}
                         aria-label={`${item} yıldız`}
-                        className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-3xl transition ${
+                        className={`flex h-12 w-12 items-center justify-center rounded-lg border text-2xl transition-all duration-200 ease-out ${
                           active
                             ? 'border-amber-300 bg-amber-50'
-                            : 'border-black/10 bg-white hover:bg-neutral-50'
+                            : 'border-slate-200/80 bg-white hover:border-slate-300'
                         }`}
                       >
                         {active ? '★' : '☆'}
@@ -244,7 +244,7 @@ export default function ReviewBookingPage() {
                     )
                   })}
                 </div>
-                <p className="mt-3 text-sm font-semibold text-neutral-600">
+                <p className="mt-3 text-sm font-medium text-slate-500">
                   {selectedLabel}
                 </p>
               </div>
@@ -252,9 +252,9 @@ export default function ReviewBookingPage() {
               <div>
                 <label
                   htmlFor="reviewText"
-                  className="text-sm font-black text-neutral-900"
+                  className="text-sm font-semibold text-slate-900"
                 >
-                  Yorumunuz <span className="font-semibold text-neutral-500">(isteğe bağlı)</span>
+                  Yorumunuz <span className="font-medium text-slate-400">(isteğe bağlı)</span>
                 </label>
                 <textarea
                   id="reviewText"
@@ -264,9 +264,9 @@ export default function ReviewBookingPage() {
                   }
                   rows={7}
                   placeholder="Deneyiminizi kısa ve yapıcı şekilde paylaşabilirsiniz."
-                  className="mt-3 w-full resize-none rounded-[24px] border border-black/10 bg-white px-4 py-4 text-sm leading-6 outline-none transition placeholder:text-neutral-400 focus:border-neutral-950"
+                  className="mt-3 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 outline-none transition-all duration-200 ease-out placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
                 />
-                <div className="mt-2 flex items-center justify-between gap-4 text-xs text-neutral-500">
+                <div className="mt-2 flex items-center justify-between gap-4 text-xs text-slate-400">
                   <span>
                     Yorumlar moderasyon sonrası yayınlanır. Kişisel bilgi
                     paylaşmayın.
@@ -277,10 +277,10 @@ export default function ReviewBookingPage() {
 
               {state.message ? (
                 <div
-                  className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
+                  className={`rounded-lg border px-4 py-3 text-sm font-medium ${
                     state.status === 'error'
-                      ? 'border-red-200 bg-red-50 text-red-700'
-                      : 'border-black/10 bg-neutral-50 text-neutral-700'
+                      ? 'border-rose-200 bg-rose-50 text-rose-700'
+                      : 'border-slate-200/80 bg-slate-50 text-slate-700'
                   }`}
                 >
                   {state.message}
@@ -291,14 +291,14 @@ export default function ReviewBookingPage() {
                 type="button"
                 disabled={state.status === 'submitting'}
                 onClick={submitReview}
-                className="inline-flex w-full items-center justify-center rounded-full bg-neutral-950 px-6 py-4 text-sm font-black text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {state.status === 'submitting'
                   ? 'Gönderiliyor...'
                   : 'Değerlendirmeyi gönder'}
               </button>
 
-              <p className="text-xs leading-5 text-neutral-500">
+              <p className="text-xs leading-5 text-slate-400">
                 Mindora acil kriz hattı değildir. Kendinize veya bir başkasına
                 zarar verme riski varsa lütfen 112 ile iletişime geçin ya da en
                 yakın sağlık kuruluşuna başvurun.

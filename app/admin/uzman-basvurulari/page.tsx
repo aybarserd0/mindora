@@ -45,13 +45,13 @@ function getStatusLabel(status: ExpertStatus) {
 
 function getStatusStyle(status: ExpertStatus) {
   const styles: Record<ExpertStatus, string> = {
-    approved: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-    pending: "bg-amber-50 text-amber-700 ring-amber-100",
-    rejected: "bg-rose-50 text-rose-700 ring-rose-100",
-    passive: "bg-slate-100 text-slate-700 ring-slate-200",
+    approved: "border border-emerald-200 bg-emerald-50 text-emerald-700",
+    pending: "border border-amber-200 bg-amber-50 text-amber-700",
+    rejected: "border border-rose-200 bg-rose-50 text-rose-700",
+    passive: "border border-slate-200 bg-slate-100 text-slate-700",
   };
 
-  return styles[status] || "bg-slate-100 text-slate-700 ring-slate-200";
+  return styles[status] || "border border-slate-200 bg-slate-100 text-slate-700";
 }
 
 function formatDate(value: string) {
@@ -209,20 +209,20 @@ export default function UzmanBasvurulariPage() {
   }, [fetchExperts]);
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
         <AdminHeader />
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
                 Yönetim Merkezi
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Uzman Başvuruları
               </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
                 Gelen uzman başvurularını incele, onayla, reddet veya pasife al.
                 Onaylanan uzmanlar uzmanlar sayfasında görünür ve danışan
                 eşleştirme sürecinde kullanılabilir.
@@ -232,7 +232,7 @@ export default function UzmanBasvurulariPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/admin"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Yönetim Merkezi
               </Link>
@@ -240,7 +240,7 @@ export default function UzmanBasvurulariPage() {
                 type="button"
                 onClick={() => void fetchExperts()}
                 disabled={loading}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Yükleniyor..." : "Yenile"}
               </button>
@@ -257,10 +257,10 @@ export default function UzmanBasvurulariPage() {
                 setFilter(option.value);
                 setPage(1);
               }}
-              className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 ${
+              className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                 filter === option.value
-                  ? "bg-slate-950 text-white ring-slate-950"
-                  : "bg-white text-slate-700 ring-slate-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm"
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
               {option.label} ({counts[option.value]})
@@ -268,7 +268,7 @@ export default function UzmanBasvurulariPage() {
           ))}
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <input
             value={search}
             onChange={(event) => {
@@ -276,7 +276,7 @@ export default function UzmanBasvurulariPage() {
               setPage(1);
             }}
             placeholder="İsim, e-posta, telefon, unvan veya uzmanlık alanı ara..."
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+            className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
           />
         </section>
 
@@ -294,16 +294,16 @@ export default function UzmanBasvurulariPage() {
             {paginatedExperts.map((expert) => (
               <article
                 key={expert.id}
-                className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-200 ease-out hover:border-slate-300"
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="text-xl font-black text-slate-950">
+                      <h2 className="text-xl font-bold text-slate-900">
                         {expert.name}
                       </h2>
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusStyle(
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(
                           expert.status
                         )}`}
                       >
@@ -311,11 +311,11 @@ export default function UzmanBasvurulariPage() {
                       </span>
                     </div>
 
-                    <p className="mt-2 text-sm font-semibold text-slate-600">
+                    <p className="mt-2 text-sm font-semibold text-slate-500">
                       {safeText(expert.title)} • {safeText(expert.areas)}
                     </p>
 
-                    <p className="mt-2 text-xs font-bold text-slate-400">
+                    <p className="mt-2 text-xs font-semibold text-slate-400">
                       Başvuru tarihi: {formatDate(expert.created_at)}
                     </p>
                   </div>
@@ -325,7 +325,7 @@ export default function UzmanBasvurulariPage() {
                       type="button"
                       disabled={updatingId === expert.id || expert.status === "approved"}
                       onClick={() => updateStatus(expert.id, "approved")}
-                      className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Onayla
                     </button>
@@ -334,7 +334,7 @@ export default function UzmanBasvurulariPage() {
                       type="button"
                       disabled={updatingId === expert.id || expert.status === "rejected"}
                       onClick={() => updateStatus(expert.id, "rejected")}
-                      className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-black text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Reddet
                     </button>
@@ -343,14 +343,14 @@ export default function UzmanBasvurulariPage() {
                       type="button"
                       disabled={updatingId === expert.id || expert.status === "passive"}
                       onClick={() => updateStatus(expert.id, "passive")}
-                      className="rounded-2xl bg-slate-700 px-4 py-2 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Pasife Al
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-6 grid gap-3 rounded-3xl bg-slate-50 p-5 text-sm text-slate-700 ring-1 ring-slate-200 md:grid-cols-2">
+                <div className="mt-6 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600 md:grid-cols-2">
                   <InfoRow label="Telefon" value={safeText(expert.phone)} />
                   <InfoRow label="E-posta" value={safeText(expert.email)} />
                   <InfoRow label="Unvan" value={safeText(expert.title)} />
@@ -370,7 +370,7 @@ export default function UzmanBasvurulariPage() {
                     className="md:col-span-2"
                   />
                   <p className="break-all text-xs font-semibold text-slate-400 md:col-span-2">
-                    <span className="font-black text-slate-500">Uzman ID:</span>{" "}
+                    <span className="font-semibold text-slate-500">Uzman ID:</span>{" "}
                     {expert.id}
                   </p>
                 </div>
@@ -380,7 +380,7 @@ export default function UzmanBasvurulariPage() {
         )}
 
         {!loading && !error && filteredExperts.length > PAGE_SIZE ? (
-          <section className="flex flex-col items-center justify-between gap-3 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:flex-row">
+          <section className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm sm:flex-row">
             <p className="text-sm font-semibold text-slate-500">
               Sayfa {currentPage} / {totalPages} • Toplam {filteredExperts.length} kayıt
             </p>
@@ -390,7 +390,7 @@ export default function UzmanBasvurulariPage() {
                 type="button"
                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage <= 1}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Önceki
               </button>
@@ -398,7 +398,7 @@ export default function UzmanBasvurulariPage() {
                 type="button"
                 onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage >= totalPages}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Sonraki
               </button>
@@ -421,7 +421,7 @@ function InfoRow({
 }) {
   return (
     <p className={className}>
-      <span className="font-black text-slate-900">{label}:</span> {value}
+      <span className="font-semibold text-slate-900">{label}:</span> {value}
     </p>
   );
 }
@@ -437,12 +437,12 @@ function StateBox({
 }) {
   const className =
     tone === "error"
-      ? "border-rose-100 bg-rose-50 text-rose-700"
-      : "border-slate-200 bg-white text-slate-600";
+      ? "border-rose-200 bg-rose-50 text-rose-700"
+      : "border-slate-200 bg-white text-slate-500";
 
   return (
-    <section className={`rounded-[2rem] border p-8 text-center shadow-sm ${className}`}>
-      <p className="text-sm font-black">{title}</p>
+    <section className={`rounded-xl border p-8 text-center shadow-sm ${className}`}>
+      <p className="text-sm font-semibold">{title}</p>
       <p className="mt-2 text-sm font-semibold">{description}</p>
     </section>
   );

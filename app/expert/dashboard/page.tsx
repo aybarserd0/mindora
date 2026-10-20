@@ -173,22 +173,22 @@ function getStatusBadgeClass(status: string | null | undefined) {
   const normalized = (status || '').toLowerCase()
 
   if (normalized === 'active' || normalized === 'confirmed' || normalized === 'paid') {
-    return 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+    return 'border-emerald-200 bg-emerald-50 text-emerald-700'
   }
 
   if (normalized === 'scheduled' || normalized === 'matched' || normalized === 'open') {
-    return 'bg-indigo-50 text-indigo-700 ring-indigo-100'
+    return 'border-indigo-200 bg-indigo-50 text-indigo-700'
   }
 
   if (normalized === 'cancelled' || normalized === 'canceled' || normalized === 'failed') {
-    return 'bg-rose-50 text-rose-700 ring-rose-100'
+    return 'border-rose-200 bg-rose-50 text-rose-700'
   }
 
   if (normalized === 'completed' || normalized === 'refunded') {
-    return 'bg-slate-100 text-slate-700 ring-slate-200'
+    return 'border-slate-200 bg-slate-100 text-slate-700'
   }
 
-  return 'bg-amber-50 text-amber-700 ring-amber-100'
+  return 'border-amber-200 bg-amber-50 text-amber-700'
 }
 
 function getNotificationTypeLabel(type: string | null | undefined) {
@@ -435,18 +435,18 @@ export default async function ExpertDashboardPage() {
   ]
 
   return (
-    <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+    <section className="px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg lg:p-8">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Hoş geldiniz.
               </h1>
-              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
                 Danışanlarınızı, görüşmelerinizi, çalışma saatlerinizi ve kazançlarınızı
                 tek ekrandan güvenli şekilde takip edin.
               </p>
@@ -462,19 +462,19 @@ export default async function ExpertDashboardPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Görüşmeleri Aç
               </Link>
               <Link
                 href="/expert/dashboard/verification"
-                className="inline-flex items-center justify-center rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-3 text-sm font-black text-indigo-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-all duration-200 ease-out hover:bg-indigo-100"
               >
                 Belgeleri Doğrula
               </Link>
               <Link
                 href="/expert/dashboard/availability"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Müsaitlik Yönet
               </Link>
@@ -483,12 +483,13 @@ export default async function ExpertDashboardPage() {
         </section>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {cards.map((card) => (
+          {cards.map((card, index) => (
             <MetricCard
               key={card.label}
               title={card.label}
               value={card.value}
               subtitle={card.helper}
+              index={index}
             />
           ))}
         </section>
@@ -575,16 +576,16 @@ export default async function ExpertDashboardPage() {
           )}
         </Panel>
 
-        <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+        <section className="rounded-xl border border-indigo-200 bg-indigo-50 p-6 shadow-sm">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-700">
+              <p className="text-sm font-semibold uppercase tracking-wide text-indigo-700">
                 C14 Uzman Doğrulama
               </p>
-              <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
                 Güven rozetinizi tamamlayın.
               </h2>
-              <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
                 Diploma, lisans ve uzmanlık belgeleri doğrulanan profiller danışan tarafında daha güvenilir görünür.
                 Belgelerinizi yükleyip admin onay sürecini buradan takip edebilirsiniz.
               </p>
@@ -597,7 +598,7 @@ export default async function ExpertDashboardPage() {
 
             <Link
               href="/expert/dashboard/verification"
-              className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
             >
               Doğrulama Merkezini Aç
             </Link>
@@ -652,34 +653,34 @@ export default async function ExpertDashboardPage() {
 function NotificationItem({ notification }: { notification: NotificationRow }) {
   const content = (
     <article
-      className={`rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+      className={`rounded-xl border p-4 transition-all duration-200 ease-out ${
         notification.is_read
-          ? 'border-slate-200 bg-slate-50 hover:bg-slate-100'
-          : 'border-indigo-100 bg-indigo-50 hover:bg-indigo-100'
+          ? 'border-slate-200/80 bg-slate-50 hover:border-slate-300'
+          : 'border-indigo-200 bg-indigo-50 hover:bg-indigo-100'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <span
-          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
             notification.is_read
-              ? 'bg-white text-slate-600 ring-slate-200'
-              : 'bg-white text-indigo-700 ring-indigo-100'
+              ? 'border-slate-200 bg-white text-slate-600'
+              : 'border-indigo-200 bg-white text-indigo-700'
           }`}
         >
           {getNotificationTypeLabel(notification.type)}
         </span>
-        <span className="text-xs font-bold text-slate-500">
+        <span className="text-xs font-semibold text-slate-500">
           {formatDateTime(notification.created_at)}
         </span>
       </div>
 
-      <p className="mt-3 text-sm font-black text-slate-950">{notification.title}</p>
-      <p className="mt-1 text-sm leading-6 text-slate-600">
+      <p className="mt-3 text-sm font-semibold text-slate-900">{notification.title}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-500">
         {getPreview(notification.message)}
       </p>
 
       {!notification.is_read ? (
-        <p className="mt-2 text-xs font-black text-indigo-600">Yeni bildirim</p>
+        <p className="mt-2 text-xs font-semibold text-indigo-600">Yeni bildirim</p>
       ) : null}
     </article>
   )
@@ -695,9 +696,9 @@ function NotificationItem({ notification }: { notification: NotificationRow }) {
 
 function VerificationMiniCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-indigo-100">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-black text-slate-950">{value}</p>
+    <div className="rounded-xl border border-indigo-200 bg-white px-4 py-3 shadow-sm">
+      <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )
 }
@@ -711,13 +712,13 @@ function StatusPill({
 }) {
   const className =
     tone === 'green'
-      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
       : tone === 'blue'
-        ? 'bg-blue-50 text-blue-700 ring-blue-100'
-        : 'bg-slate-100 text-slate-700 ring-slate-200'
+        ? 'border-blue-200 bg-blue-50 text-blue-700'
+        : 'border-slate-200 bg-slate-100 text-slate-700'
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>
+    <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${className}`}>
       {children}
     </span>
   )
@@ -727,15 +728,20 @@ function MetricCard({
   title,
   value,
   subtitle,
+  index = 0,
 }: {
   title: string
   value: string
   subtitle: string
+  index?: number
 }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-4 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+    <article
+      className="animate-fade-in-up rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300"
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
+      <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
     </article>
   )
@@ -755,17 +761,17 @@ function Panel({
   actionLabel?: string
 }) {
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+    <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-slate-950">{title}</h2>
+          <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
           <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
         </div>
 
         {actionHref && actionLabel ? (
           <Link
             href={actionHref}
-            className="shrink-0 text-sm font-black text-indigo-600 transition hover:text-indigo-700"
+            className="shrink-0 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
           >
             {actionLabel}
           </Link>
@@ -787,15 +793,15 @@ function SessionItem({
   clientEmail: string | null
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-md">
+    <article className="rounded-xl border border-slate-200/80 bg-slate-50 p-4 transition-all duration-200 ease-out hover:border-indigo-200 hover:bg-indigo-50">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-black text-slate-950">{clientName}</p>
+          <p className="text-sm font-semibold text-slate-900">{clientName}</p>
           {clientEmail ? <p className="mt-1 text-xs font-semibold text-slate-500">{clientEmail}</p> : null}
-          <p className="mt-2 text-sm font-semibold text-slate-600">
+          <p className="mt-2 text-sm font-semibold text-slate-500">
             {formatDateTime(booking.scheduled_start_at)}
           </p>
-          <p className="mt-1 text-xs font-bold text-slate-500">
+          <p className="mt-1 text-xs font-semibold text-slate-500">
             {formatTimeRange(booking.scheduled_start_at, booking.scheduled_end_at)}
           </p>
         </div>
@@ -804,13 +810,13 @@ function SessionItem({
           {booking.conversation_id ? (
             <Link
               href={`/expert/chat/${booking.conversation_id}`}
-              className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
+              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
             >
               Chat
             </Link>
           ) : null}
           <span
-            className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusBadgeClass(
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
               booking.status
             )}`}
           >
@@ -832,20 +838,20 @@ function ClientItem({
   clientEmail: string | null
 }) {
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+    <article className="flex flex-col gap-3 rounded-xl border border-slate-200/80 bg-slate-50 p-4 transition-all duration-200 ease-out hover:border-indigo-200 hover:bg-indigo-50 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="text-sm font-black text-slate-950">{clientName}</p>
+        <p className="text-sm font-semibold text-slate-900">{clientName}</p>
         {clientEmail ? <p className="mt-1 text-xs font-semibold text-slate-500">{clientEmail}</p> : null}
         <div className="mt-2 flex flex-wrap gap-2">
           <span
-            className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusBadgeClass(
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
               conversation.status
             )}`}
           >
             {getStatusLabel(conversation.status)}
           </span>
           <span
-            className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getStatusBadgeClass(
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
               conversation.payment_status
             )}`}
           >
@@ -856,7 +862,7 @@ function ClientItem({
 
       <Link
         href={`/expert/chat/${conversation.id}`}
-        className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
+        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100"
       >
         Mesaj
       </Link>
@@ -866,19 +872,19 @@ function ClientItem({
 
 function ChecklistItem({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
+    <div className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3 transition-all duration-200 ease-out hover:bg-indigo-50">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-xs font-semibold text-indigo-700">
         ✓
       </span>
-      <span className="text-sm font-bold text-slate-700">{children}</span>
+      <span className="text-sm font-semibold text-slate-700">{children}</span>
     </div>
   )
 }
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <p className="text-sm font-black text-slate-900">{title}</p>
+    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
     </div>
   )
@@ -896,10 +902,10 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-md"
+      className="group flex items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50 p-4 transition-all duration-200 ease-out hover:border-indigo-200 hover:bg-indigo-50"
     >
       <span>
-        <span className="block text-sm font-black text-slate-950">{title}</span>
+        <span className="block text-sm font-semibold text-slate-900">{title}</span>
         <span className="mt-1 block text-sm leading-5 text-slate-500">{description}</span>
       </span>
       <span className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-indigo-500">

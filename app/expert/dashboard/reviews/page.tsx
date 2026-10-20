@@ -47,10 +47,10 @@ type ExpertReviewsResponse = {
 };
 
 const statusLabels: Record<string, { label: string; className: string }> = {
-  pending: { label: "Onay Bekliyor", className: "bg-amber-50 text-amber-700 ring-amber-100" },
-  approved: { label: "Yayında", className: "bg-emerald-50 text-emerald-700 ring-emerald-100" },
-  rejected: { label: "Reddedildi", className: "bg-rose-50 text-rose-700 ring-rose-100" },
-  hidden: { label: "Gizli", className: "bg-slate-100 text-slate-700 ring-slate-200" },
+  pending: { label: "Onay Bekliyor", className: "border-amber-200 bg-amber-50 text-amber-700" },
+  approved: { label: "Yayında", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+  rejected: { label: "Reddedildi", className: "border-rose-200 bg-rose-50 text-rose-700" },
+  hidden: { label: "Gizli", className: "border-slate-200 bg-slate-100 text-slate-700" },
 };
 
 const statusFilters: Array<{ label: string; value: ReviewStatus }> = [
@@ -105,7 +105,7 @@ function formatDate(value?: string | null) {
 function getStatusConfig(status: string) {
   return statusLabels[status] || {
     label: "Belirsiz",
-    className: "bg-slate-100 text-slate-600 ring-slate-200",
+    className: "border-slate-200 bg-slate-100 text-slate-600",
   };
 }
 
@@ -214,18 +214,18 @@ function ExpertReviewsContent() {
   const maxDistribution = Math.max(...Object.values(distribution).map((value) => Number(value) || 0), 1);
 
   return (
-    <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+    <section className="px-4 py-6 text-slate-900 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Yorumlar ve Puanlar
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
                 {expertName} profilinize gelen danışan değerlendirmelerini, ortalama puanınızı ve moderasyon durumlarını takip edin.
               </p>
             </div>
@@ -235,13 +235,13 @@ function ExpertReviewsContent() {
                 type="button"
                 onClick={() => void fetchReviews("refresh")}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? "Yükleniyor..." : "Yenile"}
               </button>
               <Link
                 href={buildTokenUrl("/expert/dashboard", token)}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Dashboard
               </Link>
@@ -250,8 +250,8 @@ function ExpertReviewsContent() {
         </header>
 
         {notice ? (
-          <section className="rounded-3xl border border-amber-100 bg-amber-50 p-5 text-amber-900 shadow-sm">
-            <p className="text-sm font-black">Yorumlar yüklenemedi</p>
+          <section className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-900 shadow-sm">
+            <p className="text-sm font-semibold">Yorumlar yüklenemedi</p>
             <p className="mt-1 text-sm font-semibold">{notice}</p>
           </section>
         ) : null}
@@ -269,8 +269,8 @@ function ExpertReviewsContent() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.5fr]">
-          <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-950">Puan Dağılımı</h2>
+          <article className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900">Puan Dağılımı</h2>
             <p className="mt-1 text-sm text-slate-500">Yayındaki onaylı yorumlara göre hesaplanır.</p>
 
             <div className="mt-6 space-y-3">
@@ -280,23 +280,23 @@ function ExpertReviewsContent() {
 
                 return (
                   <div key={rating} className="grid grid-cols-[72px_1fr_36px] items-center gap-3">
-                    <div className="flex items-center gap-1 text-sm font-black text-slate-700">
+                    <div className="flex items-center gap-1 text-sm font-semibold text-slate-700">
                       {rating} <span className="text-amber-400">★</span>
                     </div>
                     <div className="h-3 overflow-hidden rounded-full bg-slate-100">
                       <div className="h-full rounded-full bg-amber-400" style={{ width: `${width}%` }} />
                     </div>
-                    <div className="text-right text-sm font-black text-slate-600">{count}</div>
+                    <div className="text-right text-sm font-semibold text-slate-600">{count}</div>
                   </div>
                 );
               })}
             </div>
           </article>
 
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-950">Filtrele ve Ara</h2>
+                <h2 className="text-xl font-bold text-slate-900">Filtrele ve Ara</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Yorum metni, danışan kodu, puan veya durum bilgisine göre arama yapın.
                 </p>
@@ -306,7 +306,7 @@ function ExpertReviewsContent() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Yorum ara..."
-                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
+                className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
               />
             </div>
 
@@ -316,10 +316,10 @@ function ExpertReviewsContent() {
                   key={item.value}
                   type="button"
                   onClick={() => setStatusFilter(item.value)}
-                  className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                  className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                     statusFilter === item.value
-                      ? "bg-slate-950 text-white ring-slate-950"
-                      : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   {item.label}
@@ -333,10 +333,10 @@ function ExpertReviewsContent() {
                   key={item.value}
                   type="button"
                   onClick={() => setRatingFilter(item.value)}
-                  className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                  className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                     ratingFilter === item.value
-                      ? "bg-indigo-600 text-white ring-indigo-600"
-                      : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   {item.label}
@@ -346,16 +346,16 @@ function ExpertReviewsContent() {
           </section>
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Yorum Listesi</h2>
+              <h2 className="text-xl font-bold text-slate-900">Yorum Listesi</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Danışan değerlendirmeleri ve yayın durumları.
               </p>
             </div>
 
-            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
               {loading ? "Yükleniyor" : `${filteredReviews.length} kayıt`}
             </span>
           </div>

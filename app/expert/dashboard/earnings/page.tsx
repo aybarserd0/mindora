@@ -63,20 +63,20 @@ const payoutFilters: Array<{ label: string; value: PayoutFilter }> = [
 ]
 
 const paymentStatusConfig: Record<PaymentStatus, { label: string; className: string }> = {
-  pending: { label: 'Bekliyor', className: 'bg-amber-50 text-amber-700 ring-amber-200' },
-  paid: { label: 'Başarılı', className: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-  failed: { label: 'Başarısız', className: 'bg-red-50 text-red-700 ring-red-200' },
-  cancelled: { label: 'İptal Edildi', className: 'bg-slate-100 text-slate-700 ring-slate-200' },
-  refunded: { label: 'İade Edildi', className: 'bg-sky-50 text-sky-700 ring-sky-200' },
-  unknown: { label: 'Bilinmiyor', className: 'bg-slate-100 text-slate-600 ring-slate-200' },
+  pending: { label: 'Bekliyor', className: 'border-amber-200 bg-amber-50 text-amber-700' },
+  paid: { label: 'Başarılı', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+  failed: { label: 'Başarısız', className: 'border-red-200 bg-red-50 text-red-700' },
+  cancelled: { label: 'İptal Edildi', className: 'border-slate-200 bg-slate-100 text-slate-700' },
+  refunded: { label: 'İade Edildi', className: 'border-sky-200 bg-sky-50 text-sky-700' },
+  unknown: { label: 'Bilinmiyor', className: 'border-slate-200 bg-slate-100 text-slate-600' },
 }
 
 const payoutStatusConfig: Record<PayoutStatus, { label: string; className: string }> = {
-  unpaid: { label: 'Beklemede', className: 'bg-amber-50 text-amber-700 ring-amber-200' },
-  scheduled: { label: 'Planlandı', className: 'bg-blue-50 text-blue-700 ring-blue-200' },
-  paid: { label: 'Ödendi', className: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-  blocked: { label: 'Blokeli', className: 'bg-red-50 text-red-700 ring-red-200' },
-  unknown: { label: 'Bilinmiyor', className: 'bg-slate-100 text-slate-600 ring-slate-200' },
+  unpaid: { label: 'Beklemede', className: 'border-amber-200 bg-amber-50 text-amber-700' },
+  scheduled: { label: 'Planlandı', className: 'border-blue-200 bg-blue-50 text-blue-700' },
+  paid: { label: 'Ödendi', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+  blocked: { label: 'Blokeli', className: 'border-red-200 bg-red-50 text-red-700' },
+  unknown: { label: 'Bilinmiyor', className: 'border-slate-200 bg-slate-100 text-slate-600' },
 }
 
 function normalizePaymentStatus(value: unknown): PaymentStatus {
@@ -307,16 +307,16 @@ export default function ExpertEarningsPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Kazançlar
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
                 Görüşme gelirlerinizi, platform kesintisini, net kazancınızı ve aktarım
                 durumunuzu güvenli şekilde tek ekrandan takip edin.
               </p>
@@ -327,19 +327,19 @@ export default function ExpertEarningsPage() {
                 type="button"
                 onClick={() => void fetchEarnings('refresh')}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href="/expert/dashboard"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Dashboard
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Görüşmeleri Gör
               </Link>
@@ -397,10 +397,10 @@ export default function ExpertEarningsPage() {
           />
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Ödeme Geçmişi</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Ödeme Geçmişi</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Görüşme bazlı brüt tutar, kesinti, net kazanç ve aktarım durumunu görüntüleyin.
               </p>
@@ -410,7 +410,7 @@ export default function ExpertEarningsPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Danışan veya ödeme ara..."
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
+              className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 lg:w-80"
             />
           </div>
 
@@ -420,10 +420,10 @@ export default function ExpertEarningsPage() {
                 key={item.value}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition hover:-translate-y-0.5 ${
+                className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                   filter === item.value
-                    ? 'bg-slate-950 text-white ring-slate-950'
-                    : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                 }`}
               >
                 {item.label}
@@ -432,7 +432,7 @@ export default function ExpertEarningsPage() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
           <SectionHeader
             title="Kazanç Kayıtları"
             description={loading ? 'Kayıtlar hazırlanıyor.' : `${filteredPayments.length} kayıt görüntüleniyor.`}
@@ -484,20 +484,20 @@ function EarningsTable({ payments }: { payments: EarningPayment[] }) {
         <tbody className="divide-y divide-slate-100">
           {payments.map((payment) => (
             <tr key={payment.id} className="align-top transition hover:bg-slate-50">
-              <td className="whitespace-nowrap px-5 py-4 text-sm font-bold text-slate-700">
+              <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700">
                 {formatDate(payment.createdAt)}
               </td>
               <td className="px-5 py-4">
-                <p className="font-black text-slate-950">{payment.clientName}</p>
+                <p className="font-semibold text-slate-900">{payment.clientName}</p>
                 <p className="mt-1 text-xs text-slate-500">{payment.clientEmail || '-'}</p>
               </td>
-              <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-950">
+              <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-900">
                 {formatMoney(payment.grossAmount)}
               </td>
-              <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-700">
+              <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-700">
                 {formatMoney(payment.commissionAmount)}
               </td>
-              <td className="whitespace-nowrap px-5 py-4 font-black text-indigo-700">
+              <td className="whitespace-nowrap px-5 py-4 font-bold text-indigo-700">
                 {formatMoney(payment.expertAmount)}
               </td>
               <td className="whitespace-nowrap px-5 py-4">
@@ -521,12 +521,12 @@ function EarningsCards({ payments }: { payments: EarningPayment[] }) {
   return (
     <div className="grid gap-4 p-4 lg:hidden">
       {payments.map((payment) => (
-        <article key={payment.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <article key={payment.id} className="rounded-xl border border-slate-200/80 bg-slate-50 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-black text-slate-950">{payment.clientName}</p>
+              <p className="font-semibold text-slate-900">{payment.clientName}</p>
               <p className="mt-1 text-xs text-slate-500">{payment.clientEmail || '-'}</p>
-              <p className="mt-2 text-xs font-bold text-slate-500">{formatDate(payment.createdAt)}</p>
+              <p className="mt-2 text-xs font-semibold text-slate-500">{formatDate(payment.createdAt)}</p>
             </div>
             <PaymentBadge status={payment.status} />
           </div>
@@ -535,8 +535,8 @@ function EarningsCards({ payments }: { payments: EarningPayment[] }) {
             <MiniMetric label="Brüt" value={formatMoney(payment.grossAmount)} />
             <MiniMetric label="Kesinti" value={formatMoney(payment.commissionAmount)} />
             <MiniMetric label="Net" value={formatMoney(payment.expertAmount)} emphasized />
-            <div className="rounded-2xl bg-white p-3 ring-1 ring-slate-200">
-              <p className="text-xs font-bold text-slate-500">Aktarım</p>
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <p className="text-xs font-semibold text-slate-500">Aktarım</p>
               <div className="mt-2"><PayoutBadge status={payment.payoutStatus} /></div>
             </div>
           </div>
@@ -548,9 +548,9 @@ function EarningsCards({ payments }: { payments: EarningPayment[] }) {
 
 function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -558,9 +558,9 @@ function SummaryCard({ title, value, description }: { title: string; value: stri
 
 function InfoBlock({ title, value, description }: { title: string; value: string; description: string }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-2 text-lg font-black text-slate-950">{value}</p>
+    <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
+      <p className="mt-2 text-lg font-bold text-slate-900">{value}</p>
       <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
     </div>
   )
@@ -568,9 +568,9 @@ function InfoBlock({ title, value, description }: { title: string; value: string
 
 function MiniMetric({ label, value, emphasized = false }: { label: string; value: string; emphasized?: boolean }) {
   return (
-    <div className="rounded-2xl bg-white p-3 ring-1 ring-slate-200">
-      <p className="text-xs font-bold text-slate-500">{label}</p>
-      <p className={`mt-1 font-black ${emphasized ? 'text-indigo-700' : 'text-slate-900'}`}>{value}</p>
+    <div className="rounded-lg border border-slate-200 bg-white p-3">
+      <p className="text-xs font-semibold text-slate-500">{label}</p>
+      <p className={`mt-1 font-bold ${emphasized ? 'text-indigo-700' : 'text-slate-900'}`}>{value}</p>
     </div>
   )
 }
@@ -578,8 +578,8 @@ function MiniMetric({ label, value, emphasized = false }: { label: string; value
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div className="px-5 py-10 text-center">
-      <div className="mx-auto max-w-md rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-7">
-        <p className="text-sm font-black text-slate-800">{title}</p>
+      <div className="mx-auto max-w-md rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-7">
+        <p className="text-sm font-semibold text-slate-800">{title}</p>
         <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
       </div>
     </div>
@@ -589,21 +589,21 @@ function EmptyState({ title, description }: { title: string; description: string
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
     <div className="flex flex-col gap-2 border-b border-slate-200 px-5 py-5 sm:px-6">
-      <h2 className="text-xl font-black text-slate-950">{title}</h2>
+      <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
       <p className="text-sm text-slate-500">{description}</p>
     </div>
   )
 }
 
 function TableHead({ children }: { children: ReactNode }) {
-  return <th className="px-5 py-4 font-black">{children}</th>
+  return <th className="px-5 py-4 font-semibold">{children}</th>
 }
 
 function PaymentBadge({ status }: { status: PaymentStatus }) {
   const config = paymentStatusConfig[status] || paymentStatusConfig.unknown
 
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}>
+    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${config.className}`}>
       {config.label}
     </span>
   )
@@ -613,7 +613,7 @@ function PayoutBadge({ status }: { status: PayoutStatus }) {
   const config = payoutStatusConfig[status] || payoutStatusConfig.unknown
 
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}>
+    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${config.className}`}>
       {config.label}
     </span>
   )
@@ -638,17 +638,17 @@ function NoticeCard({
         : 'border-slate-200 bg-white text-slate-700'
 
   return (
-    <section className={`rounded-3xl border p-5 shadow-sm ${className}`}>
+    <section className={`rounded-xl border p-5 shadow-sm ${className}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-black">{title}</p>
+          <p className="text-sm font-semibold">{title}</p>
           <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
         </div>
         {onRetry ? (
           <button
             type="button"
             onClick={onRetry}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+            className="inline-flex items-center justify-center rounded-lg border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-amber-100"
           >
             Tekrar Dene
           </button>

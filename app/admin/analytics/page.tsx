@@ -329,15 +329,15 @@ function AnalyticsContent() {
   const topExpert = expertPerformance[0];
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-8">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-8">
       <div className="mx-auto max-w-7xl space-y-5">
-        <header className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 C12 Analytics Dashboard
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
                 Analytics
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
@@ -349,7 +349,7 @@ function AnalyticsContent() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href={buildAdminUrl("/admin", adminToken)}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 no-underline transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 no-underline transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Dashboard
               </Link>
@@ -358,7 +358,7 @@ function AnalyticsContent() {
                 type="button"
                 onClick={() => void fetchAnalytics("refresh")}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? "Yükleniyor..." : "Verileri Yenile"}
               </button>
@@ -367,7 +367,7 @@ function AnalyticsContent() {
         </header>
 
         {notice ? (
-          <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+          <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">
             {notice}
           </section>
         ) : null}
@@ -376,10 +376,10 @@ function AnalyticsContent() {
           {kpiCards.map((item) => (
             <article
               key={item.title}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm"
             >
               <p className="text-sm font-bold text-slate-500">{item.title}</p>
-              <p className="mt-2 break-words text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
+              <p className="mt-2 break-words text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
                 {loading ? "..." : item.value}
               </p>
               <p className="mt-3 text-sm text-slate-500">{item.description}</p>
@@ -390,13 +390,13 @@ function AnalyticsContent() {
         <ConversionMetrics conversion={conversion} loading={loading} />
 
         {topExpert ? (
-          <section className="rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-5 shadow-sm md:p-6">
+          <section className="rounded-xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm md:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-700">
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                   Öne Çıkan Uzman
                 </p>
-                <h2 className="mt-2 text-2xl font-black text-slate-950">
+                <h2 className="mt-2 text-2xl font-bold text-slate-900">
                   {topExpert.expertName || "Uzman"}
                 </h2>
                 <p className="mt-2 text-sm font-semibold text-slate-600">
@@ -500,19 +500,19 @@ function ConversionMetrics({
   ];
 
   return (
-    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+    <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             C12.2 Conversion Metrics
           </p>
-          <h2 className="mt-2 text-xl font-black text-slate-950">Dönüşüm Hunisi</h2>
+          <h2 className="mt-2 text-xl font-bold text-slate-900">Dönüşüm Hunisi</h2>
           <p className="mt-1 text-sm text-slate-500">
             Mindora'nın başvurudan yoruma kadar nerede güçlendiğini ve nerede para kaybettiğini gösterir.
           </p>
         </div>
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
+        <span className="rounded-full border border-slate-200/80 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
           4 kritik oran
         </span>
       </div>
@@ -521,22 +521,22 @@ function ConversionMetrics({
         {steps.map((step) => (
           <article
             key={step.title}
-            className="rounded-3xl border border-slate-200 bg-slate-50 p-4"
+            className="rounded-xl border border-slate-200/80 bg-slate-50 p-4"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-black text-slate-950">{step.title}</p>
+                <p className="text-sm font-bold text-slate-900">{step.title}</p>
                 <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
                   {step.description}
                 </p>
               </div>
 
-              <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-slate-600 ring-1 ring-slate-200">
+              <span className="rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-500">
                 {getFunnelHealth(step.rate)}
               </span>
             </div>
 
-            <p className="mt-5 text-4xl font-black tracking-tight text-slate-950">
+            <p className="mt-5 text-4xl font-bold tracking-tight text-slate-900">
               {loading ? "..." : formatPercent(step.rate)}
             </p>
 
@@ -566,9 +566,9 @@ function ConversionMetrics({
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white px-4 py-3 text-center shadow-sm ring-1 ring-indigo-100">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-black text-slate-950">{value}</p>
+    <div className="rounded-lg border border-indigo-200 bg-white px-4 py-3 text-center shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
     </div>
   );
 }
@@ -590,23 +590,23 @@ function ChartCard({
   const maxValue = getChartMax(safePoints);
 
   return (
-    <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-slate-950">{title}</h2>
+          <h2 className="text-xl font-bold text-slate-900">{title}</h2>
           <p className="mt-1 text-sm text-slate-500">{description}</p>
         </div>
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
+        <span className="rounded-full border border-slate-200/80 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
           {safePoints.length} veri
         </span>
       </div>
 
       <div className="mt-6">
         {loading ? (
-          <div className="h-64 animate-pulse rounded-3xl bg-slate-100" />
+          <div className="h-64 animate-pulse rounded-xl bg-slate-100" />
         ) : safePoints.length > 0 ? (
-          <div className="flex h-64 items-end gap-2 overflow-x-auto rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex h-64 items-end gap-2 overflow-x-auto rounded-xl border border-slate-200/80 bg-slate-50 p-4">
             {safePoints.map((point, index) => {
               const value = Number(point.value) || 0;
               const height = Math.max(8, Math.round((value / maxValue) * 190));
@@ -617,11 +617,11 @@ function ChartCard({
                   className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"
                   title={`${point.label}: ${valueFormatter(value)}`}
                 >
-                  <span className="text-[10px] font-black text-slate-500">
+                  <span className="text-[10px] font-semibold text-slate-500">
                     {value > 0 ? valueFormatter(value) : ""}
                   </span>
                   <div
-                    className="w-full rounded-t-2xl bg-indigo-600"
+                    className="w-full rounded-t-lg bg-indigo-600"
                     style={{ height }}
                   />
                   <span className="max-w-16 truncate text-[10px] font-bold text-slate-500">
@@ -632,8 +632,8 @@ function ChartCard({
             })}
           </div>
         ) : (
-          <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-            <p className="text-sm font-black text-slate-600">Henüz veri yok</p>
+          <div className="rounded-xl border border-dashed border-slate-200/80 bg-slate-50 p-8 text-center">
+            <p className="text-sm font-semibold text-slate-600">Henüz veri yok</p>
             <p className="mt-1 text-sm text-slate-500">
               Kayıtlar oluştuğunda grafik otomatik dolacak.
             </p>
@@ -654,31 +654,31 @@ function ExpertPerformanceTable({
   const safeRows = Array.isArray(rows) ? rows.slice(0, 20) : [];
 
   return (
-    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+    <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-slate-950">Uzman Performansı</h2>
+          <h2 className="text-xl font-bold text-slate-900">Uzman Performansı</h2>
           <p className="mt-1 text-sm text-slate-500">
             Seans, gelir, komisyon ve yorum puanına göre uzman performans tablosu.
           </p>
         </div>
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
+        <span className="rounded-full border border-slate-200/80 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
           İlk 20 uzman
         </span>
       </div>
 
-      <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200">
+      <div className="mt-5 overflow-hidden rounded-xl border border-slate-200/80">
         {loading ? (
           <div className="space-y-3 bg-white p-4">
             {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="h-14 animate-pulse rounded-2xl bg-slate-100" />
+              <div key={item} className="h-14 animate-pulse rounded-xl bg-slate-100" />
             ))}
           </div>
         ) : safeRows.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-[920px] w-full border-collapse text-left">
-              <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+              <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                 <tr>
                   <th className="px-4 py-4">Uzman</th>
                   <th className="px-4 py-4">Rozet</th>
@@ -696,14 +696,14 @@ function ExpertPerformanceTable({
                   const badge = getBestExpertBadge(index, row);
 
                   return (
-                    <tr key={row.expertId || `${row.expertName}-${index}`} className="hover:bg-slate-50">
+                    <tr key={row.expertId || `${row.expertName}-${index}`} className="transition-colors duration-200 hover:bg-slate-50">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-sm font-black text-indigo-700 ring-1 ring-indigo-100">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-sm font-semibold text-indigo-700">
                             {index + 1}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-black text-slate-950">
+                            <p className="truncate text-sm font-semibold text-slate-900">
                               {row.expertName || "İsimsiz Uzman"}
                             </p>
                             <p className="mt-0.5 text-xs font-semibold text-slate-500">
@@ -715,7 +715,7 @@ function ExpertPerformanceTable({
 
                       <td className="px-4 py-4">
                         {badge ? (
-                          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700 ring-1 ring-indigo-100">
+                          <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                             {badge}
                           </span>
                         ) : (
@@ -723,22 +723,22 @@ function ExpertPerformanceTable({
                         )}
                       </td>
 
-                      <td className="px-4 py-4 text-right text-sm font-black text-slate-700">
+                      <td className="px-4 py-4 text-right text-sm font-semibold text-slate-600">
                         {formatNumber(row.sessions)}
                       </td>
-                      <td className="px-4 py-4 text-right text-sm font-black text-slate-700">
+                      <td className="px-4 py-4 text-right text-sm font-semibold text-slate-600">
                         {formatNumber(row.completedSessions)}
                       </td>
-                      <td className="px-4 py-4 text-right text-sm font-black text-slate-950">
+                      <td className="px-4 py-4 text-right text-sm font-semibold text-slate-900">
                         {formatMoney(row.revenue)}
                       </td>
-                      <td className="px-4 py-4 text-right text-sm font-black text-slate-700">
+                      <td className="px-4 py-4 text-right text-sm font-semibold text-slate-600">
                         {formatMoney(row.commission)}
                       </td>
-                      <td className="px-4 py-4 text-right text-sm font-black text-slate-700">
+                      <td className="px-4 py-4 text-right text-sm font-semibold text-slate-600">
                         {formatRating(row.averageRating)}
                       </td>
-                      <td className="px-4 py-4 text-right text-sm font-black text-slate-700">
+                      <td className="px-4 py-4 text-right text-sm font-semibold text-slate-600">
                         {formatNumber(row.reviewCount)}
                       </td>
                     </tr>
@@ -749,7 +749,7 @@ function ExpertPerformanceTable({
           </div>
         ) : (
           <div className="bg-slate-50 p-8 text-center">
-            <p className="text-sm font-black text-slate-600">Henüz uzman performans verisi yok</p>
+            <p className="text-sm font-semibold text-slate-600">Henüz uzman performans verisi yok</p>
             <p className="mt-1 text-sm text-slate-500">
               Analytics API expertPerformance alanını döndürdüğünde tablo otomatik dolacak.
             </p>
@@ -764,9 +764,9 @@ export default function AdminAnalyticsPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-8">
-          <div className="mx-auto max-w-7xl rounded-[1.75rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Analytics yükleniyor...</p>
+        <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-8">
+          <div className="mx-auto max-w-7xl rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="font-semibold text-slate-600">Analytics yükleniyor...</p>
           </div>
         </main>
       }

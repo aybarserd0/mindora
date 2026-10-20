@@ -372,15 +372,15 @@ function profileStatusLabel(status: ProfileStatus) {
 function profileStatusClass(status: ProfileStatus) {
   switch (status) {
     case 'approved':
-      return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700'
     case 'pending':
-      return 'bg-amber-50 text-amber-700 ring-amber-200'
+      return 'border-amber-200 bg-amber-50 text-amber-700'
     case 'review':
-      return 'bg-blue-50 text-blue-700 ring-blue-200'
+      return 'border-blue-200 bg-blue-50 text-blue-700'
     case 'passive':
-      return 'bg-slate-100 text-slate-600 ring-slate-200'
+      return 'border-slate-200 bg-slate-100 text-slate-600'
     default:
-      return 'bg-slate-100 text-slate-600 ring-slate-200'
+      return 'border-slate-200 bg-slate-100 text-slate-600'
   }
 }
 
@@ -548,11 +548,11 @@ export default function ExpertProfilePage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6 lg:p-8">
+        <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="border-b border-slate-200/80 bg-slate-50 p-6 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-indigo-600 text-2xl font-black text-white shadow-sm ring-1 ring-indigo-100">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-2xl font-semibold text-white shadow-sm">
                   {profile.profileImageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -567,17 +567,17 @@ export default function ExpertProfilePage() {
 
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                       Mindora Uzman Paneli
                     </p>
                     <StatusBadge status={profile.status} />
                   </div>
 
-                  <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                  <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                     {safeText(profile.name, 'Uzman')}
                   </h1>
 
-                  <p className="mt-1 text-sm font-bold text-slate-600">
+                  <p className="mt-1 text-sm font-semibold text-slate-500">
                     {safeText(profile.title)} • {safeText(profile.city)}
                   </p>
 
@@ -593,7 +593,7 @@ export default function ExpertProfilePage() {
                   type="button"
                   onClick={() => void fetchProfile('refresh')}
                   disabled={loading || refreshing || saving}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading || refreshing ? 'Yükleniyor...' : 'Bilgileri Yenile'}
                 </button>
@@ -602,14 +602,14 @@ export default function ExpertProfilePage() {
                   type="button"
                   onClick={() => setEditing((current) => !current)}
                   disabled={loading || saving}
-                  className="inline-flex items-center justify-center rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm font-black text-indigo-700 shadow-sm transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {editing ? 'Önizlemeye Dön' : 'Profili Düzenle'}
                 </button>
 
                 <Link
                   href={publicPreviewHref}
-                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
                 >
                   Danışan Görünümünü Aç
                 </Link>
@@ -651,9 +651,9 @@ export default function ExpertProfilePage() {
                 <List items={REVIEW_REQUIRED_FIELDS} emptyText="Onay gerektiren alan yok." />
               </Panel>
 
-              <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm">
-                <h2 className="text-lg font-black text-indigo-950">Profil yazım önerisi</h2>
-                <p className="mt-2 text-sm leading-6 text-indigo-800">
+              <section className="rounded-xl border border-slate-200/80 bg-slate-50 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-900">Profil yazım önerisi</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
                   Tanıtım metninizde sade, güven veren ve danışanın anlayacağı bir dil kullanın.
                   Akademik bilgileri kısa tutup hangi konularda destek verdiğinizi net yazın.
                 </p>
@@ -752,7 +752,7 @@ function ProfilePreview({
 
           <Link
             href={publicPreviewHref}
-            className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
+            className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
           >
             Public Profili Aç
           </Link>
@@ -766,9 +766,9 @@ function ProfilePreview({
           <List items={profile.certificates} emptyText="Sertifika eklenmemiş." />
         </Panel>
 
-        <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm">
-          <h2 className="text-lg font-black text-indigo-950">Profil önerisi</h2>
-          <p className="mt-2 text-sm leading-6 text-indigo-800">
+        <section className="rounded-xl border border-slate-200/80 bg-slate-50 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">Profil önerisi</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
             Daha iyi dönüşüm için tanıtım metninizi sade, güven veren ve danışanın
             anlayacağı bir dille yazın. Uzmanlık alanlarınızı kısa başlıklarla belirtin.
           </p>
@@ -792,16 +792,16 @@ function ProfileEditForm({
   onSave: () => void
 }) {
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-black text-slate-950">Profili Güncelle</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Profili Güncelle</h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
             Temel bilgilerinizi ve danışan görünümünde yer alan profil içeriklerinizi buradan
             güncelleyebilirsiniz.
           </p>
         </div>
-        <div className="rounded-2xl bg-amber-50 px-4 py-3 text-xs font-black text-amber-800 ring-1 ring-amber-100">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-800">
           Kritik alanlar admin onayına düşebilir.
         </div>
       </div>
@@ -874,7 +874,7 @@ function ProfileEditForm({
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Vazgeç
         </button>
@@ -882,7 +882,7 @@ function ProfileEditForm({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving ? 'Kaydediliyor...' : 'Profili Güncelle'}
         </button>
@@ -906,12 +906,12 @@ function Field({
 }) {
   return (
     <label className={`space-y-2 ${className}`}>
-      <span className="text-sm font-black text-slate-700">{label}</span>
+      <span className="text-sm font-semibold text-slate-700">{label}</span>
       <input
         value={value}
         inputMode={inputMode}
         onChange={(event) => onChange(event.target.value)}
-        className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+        className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
       />
     </label>
   )
@@ -932,12 +932,12 @@ function TextArea({
 }) {
   return (
     <label className="space-y-2">
-      <span className="text-sm font-black text-slate-700">{label}</span>
+      <span className="text-sm font-semibold text-slate-700">{label}</span>
       <textarea
         value={value}
         rows={rows}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-900 outline-none transition-all duration-200 ease-out placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
       />
       {hint ? <span className="block text-xs leading-5 text-slate-500">{hint}</span> : null}
     </label>
@@ -957,23 +957,23 @@ function NoticeCard({
 }) {
   const className =
     tone === 'warning'
-      ? 'border-amber-100 bg-amber-50 text-amber-900'
+      ? 'border-amber-200 bg-amber-50 text-amber-900'
       : tone === 'success'
-        ? 'border-emerald-100 bg-emerald-50 text-emerald-900'
-        : 'border-slate-100 bg-slate-50 text-slate-700'
+        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+        : 'border-slate-200/80 bg-slate-50 text-slate-700'
 
   return (
     <div className={`border-t px-6 py-4 ${className}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-black">{title}</p>
+          <p className="text-sm font-semibold">{title}</p>
           <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
         </div>
         {onRetry ? (
           <button
             type="button"
             onClick={onRetry}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+            className="inline-flex items-center justify-center rounded-lg border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition-all duration-200 ease-out hover:bg-amber-100"
           >
             Tekrar Dene
           </button>
@@ -986,7 +986,7 @@ function NoticeCard({
 function StatusBadge({ status }: { status: ProfileStatus }) {
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${profileStatusClass(
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${profileStatusClass(
         status
       )}`}
     >
@@ -997,9 +997,9 @@ function StatusBadge({ status }: { status: ProfileStatus }) {
 
 function StatCard({ label, value, description }: { label: string; value: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-100 hover:shadow-md">
-      <p className="text-sm font-bold text-slate-500">{label}</p>
-      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
+      <p className="text-sm font-semibold text-slate-500">{label}</p>
+      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
     </article>
   )
@@ -1007,9 +1007,9 @@ function StatCard({ label, value, description }: { label: string; value: string;
 
 function Panel({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:border-indigo-100 hover:shadow-md">
+    <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
       <div className="mb-5">
-        <h2 className="text-xl font-black text-slate-950">{title}</h2>
+        <h2 className="text-xl font-bold text-slate-900">{title}</h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
       </div>
       {children}
@@ -1019,17 +1019,17 @@ function Panel({ title, description, children }: { title: string; description: s
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 transition hover:bg-white hover:ring-indigo-100">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="mt-2 break-words text-sm font-black text-slate-950">{value}</p>
+    <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-white">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-2 break-words text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )
 }
 
 function TextBlock({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 transition hover:bg-white hover:ring-indigo-100">
-      <p className="text-sm font-black text-slate-950">{title}</p>
+    <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-white">
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
     </div>
   )
@@ -1037,9 +1037,9 @@ function TextBlock({ title, text }: { title: string; text: string }) {
 
 function StatusLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200/80 bg-slate-50 px-4 py-3">
       <span className="text-sm text-slate-600">{label}</span>
-      <span className="text-right text-sm font-black text-slate-950">{value}</span>
+      <span className="text-right text-sm font-semibold text-slate-900">{value}</span>
     </div>
   )
 }
@@ -1047,7 +1047,7 @@ function StatusLine({ label, value }: { label: string; value: string }) {
 function TagList({ items, emptyText }: { items: string[]; emptyText: string }) {
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
         {emptyText}
       </div>
     )
@@ -1058,7 +1058,7 @@ function TagList({ items, emptyText }: { items: string[]; emptyText: string }) {
       {items.map((item) => (
         <span
           key={item}
-          className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-black text-indigo-700 ring-1 ring-indigo-100"
+          className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700"
         >
           {item}
         </span>
@@ -1070,7 +1070,7 @@ function TagList({ items, emptyText }: { items: string[]; emptyText: string }) {
 function List({ items, emptyText }: { items: string[]; emptyText: string }) {
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500">
         {emptyText}
       </div>
     )
@@ -1081,7 +1081,7 @@ function List({ items, emptyText }: { items: string[]; emptyText: string }) {
       {items.map((item) => (
         <li
           key={item}
-          className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 ring-1 ring-slate-100 transition hover:bg-white hover:ring-indigo-100"
+          className="rounded-lg border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-white"
         >
           {item}
         </li>

@@ -202,7 +202,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className="h-full scroll-smooth antialiased">
-      <body className="min-h-full bg-[#f7f2eb] text-[#171717]">
+      <body className="min-h-full bg-slate-50 text-slate-900">
         <AnalyticsScripts />
         <JsonLd />
         <ToastProvider>

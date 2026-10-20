@@ -195,22 +195,22 @@ function getActivityTypeLabel(type: string) {
 }
 
 function getActivityClass(type: string) {
-  if (type === "expert") return "bg-violet-50 text-violet-700 ring-violet-100";
-  if (type === "client") return "bg-sky-50 text-sky-700 ring-sky-100";
-  if (type === "payment") return "bg-emerald-50 text-emerald-700 ring-emerald-100";
-  if (type === "review") return "bg-amber-50 text-amber-700 ring-amber-100";
+  if (type === "expert") return "border border-violet-200 bg-violet-50 text-violet-700";
+  if (type === "client") return "border border-sky-200 bg-sky-50 text-sky-700";
+  if (type === "payment") return "border border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (type === "review") return "border border-amber-200 bg-amber-50 text-amber-700";
 
-  return "bg-slate-100 text-slate-700 ring-slate-200";
+  return "border border-slate-200 bg-slate-100 text-slate-700";
 }
 
 function getKpiToneClass(tone: CardTone) {
   const classes: Record<CardTone, string> = {
-    indigo: "from-indigo-50 to-white hover:border-indigo-200",
-    emerald: "from-emerald-50 to-white hover:border-emerald-200",
-    amber: "from-amber-50 to-white hover:border-amber-200",
-    sky: "from-sky-50 to-white hover:border-sky-200",
-    violet: "from-violet-50 to-white hover:border-violet-200",
-    slate: "from-slate-50 to-white hover:border-slate-300",
+    indigo: "hover:border-indigo-200",
+    emerald: "hover:border-emerald-200",
+    amber: "hover:border-amber-200",
+    sky: "hover:border-sky-200",
+    violet: "hover:border-violet-200",
+    slate: "hover:border-slate-300",
   };
 
   return classes[tone];
@@ -354,24 +354,24 @@ function AdminHomeContent() {
   const visibleActivities = activities.slice(0, 8);
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-8">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-8">
       <div className="mx-auto max-w-7xl space-y-5">
-        <header className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+        <header className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[1.45fr_0.55fr]">
             <div className="p-6 md:p-8">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-indigo-700 ring-1 ring-indigo-100">
+                <p className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700">
                   Mindora Yönetim Paneli
                 </p>
-                <p className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                <p className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                   Operasyon merkezi
                 </p>
               </div>
 
-              <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
+              <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
                 Gösterge Paneli
               </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
                 Başvuruları, seansları, ödemeleri, yorumları ve son operasyon hareketlerini tek ekrandan takip et.
                 C12 Analytics sayfası ile detaylı büyüme ve gelir analizine geçebilirsin.
               </p>
@@ -381,22 +381,22 @@ function AdminHomeContent() {
                   type="button"
                   onClick={() => void fetchDashboard("refresh")}
                   disabled={loading || refreshing}
-                  className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading || refreshing ? "Yükleniyor..." : "Verileri Yenile"}
                 </button>
 
                 <Link
                   href={buildAdminUrl("/admin/analytics", adminToken)}
-                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700"
+                  className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-indigo-700"
                 >
                   Analytics'i Aç →
                 </Link>
               </div>
             </div>
 
-            <div className="border-t border-slate-200 bg-slate-950 p-6 text-white lg:border-l lg:border-t-0 md:p-8">
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">
+            <div className="border-t border-slate-200/80 bg-slate-900 p-6 text-white lg:border-l lg:border-t-0 md:p-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
                 Anlık durum
               </p>
 
@@ -414,7 +414,7 @@ function AdminHomeContent() {
         </header>
 
         {notice ? (
-          <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+          <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
             {notice}
           </section>
         ) : null}
@@ -423,21 +423,22 @@ function AdminHomeContent() {
           {loading ? (
             <KpiSkeleton />
           ) : (
-            kpiCards.map((item) => (
+            kpiCards.map((item, index) => (
               <Link
                 key={item.title}
                 href={buildAdminUrl(item.href, adminToken)}
-                className={`rounded-3xl border border-slate-200 bg-gradient-to-br p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${getKpiToneClass(
+                className={`animate-fade-in-up rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out ${getKpiToneClass(
                   item.tone
                 )}`}
+                style={{ animationDelay: `${index * 60}ms` }}
               >
-                <p className="text-sm font-bold text-slate-500">{item.title}</p>
-                <p className="mt-2 break-words text-4xl font-black tracking-tight text-slate-950">
+                <p className="text-sm font-semibold text-slate-500">{item.title}</p>
+                <p className="mt-2 break-words text-4xl font-bold tracking-tight text-slate-900">
                   {item.value}
                 </p>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <p className="text-sm text-slate-500">{item.description}</p>
-                  <span className="text-sm font-black text-indigo-700">Aç →</span>
+                  <span className="text-sm font-semibold text-indigo-700">Aç →</span>
                 </div>
               </Link>
             ))
@@ -445,16 +446,16 @@ function AdminHomeContent() {
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-          <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+          <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-950">Son Aktiviteler</h2>
+                <h2 className="text-xl font-bold text-slate-900">Son Aktiviteler</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Başvuru, ödeme, yorum ve operasyon hareketleri.
                 </p>
               </div>
 
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
+              <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
                 {visibleActivities.length} kayıt
               </span>
             </div>
@@ -470,17 +471,17 @@ function AdminHomeContent() {
                     <Link
                       key={activity.id}
                       href={href}
-                      className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 no-underline transition hover:border-indigo-200 hover:bg-indigo-50 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-3 rounded-xl border border-slate-200/80 bg-slate-50 p-4 no-underline transition-all duration-200 ease-out hover:border-indigo-200 hover:bg-indigo-50 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${getActivityClass(activity.type)}`}>
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getActivityClass(activity.type)}`}>
                             {getActivityTypeLabel(activity.type)}
                           </span>
-                          <p className="text-sm font-black text-slate-950">{activity.title}</p>
+                          <p className="text-sm font-semibold text-slate-900">{activity.title}</p>
                         </div>
 
-                        <p className="mt-2 text-sm font-semibold text-slate-600">
+                        <p className="mt-2 text-sm font-semibold text-slate-500">
                           {activity.description}
                         </p>
                       </div>
@@ -501,8 +502,8 @@ function AdminHomeContent() {
           </article>
 
           <div className="space-y-5">
-            <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-              <h2 className="text-xl font-black text-slate-950">Finans Özeti</h2>
+            <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6">
+              <h2 className="text-xl font-bold text-slate-900">Finans Özeti</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Özet finans görünümü. Detay için Ödemeler ekranına geç.
               </p>
@@ -516,21 +517,21 @@ function AdminHomeContent() {
 
               <Link
                 href={buildAdminUrl("/admin/payments", adminToken)}
-                className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white no-underline transition hover:bg-slate-800"
+                className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Ödemeleri Aç
               </Link>
             </article>
 
-            <article className="rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-5 shadow-sm md:p-6">
-              <h2 className="text-xl font-black text-slate-950">C12 Analytics Hazır</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+            <article className="rounded-xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm md:p-6">
+              <h2 className="text-xl font-bold text-slate-900">C12 Analytics Hazır</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
                 Günlük başvuru, ödeme, aylık gelir, komisyon ve dönüşüm metrikleri için ayrı analytics ekranına geçiş hazırlandı.
               </p>
 
               <Link
                 href={buildAdminUrl("/admin/analytics", adminToken)}
-                className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white no-underline transition hover:bg-indigo-700"
+                className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-indigo-700"
               >
                 Analytics Dashboard'a Git
               </Link>
@@ -546,7 +547,7 @@ function KpiSkeleton() {
   return (
     <>
       {[1, 2, 3, 4, 5, 6].map((item) => (
-        <div key={item} className="h-40 animate-pulse rounded-3xl border border-slate-200 bg-white" />
+        <div key={item} className="h-40 animate-pulse rounded-xl border border-slate-200/80 bg-white" />
       ))}
     </>
   );
@@ -556,7 +557,7 @@ function ActivitySkeleton() {
   return (
     <>
       {[1, 2, 3].map((item) => (
-        <div key={item} className="h-20 animate-pulse rounded-3xl border border-slate-200 bg-slate-50" />
+        <div key={item} className="h-20 animate-pulse rounded-xl border border-slate-200/80 bg-slate-50" />
       ))}
     </>
   );
@@ -564,26 +565,26 @@ function ActivitySkeleton() {
 
 function StatusLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
-      <p className="text-xs font-bold text-slate-400">{label}</p>
-      <p className="mt-1 text-2xl font-black text-white">{value}</p>
+    <div className="rounded-lg border border-white/10 bg-white/10 px-4 py-3">
+      <p className="text-xs font-semibold text-slate-400">{label}</p>
+      <p className="mt-1 text-2xl font-bold text-white">{value}</p>
     </div>
   );
 }
 
 function FinanceLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-      <p className="text-sm font-bold text-slate-500">{label}</p>
-      <p className="text-base font-black text-slate-950">{value}</p>
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+      <p className="text-sm font-semibold text-slate-500">{label}</p>
+      <p className="text-base font-bold text-slate-900">{value}</p>
     </div>
   );
 }
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-      <p className="text-sm font-black text-slate-600">{title}</p>
+    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </div>
   );
@@ -593,9 +594,9 @@ export default function AdminHomePage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-8">
-          <div className="mx-auto max-w-7xl rounded-[1.75rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Gösterge paneli yükleniyor...</p>
+        <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-8">
+          <div className="mx-auto max-w-7xl rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="font-semibold text-slate-500">Gösterge paneli yükleniyor...</p>
           </div>
         </main>
       }

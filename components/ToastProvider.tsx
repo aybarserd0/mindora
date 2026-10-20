@@ -76,7 +76,7 @@ function getToastClasses(type: ToastType) {
     return 'border-orange-100 bg-orange-50 text-orange-900'
   }
 
-  return 'border-black/10 bg-white text-[#171717]'
+  return 'border-slate-200/80 bg-white text-slate-900'
 }
 
 function getToastIcon(type: ToastType) {
@@ -261,20 +261,20 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
             key={toast.id}
             role="status"
             aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
-            className={`pointer-events-auto overflow-hidden rounded-2xl border p-4 shadow-2xl backdrop-blur transition-all duration-300 animate-in slide-in-from-top-3 ${getToastClasses(
+            className={`pointer-events-auto overflow-hidden rounded-xl border p-4 shadow-lg backdrop-blur transition-all duration-300 ease-out animate-in slide-in-from-top-3 ${getToastClasses(
               toast.type
             )}`}
           >
             <div className="flex items-start gap-3">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black/10 text-xs font-black">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black/10 text-xs font-semibold">
                 {getToastIcon(toast.type)}
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-black">{toast.title}</p>
+                <p className="text-sm font-semibold">{toast.title}</p>
 
                 {toast.description && (
-                  <p className="mt-1 text-xs font-semibold leading-5 opacity-80">
+                  <p className="mt-1 text-xs font-medium leading-5 opacity-80">
                     {toast.description}
                   </p>
                 )}
@@ -283,7 +283,7 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => removeToast(toast.id)}
-                className="rounded-full px-2 py-1 text-xs font-black opacity-60 transition hover:bg-black/5 hover:opacity-100"
+                className="rounded-full px-2 py-1 text-xs font-semibold opacity-60 transition-all duration-200 ease-out hover:bg-black/5 hover:opacity-100"
                 aria-label="Bildirimi kapat"
               >
                 ✕

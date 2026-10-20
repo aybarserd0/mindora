@@ -85,14 +85,14 @@ function getStatusLabel(status: PaymentStatus) {
 
 function getStatusStyle(status: PaymentStatus) {
   const styles: Record<PaymentStatus, string> = {
-    pending: "bg-amber-50 text-amber-800 ring-amber-100",
-    paid: "bg-emerald-50 text-emerald-800 ring-emerald-100",
-    failed: "bg-rose-50 text-rose-800 ring-rose-100",
-    cancelled: "bg-slate-100 text-slate-700 ring-slate-200",
-    refunded: "bg-sky-50 text-sky-800 ring-sky-100",
+    pending: "border-amber-200 bg-amber-50 text-amber-700",
+    paid: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    failed: "border-rose-200 bg-rose-50 text-rose-700",
+    cancelled: "border-slate-200 bg-slate-100 text-slate-700",
+    refunded: "border-sky-200 bg-sky-50 text-sky-700",
   };
 
-  return styles[status] || "bg-slate-100 text-slate-700 ring-slate-200";
+  return styles[status] || "border-slate-200 bg-slate-100 text-slate-700";
 }
 
 function getPayoutLabel(status: PayoutStatus | null) {
@@ -104,11 +104,11 @@ function getPayoutLabel(status: PayoutStatus | null) {
 }
 
 function getPayoutStyle(status: PayoutStatus | null) {
-  if (status === "paid") return "bg-emerald-50 text-emerald-800 ring-emerald-100";
-  if (status === "scheduled") return "bg-sky-50 text-sky-800 ring-sky-100";
-  if (status === "blocked") return "bg-rose-50 text-rose-800 ring-rose-100";
+  if (status === "paid") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (status === "scheduled") return "border-sky-200 bg-sky-50 text-sky-700";
+  if (status === "blocked") return "border-rose-200 bg-rose-50 text-rose-700";
 
-  return "bg-violet-50 text-violet-800 ring-violet-100";
+  return "border-violet-200 bg-violet-50 text-violet-700";
 }
 
 function safeText(value: string | null | undefined) {
@@ -267,17 +267,17 @@ export default function PaymentsPage() {
   }, [fetchPayments]);
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-950 md:px-6 md:py-10">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
         <AdminHeader />
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Yönetim Merkezi
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Ödeme Yönetimi
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
@@ -290,7 +290,7 @@ export default function PaymentsPage() {
               type="button"
               onClick={() => void fetchPayments()}
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Yükleniyor..." : "Yenile"}
             </button>
@@ -311,10 +311,10 @@ export default function PaymentsPage() {
               key={item.value}
               type="button"
               onClick={() => setFilter(item.value)}
-              className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 ${
+              className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                 filter === item.value
-                  ? "bg-slate-950 text-white ring-slate-950"
-                  : "bg-white text-slate-700 ring-slate-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm"
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
               {item.label}
@@ -322,12 +322,12 @@ export default function PaymentsPage() {
           ))}
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Danışan, uzman, e-posta, ödeme numarası, ödeme linki veya iyzico numarası ara..."
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+            className="h-12 w-full rounded-lg border border-slate-200/80 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
           />
         </section>
 
@@ -341,10 +341,10 @@ export default function PaymentsPage() {
             description="Bu filtre veya arama için ödeme kaydı bulunmuyor."
           />
         ) : (
-          <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-5 py-4">Durum</th>
                     <th className="px-5 py-4">Uzman Ödemesi</th>
@@ -360,7 +360,7 @@ export default function PaymentsPage() {
 
                 <tbody className="divide-y divide-slate-100">
                   {filteredPayments.map((payment) => (
-                    <tr key={payment.id} className="align-top transition hover:bg-slate-50">
+                    <tr key={payment.id} className="align-top transition-all duration-200 ease-out hover:bg-slate-50">
                       <td className="px-5 py-4">
                         <StatusPill className={getStatusStyle(payment.status)}>
                           {getStatusLabel(payment.status)}
@@ -383,7 +383,7 @@ export default function PaymentsPage() {
                             type="button"
                             disabled={payoutLoadingId === payment.id}
                             onClick={() => markPayoutPaid(payment.id)}
-                            className="mt-3 rounded-2xl bg-violet-700 px-3 py-2 text-xs font-black text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-3 rounded-lg bg-violet-700 px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {payoutLoadingId === payment.id ? "İşleniyor..." : "Uzmana Ödendi"}
                           </button>
@@ -391,7 +391,7 @@ export default function PaymentsPage() {
                       </td>
 
                       <td className="px-5 py-4">
-                        <p className="font-black text-slate-950">
+                        <p className="font-semibold text-slate-900">
                           {safeText(payment.client_applications?.name)}
                         </p>
                         <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -403,7 +403,7 @@ export default function PaymentsPage() {
                       </td>
 
                       <td className="px-5 py-4">
-                        <p className="font-black text-slate-950">
+                        <p className="font-semibold text-slate-900">
                           {safeText(payment.experts?.name)}
                         </p>
                         <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -411,15 +411,15 @@ export default function PaymentsPage() {
                         </p>
                       </td>
 
-                      <td className="px-5 py-4 font-black text-slate-950">
+                      <td className="px-5 py-4 font-semibold text-slate-900">
                         {formatMoney(payment.amount)}
                       </td>
 
-                      <td className="px-5 py-4 font-black text-emerald-700">
+                      <td className="px-5 py-4 font-semibold text-emerald-700">
                         {formatMoney(payment.commission_amount)}
                       </td>
 
-                      <td className="px-5 py-4 font-black text-violet-700">
+                      <td className="px-5 py-4 font-semibold text-violet-700">
                         {formatMoney(payment.expert_amount)}
                       </td>
 
@@ -428,12 +428,12 @@ export default function PaymentsPage() {
                       </td>
 
                       <td className="px-5 py-4">
-                        <p className="text-xs font-black text-slate-800">Ödeme ID</p>
+                        <p className="text-xs font-semibold text-slate-700">Ödeme ID</p>
                         <p className="max-w-[220px] break-all text-xs text-slate-500">
                           {payment.id}
                         </p>
 
-                        <p className="mt-2 text-xs font-black text-slate-800">iyzico</p>
+                        <p className="mt-2 text-xs font-semibold text-slate-700">iyzico</p>
                         <p className="max-w-[220px] break-all text-xs text-slate-500">
                           {safeText(payment.iyzico_payment_id)}
                         </p>
@@ -443,7 +443,7 @@ export default function PaymentsPage() {
                             href={payment.payment_page_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-3 inline-flex rounded-2xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 transition hover:bg-indigo-100"
+                            className="mt-3 inline-flex rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 transition-all duration-200 ease-out hover:bg-indigo-100"
                           >
                             Ödeme Linkini Aç
                           </a>
@@ -457,7 +457,7 @@ export default function PaymentsPage() {
           </section>
         )}
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 text-xs font-semibold text-slate-500 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-4 text-xs font-semibold text-slate-500 shadow-sm">
           Toplam kayıt: {summary.totalCount} • Başarılı: {summary.paidCount} • Bekleyen:{" "}
           {summary.pendingCount} • Başarısız: {summary.failedCount} • Uzmana ödenecek:{" "}
           {formatMoney(summary.unpaidPayoutAmount)} • Uzmana ödenen:{" "}
@@ -478,9 +478,9 @@ function SummaryCard({
   description: string;
 }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 break-words text-2xl font-black tracking-tight text-slate-950">
+      <p className="mt-3 break-words text-2xl font-bold tracking-tight text-slate-900">
         {value}
       </p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
@@ -496,7 +496,7 @@ function StatusPill({
   className: string;
 }) {
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>
+    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${className}`}>
       {children}
     </span>
   );
@@ -513,12 +513,12 @@ function StateBox({
 }) {
   const className =
     tone === "error"
-      ? "border-rose-100 bg-rose-50 text-rose-700"
-      : "border-slate-200 bg-white text-slate-600";
+      ? "border-rose-200 bg-rose-50 text-rose-700"
+      : "border-slate-200/80 bg-white text-slate-600";
 
   return (
-    <section className={`rounded-[2rem] border p-8 text-center shadow-sm ${className}`}>
-      <p className="text-sm font-black">{title}</p>
+    <section className={`rounded-xl border p-8 text-center shadow-sm ${className}`}>
+      <p className="text-sm font-semibold">{title}</p>
       <p className="mt-2 text-sm font-semibold">{description}</p>
     </section>
   );

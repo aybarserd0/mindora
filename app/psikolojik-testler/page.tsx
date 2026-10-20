@@ -111,7 +111,7 @@ function getResult(score: number, maxScore: number): ResultLevel {
       label: 'Düşük düzey farkındalık sinyali',
       description:
         'Yanıtların bu alanda şu an düşük düzeyde belirti yaşadığını düşündürüyor. Yine de tekrar eden zorlanmalar varsa destek almak faydalı olabilir.',
-      tone: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
+      tone: 'border-emerald-200 bg-emerald-50 text-emerald-800',
     }
   }
 
@@ -120,7 +120,7 @@ function getResult(score: number, maxScore: number): ResultLevel {
       label: 'Orta düzey farkındalık sinyali',
       description:
         'Yanıtların bu alanda zaman zaman zorlanma yaşayabileceğini gösteriyor. Günlük yaşamını etkileyen durumlar için bir uzmanla görüşmek iyi bir başlangıç olabilir.',
-      tone: 'bg-amber-50 text-amber-800 ring-amber-200',
+      tone: 'border-amber-200 bg-amber-50 text-amber-800',
     }
   }
 
@@ -128,7 +128,7 @@ function getResult(score: number, maxScore: number): ResultLevel {
     label: 'Yüksek düzey farkındalık sinyali',
     description:
       'Yanıtların bu alanda belirgin zorlanmalar yaşayabileceğini düşündürüyor. Bu sonuç tanı değildir; ancak bir uzmanla görüşerek ihtiyacını değerlendirmek önemlidir.',
-    tone: 'bg-rose-50 text-rose-800 ring-rose-200',
+    tone: 'border-rose-200 bg-rose-50 text-rose-800',
   }
 }
 
@@ -182,20 +182,20 @@ export default function PsikolojikTestler() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f2eb] text-[#171717]">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
 
       <section className="mx-auto max-w-7xl px-5 pb-14 pt-16 md:pt-20">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Psikolojik Testler
           </p>
 
-          <h1 className="mt-4 text-5xl font-black leading-[1.05] tracking-tight md:text-6xl">
+          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl">
             Kendini daha iyi anlamak için kısa farkındalık testleri.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-500">
             Mindora testleri, destek ihtiyacını daha net fark etmene yardımcı
             olmak için hazırlanır. Sonuçlar tanı koymaz; farkındalık ve doğru
             destek sürecine yönlendirme amacı taşır.
@@ -205,7 +205,7 @@ export default function PsikolojikTestler() {
             {NOTES.map((note) => (
               <span
                 key={note}
-                className="rounded-full bg-white/75 px-4 py-2 text-sm font-bold text-neutral-700 shadow-sm ring-1 ring-black/5"
+                className="rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm"
               >
                 {note}
               </span>
@@ -216,7 +216,7 @@ export default function PsikolojikTestler() {
 
       <section className="mx-auto max-w-7xl px-5 py-10">
         <div className="grid gap-4 md:grid-cols-4">
-          {TESTS.map((test) => {
+          {TESTS.map((test, index) => {
             const isActive = test.key === activeKey
 
             return (
@@ -224,23 +224,24 @@ export default function PsikolojikTestler() {
                 key={test.key}
                 type="button"
                 onClick={() => selectTest(test.key)}
-                className={`rounded-[1.5rem] p-5 text-left shadow-sm ring-1 transition hover:-translate-y-0.5 ${
+                style={{ animationDelay: `${index * 60}ms` }}
+                className={`animate-fade-in-up rounded-xl border p-5 text-left shadow-sm transition-all duration-200 ease-out ${
                   isActive
-                    ? 'bg-black text-white ring-black'
-                    : 'bg-white/75 text-black ring-black/5 hover:bg-white'
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200/80 bg-white text-slate-900 hover:border-slate-300'
                 }`}
               >
                 <p
-                  className={`text-xs font-black uppercase tracking-[0.2em] ${
-                    isActive ? 'text-neutral-300' : 'text-neutral-500'
+                  className={`text-xs font-semibold uppercase tracking-wide ${
+                    isActive ? 'text-slate-400' : 'text-slate-400'
                   }`}
                 >
                   Aktif test
                 </p>
-                <h2 className="mt-3 text-xl font-black">{test.shortTitle}</h2>
+                <h2 className="mt-3 text-lg font-bold">{test.shortTitle}</h2>
                 <p
                   className={`mt-2 text-sm leading-6 ${
-                    isActive ? 'text-neutral-300' : 'text-neutral-600'
+                    isActive ? 'text-slate-300' : 'text-slate-500'
                   }`}
                 >
                   {test.text}
@@ -252,51 +253,51 @@ export default function PsikolojikTestler() {
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[0.75fr_1.25fr]">
-        <aside className="h-fit rounded-[2rem] bg-white/80 p-7 shadow-sm ring-1 ring-black/5 lg:sticky lg:top-24">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
+        <aside className="h-fit rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm lg:sticky lg:top-24">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Seçili test
           </p>
-          <h2 className="mt-3 text-3xl font-black">{activeTest.title}</h2>
-          <p className="mt-4 leading-7 text-neutral-600">{activeTest.audience}</p>
+          <h2 className="mt-3 text-2xl font-bold text-slate-900">{activeTest.title}</h2>
+          <p className="mt-4 leading-7 text-slate-500">{activeTest.audience}</p>
 
-          <div className="mt-6 rounded-3xl bg-[#f7f2eb] p-5">
-            <div className="flex items-center justify-between text-sm font-black">
+          <div className="mt-6 rounded-lg border border-slate-200/80 bg-slate-50 p-5">
+            <div className="flex items-center justify-between text-sm font-semibold text-slate-700">
               <span>İlerleme</span>
               <span>{progress}%</span>
             </div>
-            <div className="mt-3 h-3 overflow-hidden rounded-full bg-white">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
               <div
-                className="h-full rounded-full bg-black transition-all"
+                className="h-full rounded-full bg-slate-900 transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="mt-3 text-sm font-bold text-neutral-600">
+            <p className="mt-3 text-sm font-medium text-slate-500">
               {answeredCount}/{totalQuestions} soru tamamlandı
             </p>
           </div>
 
-          <div className="mt-6 rounded-3xl bg-black p-5 text-white">
-            <p className="font-black">Önemli not</p>
-            <p className="mt-2 text-sm leading-6 text-neutral-300">
+          <div className="mt-6 rounded-lg bg-slate-900 p-5 text-white">
+            <p className="font-semibold">Önemli not</p>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
               Bu test tıbbi/klinik tanı koymaz. Sonuçların seni düşündürüyorsa
               bir uzmanla görüşerek durumunu değerlendirebilirsin.
             </p>
           </div>
         </aside>
 
-        <div className="rounded-[2rem] bg-white/80 p-6 shadow-sm ring-1 ring-black/5 md:p-8">
-          <div className="flex flex-col justify-between gap-4 border-b border-black/10 pb-6 md:flex-row md:items-end">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
+          <div className="flex flex-col justify-between gap-4 border-b border-slate-200/80 pb-6 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Test soruları
               </p>
-              <h2 className="mt-2 text-3xl font-black">{activeTest.title}</h2>
+              <h2 className="mt-2 text-2xl font-bold text-slate-900">{activeTest.title}</h2>
             </div>
 
             <button
               type="button"
               onClick={resetActiveTest}
-              className="rounded-2xl border border-black/10 bg-[#f7f2eb] px-5 py-3 text-sm font-black text-black transition hover:bg-white"
+              className="rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
             >
               Testi sıfırla
             </button>
@@ -304,8 +305,12 @@ export default function PsikolojikTestler() {
 
           <div className="mt-8 space-y-5">
             {activeTest.questions.map((question, index) => (
-              <div key={question.id} className="rounded-3xl bg-[#f7f2eb] p-5">
-                <p className="font-black">
+              <div
+                key={question.id}
+                style={{ animationDelay: `${index * 60}ms` }}
+                className="animate-fade-in-up rounded-lg border border-slate-200/80 bg-slate-50 p-5"
+              >
+                <p className="font-semibold text-slate-900">
                   {index + 1}. {question.text}
                 </p>
 
@@ -318,10 +323,10 @@ export default function PsikolojikTestler() {
                         key={option.value}
                         type="button"
                         onClick={() => setAnswer(question.id, option.value)}
-                        className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
+                        className={`rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                           selected
-                            ? 'bg-black text-white'
-                            : 'bg-white text-neutral-700 ring-1 ring-black/5 hover:bg-neutral-50'
+                            ? 'bg-slate-900 text-white'
+                            : 'border border-slate-200/80 bg-white text-slate-700 hover:border-slate-300'
                         }`}
                       >
                         {option.label}
@@ -338,42 +343,42 @@ export default function PsikolojikTestler() {
               type="button"
               disabled={!isComplete}
               onClick={() => setShowResult(true)}
-              className="rounded-2xl bg-black px-8 py-4 font-black text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
+              className="rounded-lg bg-slate-900 px-8 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
             >
               Sonucumu göster
             </button>
 
             <a
               href="/eslesme"
-              className="rounded-2xl border border-black/10 bg-white px-8 py-4 text-center font-black text-black transition hover:bg-neutral-50"
+              className="rounded-lg border border-slate-200 bg-white px-8 py-4 text-center font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
             >
               Uzmanla değerlendirmek istiyorum
             </a>
           </div>
 
           {!isComplete ? (
-            <p className="mt-4 text-sm font-bold text-neutral-500">
+            <p className="mt-4 text-sm font-medium text-slate-400">
               Sonucu görmek için tüm soruları yanıtla.
             </p>
           ) : null}
 
           {showResult ? (
-            <div className="mt-8 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-black/5">
-              <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">
+            <div className="animate-fade-in-up mt-8 rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Test sonucu
               </p>
 
-              <div className={`mt-4 rounded-3xl p-5 ring-1 ${result.tone}`}>
-                <h3 className="text-2xl font-black">{result.label}</h3>
+              <div className={`mt-4 rounded-lg border p-5 ${result.tone}`}>
+                <h3 className="text-xl font-bold">{result.label}</h3>
                 <p className="mt-3 leading-7">{result.description}</p>
-                <p className="mt-4 text-sm font-black">
+                <p className="mt-4 text-sm font-semibold">
                   Puan: {score}/{maxScore}
                 </p>
               </div>
 
-              <div className="mt-6 rounded-3xl bg-[#f7f2eb] p-5">
-                <h4 className="text-xl font-black">Sonraki adım ne olabilir?</h4>
-                <p className="mt-3 leading-7 text-neutral-600">
+              <div className="mt-6 rounded-lg border border-slate-200/80 bg-slate-50 p-5">
+                <h4 className="text-lg font-bold text-slate-900">Sonraki adım ne olabilir?</h4>
+                <p className="mt-3 leading-7 text-slate-500">
                   Sonucunu tek başına yorumlamak yerine, destek ihtiyacını bir
                   uzmanla değerlendirmek daha sağlıklı olur. Mindora ön eşleşme
                   formu ücretsizdir ve seans satın alma zorunluluğu oluşturmaz.
@@ -381,7 +386,7 @@ export default function PsikolojikTestler() {
 
                 <a
                   href="/eslesme"
-                  className="mt-5 inline-block rounded-2xl bg-black px-7 py-3 font-black text-white transition hover:bg-neutral-800"
+                  className="mt-5 inline-block rounded-lg bg-slate-900 px-7 py-3 font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
                 >
                   Ücretsiz ön eşleşme başlat
                 </a>
@@ -392,19 +397,19 @@ export default function PsikolojikTestler() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-16">
-        <div className="grid gap-8 rounded-[2rem] bg-black p-8 text-white md:grid-cols-2 md:p-14">
+        <div className="grid gap-8 rounded-xl bg-slate-900 p-8 text-white md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.3em] text-neutral-400">
+            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Testten sonra ne olacak?
             </p>
 
-            <h2 className="mt-4 text-4xl font-black md:text-5xl">
+            <h2 className="mt-4 text-3xl font-bold md:text-4xl">
               Sonuca göre değil, ihtiyacına göre destek planlanır.
             </h2>
           </div>
 
           <div>
-            <p className="text-lg leading-8 text-neutral-300">
+            <p className="text-lg leading-8 text-slate-300">
               Testler yalnızca farkındalık sağlar. Asıl eşleşme; destek almak
               istediğin konu, uzman tercihin, uygun zamanın ve beklentin
               değerlendirilerek yapılır.
@@ -412,7 +417,7 @@ export default function PsikolojikTestler() {
 
             <a
               href="/eslesme"
-              className="mt-8 inline-block rounded-2xl bg-white px-9 py-4 font-black text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
+              className="mt-8 inline-block rounded-lg bg-white px-9 py-4 font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100"
             >
               Ücretsiz ön eşleşme başlat
             </a>

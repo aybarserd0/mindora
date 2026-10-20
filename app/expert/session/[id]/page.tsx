@@ -552,13 +552,13 @@ export default function ExpertSessionPage() {
     return (
       <SessionShell>
         <CenteredCard align="center">
-          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-zinc-700 border-t-white" />
+          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-slate-200 border-t-slate-900" />
 
-          <h1 className="mb-3 text-2xl font-semibold text-white">
+          <h1 className="mb-3 text-2xl font-semibold text-slate-900">
             Uzman görüşmesi hazırlanıyor...
           </h1>
 
-          <p className="text-sm leading-6 text-zinc-400">
+          <p className="text-sm leading-6 text-slate-500">
             Güvenli bağlantı kuruluyor. Kamera ve mikrofon kontrol ekranı hazırlanıyor.
           </p>
         </CenteredCard>
@@ -570,19 +570,19 @@ export default function ExpertSessionPage() {
     return (
       <SessionShell>
         <CenteredCard>
-          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-xl">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-xl">
             ⚠️
           </div>
 
-          <h1 className="mb-3 text-2xl font-semibold text-red-300">
+          <h1 className="mb-3 text-2xl font-semibold text-slate-900">
             Görüşme başlatılamadı
           </h1>
 
-          <p className="mb-6 text-sm leading-6 text-zinc-300">{error}</p>
+          <p className="mb-6 text-sm leading-6 text-slate-500">{error}</p>
 
           <button
             onClick={() => router.back()}
-            className="w-full rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
+            className="w-full rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
           >
             Geri Dön
           </button>
@@ -596,12 +596,12 @@ export default function ExpertSessionPage() {
       <SessionShell>
         <CenteredCard align="center">
           <div
-            className={`mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-3xl text-2xl ${
+            className={`mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border text-2xl ${
               exitReason === 'completed'
-                ? 'bg-emerald-500/10'
+                ? 'border-emerald-200 bg-emerald-50'
                 : exitReason === 'connection_lost'
-                  ? 'bg-red-500/10'
-                  : 'bg-white/10'
+                  ? 'border-rose-200 bg-rose-50'
+                  : 'border-slate-200 bg-slate-100'
             }`}
           >
             {exitReason === 'completed'
@@ -611,11 +611,11 @@ export default function ExpertSessionPage() {
                 : '↩'}
           </div>
 
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
             Mindora Expert Session
           </p>
 
-          <h1 className="mb-3 text-2xl font-semibold text-white">
+          <h1 className="mb-3 text-2xl font-semibold text-slate-900">
             {exitReason === 'completed'
               ? 'Seans tamamlandı'
               : exitReason === 'connection_lost'
@@ -623,7 +623,7 @@ export default function ExpertSessionPage() {
                 : 'Görüşmeden ayrıldın'}
           </h1>
 
-          <p className="mb-5 text-sm leading-6 text-zinc-400">
+          <p className="mb-5 text-sm leading-6 text-slate-500">
             {exitReason === 'completed'
               ? 'Seans başarıyla tamamlandı olarak işaretlendi. Danışanla mesajlaşmaya chat ekranından devam edebilirsin.'
               : exitReason === 'connection_lost'
@@ -631,14 +631,14 @@ export default function ExpertSessionPage() {
                 : 'Görüşme ekranından çıktın. Bu işlem seansı tamamlandı olarak işaretlemedi.'}
           </p>
 
-          <div className="mb-6 rounded-2xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-zinc-300">
+          <div className="mb-6 rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm text-slate-600">
             Görüşmede kalınan süre: {formatElapsedTime(elapsedSeconds)}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               onClick={() => router.back()}
-              className="rounded-2xl bg-white px-5 py-4 text-sm font-bold text-black transition hover:bg-zinc-200"
+              className="rounded-lg bg-slate-900 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
             >
               Chat’e Dön
             </button>
@@ -651,7 +651,7 @@ export default function ExpertSessionPage() {
                   handleManualRetry()
                 }}
                 disabled={!isBrowserOnline}
-                className="rounded-2xl border border-white/10 px-5 py-4 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Tekrar Bağlan
               </button>
@@ -666,8 +666,8 @@ export default function ExpertSessionPage() {
     return (
       <SessionShell>
         <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl">
-            <div className="relative aspect-video bg-zinc-900">
+          <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="relative aspect-video bg-black">
               {permissionState === 'granted' && deviceState.videoEnabled ? (
                 <video
                   ref={previewVideoRef}
@@ -678,7 +678,7 @@ export default function ExpertSessionPage() {
                 />
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center px-6 text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 text-3xl">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-3xl">
                     👨‍⚕️
                   </div>
 
@@ -686,7 +686,7 @@ export default function ExpertSessionPage() {
                     Kamera önizlemesi kapalı
                   </h2>
 
-                  <p className="max-w-md text-sm leading-6 text-zinc-400">
+                  <p className="max-w-md text-sm leading-6 text-slate-400">
                     Kamera izni verilmemiş olabilir veya kameranı kapalı başlatmayı seçtin.
                   </p>
                 </div>
@@ -697,17 +697,17 @@ export default function ExpertSessionPage() {
               </div>
             </div>
 
-            <div className="grid gap-3 border-t border-white/10 p-4 sm:grid-cols-2">
+            <div className="grid gap-3 border-t border-slate-200/80 p-4 sm:grid-cols-2">
               <button
                 onClick={() =>
                   handleDeviceChange({
                     audioEnabled: !deviceState.audioEnabled,
                   })
                 }
-                className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
+                className={`rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                   deviceState.audioEnabled
-                    ? 'bg-white text-black hover:bg-zinc-200'
-                    : 'bg-red-500 text-white hover:bg-red-600'
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-rose-600 text-white hover:bg-rose-700'
                 }`}
               >
                 {deviceState.audioEnabled ? '🎤 Mikrofon Açık' : '🔇 Mikrofon Kapalı'}
@@ -719,10 +719,10 @@ export default function ExpertSessionPage() {
                     videoEnabled: !deviceState.videoEnabled,
                   })
                 }
-                className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
+                className={`rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                   deviceState.videoEnabled
-                    ? 'bg-white text-black hover:bg-zinc-200'
-                    : 'bg-red-500 text-white hover:bg-red-600'
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-rose-600 text-white hover:bg-rose-700'
                 }`}
               >
                 {deviceState.videoEnabled ? '📷 Kamera Açık' : '🚫 Kamera Kapalı'}
@@ -730,17 +730,17 @@ export default function ExpertSessionPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-zinc-950/90 p-6 shadow-2xl">
+          <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div className="mb-6">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">
+              <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Mindora Expert Session
               </p>
 
-              <h1 className="text-2xl font-semibold text-white">
+              <h1 className="text-2xl font-semibold text-slate-900">
                 Danışan görüşmesine katıl
               </h1>
 
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
+              <p className="mt-3 text-sm leading-6 text-slate-500">
                 Görüşmeye başlamadan önce kamera ve mikrofon ayarlarını kontrol et.
               </p>
             </div>
@@ -793,13 +793,13 @@ export default function ExpertSessionPage() {
               />
 
               {permissionState === 'denied' && (
-                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-sm leading-6 text-yellow-100">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-700">
                   Kamera veya mikrofon izni verilmedi. Tarayıcı izinlerinden Mindora için kamera/mikrofon erişimini açabilir ya da kamerayı/mikrofonu kapalı başlatabilirsin.
                 </div>
               )}
 
               {!isBrowserOnline && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm leading-6 text-rose-700">
                   İnternet bağlantısı yok. Görüşmeye başlamadan önce bağlantını kontrol et.
                 </div>
               )}
@@ -807,14 +807,14 @@ export default function ExpertSessionPage() {
               <button
                 onClick={handleJoinSession}
                 disabled={!token || !serverUrl || joining || !isBrowserOnline}
-                className="mt-2 w-full rounded-2xl bg-white px-5 py-4 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-2 w-full rounded-lg bg-slate-900 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {joining ? 'Bağlanılıyor...' : 'Görüşmeye Katıl'}
               </button>
 
               <button
                 onClick={() => router.back()}
-                className="w-full rounded-2xl border border-white/10 px-5 py-4 text-sm font-semibold text-white transition hover:bg-white/10"
+                className="w-full rounded-lg border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Chat’e Geri Dön
               </button>
@@ -839,13 +839,13 @@ export default function ExpertSessionPage() {
       />
 
       {!isBrowserOnline && (
-        <div className="absolute left-4 right-4 top-[8.75rem] z-20 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100 shadow-xl backdrop-blur sm:left-6 sm:right-auto sm:top-28">
+        <div className="absolute left-4 right-4 top-[8.75rem] z-20 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm sm:left-6 sm:right-auto sm:top-28">
           İnternet bağlantısı yok
         </div>
       )}
 
       {endSessionError && (
-        <div className="absolute left-4 right-4 top-[12.5rem] z-20 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100 shadow-xl backdrop-blur sm:left-6 sm:right-auto sm:top-44 sm:max-w-md">
+        <div className="absolute left-4 right-4 top-[12.5rem] z-20 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm sm:left-6 sm:right-auto sm:top-44 sm:max-w-md">
           {endSessionError}
         </div>
       )}
@@ -1027,16 +1027,16 @@ function InCallControls({
 
   return (
     <div className="pointer-events-none absolute bottom-3 left-0 right-0 z-30 flex justify-center px-2 sm:bottom-6 sm:px-4">
-      <div className="pointer-events-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-2 rounded-[1.75rem] border border-white/10 bg-black/75 p-2 shadow-2xl backdrop-blur sm:w-auto sm:gap-3 sm:rounded-3xl sm:p-3">
+      <div className="pointer-events-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-2 rounded-full border border-white/10 bg-black/75 p-2 shadow-sm backdrop-blur sm:w-auto sm:gap-3 sm:p-3">
         <button
           type="button"
           onClick={toggleMicrophone}
           disabled={audioBusy || disabled}
           aria-label={audioEnabled ? 'Mikrofonu kapat' : 'Mikrofonu aç'}
-          className={`flex h-14 min-w-14 items-center justify-center rounded-2xl px-3 text-lg font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
+          className={`flex h-14 min-w-14 items-center justify-center rounded-full px-3 text-lg font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
             audioEnabled
-              ? 'bg-white text-black hover:bg-zinc-200'
-              : 'bg-red-500 text-white hover:bg-red-600'
+              ? 'bg-white text-black hover:bg-slate-200'
+              : 'bg-rose-600 text-white hover:bg-rose-700'
           }`}
         >
           <span className="sm:hidden">{audioEnabled ? '🎤' : '🔇'}</span>
@@ -1054,10 +1054,10 @@ function InCallControls({
           onClick={toggleCamera}
           disabled={videoBusy || disabled}
           aria-label={videoEnabled ? 'Kamerayı kapat' : 'Kamerayı aç'}
-          className={`flex h-14 min-w-14 items-center justify-center rounded-2xl px-3 text-lg font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
+          className={`flex h-14 min-w-14 items-center justify-center rounded-full px-3 text-lg font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
             videoEnabled
-              ? 'bg-white text-black hover:bg-zinc-200'
-              : 'bg-red-500 text-white hover:bg-red-600'
+              ? 'bg-white text-black hover:bg-slate-200'
+              : 'bg-rose-600 text-white hover:bg-rose-700'
           }`}
         >
           <span className="sm:hidden">{videoEnabled ? '📷' : '🚫'}</span>
@@ -1075,7 +1075,7 @@ function InCallControls({
           onClick={toggleScreenShare}
           disabled={screenShareBusy || disabled}
           aria-label={screenShareEnabled ? 'Ekran paylaşımını kapat' : 'Ekran paylaş'}
-          className={`flex h-14 min-w-14 items-center justify-center rounded-2xl px-3 text-lg font-black transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
+          className={`flex h-14 min-w-14 items-center justify-center rounded-full px-3 text-lg font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3 sm:text-sm ${
             screenShareEnabled
               ? 'bg-emerald-500 text-black hover:bg-emerald-400'
               : 'border border-white/10 bg-white/5 text-white hover:bg-white/10'
@@ -1096,7 +1096,7 @@ function InCallControls({
           onClick={onToggleFitMode}
           disabled={disabled}
           aria-label={videoFitMode === 'fit' ? 'Videoyu doldur' : 'Videoyu sığdır'}
-          className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3 text-lg font-black text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[112px] sm:px-4 sm:py-3 sm:text-sm"
+          className="flex h-14 min-w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 px-3 text-lg font-semibold text-white transition-all duration-200 ease-out hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[112px] sm:px-4 sm:py-3 sm:text-sm"
         >
           <span className="sm:hidden">{videoFitMode === 'fit' ? '↔️' : '⛶'}</span>
           <span className="hidden sm:inline">
@@ -1109,7 +1109,7 @@ function InCallControls({
           onClick={onToggleFullscreen}
           disabled={disabled}
           aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
-          className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3 text-lg font-black text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[112px] sm:px-4 sm:py-3 sm:text-sm"
+          className="flex h-14 min-w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 px-3 text-lg font-semibold text-white transition-all duration-200 ease-out hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[112px] sm:px-4 sm:py-3 sm:text-sm"
         >
           <span className="sm:hidden">{isFullscreen ? '↙️' : '⛶'}</span>
           <span className="hidden sm:inline">{isFullscreen ? 'Çık' : 'Tam Ekran'}</span>
@@ -1119,7 +1119,7 @@ function InCallControls({
           type="button"
           onClick={onLeave}
           disabled={endingSession}
-          className="flex h-14 min-w-16 items-center justify-center rounded-2xl border border-white/10 px-3 text-sm font-black text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[96px] sm:px-4 sm:py-3"
+          className="flex h-14 min-w-16 items-center justify-center rounded-full border border-white/10 px-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[96px] sm:px-4 sm:py-3"
         >
           Ayrıl
         </button>
@@ -1128,7 +1128,7 @@ function InCallControls({
           type="button"
           onClick={onEndSession}
           disabled={endingSession}
-          className="flex h-14 min-w-20 items-center justify-center rounded-2xl bg-red-500 px-3 text-sm font-black text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3"
+          className="flex h-14 min-w-20 items-center justify-center rounded-full bg-rose-600 px-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:min-w-[132px] sm:px-4 sm:py-3"
         >
           <span className="sm:hidden">{endingSession ? '...' : 'Bitir'}</span>
           <span className="hidden sm:inline">
@@ -1142,8 +1142,7 @@ function InCallControls({
 
 function SessionShell({ children }: { children: ReactNode }) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4 py-8 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_35%)]" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-8 text-slate-900">
       <div className="relative z-10 w-full">{children}</div>
     </main>
   )
@@ -1158,7 +1157,7 @@ function CenteredCard({
 }) {
   return (
     <div
-      className={`mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-zinc-950/90 p-8 shadow-2xl ${
+      className={`mx-auto w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm ${
         align === 'center' ? 'text-center' : ''
       }`}
     >
@@ -1177,15 +1176,15 @@ function StatusCard({
   ok: boolean
 }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-zinc-900 px-4 py-3">
+    <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3">
       <div>
-        <p className="text-xs text-zinc-500">{title}</p>
-        <p className="text-sm font-semibold text-white">{value}</p>
+        <p className="text-xs text-slate-400">{title}</p>
+        <p className="text-sm font-semibold text-slate-900">{value}</p>
       </div>
 
       <div
         className={`h-3 w-3 rounded-full ${
-          ok ? 'bg-emerald-400' : 'bg-yellow-400'
+          ok ? 'bg-emerald-400' : 'bg-amber-400'
         }`}
       />
     </div>
@@ -1209,7 +1208,7 @@ function DeviceSelect({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-xs font-medium text-zinc-400">
+      <label className="mb-2 block text-xs font-medium text-slate-400">
         {label}
       </label>
 
@@ -1217,7 +1216,7 @@ function DeviceSelect({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={!devices.length}
-        className="w-full rounded-2xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-white outline-none transition focus:border-white/30 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 ease-out focus:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {devices.length ? (
           devices.map((device, index) => (
@@ -1254,9 +1253,9 @@ function SessionTopBar({
 }) {
   return (
     <div className="absolute left-0 right-0 top-0 z-20 px-3 pt-3 sm:px-4 sm:pt-4">
-      <div className="mx-auto flex max-w-7xl flex-col gap-2 rounded-3xl border border-white/10 bg-black/70 p-3 text-white shadow-2xl backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-4">
+      <div className="mx-auto flex max-w-7xl flex-col gap-2 rounded-xl border border-white/10 bg-black/70 p-3 text-white shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="min-w-0">
-          <p className="truncate text-xs text-zinc-400">
+          <p className="truncate text-xs text-slate-400">
             Mindora Expert Session
           </p>
           <p className="truncate text-sm font-semibold">{connectionStatus}</p>
@@ -1286,7 +1285,7 @@ function SessionTopBar({
           <button
             onClick={onLeave}
             disabled={endingSession}
-            className="ml-auto rounded-2xl border border-white/10 bg-black/70 px-4 py-3 text-xs font-bold text-white shadow-xl backdrop-blur transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-2 sm:px-5 sm:text-sm"
+            className="ml-auto rounded-full border border-white/10 bg-black/70 px-4 py-3 text-xs font-semibold text-white shadow-sm backdrop-blur transition-all duration-200 ease-out hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-2 sm:px-5 sm:text-sm"
           >
             Ayrıl
           </button>
@@ -1294,7 +1293,7 @@ function SessionTopBar({
           <button
             onClick={onEndSession}
             disabled={endingSession}
-            className="rounded-2xl bg-red-500 px-4 py-3 text-xs font-bold text-white shadow-xl transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:text-sm"
+            className="rounded-full bg-rose-600 px-4 py-3 text-xs font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:text-sm"
           >
             {endingSession ? 'Bitiriliyor...' : 'Seansı Bitir'}
           </button>
@@ -1314,15 +1313,15 @@ function HeaderPill({
   ok: boolean
 }) {
   return (
-    <div className="min-w-[92px] rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-zinc-500">
+    <div className="min-w-[92px] rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+      <p className="text-[10px] uppercase tracking-wider text-slate-400">
         {label}
       </p>
 
       <div className="flex items-center gap-2">
         <span
           className={`h-2 w-2 shrink-0 rounded-full ${
-            ok ? 'bg-emerald-400' : 'bg-yellow-400'
+            ok ? 'bg-emerald-400' : 'bg-amber-400'
           }`}
         />
         <p className="truncate text-xs font-semibold text-white">{value}</p>
@@ -1342,8 +1341,8 @@ function WaitingRoomOverlay({
 
   return (
     <div className="pointer-events-none absolute inset-x-4 bottom-6 z-20 flex justify-center sm:bottom-8">
-      <div className="pointer-events-auto w-full max-w-md rounded-3xl border border-white/10 bg-black/75 p-5 text-center text-white shadow-2xl backdrop-blur">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl">
+      <div className="pointer-events-auto w-full max-w-md rounded-xl border border-white/10 bg-black/75 p-5 text-center text-white shadow-sm backdrop-blur">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-2xl">
           {isRemoteLeft ? '⚠️' : '⏳'}
         </div>
 
@@ -1351,13 +1350,13 @@ function WaitingRoomOverlay({
           {isRemoteLeft ? 'Danışanın bağlantısı koptu' : 'Danışan bekleniyor...'}
         </h2>
 
-        <p className="text-sm leading-6 text-zinc-400">
+        <p className="text-sm leading-6 text-slate-400">
           {isRemoteLeft
             ? 'Danışan görüşmeden ayrıldı veya bağlantısı kesildi. Kısa süre içinde tekrar bağlanabilir.'
             : 'Görüşme odasındasın. Danışan bağlandığında görüşme otomatik olarak aktif görünecek.'}
         </p>
 
-        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-zinc-300">
+        <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
           Bekleme / görüşme süresi: {formatElapsedTime(elapsedSeconds)}
         </div>
       </div>
@@ -1467,7 +1466,7 @@ function CustomVideoGrid({ videoFitMode }: { videoFitMode: VideoFitMode }) {
 
   return (
     <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,#18181b_0%,#050505_48%,#000_100%)] px-2 pb-28 pt-28 sm:px-5 sm:pb-32 sm:pt-28">
-      <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-black shadow-2xl sm:rounded-[2rem]">
+      <div className="relative h-full w-full overflow-hidden rounded-xl border border-white/10 bg-black shadow-sm">
         {mainTrackRef ? (
           <FocusVideoTile
             trackRef={mainTrackRef}
@@ -1494,11 +1493,11 @@ function CustomVideoGrid({ videoFitMode }: { videoFitMode: VideoFitMode }) {
         )}
 
         {showRemoteMiniStrip && (
-          <div className="absolute bottom-3 left-3 z-20 flex max-w-[calc(100%-1.5rem)] gap-2 overflow-x-auto rounded-3xl border border-white/10 bg-black/55 p-2 shadow-2xl backdrop-blur sm:bottom-5 sm:left-5">
+          <div className="absolute bottom-3 left-3 z-20 flex max-w-[calc(100%-1.5rem)] gap-2 overflow-x-auto rounded-xl border border-white/10 bg-black/55 p-2 shadow-sm backdrop-blur sm:bottom-5 sm:left-5">
             {playableRemoteTrackRefs.slice(0, 3).map((trackRef) => (
               <div
                 key={`${trackRef.participant.identity}-${trackRef.source}`}
-                className="h-24 w-36 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 sm:h-28 sm:w-44"
+                className="h-24 w-36 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-zinc-950 sm:h-28 sm:w-44"
               >
                 <FocusVideoTile
                   trackRef={trackRef}
@@ -1513,7 +1512,7 @@ function CustomVideoGrid({ videoFitMode }: { videoFitMode: VideoFitMode }) {
         )}
 
         {showLocalPreview && localTrackRef && (
-          <div className="absolute bottom-3 right-3 z-20 h-28 w-20 overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 shadow-2xl sm:bottom-5 sm:right-5 sm:h-40 sm:w-56">
+          <div className="absolute bottom-3 right-3 z-20 h-28 w-20 overflow-hidden rounded-xl border border-white/20 bg-zinc-950 shadow-sm sm:bottom-5 sm:right-5 sm:h-40 sm:w-56">
             <FocusVideoTile
               trackRef={localTrackRef}
               label="Siz"
@@ -1528,18 +1527,18 @@ function CustomVideoGrid({ videoFitMode }: { videoFitMode: VideoFitMode }) {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />
 
         <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2 sm:left-4 sm:top-4">
-          <div className="rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-bold text-white shadow-xl backdrop-blur sm:px-4 sm:text-xs">
+          <div className="rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-bold text-white shadow-sm backdrop-blur sm:px-4 sm:text-xs">
             {hasRemoteParticipant ? 'Canlı görüşme aktif' : 'Danışan bekleniyor'}
           </div>
 
           {activeSpeakerId && (
-            <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-100 shadow-xl backdrop-blur sm:px-4 sm:text-xs">
+            <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-100 shadow-sm backdrop-blur sm:px-4 sm:text-xs">
               Konuşan: {activeSpeakerId}
             </div>
           )}
 
           {isScreenShareMain && (
-            <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-[11px] font-bold text-sky-100 shadow-xl backdrop-blur sm:px-4 sm:text-xs">
+            <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-[11px] font-bold text-sky-100 shadow-sm backdrop-blur sm:px-4 sm:text-xs">
               Ekran paylaşımı
             </div>
           )}
@@ -1614,24 +1613,24 @@ function FocusVideoTile({
       )}
 
       <div
-        className={`absolute left-2 top-2 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/65 text-white shadow-xl backdrop-blur sm:left-3 sm:top-3 ${
-          compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[11px] font-bold sm:px-4 sm:text-xs'
+        className={`absolute left-2 top-2 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/65 text-white shadow-sm backdrop-blur sm:left-3 sm:top-3 ${
+          compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[11px] font-semibold sm:px-4 sm:text-xs'
         }`}
       >
         <span
           className={`h-2 w-2 rounded-full ${
-            isActiveSpeaker ? 'bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.95)]' : 'bg-emerald-400'
+            isActiveSpeaker ? 'bg-emerald-300' : 'bg-emerald-400'
           }`}
         />
         <span className="max-w-[180px] truncate">{label}</span>
       </div>
 
       <div
-        className={`absolute right-2 top-2 z-20 rounded-full border border-white/10 bg-black/65 text-white shadow-xl backdrop-blur sm:right-3 sm:top-3 ${
+        className={`absolute right-2 top-2 z-20 rounded-full border border-white/10 bg-black/65 text-white shadow-sm backdrop-blur sm:right-3 sm:top-3 ${
           compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[10px]'
         }`}
       >
-        <span className="font-bold uppercase tracking-wide text-zinc-300">
+        <span className="font-semibold uppercase tracking-wide text-slate-300">
           {isScreenShare
             ? 'Ekran paylaşımı'
             : playableTrackRef
@@ -1662,19 +1661,19 @@ function VideoAvatarFallback({
   const initial = name.trim().charAt(0).toUpperCase() || 'M'
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_center,#27272a_0%,#09090b_58%,#000_100%)] px-6 text-center">
+    <div className="flex h-full w-full flex-col items-center justify-center bg-black px-6 text-center">
       <div
-        className={`mb-4 flex items-center justify-center rounded-full border border-white/10 bg-white/10 font-black text-white shadow-2xl ${
+        className={`mb-4 flex items-center justify-center rounded-full border border-white/10 bg-white/10 font-bold text-white shadow-sm ${
           large ? 'h-24 w-24 text-4xl sm:h-32 sm:w-32 sm:text-5xl' : 'h-14 w-14 text-xl sm:h-16 sm:w-16 sm:text-2xl'
         }`}
       >
         {initial}
       </div>
 
-      <p className={`${large ? 'text-xl sm:text-2xl' : 'text-sm'} font-black text-white`}>
+      <p className={`${large ? 'text-xl sm:text-2xl' : 'text-sm'} font-bold text-white`}>
         {name}
       </p>
-      <p className="mt-1 text-xs font-semibold text-zinc-400">{label}</p>
+      <p className="mt-1 text-xs font-semibold text-slate-400">{label}</p>
     </div>
   )
 }
@@ -1723,20 +1722,20 @@ function ConnectionRecoveryOverlay({
 
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-950 p-7 text-center shadow-2xl">
+      <div className="w-full max-w-md rounded-xl border border-slate-200/80 bg-white p-7 text-center shadow-sm">
         {!isLost ? (
-          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-zinc-700 border-t-white" />
+          <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-2 border-slate-200 border-t-slate-900" />
         ) : (
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-3xl bg-red-500/10 text-2xl">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-2xl">
             ⚠️
           </div>
         )}
 
-        <h2 className="mb-3 text-2xl font-semibold text-white">
+        <h2 className="mb-3 text-2xl font-semibold text-slate-900">
           {isLost ? 'Bağlantı koptu' : 'Yeniden bağlanılıyor...'}
         </h2>
 
-        <p className="mb-5 text-sm leading-6 text-zinc-400">
+        <p className="mb-5 text-sm leading-6 text-slate-500">
           {isLost
             ? 'Görüşmeye otomatik olarak tekrar bağlanılamadı. Bağlantını kontrol edip yeniden deneyebilirsin.'
             : isOnline
@@ -1744,7 +1743,7 @@ function ConnectionRecoveryOverlay({
               : 'İnternet bağlantısı yok. Bağlantı geri geldiğinde yeniden bağlanmayı deneyeceğiz.'}
         </p>
 
-        <div className="mb-6 rounded-2xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-zinc-300">
+        <div className="mb-6 rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           Deneme: {Math.min(retryCount + 1, maxRetryCount)} / {maxRetryCount}
         </div>
 
@@ -1752,14 +1751,14 @@ function ConnectionRecoveryOverlay({
           <button
             onClick={onRetry}
             disabled={!isOnline}
-            className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Tekrar Dene
           </button>
 
           <button
             onClick={isLost ? onExit : onBackToChat}
-            className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            className="rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
           >
             Chat’e Dön
           </button>

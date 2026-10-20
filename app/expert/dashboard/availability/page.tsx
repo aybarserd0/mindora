@@ -369,16 +369,16 @@ export default function ExpertAvailabilityPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Müsaitlik Takvimi
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
                 Haftalık uygun gün ve saatlerinizi tanımlayın. Danışanlar randevu
                 oluştururken bu saat aralıklarını görecek.
               </p>
@@ -389,19 +389,19 @@ export default function ExpertAvailabilityPage() {
                 type="button"
                 onClick={() => void fetchAvailability()}
                 disabled={loading}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href="/expert/dashboard"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Dashboard
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
               >
                 Görüşmeleri Gör
               </Link>
@@ -420,9 +420,9 @@ export default function ExpertAvailabilityPage() {
         </section>
 
         <div className="grid gap-6 xl:grid-cols-[1.25fr_1fr]">
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div className="mb-5">
-              <h2 className="text-xl font-black text-slate-950">Müsaitlik Ekle</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Müsaitlik Ekle</h2>
               <p className="mt-1 text-sm leading-6 text-slate-500">
                 Aynı gün içinde çakışan saat aralıkları sistem tarafından engellenir.
               </p>
@@ -430,13 +430,13 @@ export default function ExpertAvailabilityPage() {
 
             <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm font-black text-slate-700">Gün</span>
+                <span className="text-sm font-semibold text-slate-700">Gün</span>
                 <select
                   value={form.dayOfWeek}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, dayOfWeek: Number(event.target.value) }))
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                 >
                   {weekDays.map((day) => (
                     <option key={day.id} value={day.id}>
@@ -447,7 +447,7 @@ export default function ExpertAvailabilityPage() {
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-black text-slate-700">Durum</span>
+                <span className="text-sm font-semibold text-slate-700">Durum</span>
                 <select
                   value={form.isActive ? 'active' : 'passive'}
                   onChange={(event) =>
@@ -456,7 +456,7 @@ export default function ExpertAvailabilityPage() {
                       isActive: event.target.value === 'active',
                     }))
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                 >
                   <option value="active">Yayında</option>
                   <option value="passive">Kapalı</option>
@@ -464,31 +464,31 @@ export default function ExpertAvailabilityPage() {
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-black text-slate-700">Başlangıç Saati</span>
+                <span className="text-sm font-semibold text-slate-700">Başlangıç Saati</span>
                 <input
                   type="time"
                   value={form.startTime}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, startTime: event.target.value }))
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                 />
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-black text-slate-700">Bitiş Saati</span>
+                <span className="text-sm font-semibold text-slate-700">Bitiş Saati</span>
                 <input
                   type="time"
                   value={form.endTime}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, endTime: event.target.value }))
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                 />
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-black text-slate-700">Seans Süresi</span>
+                <span className="text-sm font-semibold text-slate-700">Seans Süresi</span>
                 <select
                   value={form.slotDurationMinutes}
                   onChange={(event) =>
@@ -497,7 +497,7 @@ export default function ExpertAvailabilityPage() {
                       slotDurationMinutes: Number(event.target.value),
                     }))
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                 >
                   <option value={30}>30 dk</option>
                   <option value={45}>45 dk</option>
@@ -508,13 +508,13 @@ export default function ExpertAvailabilityPage() {
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-black text-slate-700">Ara Süresi</span>
+                <span className="text-sm font-semibold text-slate-700">Ara Süresi</span>
                 <select
                   value={form.bufferMinutes}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, bufferMinutes: Number(event.target.value) }))
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                 >
                   <option value={0}>Ara yok</option>
                   <option value={5}>5 dk</option>
@@ -526,14 +526,14 @@ export default function ExpertAvailabilityPage() {
 
               <input type="hidden" value={form.timezone} readOnly />
 
-              <div className="sm:col-span-2 rounded-3xl border border-indigo-100 bg-indigo-50 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-600">
+              <div className="sm:col-span-2 rounded-xl border border-slate-200/80 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Önizleme
                 </p>
-                <p className="mt-2 text-sm font-black text-indigo-950">
+                <p className="mt-2 text-sm font-semibold text-slate-900">
                   {getDayLabel(form.dayOfWeek)} · {form.startTime || '-'} - {form.endTime || '-'}
                 </p>
-                <p className="mt-1 text-sm leading-6 text-indigo-800">
+                <p className="mt-1 text-sm leading-6 text-slate-500">
                   Bu aralık yaklaşık <strong>{formSlotPreview}</strong> randevu slotu üretir.
                   Saatler {form.timezone} zaman dilimine göre kaydedilir.
                 </p>
@@ -543,7 +543,7 @@ export default function ExpertAvailabilityPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {saving ? 'Kaydediliyor...' : 'Müsaitlik Ekle'}
                 </button>
@@ -551,8 +551,8 @@ export default function ExpertAvailabilityPage() {
             </form>
           </section>
 
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-950">Randevu Akışı</h2>
+          <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-900">Randevu Akışı</h2>
             <p className="mt-1 text-sm leading-6 text-slate-500">
               Yayındaki saat aralıkları ödeme sonrası danışanın göreceği seans seçeneklerini oluşturur.
             </p>
@@ -566,10 +566,10 @@ export default function ExpertAvailabilityPage() {
           </section>
         </div>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Haftalık Müsaitlikler</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Haftalık Müsaitlikler</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Yayındaki ve kapalı saat aralıklarını buradan takip edebilirsiniz.
               </p>
@@ -609,9 +609,9 @@ function SummaryCard({
   description: string
 }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-100 hover:shadow-md">
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
       <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -632,14 +632,14 @@ function AvailabilityTable({
         {rows.map((row) => (
           <article
             key={row.id}
-            className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-100 hover:shadow-md"
+            className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-base font-black text-slate-950">
+                <p className="text-base font-semibold text-slate-900">
                   {getDayLabel(row.day_of_week)}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-slate-600">
+                <p className="mt-1 text-sm font-semibold text-slate-500">
                   {normalizeTime(row.start_time)} - {normalizeTime(row.end_time)}
                 </p>
               </div>
@@ -656,7 +656,7 @@ function AvailabilityTable({
               type="button"
               onClick={() => onDelete(row)}
               disabled={deletingId === row.id}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700 transition-all duration-200 ease-out hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {deletingId === row.id ? 'Siliniyor...' : 'Müsaitliği Sil'}
             </button>
@@ -664,24 +664,24 @@ function AvailabilityTable({
         ))}
       </div>
 
-      <div className="hidden overflow-hidden rounded-3xl border border-slate-200 lg:block">
+      <div className="hidden overflow-hidden rounded-xl border border-slate-200/80 lg:block">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
               <tr>
-                <th className="px-5 py-4 font-black">Gün</th>
-                <th className="px-5 py-4 font-black">Saat Aralığı</th>
-                <th className="px-5 py-4 font-black">Seans</th>
-                <th className="px-5 py-4 font-black">Ara</th>
-                <th className="px-5 py-4 font-black">Slot</th>
-                <th className="px-5 py-4 font-black">Durum</th>
-                <th className="px-5 py-4 text-right font-black">İşlem</th>
+                <th className="px-5 py-4 font-semibold">Gün</th>
+                <th className="px-5 py-4 font-semibold">Saat Aralığı</th>
+                <th className="px-5 py-4 font-semibold">Seans</th>
+                <th className="px-5 py-4 font-semibold">Ara</th>
+                <th className="px-5 py-4 font-semibold">Slot</th>
+                <th className="px-5 py-4 font-semibold">Durum</th>
+                <th className="px-5 py-4 text-right font-semibold">İşlem</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {rows.map((row) => (
-                <tr key={row.id} className="transition hover:bg-indigo-50/40">
-                  <td className="px-5 py-4 font-black text-slate-950">
+                <tr key={row.id} className="transition-all duration-200 ease-out hover:bg-slate-50">
+                  <td className="px-5 py-4 font-semibold text-slate-900">
                     {getDayLabel(row.day_of_week)}
                   </td>
                   <td className="px-5 py-4 font-semibold text-slate-700">
@@ -698,7 +698,7 @@ function AvailabilityTable({
                       type="button"
                       onClick={() => onDelete(row)}
                       disabled={deletingId === row.id}
-                      className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition-all duration-200 ease-out hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {deletingId === row.id ? 'Siliniyor...' : 'Sil'}
                     </button>
@@ -715,8 +715,8 @@ function AvailabilityTable({
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-slate-50 px-3 py-2 ring-1 ring-slate-100">
-      <p className="font-black text-slate-950">{value}</p>
+    <div className="rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2">
+      <p className="font-semibold text-slate-900">{value}</p>
       <p className="mt-0.5 font-bold text-slate-500">{label}</p>
     </div>
   )
@@ -724,11 +724,11 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
 
 function StatusBadge({ active }: { active: boolean }) {
   return active ? (
-    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
       Yayında
     </span>
   ) : (
-    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
+    <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
       Kapalı
     </span>
   )
@@ -751,8 +751,8 @@ function NoticeCard({
         : 'border-slate-200 bg-white text-slate-700'
 
   return (
-    <section className={`rounded-3xl border p-5 shadow-sm ${className}`}>
-      <p className="text-sm font-black">{title}</p>
+    <section className={`rounded-xl border p-5 shadow-sm ${className}`}>
+      <p className="text-sm font-semibold">{title}</p>
       <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
     </section>
   )
@@ -760,8 +760,8 @@ function NoticeCard({
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <p className="text-sm font-black text-slate-800">{title}</p>
+    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
     </div>
   )
@@ -769,11 +769,11 @@ function EmptyState({ title, description }: { title: string; description: string
 
 function StepItem({ index, title }: { index: number; title: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-black text-white">
+    <div className="flex items-center gap-3 rounded-lg border border-slate-200/80 bg-slate-50 p-4">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
         {index}
       </span>
-      <p className="text-sm font-black text-slate-700">{title}</p>
+      <p className="text-sm font-semibold text-slate-700">{title}</p>
     </div>
   )
 }

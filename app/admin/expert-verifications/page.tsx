@@ -46,9 +46,9 @@ const emptyStats: VerificationStats = {
 };
 
 function badge(status: string) {
-  if (status === "approved") return "bg-emerald-50 text-emerald-700 ring-emerald-100";
-  if (status === "rejected") return "bg-rose-50 text-rose-700 ring-rose-100";
-  return "bg-amber-50 text-amber-700 ring-amber-100";
+  if (status === "approved") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (status === "rejected") return "border-rose-200 bg-rose-50 text-rose-700";
+  return "border-amber-200 bg-amber-50 text-amber-700";
 }
 
 function statusLabel(status: string) {
@@ -162,15 +162,15 @@ export default function ExpertVerificationsAdminPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-100 p-4 text-slate-950 md:p-6">
+    <main className="min-h-screen bg-slate-50 p-4 text-slate-900 md:p-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 C14 Admin
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
                 Uzman Doğrulama Merkezi
               </h1>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
@@ -183,14 +183,14 @@ export default function ExpertVerificationsAdminPage() {
                 type="button"
                 onClick={() => void fetchVerifications("refresh")}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? "Yükleniyor..." : "Verileri Yenile"}
               </button>
 
               <Link
                 href="/admin"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Dashboard
               </Link>
@@ -199,7 +199,7 @@ export default function ExpertVerificationsAdminPage() {
         </section>
 
         {notice ? (
-          <section className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-black text-amber-900">
+          <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
             {notice}
           </section>
         ) : null}
@@ -210,10 +210,10 @@ export default function ExpertVerificationsAdminPage() {
           ))}
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Belge Listesi</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Belge Listesi</h2>
               <p className="mt-1 text-sm leading-6 text-slate-500">
                 Private storage içinde tutulan belge kayıtları. Onay/red işlemleri gerçek API üzerinden yapılır.
               </p>
@@ -235,17 +235,17 @@ export default function ExpertVerificationsAdminPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-3xl border border-slate-200">
+          <div className="overflow-hidden rounded-xl border border-slate-200">
             {loading ? (
               <div className="space-y-3 bg-white p-4">
                 {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="h-16 animate-pulse rounded-2xl bg-slate-100" />
+                  <div key={item} className="h-16 animate-pulse rounded-lg bg-slate-100" />
                 ))}
               </div>
             ) : filteredItems.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-[1120px] w-full border-collapse text-left">
-                  <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+                  <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                     <tr>
                       <th className="px-4 py-4">Uzman</th>
                       <th className="px-4 py-4">Belge</th>
@@ -261,7 +261,7 @@ export default function ExpertVerificationsAdminPage() {
                     {filteredItems.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50">
                         <td className="px-4 py-4">
-                          <p className="text-sm font-black text-slate-950">{item.expertName}</p>
+                          <p className="text-sm font-semibold text-slate-900">{item.expertName}</p>
                           {item.expertTitle ? (
                             <p className="mt-0.5 text-xs font-semibold text-slate-500">{item.expertTitle}</p>
                           ) : null}
@@ -270,7 +270,7 @@ export default function ExpertVerificationsAdminPage() {
                           </p>
                         </td>
 
-                        <td className="px-4 py-4 text-sm font-black text-slate-700">
+                        <td className="px-4 py-4 text-sm font-semibold text-slate-700">
                           {item.documentLabel}
                         </td>
 
@@ -288,7 +288,7 @@ export default function ExpertVerificationsAdminPage() {
                         </td>
 
                         <td className="px-4 py-4">
-                          <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${badge(item.status)}`}>
+                          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${badge(item.status)}`}>
                             {statusLabel(item.status)}
                           </span>
                         </td>
@@ -311,7 +311,7 @@ export default function ExpertVerificationsAdminPage() {
               </div>
             ) : (
               <div className="bg-slate-50 p-10 text-center">
-                <p className="text-sm font-black text-slate-700">Kayıt bulunamadı</p>
+                <p className="text-sm font-semibold text-slate-700">Kayıt bulunamadı</p>
                 <p className="mt-1 text-sm text-slate-500">
                   Uzmanlar belge yüklediğinde burada listelenecek.
                 </p>
@@ -337,10 +337,10 @@ function FilterButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl px-4 py-2 text-xs font-black ring-1 transition ${
+      className={`rounded-lg border px-4 py-2 text-xs font-semibold transition-all duration-200 ease-out ${
         active
-          ? "bg-slate-950 text-white ring-slate-950"
-          : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
+          ? "border-slate-900 bg-slate-900 text-white"
+          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
       }`}
     >
       {children}
@@ -350,9 +350,9 @@ function FilterButton({
 
 function Card({ title, value, helper }: { title: string; value: string; helper: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-2 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       <p className="mt-2 text-sm leading-5 text-slate-500">{helper}</p>
     </article>
   );

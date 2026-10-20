@@ -65,21 +65,21 @@ export default function PsikologBasvuru() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#f6f1ea] text-[#171717]">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
 
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-10 rounded-[2rem] bg-black p-8 text-white md:grid-cols-2 md:p-14">
+        <div className="grid gap-10 rounded-xl bg-slate-900 p-8 text-white md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-400">
+            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Uzmanlar için
             </p>
 
-            <h1 className="mt-4 text-5xl font-black leading-tight md:text-6xl">
+            <h1 className="mt-4 text-4xl font-bold leading-tight md:text-5xl">
               Mindora uzman ağına katıl.
             </h1>
 
-            <p className="mt-5 text-lg leading-8 text-neutral-300">
+            <p className="mt-5 text-lg leading-8 text-slate-300">
               Online psikolojik destek vermek, daha fazla danışana ulaşmak ve
               dijital terapi sürecini daha düzenli yürütmek isteyen uzmanlar için
               Mindora uzman ağı oluşturuluyor.
@@ -90,14 +90,14 @@ export default function PsikologBasvuru() {
                 href={psychologistFormUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-2xl bg-white px-8 py-4 text-center font-bold text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
+                className="rounded-lg bg-white px-8 py-4 text-center font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100"
               >
                 Psikolog başvurusu yap
               </a>
 
               <a
                 href="/uzmanlar"
-                className="rounded-2xl border border-white/20 px-8 py-4 text-center font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+                className="rounded-lg border border-white/20 px-8 py-4 text-center font-semibold text-white transition-all duration-200 ease-out hover:bg-white/10"
               >
                 Uzman ağını incele
               </a>
@@ -106,9 +106,9 @@ export default function PsikologBasvuru() {
 
           <div className="space-y-4">
             {benefits.map((item) => (
-              <div key={item.title} className="rounded-2xl bg-white/10 p-5">
-                <h3 className="font-black text-white">{item.title}</h3>
-                <p className="mt-2 leading-7 text-neutral-300">{item.text}</p>
+              <div key={item.title} className="rounded-lg bg-white/10 p-5">
+                <h3 className="font-semibold text-white">{item.title}</h3>
+                <p className="mt-2 leading-7 text-slate-300">{item.text}</p>
               </div>
             ))}
           </div>
@@ -117,11 +117,11 @@ export default function PsikologBasvuru() {
 
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Başvuru süreci
           </p>
 
-          <h2 className="mt-3 text-4xl font-black md:text-5xl">
+          <h2 className="mt-3 text-3xl font-bold text-slate-900 md:text-4xl">
             3 adımda Mindora uzman ağına başvur.
           </h2>
         </div>
@@ -130,27 +130,28 @@ export default function PsikologBasvuru() {
           {steps.map((step, index) => (
             <div
               key={step.title}
-              className="rounded-[2rem] bg-white/70 p-7 shadow-sm ring-1 ring-black/5"
+              style={{ animationDelay: `${index * 80}ms` }}
+              className="animate-fade-in-up rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm transition-all duration-200 ease-out hover:border-slate-300"
             >
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-lg font-black text-white">
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-slate-900 text-lg font-semibold text-white">
                 {index + 1}
               </div>
 
-              <h3 className="text-2xl font-black">{step.title}</h3>
-              <p className="mt-3 leading-7 text-neutral-600">{step.text}</p>
+              <h3 className="text-xl font-bold text-slate-900">{step.title}</h3>
+              <p className="mt-3 leading-7 text-slate-500">{step.text}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-8 rounded-[2rem] bg-white/70 p-8 shadow-sm ring-1 ring-black/5 md:grid-cols-2 md:p-14">
+        <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-500">
+            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Kimler başvurabilir?
             </p>
 
-            <h2 className="mt-4 text-4xl font-black md:text-5xl">
+            <h2 className="mt-4 text-3xl font-bold text-slate-900 md:text-4xl">
               Etik, güvenli ve düzenli online destek vermek isteyen uzmanlar.
             </h2>
           </div>
@@ -159,7 +160,7 @@ export default function PsikologBasvuru() {
             {requirements.map((item) => (
               <div
                 key={item}
-                className="rounded-2xl bg-[#f6f1ea] p-5 font-bold text-neutral-700"
+                className="rounded-lg border border-slate-200/80 bg-slate-50 p-5 font-medium text-slate-700"
               >
                 {item}
               </div>
@@ -170,7 +171,7 @@ export default function PsikologBasvuru() {
 
       <section className="mx-auto max-w-5xl px-6 py-20">
         <div className="text-center">
-          <h2 className="text-4xl font-black md:text-5xl">
+          <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
             Psikolog başvurusu hakkında sorular
           </h2>
         </div>
@@ -179,22 +180,22 @@ export default function PsikologBasvuru() {
           {faqs.map((faq) => (
             <div
               key={faq.q}
-              className="rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-black/5"
+              className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-200 ease-out hover:border-slate-300"
             >
-              <h3 className="text-lg font-black">{faq.q}</h3>
-              <p className="mt-2 leading-7 text-neutral-600">{faq.a}</p>
+              <h3 className="text-lg font-bold text-slate-900">{faq.q}</h3>
+              <p className="mt-2 leading-7 text-slate-500">{faq.a}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-black/5 md:p-14">
-          <h2 className="text-4xl font-black md:text-5xl">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm md:p-14">
+          <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
             Mindora uzman ağına başvur.
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-neutral-600">
+          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-500">
             Başvuru formunu doldur, uygun görülmesi halinde onboarding sürecini
             birlikte başlatalım.
           </p>
@@ -203,7 +204,7 @@ export default function PsikologBasvuru() {
             href={psychologistFormUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-8 inline-block rounded-2xl bg-black px-9 py-4 font-bold text-white transition hover:-translate-y-0.5 hover:bg-neutral-800"
+            className="mt-8 inline-block rounded-lg bg-slate-900 px-9 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
           >
             Başvuru formuna git
           </a>

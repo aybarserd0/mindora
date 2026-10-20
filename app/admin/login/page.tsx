@@ -35,28 +35,28 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f1ea] px-6 py-20 text-[#171717]">
+    <main className="min-h-screen bg-slate-50 px-6 py-20 text-slate-900">
       <div className="mx-auto mb-8 flex max-w-md justify-center">
         <a
           href="/"
-          className="inline-block rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-bold text-black transition hover:bg-neutral-100"
+          className="inline-block rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
         >
           ← Ana Sayfa
         </a>
       </div>
 
-      <div className="mx-auto max-w-md rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
+      <div className="mx-auto max-w-md rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm">
         <div className="mb-6 flex justify-center">
           <img
             src="/logo.png"
             alt="Mindora"
-            className="h-14 w-14 rounded-2xl object-cover shadow-sm"
+            className="h-14 w-14 rounded-xl object-cover ring-1 ring-slate-200"
           />
         </div>
 
-        <h1 className="text-center text-3xl font-black">Mindora Admin</h1>
+        <h1 className="text-center text-2xl font-bold text-slate-900">Mindora Admin</h1>
 
-        <p className="mt-2 text-center text-neutral-600">
+        <p className="mt-2 text-center text-slate-500">
           Admin paneline erişmek için şifreni gir.
         </p>
 
@@ -67,12 +67,12 @@ export default function AdminLoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Admin şifresi"
-            className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none transition focus:bg-white focus:ring-2 focus:ring-black/20"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
           />
 
           <button
             disabled={loading}
-            className="w-full rounded-2xl bg-black px-6 py-4 font-bold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-slate-900 px-6 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Giriş yapılıyor...' : 'Admin Paneline Gir'}
           </button>

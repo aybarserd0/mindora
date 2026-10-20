@@ -387,28 +387,28 @@ function ClientProfileContent() {
 
   if (loading) {
     return (
-      <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
-        <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-          <p className="font-black text-slate-600">Profil yükleniyor...</p>
+      <section className="px-4 py-6 text-slate-900 md:px-6 md:py-10">
+        <div className="mx-auto max-w-7xl rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+          <p className="font-semibold text-slate-600">Profil yükleniyor...</p>
         </div>
       </section>
     )
   }
 
   return (
-    <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+    <section className="px-4 py-6 text-slate-900 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6 lg:p-8">
+        <header className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="border-b border-slate-200/80 bg-white p-6 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                   Mindora Danışan Paneli
                 </p>
-                <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">
                   Profilim
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
                   Danışan bilgilerinizi, eşleşme sürecinizi, seans özetinizi ve hesap
                   güvenliğinizi tek ekrandan takip edin.
                 </p>
@@ -427,19 +427,19 @@ function ClientProfileContent() {
                   type="button"
                   onClick={() => void fetchProfile('refresh')}
                   disabled={refreshing}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {refreshing ? 'Yükleniyor...' : 'Yenile'}
                 </button>
                 <Link
                   href={dashboardHref}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href={safeChatHref}
-                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
                 >
                   Sohbete Git
                 </Link>
@@ -448,21 +448,21 @@ function ClientProfileContent() {
           </div>
 
           {softNotice ? (
-            <div className="border-t border-indigo-100 bg-indigo-50 px-6 py-4">
+            <div className="border-t border-slate-200/80 bg-slate-50 px-6 py-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm font-black text-indigo-950">
+                  <p className="text-sm font-semibold text-slate-900">
                     Profil bilgileriniz henüz tamamlanmadı
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-indigo-800">
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
                     Bilgileriniz eşleşme ve danışan süreci ilerledikçe burada güncellenecektir.
                   </p>
-                  <p className="mt-1 text-xs font-semibold text-indigo-500">{softNotice}</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-400">{softNotice}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => void fetchProfile('refresh')}
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-indigo-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-md"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
                 >
                   Yenile
                 </button>
@@ -525,7 +525,7 @@ function ClientProfileContent() {
               }
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-indigo-600 text-xl font-black text-white">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-xl font-semibold text-white">
                   {expert.photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={expert.photoUrl} alt={expert.name} className="h-full w-full object-cover" />
@@ -535,9 +535,9 @@ function ClientProfileContent() {
                 </div>
 
                 <div>
-                  <p className="text-base font-black text-slate-950">{expert.name}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-600">{expert.title}</p>
-                  {expert.email ? <p className="mt-1 text-xs text-slate-500">{expert.email}</p> : null}
+                  <p className="text-base font-semibold text-slate-900">{expert.name}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-500">{expert.title}</p>
+                  {expert.email ? <p className="mt-1 text-xs text-slate-400">{expert.email}</p> : null}
                 </div>
               </div>
 
@@ -546,15 +546,15 @@ function ClientProfileContent() {
                   {expert.specialties.map((item) => (
                     <span
                       key={item}
-                      className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700 ring-1 ring-indigo-100"
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700"
                     >
                       {item}
                     </span>
                   ))}
                 </div>
               ) : (
-                <div className="mt-5 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-                  <p className="text-sm font-bold text-slate-700">
+                <div className="mt-5 rounded-lg border border-slate-200/80 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-700">
                     Uzmanlık bilgileri eşleşme tamamlandığında burada görünecek.
                   </p>
                 </div>
@@ -563,13 +563,13 @@ function ClientProfileContent() {
               <div className="mt-5 grid gap-3">
                 <Link
                   href={safeChatHref}
-                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
                 >
                   Uzmanla Sohbete Git
                 </Link>
                 <Link
                   href={expertPublicHref}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
                 >
                   Uzman Profilini Aç
                 </Link>
@@ -585,9 +585,9 @@ function ClientProfileContent() {
               </div>
             </Panel>
 
-            <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-              <h2 className="text-lg font-black text-indigo-950">Mindora notu</h2>
-              <p className="mt-2 text-sm leading-6 text-indigo-800">
+            <section className="rounded-xl border border-slate-200/80 bg-slate-50 p-6 shadow-sm transition-all duration-200 ease-out">
+              <h2 className="text-lg font-semibold text-slate-900">Mindora notu</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
                 Profil bilgileriniz eşleşme ve destek sürecinin sağlıklı yönetilmesi için kullanılır.
                 Hassas bilgileri yalnızca güvenli bağlantılar üzerinden paylaşmanız önerilir.
               </p>
@@ -602,19 +602,19 @@ function ClientProfileContent() {
 function StatusPill({ children, tone = 'default' }: { children: React.ReactNode; tone?: 'default' | 'green' | 'blue' }) {
   const className =
     tone === 'green'
-      ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
       : tone === 'blue'
-        ? 'bg-blue-50 text-blue-700 ring-blue-100'
-        : 'bg-slate-100 text-slate-700 ring-slate-200'
+        ? 'border-blue-200 bg-blue-50 text-blue-700'
+        : 'border-slate-200 bg-slate-100 text-slate-700'
 
-  return <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>{children}</span>
+  return <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${className}`}>{children}</span>
 }
 
 function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+    <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -622,9 +622,9 @@ function SummaryCard({ title, value, description }: { title: string; value: stri
 
 function Panel({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+    <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-200 ease-out">
       <div className="mb-5">
-        <h2 className="text-xl font-black text-slate-950">{title}</h2>
+        <h2 className="text-xl font-bold text-slate-900">{title}</h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
       </div>
       {children}
@@ -634,17 +634,17 @@ function Panel({ title, description, children }: { title: string; description: s
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="mt-2 break-words text-sm font-black text-slate-950">{value}</p>
+    <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-2 break-words text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )
 }
 
 function TextBlock({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-      <p className="text-sm font-black text-slate-950">{title}</p>
+    <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4">
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{text}</p>
     </div>
   )
@@ -654,9 +654,9 @@ function QuickLink({ href, title, description }: { href: string; title: string; 
   return (
     <Link
       href={href}
-      className="rounded-2xl border border-slate-200 bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-lg"
+      className="rounded-xl border border-slate-200/80 bg-white p-4 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50"
     >
-      <p className="text-sm font-black text-slate-950">{title}</p>
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mt-1 text-xs font-semibold text-slate-500">{description}</p>
     </Link>
   )
@@ -664,9 +664,9 @@ function QuickLink({ href, title, description }: { href: string; title: string; 
 
 function StatusLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200/80 bg-slate-50 px-4 py-3">
       <span className="text-sm text-slate-600">{label}</span>
-      <span className="text-right text-sm font-black text-slate-950">{value}</span>
+      <span className="text-right text-sm font-semibold text-slate-900">{value}</span>
     </div>
   )
 }
@@ -675,9 +675,9 @@ export default function ClientDashboardProfilePage() {
   return (
     <Suspense
       fallback={
-        <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
-          <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Profil yükleniyor...</p>
+        <section className="px-4 py-6 text-slate-900 md:px-6 md:py-10">
+          <div className="mx-auto max-w-7xl rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+            <p className="font-semibold text-slate-600">Profil yükleniyor...</p>
           </div>
         </section>
       }

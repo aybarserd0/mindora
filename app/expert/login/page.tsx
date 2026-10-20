@@ -41,39 +41,39 @@ function ExpertLoginContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f1ea] px-6 py-20 text-[#171717]">
+    <main className="min-h-screen bg-slate-50 px-6 py-20 text-slate-900">
       <div className="mx-auto mb-8 flex max-w-md justify-center">
         <a
           href="/"
-          className="inline-block rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-bold text-black transition hover:bg-neutral-100"
+          className="inline-block rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
         >
           ← Ana Sayfa
         </a>
       </div>
 
-      <div className="mx-auto max-w-md rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
+      <div className="mx-auto max-w-md rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm">
         <div className="mb-6 flex justify-center">
           <img
             src="/logo.png"
             alt="Mindora"
-            className="h-14 w-14 rounded-2xl object-cover shadow-sm"
+            className="h-14 w-14 rounded-xl object-cover ring-1 ring-slate-200"
           />
         </div>
 
-        <h1 className="text-center text-3xl font-black">Uzman Girişi</h1>
+        <h1 className="text-center text-2xl font-bold text-slate-900">Uzman Girişi</h1>
 
-        <p className="mt-2 text-center text-neutral-600">
+        <p className="mt-2 text-center text-slate-500">
           Onaylı uzman hesabınızın e-posta adresini girin, size güvenli bir giriş bağlantısı gönderelim.
         </p>
 
         {hasInvalidTokenError ? (
-          <p className="mt-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          <p className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
             Giriş bağlantınızın süresi dolmuş veya geçersiz. Lütfen yeni bir bağlantı isteyin.
           </p>
         ) : null}
 
         {sent ? (
-          <p className="mt-6 rounded-2xl bg-emerald-50 px-4 py-4 text-sm font-semibold text-emerald-800">
+          <p className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-medium text-emerald-800">
             E-posta adresiniz sistemde kayıtlı ve onaylıysa, birkaç dakika içinde giriş bağlantısı
             e-postanıza gelecektir.
           </p>
@@ -85,18 +85,18 @@ function ExpertLoginContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="uzman@ornek.com"
-              className="w-full rounded-2xl border border-black/10 bg-[#f6f1ea] px-4 py-3 outline-none transition focus:bg-white focus:ring-2 focus:ring-black/20"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
             />
 
             {error ? (
-              <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              <p className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
                 {error}
               </p>
             ) : null}
 
             <button
               disabled={loading}
-              className="w-full rounded-2xl bg-black px-6 py-4 font-bold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg bg-slate-900 px-6 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Gönderiliyor...' : 'Giriş Bağlantısı Gönder'}
             </button>
