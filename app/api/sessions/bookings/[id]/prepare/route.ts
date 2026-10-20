@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { enforceAdminRequest } from '@/lib/security/admin-auth'
 import { sendMail } from '@/lib/mail/smtp'
 import {
   bookingPreparedClientTemplate,
@@ -446,6 +447,10 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const unauthorized = enforceAdminRequest(req)
+
+    if (unauthorized) return unauthorized
+
     const resolved = await params
     const bookingId = resolved.id?.trim()
 

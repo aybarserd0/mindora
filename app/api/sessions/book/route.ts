@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { applyRateLimit } from "@/lib/security/rate-limit";
+import { enforceAdminRequest } from "@/lib/security/admin-auth";
 import { cleanText, cleanUuid } from "@/lib/security/validation";
 import { createNotification } from "@/lib/notifications";
 
@@ -91,6 +92,10 @@ function hasTimeConflict(existingBookings: ExistingBookingRow[], startAt: Date, 
 
 export async function POST(req: NextRequest) {
   try {
+    const unauthorized = enforceAdminRequest(req);
+
+    if (unauthorized) return unauthorized;
+
     const limited = applyRateLimit(req, {
       scope: "sessions-book",
       limit: 20,

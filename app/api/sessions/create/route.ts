@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { applyRateLimit } from "@/lib/security/rate-limit";
+import { hasAdminSession } from "@/lib/security/admin-auth";
+import { verifyConversationAccessToken } from "@/lib/chat-access-tokens";
 import { cleanText, cleanUuid } from "@/lib/security/validation";
 
 export const runtime = "nodejs";
@@ -27,7 +29,6 @@ type SessionRow = {
   created_at?: string | null;
 };
 
-const VALID_CREATED_BY: CreatedBy[] = ["client", "expert", "admin", "system"];
 const REUSABLE_SESSION_STATUSES = ["scheduled", "waiting", "active"] as const;
 const MAX_ADVANCE_DAYS = 120;
 
@@ -35,14 +36,51 @@ function jsonError(message: string, status = 400) {
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 
-function isValidCreatedBy(value: string): value is CreatedBy {
-  return VALID_CREATED_BY.includes(value as CreatedBy);
-}
+type CreatorResolution =
+  | { ok: true; createdBy: CreatedBy }
+  | { ok: false; response: NextResponse };
 
-function normalizeCreatedBy(value: unknown): CreatedBy {
-  const createdBy = cleanText(value, 20).toLowerCase();
+/**
+ * Admins are trusted via their session cookie; clients and experts must
+ * present a valid conversation access token for this exact conversation.
+ * `createdBy` comes from whoever was verified, never from the request body.
+ */
+async function resolveCreator(
+  req: NextRequest,
+  bodyRecord: Record<string, unknown>,
+  conversationId: string
+): Promise<CreatorResolution> {
+  if (hasAdminSession(req)) {
+    return { ok: true, createdBy: "admin" };
+  }
 
-  return isValidCreatedBy(createdBy) ? createdBy : "system";
+  const role = cleanText(
+    req.headers.get("x-chat-access-role") || bodyRecord.role,
+    20
+  ).toLowerCase();
+  const token = cleanText(
+    req.headers.get("x-chat-access-token") || bodyRecord.token,
+    200
+  );
+
+  if ((role !== "client" && role !== "expert") || !token) {
+    return { ok: false, response: jsonError("Görüşme erişim bilgisi gerekli.", 401) };
+  }
+
+  const access = await verifyConversationAccessToken({ conversationId, role, token });
+
+  if (!access.ok) {
+    if (access.reason === "db_error") {
+      return { ok: false, response: jsonError("Erişim doğrulanamadı.", 500) };
+    }
+
+    return {
+      ok: false,
+      response: jsonError("Bu görüşmeye erişim yetkiniz yok veya link süresi dolmuş.", 403),
+    };
+  }
+
+  return { ok: true, createdBy: role };
 }
 
 function createRoomName(conversationId: string) {
@@ -108,11 +146,16 @@ export async function POST(req: NextRequest) {
     const bodyRecord = body as Record<string, unknown>;
     const conversationId = cleanUuid(bodyRecord.conversationId);
     const scheduledAtResult = parseScheduledAt(bodyRecord.scheduledAt);
-    const createdBy = normalizeCreatedBy(bodyRecord.createdBy);
 
     if (!conversationId) {
       return jsonError("Geçerli conversationId gerekli.", 400);
     }
+
+    const creator = await resolveCreator(req, bodyRecord, conversationId);
+
+    if (!creator.ok) return creator.response;
+
+    const createdBy = creator.createdBy;
 
     if (scheduledAtResult === "invalid") {
       return jsonError("Geçerli scheduledAt değeri gerekli.", 400);

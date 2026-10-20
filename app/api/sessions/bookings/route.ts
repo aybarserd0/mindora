@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { enforceAdminRequest } from '@/lib/security/admin-auth'
 
 type BookingStatus =
   | 'scheduled'
@@ -32,6 +33,24 @@ const REMINDER_ELIGIBLE_STATUSES: BookingStatus[] = [
   'scheduled',
   'confirmed',
 ]
+
+// Join URLs embed live session access tokens, so they are deliberately not listed here.
+const BOOKING_LIST_COLUMNS = [
+  'id',
+  'expert_id',
+  'client_id',
+  'conversation_id',
+  'scheduled_start_at',
+  'scheduled_end_at',
+  'timezone',
+  'status',
+  'live_session_id',
+  'session_ready',
+  'session_ready_at',
+  'created_by',
+  'created_at',
+  'updated_at',
+].join(',')
 
 const DEFAULT_LIMIT = 50
 const MAX_LIMIT = 200
@@ -125,6 +144,10 @@ function getDateWindow(mode: BookingQueryMode, req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    const unauthorized = enforceAdminRequest(req)
+
+    if (unauthorized) return unauthorized
+
     const supabase = getSupabaseAdmin()
 
     const conversationId = toText(req.nextUrl.searchParams.get('conversationId'))
@@ -169,7 +192,7 @@ export async function GET(req: NextRequest) {
 
     let query = (supabase as any)
       .from('session_bookings')
-      .select('*')
+      .select(BOOKING_LIST_COLUMNS)
       .in('status', statuses)
       .order('scheduled_start_at', { ascending: true })
       .limit(limit)

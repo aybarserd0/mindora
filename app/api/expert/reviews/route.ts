@@ -1,7 +1,8 @@
 
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getExpertIdFromRequest } from "@/lib/security/expert-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -122,41 +123,15 @@ function anonymizeClientId(clientId: string) {
   return `Danışan ${clientId.slice(0, 4).toUpperCase()}`;
 }
 
-async function resolveExpertId({
-  supabase,
-  explicitExpertId,
-  token,
-}: {
-  supabase: NonNullable<ReturnType<typeof getSupabaseAdmin>>;
-  explicitExpertId: string;
-  token: string;
-}) {
-  if (explicitExpertId) {
-    return explicitExpertId;
-  }
-
-  if (!token) {
-    return "";
-  }
-
-  const { data: tokenRow } = await supabase
-    .from("conversation_access_tokens")
-    .select("expert_id, expires_at")
-    .eq("token", token)
-    .maybeSingle();
-
-  const resolvedExpertId = cleanValue((tokenRow as { expert_id?: string | null } | null)?.expert_id || null);
-  const expiresAt = cleanValue((tokenRow as { expires_at?: string | null } | null)?.expires_at || null);
-
-  if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
-    return "";
-  }
-
-  return resolvedExpertId;
-}
-
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
+    // Identity comes only from the expert session cookie — never from query params.
+    const expertId = await getExpertIdFromRequest(req);
+
+    if (!expertId) {
+      return jsonError("Uzman erişimi doğrulanamadı.", 401);
+    }
+
     const supabase = getSupabaseAdmin();
 
     if (!supabase) {
@@ -164,21 +139,9 @@ export async function GET(req: Request) {
     }
 
     const url = new URL(req.url);
-    const token = cleanValue(url.searchParams.get("token"));
-    const explicitExpertId = cleanValue(url.searchParams.get("expertId"));
     const status = normalizeStatus(url.searchParams.get("status"));
     const rating = getSafeRating(url.searchParams.get("rating"));
     const limit = getSafeLimit(url.searchParams.get("limit"));
-
-    const expertId = await resolveExpertId({
-      supabase,
-      explicitExpertId,
-      token,
-    });
-
-    if (!expertId) {
-      return jsonError("Uzman erişimi doğrulanamadı.", 401);
-    }
 
     let reviewsQuery = supabase
       .from("reviews")

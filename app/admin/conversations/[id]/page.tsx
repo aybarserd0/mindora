@@ -693,13 +693,8 @@ export default function AdminConversationPage({
       return
     }
 
-    if (!booking.client_join_url || !booking.expert_join_url) {
-      setBookingActionError(
-        'Client veya expert join linki eksik. Görüşmeyi tekrar hazırla.'
-      )
-      return
-    }
-
+    // Join URLs are no longer returned by the bookings list; send-links reads and
+    // validates them server-side and reports a missing link as an error.
     const shouldConfirm = window.confirm(
       `Danışan ve uzmana güvenli görüşme linkleri mail olarak gönderilsin mi?\n\nBooking ID: ${bookingId}`
     )
@@ -1684,42 +1679,6 @@ function UpcomingSessionCard({
             )}
           </div>
 
-          {booking.session_ready && (
-            <div className="mt-3 space-y-2 rounded-xl border border-emerald-800/40 bg-emerald-950/40 p-3 text-xs font-medium text-emerald-100">
-              <p className="font-semibold">Join Linkleri</p>
-              {booking.client_join_url && (
-                <a
-                  href={booking.client_join_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block truncate underline underline-offset-4"
-                >
-                  Danışan linki
-                </a>
-              )}
-              {booking.expert_join_url && (
-                <a
-                  href={booking.expert_join_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block truncate underline underline-offset-4"
-                >
-                  Uzman linki
-                </a>
-              )}
-              {booking.admin_join_url && (
-                <a
-                  href={booking.admin_join_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block truncate underline underline-offset-4"
-                >
-                  Admin akışı
-                </a>
-              )}
-            </div>
-          )}
-
           {actionError && (
             <div className="mt-4 rounded-xl border border-red-800/40 bg-red-950/40 p-3 text-xs font-medium text-red-200">
               {actionError}
@@ -1842,9 +1801,7 @@ function BookingLifecycleActions({
           disabled={
             loading ||
             sendLinksLoading ||
-            !isValidUuid(booking.id) ||
-            !booking.client_join_url ||
-            !booking.expert_join_url
+            !isValidUuid(booking.id)
           }
           onClick={() => onSendLinks(booking)}
           className="w-full rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"

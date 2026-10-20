@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { enforceAdminRequest } from '@/lib/security/admin-auth'
 
 type BookingRow = {
   id: string
@@ -358,6 +359,10 @@ export async function POST(
   }
 ): Promise<NextResponse<SendLinksResponse>> {
   try {
+    const unauthorized = enforceAdminRequest(req)
+
+    if (unauthorized) return unauthorized
+
     const body = await getRequestBody(req)
 
     const { bookingId, debug } = await resolveBookingId({
