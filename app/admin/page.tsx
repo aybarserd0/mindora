@@ -360,7 +360,7 @@ function AdminHomeContent() {
           <div className="grid gap-0 lg:grid-cols-[1.45fr_0.55fr]">
             <div className="p-6 md:p-8">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-indigo-700">
+                <p className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                   Mindora Yönetim Paneli
                 </p>
                 <p className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
@@ -396,7 +396,7 @@ function AdminHomeContent() {
             </div>
 
             <div className="border-t border-slate-200/80 bg-pine-800 p-6 text-white lg:border-l lg:border-t-0 md:p-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+              <p className="text-xs font-semibold text-slate-400">
                 Anlık durum
               </p>
 

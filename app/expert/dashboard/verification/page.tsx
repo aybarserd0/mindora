@@ -362,7 +362,7 @@ export default function ExpertVerificationPage() {
         <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[1.35fr_0.65fr]">
             <div className="p-6 lg:p-8">
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Uzman Doğrulama
               </p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">

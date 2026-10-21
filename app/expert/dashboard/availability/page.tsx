@@ -372,7 +372,7 @@ export default function ExpertAvailabilityPage() {
         <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Mindora Uzman Paneli
               </p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -527,7 +527,7 @@ export default function ExpertAvailabilityPage() {
               <input type="hidden" value={form.timezone} readOnly />
 
               <div className="sm:col-span-2 rounded-xl border border-slate-200/80 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold text-slate-400">
                   Önizleme
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-900">
@@ -667,7 +667,7 @@ function AvailabilityTable({
       <div className="hidden overflow-hidden rounded-xl border border-slate-200/80 lg:block">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
+            <thead className="bg-slate-50 text-xs text-slate-500">
               <tr>
                 <th className="px-5 py-4 font-semibold">Gün</th>
                 <th className="px-5 py-4 font-semibold">Saat Aralığı</th>

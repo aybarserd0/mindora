@@ -396,7 +396,7 @@ export default function UzmanlarPage() {
       <section className="border-b border-slate-200/80 bg-slate-50">
         <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 md:py-20 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Mindora Uzman Ağı
             </p>
 
@@ -447,7 +447,7 @@ export default function UzmanlarPage() {
       <section id="uzman-listesi" className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
         <div className="mb-8 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Uzmanlar
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -573,7 +573,7 @@ export default function UzmanlarPage() {
         <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Eşleşme mantığı
               </p>
 
@@ -615,7 +615,7 @@ export default function UzmanlarPage() {
 
       <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Destek alanları
           </p>
 

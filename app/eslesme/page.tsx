@@ -1,7 +1,7 @@
 'use client'
 
 import Header from '@/components/Header'
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 
 type SubmitState =
   | { type: 'idle'; message: '' }
@@ -53,7 +53,27 @@ function getFormValue(form: FormData, key: string) {
   return value.trim()
 }
 
+const TOPIC_OPTIONS = [
+  'Kaygı / stres',
+  'İlişki / aile',
+  'Özgüven',
+  'Motivasyon',
+  'Depresif hisler',
+  'Tükenmişlik',
+  'Diğer',
+]
+
 export default function EslesmePage() {
+  const topicRef = useRef<HTMLSelectElement>(null)
+
+  useEffect(() => {
+    // Ana sayfadaki konu seçiciden gelindiyse alanı önceden doldur
+    const topic = new URLSearchParams(window.location.search).get('konu')
+    if (topic && topicRef.current && TOPIC_OPTIONS.includes(topic)) {
+      topicRef.current.value = topic
+    }
+  }, [])
+
   const [loading, setLoading] = useState(false)
   const [submitState, setSubmitState] = useState<SubmitState>({
     type: 'idle',
@@ -180,7 +200,7 @@ export default function EslesmePage() {
           </div>
 
           <div className="mt-8 rounded-xl bg-pine-800 p-6 text-white">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Süreç
             </p>
 
@@ -215,7 +235,7 @@ export default function EslesmePage() {
 
         <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="border-b border-slate-200/80 pb-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Eşleşme formu
             </p>
 
@@ -307,18 +327,15 @@ export default function EslesmePage() {
                   Seni en çok zorlayan konu nedir?
                 </span>
                 <select
+                  ref={topicRef}
                   name="topic"
                   required
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                 >
                   <option value="">Seç</option>
-                  <option>Kaygı / stres</option>
-                  <option>İlişki / aile</option>
-                  <option>Özgüven</option>
-                  <option>Motivasyon</option>
-                  <option>Depresif hisler</option>
-                  <option>Tükenmişlik</option>
-                  <option>Diğer</option>
+                  {TOPIC_OPTIONS.map((option) => (
+                    <option key={option}>{option}</option>
+                  ))}
                 </select>
               </label>
 

@@ -9,7 +9,7 @@ export default function NotFound() {
       <section className="mx-auto flex min-h-[calc(100vh-96px)] max-w-7xl items-center px-5 py-16">
         <div className="grid w-full gap-8 rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-10 lg:grid-cols-[0.9fr_1.1fr] lg:p-14">
           <div className="rounded-xl bg-pine-800 p-8 text-white md:p-10">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Sayfa bulunamadı
             </p>
             <h1 className="mt-5 text-7xl font-bold tracking-tight md:text-8xl">
@@ -21,7 +21,7 @@ export default function NotFound() {
           </div>
 
           <div className="flex flex-col justify-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Mindora
             </p>
             <h2 className="mt-4 max-w-2xl text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl">

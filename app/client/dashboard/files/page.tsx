@@ -360,7 +360,7 @@ function ClientFilesContent() {
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-xs font-black text-indigo-600">
                 Mindora Danışan Paneli
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -498,7 +498,7 @@ function FilesTable({ files }: { files: UiFile[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-left text-sm">
-        <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
+        <thead className="bg-slate-50 text-xs text-slate-500">
           <tr>
             <th className="px-5 py-4 font-black">Dosya</th>
             <th className="px-5 py-4 font-black">Tür</th>

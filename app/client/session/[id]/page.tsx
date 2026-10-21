@@ -515,7 +515,7 @@ export default function ClientSessionPage() {
             {exitReason === 'connection_lost' ? '⚠️' : '✓'}
           </div>
 
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="mb-2 text-sm font-semibold text-slate-400">
             Mindora Secure Session
           </p>
 
@@ -632,7 +632,7 @@ export default function ClientSessionPage() {
 
           <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div className="mb-6">
-              <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-2 text-sm font-semibold text-slate-400">
                 Mindora Secure Session
               </p>
 
@@ -1190,7 +1190,7 @@ function HeaderPill({
 }) {
   return (
     <div className="min-w-[92px] rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">
+      <p className="text-[10px] text-slate-500">
         {label}
       </p>
 
@@ -1474,7 +1474,7 @@ function FocusVideoTile({
           compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[10px]'
         }`}
       >
-        <span className="font-bold uppercase tracking-wide text-slate-300">
+        <span className="font-bold text-slate-300">
           {playableTrackRef ? 'Kamera açık' : 'Kamera kapalı'}
         </span>
       </div>

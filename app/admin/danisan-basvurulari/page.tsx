@@ -514,7 +514,7 @@ export default function DanisanBasvurulariPage() {
         <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Yönetim Merkezi
               </p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">

@@ -567,7 +567,7 @@ export default function ExpertProfilePage() {
 
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="text-sm font-semibold text-slate-400">
                       Mindora Uzman Paneli
                     </p>
                     <StatusBadge status={profile.status} />
@@ -1020,7 +1020,7 @@ function Panel({ title, description, children }: { title: string; description: s
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-white">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="text-xs font-semibold text-slate-400">{label}</p>
       <p className="mt-2 break-words text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )

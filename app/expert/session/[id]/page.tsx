@@ -611,7 +611,7 @@ export default function ExpertSessionPage() {
                 : '↩'}
           </div>
 
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="mb-2 text-sm font-semibold text-slate-400">
             Mindora Expert Session
           </p>
 
@@ -732,7 +732,7 @@ export default function ExpertSessionPage() {
 
           <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div className="mb-6">
-              <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-2 text-sm font-semibold text-slate-400">
                 Mindora Expert Session
               </p>
 
@@ -1314,7 +1314,7 @@ function HeaderPill({
 }) {
   return (
     <div className="min-w-[92px] rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-slate-400">
+      <p className="text-[10px] text-slate-400">
         {label}
       </p>
 
@@ -1630,7 +1630,7 @@ function FocusVideoTile({
           compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[10px]'
         }`}
       >
-        <span className="font-semibold uppercase tracking-wide text-slate-300">
+        <span className="font-semibold text-slate-300">
           {isScreenShare
             ? 'Ekran paylaşımı'
             : playableTrackRef

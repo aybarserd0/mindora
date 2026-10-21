@@ -466,7 +466,7 @@ function ClientSessionsContent() {
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-xs font-black text-indigo-600">
                 Mindora Danışan Paneli
               </p>
               <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -526,7 +526,7 @@ function ClientSessionsContent() {
           <section className="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-sm">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-300">
+                <p className="text-xs font-black text-slate-300">
                   Sıradaki Seans
                 </p>
                 <h2 className="mt-3 text-3xl font-black">{nextSession.date}</h2>
@@ -815,7 +815,7 @@ function ReviewModal({
       <div className="w-full max-w-xl rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-slate-200">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+            <p className="text-xs font-black text-indigo-600">
               Seans Değerlendirmesi
             </p>
             <h2 className="mt-2 text-2xl font-black text-slate-950">Uzmanı değerlendir</h2>

@@ -71,7 +71,7 @@ export default function PsikologBasvuru() {
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="grid gap-10 rounded-xl bg-pine-800 p-8 text-white md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Uzmanlar için
             </p>
 
@@ -117,7 +117,7 @@ export default function PsikologBasvuru() {
 
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Başvuru süreci
           </p>
 
@@ -147,7 +147,7 @@ export default function PsikologBasvuru() {
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Kimler başvurabilir?
             </p>
 

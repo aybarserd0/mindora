@@ -402,7 +402,7 @@ function ClientProfileContent() {
           <div className="border-b border-slate-200/80 bg-white p-6 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Mindora Danışan Paneli
                 </p>
                 <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">
@@ -635,7 +635,7 @@ function Panel({ title, description, children }: { title: string; description: s
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="text-xs font-semibold text-slate-400">{label}</p>
       <p className="mt-2 break-words text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )

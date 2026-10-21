@@ -62,7 +62,7 @@ export default function FaqAccordion({ groups }: { groups: FaqGroup[] }) {
     <div className="grid gap-6 lg:grid-cols-[0.32fr_0.68fr]">
       <aside className="lg:sticky lg:top-28 lg:self-start">
         <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Kategoriler
           </p>
 

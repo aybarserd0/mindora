@@ -180,7 +180,7 @@ export default function ReviewBookingPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <section className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
         <div className="bg-pine-800 px-6 py-7 text-white sm:px-8">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-semibold text-slate-400">
             Mindora Değerlendirme
           </p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">

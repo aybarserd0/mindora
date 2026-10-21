@@ -214,7 +214,7 @@ function NotificationsContent() {
         <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
+              <p className="text-sm font-semibold text-indigo-600">
                 Mindora Notification Center
               </p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">

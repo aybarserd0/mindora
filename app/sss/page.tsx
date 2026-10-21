@@ -199,7 +199,7 @@ export default function SSS() {
 
       <section className="border-b border-slate-200/80 bg-slate-50">
         <div className="mx-auto max-w-4xl px-5 py-20 text-center md:py-24">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Sık Sorulan Sorular
           </p>
 
@@ -249,7 +249,7 @@ export default function SSS() {
         <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 İlk adım
               </p>
               <h2 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">

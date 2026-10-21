@@ -733,7 +733,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
           <aside className="self-start rounded-xl border border-slate-200/80 bg-slate-50 p-5 md:p-6 lg:sticky lg:top-6">
             <div className="rounded-lg bg-pine-800 p-5 text-white">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-xs font-semibold text-slate-400">
                 Online görüşme
               </p>
               <p className="mt-3 text-3xl font-bold">{expert.priceText}</p>
@@ -906,7 +906,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
         <div className="rounded-xl bg-pine-800 p-8 text-white md:p-12">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Ücretsiz ön eşleşme
               </p>
               <h2 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">

@@ -438,7 +438,7 @@ export default function ExpertDashboardSessionsPage() {
           <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-600">
+                <p className="text-xs font-black text-indigo-600">
                   Seans yönetimi
                 </p>
                 <h2 className="mt-2 text-xl font-black text-slate-950 sm:text-2xl">
@@ -498,7 +498,7 @@ export default function ExpertDashboardSessionsPage() {
         <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+              <p className="text-xs font-black text-slate-400">
                 Arşiv
               </p>
               <h2 className="mt-2 text-xl font-black text-slate-950">Geçmiş Görüşmeler</h2>
@@ -541,7 +541,7 @@ function HeroHeader({
         <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-indigo-50 blur-3xl" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+            <p className="text-xs font-black text-indigo-600">
               Mindora Uzman Paneli
             </p>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -633,7 +633,7 @@ function PastSessionsTable({ sessions }: { sessions: UiSession[] }) {
     <div className="overflow-hidden rounded-3xl border border-slate-200">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
+          <thead className="bg-slate-50 text-xs text-slate-500">
             <tr>
               <th className="px-5 py-4 font-black">Danışan</th>
               <th className="px-5 py-4 font-black">Tarih</th>

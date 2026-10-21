@@ -206,7 +206,7 @@ export default function UzmanBasvuruPage() {
           </div>
 
           <div className="mt-8 rounded-xl bg-pine-800 p-6 text-white">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Başvuru süreci
             </p>
 
@@ -241,7 +241,7 @@ export default function UzmanBasvuruPage() {
 
         <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="border-b border-slate-200/80 pb-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Uzman başvuru formu
             </p>
 

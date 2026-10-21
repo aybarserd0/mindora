@@ -187,7 +187,7 @@ export default function PsikolojikTestler() {
 
       <section className="mx-auto max-w-7xl px-5 pb-14 pt-16 md:pt-20">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Psikolojik Testler
           </p>
 
@@ -232,9 +232,9 @@ export default function PsikolojikTestler() {
                 }`}
               >
                 <p
-                  className={`text-xs font-semibold uppercase tracking-wide ${
-                    isActive ? 'text-slate-400' : 'text-slate-400'
-                  }`}
+                  className={`text-xs font-semibold ${
+ isActive ? 'text-slate-400' : 'text-slate-400'
+ }`}
                 >
                   Aktif test
                 </p>
@@ -254,7 +254,7 @@ export default function PsikolojikTestler() {
 
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[0.75fr_1.25fr]">
         <aside className="h-fit rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm lg:sticky lg:top-24">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Seçili test
           </p>
           <h2 className="mt-3 text-2xl font-bold text-slate-900">{activeTest.title}</h2>
@@ -288,7 +288,7 @@ export default function PsikolojikTestler() {
         <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col justify-between gap-4 border-b border-slate-200/80 pb-6 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Test soruları
               </p>
               <h2 className="mt-2 text-2xl font-bold text-slate-900">{activeTest.title}</h2>
@@ -364,7 +364,7 @@ export default function PsikolojikTestler() {
 
           {showResult ? (
             <div className="animate-fade-in-up mt-8 rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Test sonucu
               </p>
 
@@ -399,7 +399,7 @@ export default function PsikolojikTestler() {
       <section className="mx-auto max-w-7xl px-5 py-16">
         <div className="grid gap-8 rounded-xl bg-pine-800 p-8 text-white md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Testten sonra ne olacak?
             </p>
 

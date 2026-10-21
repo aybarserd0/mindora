@@ -51,28 +51,19 @@ function ClientDashboardShell({ children }: { children: ReactNode }) {
   return (
     <div className="h-screen overflow-hidden bg-slate-50 text-slate-900">
       <div className="flex h-full min-w-0">
-        <aside className="hidden h-full w-[260px] shrink-0 border-r border-slate-200/80 bg-white lg:flex lg:flex-col">
-          <div className="flex h-20 items-center gap-3 border-b border-slate-200/80 px-5">
-            <Link href={dashboardHref} className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-pine-800 text-sm font-bold text-white shadow-sm">
-                M
-              </span>
-              <span>
-                <span className="block text-base font-bold tracking-tight text-slate-900">Mindora</span>
-                <span className="block text-xs font-semibold text-slate-500">Danışan Paneli</span>
+        <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
+          <div className="px-5 pb-4 pt-6">
+            <Link href={dashboardHref} className="flex items-center gap-2.5">
+              <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
+              <span className="leading-tight">
+                <span className="block font-display text-lg font-semibold text-slate-900">mindora</span>
+                <span className="block text-xs text-slate-500">Destek alanın</span>
               </span>
             </Link>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3 py-4">
-            <div className="mb-4 rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-4">
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">Destek Alanı</p>
-              <p className="mt-2 text-sm font-semibold leading-5 text-slate-900">
-                Seanslarınızı, ödemelerinizi ve uzman görüşmelerinizi yönetin.
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
+          <nav aria-label="Danışan menüsü" className="flex-1 overflow-y-auto px-3 pb-6 pt-2">
+            <div className="space-y-0.5">
               {navigationItems.map((item) => {
                 const active = isActive(pathname, item.href)
                 const href = buildTokenUrl(item.href, token)
@@ -81,97 +72,71 @@ function ClientDashboardShell({ children }: { children: ReactNode }) {
                   <Link
                     key={item.href}
                     href={href}
-                    className={`group flex items-center gap-3 rounded-lg px-3 py-3 transition-all duration-200 ease-out ${
-                      active ? 'bg-pine-800 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    aria-current={active ? 'page' : undefined}
+                    className={`relative block rounded-lg px-3 py-2.5 text-[0.94rem] transition-colors ${
+                      active
+                        ? 'bg-pine-50 font-semibold text-pine-900 before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-pine-600'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${
-                        active ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-white'
-                      }`}
-                    >
-                      {item.icon}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold leading-5">{item.label}</span>
-                      <span className={`block truncate text-xs leading-4 ${active ? 'text-slate-300' : 'text-slate-500'}`}>
-                        {item.description}
-                      </span>
-                    </span>
+                    {item.label}
                   </Link>
                 )
               })}
             </div>
           </nav>
 
-          <div className="border-t border-slate-200/80 p-3">
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">D</span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900">Danışan Hesabı</p>
-                  <p className="text-xs font-semibold text-emerald-600">Aktif</p>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Link
-                  href={profileHref}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
-                >
-                  Profil
-                </Link>
-                <Link
-                  href="/"
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
-                >
-                  Site
-                </Link>
-              </div>
+          <div className="space-y-3 border-t border-slate-200 p-4">
+            <p className="text-xs leading-5 text-slate-500">
+              Acil bir durumdaysan 112&apos;yi ara. Mindora acil durum hizmeti değildir.
+            </p>
+            <div className="flex gap-2">
+              <Link
+                href={profileHref}
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 transition-colors hover:border-slate-300"
+              >
+                Profil
+              </Link>
+              <Link
+                href="/"
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 transition-colors hover:border-slate-300"
+              >
+                Site
+              </Link>
             </div>
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur">
-            <div className="flex min-h-20 flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">Danışan Paneli</p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Destek Alanı</h1>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <NotificationBell role="client" token={token} />
-
-                <div className="hidden items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3 lg:flex">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">D</span>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Danışan Hesabı</p>
-                    <p className="text-xs font-semibold text-slate-500">Panel erişimi aktif</p>
-                  </div>
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Aktif</span>
-                </div>
-              </div>
-
-              <nav className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
-                {navigationItems.map((item) => {
-                  const active = isActive(pathname, item.href)
-                  const href = buildTokenUrl(item.href, token)
-
-                  return (
-                    <Link
-                      key={item.href}
-                      href={href}
-                      className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ease-out ${
-                        active ? 'bg-pine-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  )
-                })}
-              </nav>
+          <header className="z-20 border-b border-slate-200 bg-white lg:bg-slate-50">
+            <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+              <Link href={dashboardHref} className="flex items-center gap-2 lg:hidden">
+                <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
+                <span className="font-display text-lg font-semibold text-slate-900">Destek alanın</span>
+              </Link>
+              <p className="hidden text-sm text-slate-500 lg:block">Seanslarını, ödemelerini ve dosyalarını buradan takip edebilirsin.</p>
+              <NotificationBell role="client" token={token} />
             </div>
+
+            <nav aria-label="Danışan menüsü" className="flex gap-2 overflow-x-auto px-4 pb-3 sm:px-6 lg:hidden">
+              {navigationItems.map((item) => {
+                const active = isActive(pathname, item.href)
+                const href = buildTokenUrl(item.href, token)
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                      active ? 'bg-pine-800 text-white' : 'border border-slate-200 text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </nav>
           </header>
 
           <main className="min-h-0 flex-1 overflow-y-auto bg-slate-50">{children}</main>

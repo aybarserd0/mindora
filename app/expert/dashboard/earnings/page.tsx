@@ -310,7 +310,7 @@ export default function ExpertEarningsPage() {
         <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Mindora Uzman Paneli
               </p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -469,7 +469,7 @@ function EarningsTable({ payments }: { payments: EarningPayment[] }) {
   return (
     <div className="hidden overflow-x-auto lg:block">
       <table className="min-w-full text-left text-sm">
-        <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
+        <thead className="bg-slate-50 text-xs text-slate-500">
           <tr>
             <TableHead>Tarih</TableHead>
             <TableHead>Danışan</TableHead>

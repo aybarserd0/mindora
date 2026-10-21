@@ -341,7 +341,7 @@ export default function ExpertClientsPage() {
         <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Mindora Uzman Paneli
               </p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -764,9 +764,9 @@ function TableHead({
   return (
     <th
       scope="col"
-      className={`whitespace-nowrap px-5 py-3 text-xs font-black uppercase tracking-wide text-slate-500 sm:px-6 ${
-        align === 'right' ? 'text-right' : 'text-left'
-      }`}
+      className={`whitespace-nowrap px-5 py-3 text-xs font-black text-slate-500 sm:px-6 ${
+ align === 'right' ? 'text-right' : 'text-left'
+ }`}
     >
       {children}
     </th>
@@ -815,7 +815,7 @@ function NoticeCard({
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <span className="text-xs font-black text-slate-400">{label}</span>
       <span className="text-right font-semibold text-slate-700">{value}</span>
     </div>
   )

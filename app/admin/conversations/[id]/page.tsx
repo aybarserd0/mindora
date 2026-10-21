@@ -1043,7 +1043,7 @@ export default function AdminConversationPage({
         <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Mindora Moderasyon
               </p>
 
@@ -1161,7 +1161,7 @@ export default function AdminConversationPage({
                           )}`}
                         >
                           <div className="mb-2 flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                            <span className="text-xs font-semibold opacity-80">
                               {getSenderLabel(item.sender_type)}
                             </span>
 
@@ -1276,7 +1276,7 @@ export default function AdminConversationPage({
               <div className="rounded-xl border border-slate-800 bg-pine-800 p-5 text-white shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="text-sm font-semibold text-slate-400">
                       C7 Scheduling
                     </p>
                     <h3 className="mt-2 text-xl font-semibold">
@@ -1305,7 +1305,7 @@ export default function AdminConversationPage({
                   <>
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        <label className="mb-2 block text-xs font-semibold text-slate-400">
                           Başlangıç
                         </label>
                         <input
@@ -1317,7 +1317,7 @@ export default function AdminConversationPage({
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        <label className="mb-2 block text-xs font-semibold text-slate-400">
                           Bitiş
                         </label>
                         <input
@@ -1367,7 +1367,7 @@ export default function AdminConversationPage({
                         <div className="space-y-4">
                           {Object.entries(groupedSlots).map(([dateKey, daySlots]) => (
                             <div key={dateKey}>
-                              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                              <p className="mb-2 text-xs font-semibold text-slate-400">
                                 {dateKey}
                               </p>
 
@@ -1580,7 +1580,7 @@ function UpcomingSessionCard({
     <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Scheduled Session
           </p>
           <h3 className="mt-2 text-xl font-semibold text-slate-900">
@@ -1713,7 +1713,7 @@ function UpcomingSessionCard({
 
       {bookings.length > 0 && (
         <div className="mt-5">
-          <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <h4 className="mb-3 text-sm font-semibold text-slate-400">
             Son Randevular
           </h4>
 
@@ -1872,7 +1872,7 @@ function BookingLifecycleActions({
 function MiniSessionMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-800 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+      <p className="text-[10px] font-semibold text-slate-400">
         {label}
       </p>
       <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
@@ -1928,9 +1928,9 @@ function MetricCard({
       }`}
     >
       <p
-        className={`text-sm font-semibold uppercase tracking-wide ${
-          danger ? 'text-red-700' : 'text-slate-400'
-        }`}
+        className={`text-sm font-semibold ${
+ danger ? 'text-red-700' : 'text-slate-400'
+ }`}
       >
         {title}
       </p>

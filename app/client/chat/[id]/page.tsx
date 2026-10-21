@@ -1343,7 +1343,7 @@ export default function ClientChatPage({
         <header className="mb-6 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Mindora Güvenli Görüşme
               </p>
 
@@ -1473,7 +1473,7 @@ export default function ClientChatPage({
           {conversation && (
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Chat
                 </p>
                 <p className="mt-2 text-lg font-bold text-slate-900">
@@ -1486,7 +1486,7 @@ export default function ClientChatPage({
               </div>
 
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Ödeme
                 </p>
                 <p className="mt-2 text-lg font-bold text-green-700">
@@ -1495,7 +1495,7 @@ export default function ClientChatPage({
               </div>
 
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Video
                 </p>
                 <p
@@ -1575,7 +1575,7 @@ export default function ClientChatPage({
                                 : 'border border-slate-200/80 bg-white text-slate-900'
                           }`}
                         >
-                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide opacity-70">
+                          <p className="mb-2 text-xs font-semibold opacity-70">
                             {getSenderName(item)}
                           </p>
 

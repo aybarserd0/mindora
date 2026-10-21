@@ -74,7 +74,7 @@ export default function Hakkimizda() {
 
       <section className="border-b border-slate-200/80 bg-slate-50">
         <div className="mx-auto max-w-4xl px-5 py-20 text-center md:py-28">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Hakkımızda
           </p>
 
@@ -102,7 +102,7 @@ export default function Hakkimizda() {
       <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Biz kimiz?
             </p>
 
@@ -135,7 +135,7 @@ export default function Hakkimizda() {
       <section className="border-y border-slate-200/80 bg-slate-50">
         <div className="mx-auto max-w-7xl px-5 py-20">
           <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Değerlerimiz
             </p>
 
@@ -160,7 +160,7 @@ export default function Hakkimizda() {
 
       <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Uzman seçim kriterlerimiz
           </p>
 
@@ -194,7 +194,7 @@ export default function Hakkimizda() {
         <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Nasıl çalışıyoruz?
               </p>
 
@@ -213,7 +213,7 @@ export default function Hakkimizda() {
             <div className="space-y-4">
               {process.map((item, index) => (
                 <div key={item.title} className="rounded-lg border border-white/10 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <p className="text-xs font-semibold text-slate-400">
                     Adım {index + 1}
                   </p>
                   <h3 className="mt-2 text-base font-semibold text-white">{item.title}</h3>
@@ -228,7 +228,7 @@ export default function Hakkimizda() {
       <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Platform deneyimi
             </p>
 
@@ -259,7 +259,7 @@ export default function Hakkimizda() {
       <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Destek alanları
             </p>
 
@@ -291,7 +291,7 @@ export default function Hakkimizda() {
         <div className="mx-auto max-w-7xl px-5 py-20">
           <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Danışanlar ve uzmanlar için
               </p>
 
@@ -324,7 +324,7 @@ export default function Hakkimizda() {
       <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="grid gap-6 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               İletişim
             </p>
             <h2 className="mt-4 text-2xl font-bold text-slate-900 md:text-3xl">
@@ -339,11 +339,11 @@ export default function Hakkimizda() {
 
           <div className="space-y-3">
             <div className="rounded-lg border border-slate-200/80 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">E-posta</p>
+              <p className="text-xs font-semibold text-slate-400">E-posta</p>
               <p className="mt-1 font-medium text-slate-900">mindora.live@gmail.com</p>
             </div>
             <div className="rounded-lg border border-slate-200/80 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Instagram</p>
+              <p className="text-xs font-semibold text-slate-400">Instagram</p>
               <p className="mt-1 font-medium text-slate-900">@mindora.live</p>
             </div>
           </div>
@@ -352,7 +352,7 @@ export default function Hakkimizda() {
 
       <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm md:p-14">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             İlk adım
           </p>
 
@@ -386,7 +386,7 @@ export default function Hakkimizda() {
       <section className="mx-auto max-w-7xl px-5 pb-20">
         <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Önemli not
             </p>
 
