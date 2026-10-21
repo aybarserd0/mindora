@@ -51,7 +51,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Menü, açıldığı sayfaya bağlıdır; sayfa değişince kendiliğinden kapanır
+  const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
+  const mobileMenuOpen = menuOpenFor === pathname;
+  const setMobileMenuOpen = (value: boolean | ((v: boolean) => boolean)) => {
+    const next = typeof value === 'function' ? value(mobileMenuOpen) : value;
+    setMenuOpenFor(next ? pathname : null);
+  };
   const [totalUnread, setTotalUnread] = useState(0);
   const [loadingUnread, setLoadingUnread] = useState(false);
 
@@ -181,10 +187,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       channelRef.current = null;
     };
   }, [isLoginPage, loadTotalUnread]);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
 
   if (isLoginPage) {
     return <>{children}</>;
