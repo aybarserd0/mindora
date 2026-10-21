@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { deleteExpiredSupervisionCases } from '@/lib/supervision/cleanup'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { sendMail } from '@/lib/mail/smtp'
 import {
@@ -594,10 +595,12 @@ export async function GET(req: NextRequest) {
     }
 
     const result = await runSessionReminders(req)
+    const deletedSupervisionCases = await deleteExpiredSupervisionCases().catch(() => 0)
 
     return NextResponse.json({
       ok: true,
       ...result,
+      deletedSupervisionCases,
     })
   } catch (error) {
     console.error('SESSION_REMINDERS_CRON_ERROR', error)
