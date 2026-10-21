@@ -63,17 +63,14 @@ export function scanForPii(text: string | null | undefined): PiiFinding[] {
     for (const m of text.matchAll(regex)) push(type, m[0])
   }
 
-  // Cümle başı olmayan, büyük harfle başlayan ve yaygın ad listesinde olan kelimeler
-  const words = text.split(/(\s+)/)
-  let sentenceStart = true
-  for (const token of words) {
-    if (/^\s+$/.test(token)) continue
+  // Büyük harfle başlayan ve yaygın ad listesinde olan kelimeler. Cümle başındaki
+  // "Umut", "Deniz" gibi kelimeler de işaretlenir; psikolog "isim değil" diyebilir.
+  for (const token of text.split(/\s+/)) {
     const clean = token.replace(/[^\p{L}]/gu, '')
-    const isCapitalized = clean.length > 1 && clean[0] === clean[0].toLocaleUpperCase('tr') && clean[0] !== clean[0].toLocaleLowerCase('tr')
-    if (!sentenceStart && isCapitalized && COMMON_NAMES.has(clean.toLocaleLowerCase('tr'))) {
-      push('name', clean)
-    }
-    sentenceStart = /[.!?]$/.test(token)
+    if (clean.length < 2) continue
+    const first = clean[0]
+    const isCapitalized = first === first.toLocaleUpperCase('tr') && first !== first.toLocaleLowerCase('tr')
+    if (isCapitalized && COMMON_NAMES.has(clean.toLocaleLowerCase('tr'))) push('name', clean)
   }
 
   return findings
