@@ -582,7 +582,7 @@ export default function ExpertSessionPage() {
 
           <button
             onClick={() => router.back()}
-            className="w-full rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+            className="w-full rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Geri Dön
           </button>
@@ -638,7 +638,7 @@ export default function ExpertSessionPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               onClick={() => router.back()}
-              className="rounded-lg bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+              className="rounded-full bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
             >
               Chat’e Dön
             </button>
@@ -807,7 +807,7 @@ export default function ExpertSessionPage() {
               <button
                 onClick={handleJoinSession}
                 disabled={!token || !serverUrl || joining || !isBrowserOnline}
-                className="mt-2 w-full rounded-lg bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-2 w-full rounded-full bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {joining ? 'Bağlanılıyor...' : 'Görüşmeye Katıl'}
               </button>
@@ -1751,7 +1751,7 @@ function ConnectionRecoveryOverlay({
           <button
             onClick={onRetry}
             disabled={!isOnline}
-            className="rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Tekrar Dene
           </button>

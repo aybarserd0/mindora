@@ -453,7 +453,7 @@ export default function EslesmePage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-pine-800 px-6 py-4 text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full bg-pine-800 px-6 py-4 text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Başvuru gönderiliyor...' : 'Ücretsiz ön eşleşme başlat'}
             </button>

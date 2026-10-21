@@ -215,7 +215,7 @@ export default function SSS() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a
               href="/eslesme"
-              className="rounded-lg bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
+              className="rounded-full bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </a>

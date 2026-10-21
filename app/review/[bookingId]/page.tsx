@@ -167,7 +167,7 @@ export default function ReviewBookingPage() {
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+            className="mt-6 inline-flex rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Ana sayfaya dön
           </Link>
@@ -206,7 +206,7 @@ export default function ReviewBookingPage() {
               </p>
               <Link
                 href="/"
-                className="mt-6 inline-flex rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+                className="mt-6 inline-flex rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Ana sayfaya dön
               </Link>
@@ -291,7 +291,7 @@ export default function ReviewBookingPage() {
                 type="button"
                 disabled={state.status === 'submitting'}
                 onClick={submitReview}
-                className="inline-flex w-full items-center justify-center rounded-lg bg-pine-800 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-full bg-pine-800 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {state.status === 'submitting'
                   ? 'Gönderiliyor...'

@@ -241,7 +241,7 @@ function AdminFinanceContent() {
               </button>
               <Link
                 href={buildAdminUrl("/admin", adminToken)}
-                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
+                className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Yönetim Merkezi
               </Link>
@@ -430,7 +430,7 @@ function TransactionCard({ transaction, adminToken }: { transaction: FinanceTran
 
           <Link
             href={buildAdminUrl("/admin/payments", adminToken)}
-            className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+            className="inline-flex items-center justify-center rounded-full bg-pine-800 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Ödeme Paneli
           </Link>

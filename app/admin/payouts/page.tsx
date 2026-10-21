@@ -314,7 +314,7 @@ function AdminPayoutsContent() {
               </button>
               <Link
                 href={buildAdminUrl("/admin/finance", adminToken)}
-                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
+                className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Finans Yönetimi
               </Link>
@@ -401,7 +401,7 @@ function AdminPayoutsContent() {
                 type="button"
                 onClick={() => void createPayout()}
                 disabled={actionLoading === "create" || !selectedExpertId || !amount || Number(amount) <= 0}
-                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {actionLoading === "create" ? "Oluşturuluyor..." : "Ödeme Kaydı Oluştur"}
               </button>

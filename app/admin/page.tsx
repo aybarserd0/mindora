@@ -359,21 +359,12 @@ function AdminHomeContent() {
         <header className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[1.45fr_0.55fr]">
             <div className="p-6 md:p-8">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                  Mindora Yönetim Paneli
-                </p>
-                <p className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Operasyon merkezi
-                </p>
-              </div>
-
-              <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              <h1 className="text-3xl font-semibold text-slate-900 md:text-4xl">
                 Gösterge Paneli
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
-                Başvuruları, seansları, ödemeleri, yorumları ve son operasyon hareketlerini tek ekrandan takip et.
-                C12 Analytics sayfası ile detaylı büyüme ve gelir analizine geçebilirsin.
+                Başvuruları, seansları, ödemeleri ve yorumları tek ekrandan takip et. Büyüme ve gelir
+                ayrıntıları için Analytics sayfasına geç.
               </p>
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -381,16 +372,16 @@ function AdminHomeContent() {
                   type="button"
                   onClick={() => void fetchDashboard("refresh")}
                   disabled={loading || refreshing}
-                  className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loading || refreshing ? "Yükleniyor..." : "Verileri Yenile"}
+                  {loading || refreshing ? "Yükleniyor..." : "Verileri yenile"}
                 </button>
 
                 <Link
                   href={buildAdminUrl("/admin/analytics", adminToken)}
-                  className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-indigo-700"
+                  className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition-colors hover:border-slate-400"
                 >
-                  Analytics'i Aç →
+                  Analytics'i aç
                 </Link>
               </div>
             </div>
@@ -438,7 +429,7 @@ function AdminHomeContent() {
                 </p>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <p className="text-sm text-slate-500">{item.description}</p>
-                  <span className="text-sm font-semibold text-indigo-700">Aç →</span>
+                  <span className="text-sm font-semibold text-indigo-700">Aç</span>
                 </div>
               </Link>
             ))
@@ -517,7 +508,7 @@ function AdminHomeContent() {
 
               <Link
                 href={buildAdminUrl("/admin/payments", adminToken)}
-                className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-pine-900"
+                className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Ödemeleri Aç
               </Link>

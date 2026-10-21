@@ -413,7 +413,7 @@ export default function UzmanlarPage() {
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/eslesme"
-                className="rounded-lg bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
+                className="rounded-full bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
               >
                 Ücretsiz ön eşleşme başlat
               </Link>
@@ -655,7 +655,7 @@ export default function UzmanlarPage() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="/eslesme"
-              className="rounded-lg bg-pine-800 px-9 py-4 font-semibold text-white transition hover:bg-pine-900"
+              className="rounded-full bg-pine-800 px-9 py-4 font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </Link>
@@ -765,7 +765,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
       <div className="mt-5 grid gap-2.5">
         <Link
           href={profileHref}
-          className="rounded-lg bg-pine-800 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-pine-900"
+          className="rounded-full bg-pine-800 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-pine-900"
         >
           Profili incele
         </Link>
@@ -826,7 +826,7 @@ function EmptyState({
       {href && actionLabel ? (
         <Link
           href={href}
-          className="mt-6 inline-block rounded-lg bg-pine-800 px-7 py-3 font-semibold text-white transition hover:bg-pine-900"
+          className="mt-6 inline-block rounded-full bg-pine-800 px-7 py-3 font-semibold text-white transition hover:bg-pine-900"
         >
           {actionLabel}
         </Link>
@@ -836,7 +836,7 @@ function EmptyState({
         <button
           type="button"
           onClick={onAction}
-          className="mt-6 rounded-lg bg-pine-800 px-7 py-3 font-semibold text-white transition hover:bg-pine-900"
+          className="mt-6 rounded-full bg-pine-800 px-7 py-3 font-semibold text-white transition hover:bg-pine-900"
         >
           {actionLabel}
         </button>

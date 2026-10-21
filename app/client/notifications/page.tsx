@@ -246,7 +246,7 @@ function NotificationsContent() {
                 type="button"
                 onClick={() => void markAllAsRead()}
                 disabled={refreshing || unreadCount === 0}
-                className="rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Tümünü Okundu Yap
               </button>
@@ -347,7 +347,7 @@ function NotificationCard({
             <Link
               href={href}
               onClick={() => !notification.isRead && onMarkRead(notification.id)}
-              className="rounded-lg bg-pine-800 px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+              className="rounded-full bg-pine-800 px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
             >
               Aç
             </Link>

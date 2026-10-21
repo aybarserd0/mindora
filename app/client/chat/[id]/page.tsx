@@ -1324,7 +1324,7 @@ export default function ClientChatPage({
 
           <Link
             href={dashboardHref}
-            className="mt-7 block rounded-lg bg-pine-800 px-6 py-4 text-center text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+            className="mt-7 block rounded-full bg-pine-800 px-6 py-4 text-center text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Ödemeyi Tamamla
           </Link>
@@ -1838,7 +1838,7 @@ export default function ClientChatPage({
                       isRecording ||
                       (!message.trim() && !selectedAttachment)
                     }
-                    className="flex-1 rounded-lg bg-pine-800 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-full bg-pine-800 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {uploadingAttachment
                       ? 'Yükleniyor...'

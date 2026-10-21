@@ -35,7 +35,7 @@ export default function NotFound() {
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <Link
                 href="/"
-                className="rounded-lg bg-pine-800 px-6 py-4 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+                className="rounded-full bg-pine-800 px-6 py-4 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Ana sayfaya dön
               </Link>

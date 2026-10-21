@@ -91,7 +91,7 @@ export default function Hakkimizda() {
           <div className="mt-10">
             <a
               href="/eslesme"
-              className="inline-block rounded-lg bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
+              className="inline-block rounded-full bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </a>
@@ -368,7 +368,7 @@ export default function Hakkimizda() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a
               href="/eslesme"
-              className="rounded-lg bg-pine-800 px-9 py-4 font-semibold text-white transition hover:bg-pine-900"
+              className="rounded-full bg-pine-800 px-9 py-4 font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </a>

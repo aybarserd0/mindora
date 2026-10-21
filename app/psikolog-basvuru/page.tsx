@@ -204,7 +204,7 @@ export default function PsikologBasvuru() {
             href={psychologistFormUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-8 inline-block rounded-lg bg-pine-800 px-9 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+            className="mt-8 inline-block rounded-full bg-pine-800 px-9 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Başvuru formuna git
           </a>

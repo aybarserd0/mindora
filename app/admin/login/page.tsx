@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
 
           <button
             disabled={loading}
-            className="w-full rounded-lg bg-pine-800 px-6 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-full bg-pine-800 px-6 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Giriş yapılıyor...' : 'Admin Paneline Gir'}
           </button>

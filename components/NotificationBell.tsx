@@ -251,14 +251,17 @@ export default function NotificationBell({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="relative flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-lg shadow-sm transition-all duration-200 ease-out hover:border-slate-300 focus:outline-none focus:border-slate-400"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full bg-current/10 transition-colors hover:bg-current/15"
         aria-label="Bildirimler"
         aria-expanded={open}
       >
-        <span aria-hidden="true">🔔</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+        </svg>
 
         {unreadCount > 0 ? (
-          <span className="absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white ring-2 ring-white">
+          <span className="absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white ring-2 ring-current/0">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         ) : null}
@@ -368,7 +371,7 @@ export default function NotificationBell({
             <Link
               href={notificationsPageHref}
               onClick={() => setOpen(false)}
-              className="block rounded-lg bg-pine-800 px-4 py-3 text-center text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-pine-900"
+              className="block rounded-full bg-pine-800 px-4 py-3 text-center text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-pine-900"
             >
               Tüm bildirimleri gör
             </Link>

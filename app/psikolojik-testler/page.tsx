@@ -343,7 +343,7 @@ export default function PsikolojikTestler() {
               type="button"
               disabled={!isComplete}
               onClick={() => setShowResult(true)}
-              className="rounded-lg bg-pine-800 px-8 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+              className="rounded-full bg-pine-800 px-8 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
             >
               Sonucumu göster
             </button>
@@ -386,7 +386,7 @@ export default function PsikolojikTestler() {
 
                 <a
                   href="/eslesme"
-                  className="mt-5 inline-block rounded-lg bg-pine-800 px-7 py-3 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+                  className="mt-5 inline-block rounded-full bg-pine-800 px-7 py-3 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Ücretsiz ön eşleşme başlat
                 </a>

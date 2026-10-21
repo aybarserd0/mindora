@@ -537,7 +537,7 @@ export default function DanisanBasvurulariPage() {
                 type="button"
                 onClick={() => void fetchData()}
                 disabled={loading}
-                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Yükleniyor..." : "Yenile"}
               </button>

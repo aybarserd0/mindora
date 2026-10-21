@@ -132,7 +132,7 @@ export default function PublicExpertProfilePage({
             <div className="mt-5 space-y-3">
               <Link
                 href="/eslesme"
-                className="flex w-full items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
+                className="flex w-full items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Randevu Talep Et
               </Link>

@@ -762,7 +762,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             <div className="mt-6 space-y-3">
               <Link
                 href={matchingHref}
-                className="flex w-full items-center justify-center rounded-lg bg-pine-800 px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+                className="flex w-full items-center justify-center rounded-full bg-pine-800 px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Ücretsiz ön eşleşme iste
               </Link>
@@ -938,7 +938,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           </div>
           <Link
             href={matchingHref}
-            className="shrink-0 rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+            className="shrink-0 rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Eşleşme
           </Link>

@@ -439,7 +439,7 @@ function ClientProfileContent() {
                 </Link>
                 <Link
                   href={safeChatHref}
-                  className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
+                  className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Sohbete Git
                 </Link>
@@ -563,7 +563,7 @@ function ClientProfileContent() {
               <div className="mt-5 grid gap-3">
                 <Link
                   href={safeChatHref}
-                  className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+                  className="inline-flex items-center justify-center rounded-full bg-pine-800 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Uzmanla Sohbete Git
                 </Link>

@@ -136,7 +136,7 @@ export default function AdminSupervisorsPage() {
 
       <div className="mt-6 space-y-4">
         {loading ? <p className="text-sm text-slate-500">Yükleniyor…</p> : null}
-        {!loading && visible.length === 0 ? (
+        {!loading && !error && visible.length === 0 ? (
           <Panel>
             <p className="text-slate-600">Bu durumda süpervizör yok.</p>
           </Panel>

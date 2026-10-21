@@ -609,7 +609,7 @@ export default function ExpertProfilePage() {
 
                 <Link
                   href={publicPreviewHref}
-                  className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
+                  className="inline-flex items-center justify-center rounded-full bg-pine-800 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Danışan Görünümünü Aç
                 </Link>
@@ -752,7 +752,7 @@ function ProfilePreview({
 
           <Link
             href={publicPreviewHref}
-            className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-pine-800 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+            className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-pine-800 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Public Profili Aç
           </Link>
@@ -882,7 +882,7 @@ function ProfileEditForm({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving ? 'Kaydediliyor...' : 'Profili Güncelle'}
         </button>

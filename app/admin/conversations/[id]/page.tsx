@@ -1090,7 +1090,7 @@ export default function AdminConversationPage({
             <button
               onClick={() => conversationId && loadMessages(conversationId)}
               disabled={loading}
-              className="rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Yenile
             </button>
@@ -1233,7 +1233,7 @@ export default function AdminConversationPage({
                   <button
                     onClick={sendMessage}
                     disabled={sending || !message.trim()}
-                    className="rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50 md:ml-auto"
+                    className="rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50 md:ml-auto"
                   >
                     {sending ? 'Gönderiliyor...' : 'Mesaj Gönder'}
                   </button>

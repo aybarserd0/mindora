@@ -428,7 +428,7 @@ function ClientPaymentsContent() {
               </Link>
               <Link
                 href={buildTokenUrl('/client/dashboard/sessions', token)}
-                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
+                className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Seanslarım
               </Link>
@@ -600,7 +600,7 @@ function PaymentsTable({ payments }: { payments: UiPayment[] }) {
                   {payment.sessionHref !== '#' ? (
                     <Link
                       href={payment.sessionHref}
-                      className="rounded-lg bg-pine-800 px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+                      className="rounded-full bg-pine-800 px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                     >
                       Seans
                     </Link>

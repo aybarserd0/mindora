@@ -577,7 +577,7 @@ export default function AdminConversationsPage() {
               type="button"
               onClick={() => void loadConversations(false)}
               disabled={loading || refreshing}
-              className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {refreshing ? "Yenileniyor..." : "Yenile"}
             </button>
@@ -748,9 +748,9 @@ export default function AdminConversationsPage() {
                     <div className="flex w-full flex-col gap-2 lg:w-56">
                       <Link
                         href={`/admin/conversations/${conversation.id}`}
-                        className="rounded-lg bg-pine-800 px-5 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
+                        className="rounded-full bg-pine-800 px-5 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                       >
-                        Konuşmayı Aç →
+                        Konuşmayı aç
                       </Link>
 
                       <a

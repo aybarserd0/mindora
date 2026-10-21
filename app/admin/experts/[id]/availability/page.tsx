@@ -298,7 +298,7 @@ export default function ExpertAvailabilityAdminPage() {
               <button
                 onClick={createAvailability}
                 disabled={saving}
-                className="w-full rounded-lg bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:opacity-50"
+                className="w-full rounded-full bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:opacity-50"
               >
                 {saving ? 'Kaydediliyor...' : 'Müsaitliği Kaydet'}
               </button>
