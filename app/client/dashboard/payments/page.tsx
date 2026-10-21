@@ -428,7 +428,7 @@ function ClientPaymentsContent() {
               </Link>
               <Link
                 href={buildTokenUrl('/client/dashboard/sessions', token)}
-                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Seanslarım
               </Link>
@@ -508,7 +508,7 @@ function ClientPaymentsContent() {
                 onClick={() => setFilter(item.value)}
                 className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                   filter === item.value
-                    ? 'border-slate-900 bg-slate-900 text-white'
+                    ? 'border-pine-800 bg-pine-800 text-white'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                 }`}
               >
@@ -600,7 +600,7 @@ function PaymentsTable({ payments }: { payments: UiPayment[] }) {
                   {payment.sessionHref !== '#' ? (
                     <Link
                       href={payment.sessionHref}
-                      className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                      className="rounded-lg bg-pine-800 px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                     >
                       Seans
                     </Link>

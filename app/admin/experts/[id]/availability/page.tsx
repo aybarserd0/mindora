@@ -158,7 +158,7 @@ export default function ExpertAvailabilityAdminPage() {
           <button
             onClick={loadAvailability}
             disabled={loading}
-            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:opacity-50"
+            className="rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:opacity-50"
           >
             Yenile
           </button>
@@ -278,7 +278,7 @@ export default function ExpertAvailabilityAdminPage() {
                   type="checkbox"
                   checked={isActive}
                   onChange={(event) => setIsActive(event.target.checked)}
-                  className="h-5 w-5 accent-slate-900"
+                  className="h-5 w-5 accent-pine-700"
                 />
                 Aktif müsaitlik olarak kaydet
               </label>
@@ -298,7 +298,7 @@ export default function ExpertAvailabilityAdminPage() {
               <button
                 onClick={createAvailability}
                 disabled={saving}
-                className="w-full rounded-lg bg-slate-900 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:opacity-50"
+                className="w-full rounded-lg bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:opacity-50"
               >
                 {saving ? 'Kaydediliyor...' : 'Müsaitliği Kaydet'}
               </button>

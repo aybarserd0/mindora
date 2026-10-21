@@ -78,7 +78,7 @@ export default function FaqAccordion({ groups }: { groups: FaqGroup[] }) {
             ))}
           </div>
 
-          <div className="mt-6 rounded-lg bg-slate-900 p-5 text-white">
+          <div className="mt-6 rounded-lg bg-pine-800 p-5 text-white">
             <p className="font-semibold">Sorun burada yok mu?</p>
             <p className="mt-2 text-sm leading-6 text-slate-300">
               Ön eşleşme formunda eklemek istediğin not alanından durumunu

@@ -370,7 +370,7 @@ export default function ExpertClientsPage() {
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Seanslara Git
               </Link>
@@ -438,7 +438,7 @@ export default function ExpertClientsPage() {
                 onClick={() => setStatusFilter(item.value)}
                 className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                   statusFilter === item.value
-                    ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                    ? 'border-pine-800 bg-pine-800 text-white shadow-sm'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
@@ -610,7 +610,7 @@ function ClientActions({ client, fullWidth = false }: { client: ClientRow; fullW
       </Link>
       <Link
         href={client.profileHref}
-        className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+        className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
       >
         Detay
       </Link>
@@ -684,14 +684,14 @@ function EmptyClientState({
           <button
             type="button"
             onClick={onClearFilters}
-            className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Filtreleri Temizle
           </button>
         ) : (
           <Link
             href="/expert/dashboard/sessions"
-            className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Seansları Gör
           </Link>

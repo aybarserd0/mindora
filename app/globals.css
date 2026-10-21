@@ -1,28 +1,160 @@
 @import "tailwindcss";
 
+/*
+  Mindora tasarım sistemi
+  - Zemin: serin, ada çayı tonlu kâğıt
+  - Ana renk: çam yeşili (eylem, aktif durum)
+  - Vurgu: lavanta (güven ve kalite işaretleri, ör. Süpervizyonlu Uzman)
+  - Nötr: hafif yeşil tonlu griler; mevcut slate sınıfları bu skalaya bağlanır
+  - Yazı: Bricolage Grotesque (başlık), Onest (metin ve arayüz)
+*/
+
+@theme {
+  --color-slate-50: #f5f7f4;
+  --color-slate-100: #ecf0ec;
+  --color-slate-200: #dce2dd;
+  --color-slate-300: #c3ccc5;
+  --color-slate-400: #919c95;
+  --color-slate-500: #66726b;
+  --color-slate-600: #4d5852;
+  --color-slate-700: #3a443f;
+  --color-slate-800: #28302c;
+  --color-slate-900: #1b2420;
+  --color-slate-950: #111814;
+
+  --color-pine-50: #eef4f1;
+  --color-pine-100: #dce8e2;
+  --color-pine-200: #b8d1c5;
+  --color-pine-300: #8db4a3;
+  --color-pine-400: #5f927f;
+  --color-pine-500: #437866;
+  --color-pine-600: #3a6a5b;
+  --color-pine-700: #2f5a4d;
+  --color-pine-800: #254a3f;
+  --color-pine-900: #1c3830;
+  --color-pine-950: #12261f;
+
+  --color-lilac-50: #f4f1fa;
+  --color-lilac-100: #e9e3f6;
+  --color-lilac-200: #d3c8ec;
+  --color-lilac-300: #b6a6dd;
+  --color-lilac-400: #9783cb;
+  --color-lilac-500: #7d67b8;
+  --color-lilac-600: #6a54a3;
+  --color-lilac-700: #574487;
+  --color-lilac-800: #46376c;
+  --color-lilac-900: #372c55;
+  --color-lilac-950: #241c3a;
+
+  --color-indigo-50: #f4f1fa;
+  --color-indigo-100: #e9e3f6;
+  --color-indigo-200: #d3c8ec;
+  --color-indigo-300: #b6a6dd;
+  --color-indigo-400: #9783cb;
+  --color-indigo-500: #7d67b8;
+  --color-indigo-600: #6a54a3;
+  --color-indigo-700: #574487;
+  --color-indigo-800: #46376c;
+  --color-indigo-900: #372c55;
+  --color-indigo-950: #241c3a;
+
+  --color-violet-50: #f4f1fa;
+  --color-violet-100: #e9e3f6;
+  --color-violet-200: #d3c8ec;
+  --color-violet-300: #b6a6dd;
+  --color-violet-400: #9783cb;
+  --color-violet-500: #7d67b8;
+  --color-violet-600: #6a54a3;
+  --color-violet-700: #574487;
+  --color-violet-800: #46376c;
+  --color-violet-900: #372c55;
+
+  --color-purple-50: #f4f1fa;
+  --color-purple-100: #e9e3f6;
+  --color-purple-200: #d3c8ec;
+  --color-purple-300: #b6a6dd;
+  --color-purple-400: #9783cb;
+  --color-purple-500: #7d67b8;
+  --color-purple-600: #6a54a3;
+  --color-purple-700: #574487;
+  --color-purple-800: #46376c;
+  --color-purple-900: #372c55;
+
+  --color-emerald-50: #eef5f0;
+  --color-emerald-100: #d9ebdf;
+  --color-emerald-200: #b3d6bf;
+  --color-emerald-300: #86bd99;
+  --color-emerald-400: #57a173;
+  --color-emerald-500: #3b8a5a;
+  --color-emerald-600: #2f7449;
+  --color-emerald-700: #285e3d;
+  --color-emerald-800: #214b32;
+  --color-emerald-900: #1b3d29;
+
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  --font-sans: "Onest Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Onest Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-sm: 0 1px 2px rgb(27 36 32 / 0.05);
+  --shadow-md: 0 4px 12px -2px rgb(27 36 32 / 0.08);
+  --shadow-lg: 0 12px 32px -8px rgb(27 36 32 / 0.14);
+  --shadow-xl: 0 24px 48px -12px rgb(27 36 32 / 0.18);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: var(--color-slate-50);
+  --foreground: var(--color-slate-900);
+  color-scheme: light;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  letter-spacing: -0.035em;
+}
+
+::selection {
+  background: var(--color-lilac-200);
+  color: var(--color-slate-900);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pine-500);
+  outline-offset: 2px;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise-in {
+  animation: rise-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 @keyframes fade-in-up {
@@ -41,7 +173,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-in-up {
+  .animate-fade-in-up,
+  .animate-rise-in {
     animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }

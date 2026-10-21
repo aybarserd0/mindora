@@ -215,7 +215,7 @@ export default function SSS() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a
               href="/eslesme"
-              className="rounded-lg bg-slate-900 px-8 py-4 text-center font-semibold text-white transition hover:bg-slate-800"
+              className="rounded-lg bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </a>
@@ -246,7 +246,7 @@ export default function SSS() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-20">
-        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-14">
+        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="grid gap-8 md:grid-cols-2">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">

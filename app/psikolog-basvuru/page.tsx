@@ -69,7 +69,7 @@ export default function PsikologBasvuru() {
       <Header />
 
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-10 rounded-xl bg-slate-900 p-8 text-white md:grid-cols-2 md:p-14">
+        <div className="grid gap-10 rounded-xl bg-pine-800 p-8 text-white md:grid-cols-2 md:p-14">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Uzmanlar için
@@ -133,7 +133,7 @@ export default function PsikologBasvuru() {
               style={{ animationDelay: `${index * 80}ms` }}
               className="animate-fade-in-up rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm transition-all duration-200 ease-out hover:border-slate-300"
             >
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-slate-900 text-lg font-semibold text-white">
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-pine-800 text-lg font-semibold text-white">
                 {index + 1}
               </div>
 
@@ -204,7 +204,7 @@ export default function PsikologBasvuru() {
             href={psychologistFormUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-8 inline-block rounded-lg bg-slate-900 px-9 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="mt-8 inline-block rounded-lg bg-pine-800 px-9 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Başvuru formuna git
           </a>

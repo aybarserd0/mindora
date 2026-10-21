@@ -42,7 +42,7 @@ export default function Header() {
         <div className="hidden items-center gap-3 lg:flex">
           <a
             href="/eslesme"
-            className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+            className="rounded-lg bg-pine-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-pine-900"
           >
             Ücretsiz eşleş
           </a>
@@ -76,7 +76,7 @@ export default function Header() {
             <a
               href="/eslesme"
               onClick={() => setIsOpen(false)}
-              className="mt-2 rounded-lg bg-slate-900 px-4 py-3 text-center font-semibold text-white transition hover:bg-slate-800"
+              className="mt-2 rounded-lg bg-pine-800 px-4 py-3 text-center font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </a>

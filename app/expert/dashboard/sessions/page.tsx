@@ -723,7 +723,7 @@ function SessionCard({ session, mode }: { session: UiSession; mode: 'upcoming' |
           ) : (
             <Link
               href={session.conversationHref}
-              className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-black text-white transition hover:bg-slate-800"
+              className="inline-flex items-center justify-center rounded-2xl bg-pine-800 px-4 py-2.5 text-sm font-black text-white transition hover:bg-pine-900"
             >
               Detayları Gör
             </Link>

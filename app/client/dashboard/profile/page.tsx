@@ -439,7 +439,7 @@ function ClientProfileContent() {
                 </Link>
                 <Link
                   href={safeChatHref}
-                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+                  className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Sohbete Git
                 </Link>
@@ -525,7 +525,7 @@ function ClientProfileContent() {
               }
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-xl font-semibold text-white">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-pine-800 text-xl font-semibold text-white">
                   {expert.photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={expert.photoUrl} alt={expert.name} className="h-full w-full object-cover" />
@@ -563,7 +563,7 @@ function ClientProfileContent() {
               <div className="mt-5 grid gap-3">
                 <Link
                   href={safeChatHref}
-                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                  className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Uzmanla Sohbete Git
                 </Link>

@@ -179,7 +179,7 @@ export default function EslesmePage() {
             ))}
           </div>
 
-          <div className="mt-8 rounded-xl bg-slate-900 p-6 text-white">
+          <div className="mt-8 rounded-xl bg-pine-800 p-6 text-white">
             <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Süreç
             </p>
@@ -406,7 +406,7 @@ export default function EslesmePage() {
                       name="availability"
                       type="checkbox"
                       value={item}
-                      className="h-4 w-4 accent-slate-900"
+                      className="h-4 w-4 accent-pine-700"
                     />
                     {item}
                   </label>
@@ -436,7 +436,7 @@ export default function EslesmePage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-slate-900 px-6 py-4 text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg bg-pine-800 px-6 py-4 text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Başvuru gönderiliyor...' : 'Ücretsiz ön eşleşme başlat'}
             </button>

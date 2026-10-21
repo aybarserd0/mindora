@@ -241,7 +241,7 @@ function ExpertReviewsContent() {
               </button>
               <Link
                 href={buildTokenUrl("/expert/dashboard", token)}
-                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Dashboard
               </Link>
@@ -318,7 +318,7 @@ function ExpertReviewsContent() {
                   onClick={() => setStatusFilter(item.value)}
                   className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                     statusFilter === item.value
-                      ? "border-slate-900 bg-slate-900 text-white"
+                      ? "border-pine-800 bg-pine-800 text-white"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
@@ -335,7 +335,7 @@ function ExpertReviewsContent() {
                   onClick={() => setRatingFilter(item.value)}
                   className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                     ratingFilter === item.value
-                      ? "border-slate-900 bg-slate-900 text-white"
+                      ? "border-pine-800 bg-pine-800 text-white"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >

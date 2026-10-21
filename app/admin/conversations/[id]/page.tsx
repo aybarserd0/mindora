@@ -259,7 +259,7 @@ function getTypingText(senderType: SenderType) {
 }
 
 function getSenderStyle(sender: SenderType) {
-  if (sender === 'admin') return 'ml-auto bg-slate-900 text-white'
+  if (sender === 'admin') return 'ml-auto bg-pine-800 text-white'
   if (sender === 'expert') {
     return 'mr-auto border border-purple-200 bg-purple-50 text-purple-950'
   }
@@ -1090,7 +1090,7 @@ export default function AdminConversationPage({
             <button
               onClick={() => conversationId && loadMessages(conversationId)}
               disabled={loading}
-              className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Yenile
             </button>
@@ -1233,7 +1233,7 @@ export default function AdminConversationPage({
                   <button
                     onClick={sendMessage}
                     disabled={sending || !message.trim()}
-                    className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 md:ml-auto"
+                    className="rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50 md:ml-auto"
                   >
                     {sending ? 'Gönderiliyor...' : 'Mesaj Gönder'}
                   </button>
@@ -1273,7 +1273,7 @@ export default function AdminConversationPage({
                 onSendLinks={sendBookingLinks}
               />
 
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 text-white shadow-sm">
+              <div className="rounded-xl border border-slate-800 bg-pine-800 p-5 text-white shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
@@ -1610,7 +1610,7 @@ function UpcomingSessionCard({
           Bu konuşma için yaklaşan randevu yok.
         </div>
       ) : (
-        <div className="mt-5 rounded-xl bg-slate-900 p-5 text-white">
+        <div className="mt-5 rounded-xl bg-pine-800 p-5 text-white">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-slate-400">

@@ -139,7 +139,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
         <aside className="hidden h-full w-[280px] shrink-0 border-r border-slate-200/80 bg-white lg:flex lg:flex-col">
           <div className="flex h-20 items-center gap-3 border-b border-slate-200/80 px-5">
             <Link href="/expert/dashboard" className="flex items-center gap-3 no-underline">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-pine-800 text-sm font-semibold text-white shadow-sm">
                 M
               </span>
               <span>
@@ -173,7 +173,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                     href={item.href}
                     className={`group flex items-center gap-3 rounded-xl px-3 py-3 no-underline transition-all duration-200 ease-out ${
                       active
-                        ? "bg-slate-900 text-white shadow-sm"
+                        ? "bg-pine-800 text-white shadow-sm"
                         : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
@@ -299,7 +299,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
                       href={item.href}
                       className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold no-underline transition-all duration-200 ease-out ${
                         active
-                          ? "bg-slate-900 text-white"
+                          ? "bg-pine-800 text-white"
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                       }`}
                     >

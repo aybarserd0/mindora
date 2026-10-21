@@ -167,7 +167,7 @@ export default function ReviewBookingPage() {
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="mt-6 inline-flex rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Ana sayfaya dön
           </Link>
@@ -179,7 +179,7 @@ export default function ReviewBookingPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <section className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
-        <div className="bg-slate-900 px-6 py-7 text-white sm:px-8">
+        <div className="bg-pine-800 px-6 py-7 text-white sm:px-8">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Mindora Değerlendirme
           </p>
@@ -206,7 +206,7 @@ export default function ReviewBookingPage() {
               </p>
               <Link
                 href="/"
-                className="mt-6 inline-flex rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                className="mt-6 inline-flex rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Ana sayfaya dön
               </Link>
@@ -291,7 +291,7 @@ export default function ReviewBookingPage() {
                 type="button"
                 disabled={state.status === 'submitting'}
                 onClick={submitReview}
-                className="inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-lg bg-pine-800 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {state.status === 'submitting'
                   ? 'Gönderiliyor...'

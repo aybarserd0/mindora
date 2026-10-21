@@ -235,7 +235,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                       href={item.href}
                       className={`flex items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold no-underline transition-all duration-200 ease-out ${
                         active
-                          ? "bg-slate-900 text-white shadow-sm"
+                          ? "bg-pine-800 text-white shadow-sm"
                           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                       }`}
                     >
@@ -267,7 +267,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <button
             type="button"
             onClick={logout}
-            className="rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="rounded-lg bg-pine-800 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Çıkış
           </button>
@@ -298,7 +298,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen((value) => !value)}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                className="rounded-lg bg-pine-800 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Menü
               </button>

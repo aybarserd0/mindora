@@ -552,7 +552,7 @@ export default function ExpertProfilePage() {
           <div className="border-b border-slate-200/80 bg-slate-50 p-6 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-2xl font-semibold text-white shadow-sm">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-pine-800 text-2xl font-semibold text-white shadow-sm">
                   {profile.profileImageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -609,7 +609,7 @@ export default function ExpertProfilePage() {
 
                 <Link
                   href={publicPreviewHref}
-                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+                  className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Danışan Görünümünü Aç
                 </Link>
@@ -752,7 +752,7 @@ function ProfilePreview({
 
           <Link
             href={publicPreviewHref}
-            className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-pine-800 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Public Profili Aç
           </Link>
@@ -882,7 +882,7 @@ function ProfileEditForm({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving ? 'Kaydediliyor...' : 'Profili Güncelle'}
         </button>

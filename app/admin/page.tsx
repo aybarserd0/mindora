@@ -381,7 +381,7 @@ function AdminHomeContent() {
                   type="button"
                   onClick={() => void fetchDashboard("refresh")}
                   disabled={loading || refreshing}
-                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading || refreshing ? "Yükleniyor..." : "Verileri Yenile"}
                 </button>
@@ -395,7 +395,7 @@ function AdminHomeContent() {
               </div>
             </div>
 
-            <div className="border-t border-slate-200/80 bg-slate-900 p-6 text-white lg:border-l lg:border-t-0 md:p-8">
+            <div className="border-t border-slate-200/80 bg-pine-800 p-6 text-white lg:border-l lg:border-t-0 md:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
                 Anlık durum
               </p>
@@ -517,7 +517,7 @@ function AdminHomeContent() {
 
               <Link
                 href={buildAdminUrl("/admin/payments", adminToken)}
-                className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-slate-800"
+                className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Ödemeleri Aç
               </Link>

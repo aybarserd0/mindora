@@ -368,7 +368,7 @@ export default function NotificationBell({
             <Link
               href={notificationsPageHref}
               onClick={() => setOpen(false)}
-              className="block rounded-lg bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-slate-800"
+              className="block rounded-lg bg-pine-800 px-4 py-3 text-center text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-pine-900"
             >
               Tüm bildirimleri gör
             </Link>

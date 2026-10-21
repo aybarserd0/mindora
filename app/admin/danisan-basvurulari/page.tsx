@@ -537,7 +537,7 @@ export default function DanisanBasvurulariPage() {
                 type="button"
                 onClick={() => void fetchData()}
                 disabled={loading}
-                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Yükleniyor..." : "Yenile"}
               </button>
@@ -563,7 +563,7 @@ export default function DanisanBasvurulariPage() {
               }}
               className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
                 filter === option.value
-                  ? "border-slate-900 bg-slate-900 text-white"
+                  ? "border-pine-800 bg-pine-800 text-white"
                   : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:text-slate-900"
               }`}
             >
@@ -1021,7 +1021,7 @@ function StatusButton({
   const className =
     tone === "danger"
       ? "bg-rose-600 hover:bg-rose-700"
-      : "bg-slate-900 hover:bg-slate-800";
+      : "bg-pine-800 hover:bg-pine-900";
 
   return (
     <button

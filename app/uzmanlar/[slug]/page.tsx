@@ -673,7 +673,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
         <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-8 lg:grid-cols-[1fr_390px] lg:p-10">
           <div className="min-w-0">
             <div className="flex flex-col gap-7 md:flex-row">
-              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-slate-900 text-white md:h-36 md:w-36">
+              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-pine-800 text-white md:h-36 md:w-36">
                 {hasRealProfileImage(expert) ? (
                   <img
                     src={expert.profileImageUrl || ""}
@@ -732,7 +732,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           </div>
 
           <aside className="self-start rounded-xl border border-slate-200/80 bg-slate-50 p-5 md:p-6 lg:sticky lg:top-6">
-            <div className="rounded-lg bg-slate-900 p-5 text-white">
+            <div className="rounded-lg bg-pine-800 p-5 text-white">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Online görüşme
               </p>
@@ -762,7 +762,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
             <div className="mt-6 space-y-3">
               <Link
                 href={matchingHref}
-                className="flex w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                className="flex w-full items-center justify-center rounded-lg bg-pine-800 px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Ücretsiz ön eşleşme iste
               </Link>
@@ -903,7 +903,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-16">
-        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-12">
+        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-12">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
@@ -938,7 +938,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
           </div>
           <Link
             href={matchingHref}
-            className="shrink-0 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="shrink-0 rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Eşleşme
           </Link>

@@ -91,7 +91,7 @@ export default function Hakkimizda() {
           <div className="mt-10">
             <a
               href="/eslesme"
-              className="inline-block rounded-lg bg-slate-900 px-8 py-4 text-center font-semibold text-white transition hover:bg-slate-800"
+              className="inline-block rounded-lg bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </a>
@@ -180,7 +180,7 @@ export default function Hakkimizda() {
               key={item.title}
               className="rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm"
             >
-              <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white">
+              <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg bg-pine-800 text-sm font-semibold text-white">
                 {index + 1}
               </div>
               <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
@@ -191,7 +191,7 @@ export default function Hakkimizda() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-14">
+        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="grid gap-8 md:grid-cols-2">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
@@ -368,7 +368,7 @@ export default function Hakkimizda() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a
               href="/eslesme"
-              className="rounded-lg bg-slate-900 px-9 py-4 font-semibold text-white transition hover:bg-slate-800"
+              className="rounded-lg bg-pine-800 px-9 py-4 font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </a>
@@ -384,7 +384,7 @@ export default function Hakkimizda() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-20">
-        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-14">
+        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Önemli not

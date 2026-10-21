@@ -132,7 +132,7 @@ export default function PublicExpertProfilePage({
             <div className="mt-5 space-y-3">
               <Link
                 href="/eslesme"
-                className="flex w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+                className="flex w-full items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Randevu Talep Et
               </Link>
@@ -198,7 +198,7 @@ export default function PublicExpertProfilePage({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="rounded-xl bg-slate-900 p-8 text-white shadow-sm sm:p-10">
+        <div className="rounded-xl bg-pine-800 p-8 text-white shadow-sm sm:p-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-2xl font-bold tracking-tight">

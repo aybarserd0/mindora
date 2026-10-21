@@ -1378,7 +1378,7 @@ export default function ExpertChatPage({
 
           <Link
             href="/expert/dashboard"
-            className="mt-7 block rounded-lg bg-slate-900 px-6 py-4 text-center text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="mt-7 block rounded-lg bg-pine-800 px-6 py-4 text-center text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Panele Dön
           </Link>
@@ -1487,7 +1487,7 @@ export default function ExpertChatPage({
                     type="button"
                     onClick={handleEnableNotifications}
                     disabled={notificationLoading}
-                    className="mt-4 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-4 rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {notificationLoading
                       ? 'Bildirim izni alınıyor...'
@@ -1511,7 +1511,7 @@ export default function ExpertChatPage({
                 disabled={!canStartVideoSession || videoSessionLoading}
                 title={videoButtonTitle}
                 data-ready={String(isConversationReady)}
-                className="rounded-lg bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg bg-pine-800 px-5 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {videoSessionLoading
                   ? 'Seans hazırlanıyor...'
@@ -1581,7 +1581,7 @@ export default function ExpertChatPage({
             <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
               <Link
                 href="/expert/login"
-                className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-slate-800"
+                className="rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white no-underline transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Giriş Yap
               </Link>
@@ -1643,7 +1643,7 @@ export default function ExpertChatPage({
                         <div
                           className={`max-w-[82%] rounded-lg p-4 text-sm shadow-sm ${
                             isMine
-                              ? 'bg-slate-900 text-white'
+                              ? 'bg-pine-800 text-white'
                               : isAdmin
                                 ? 'border border-purple-200 bg-purple-50 text-purple-900'
                                 : 'border border-slate-200/80 bg-white text-slate-900'
@@ -1710,7 +1710,7 @@ export default function ExpertChatPage({
                                       className={`mt-3 w-full rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60 ${
                                         isMine
                                           ? 'bg-white text-slate-900 hover:bg-white/90'
-                                          : 'bg-slate-900 text-white hover:bg-slate-800'
+                                          : 'bg-pine-800 text-white hover:bg-pine-900'
                                       }`}
                                     >
                                       {openingAttachmentId === attachment.id
@@ -1807,7 +1807,7 @@ export default function ExpertChatPage({
                     <button
                       type="button"
                       onClick={stopVoiceRecording}
-                      className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                      className="rounded-full bg-pine-800 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                     >
                       Kaydı Bitir
                     </button>
@@ -1916,7 +1916,7 @@ export default function ExpertChatPage({
                       isRecording ||
                       (!message.trim() && !selectedAttachment)
                     }
-                    className="flex-1 rounded-lg bg-slate-900 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-lg bg-pine-800 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {uploadingAttachment
                       ? 'Yükleniyor...'

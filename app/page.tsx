@@ -130,7 +130,7 @@ export default async function Home() {
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a
                 href="/eslesme"
-                className="inline-block rounded-lg bg-slate-900 px-8 py-4 text-center text-base font-semibold text-white transition hover:bg-slate-800"
+                className="inline-block rounded-lg bg-pine-800 px-8 py-4 text-center text-base font-semibold text-white transition hover:bg-pine-900"
               >
                 Hemen ücretsiz eşleş
               </a>
@@ -172,7 +172,7 @@ export default async function Home() {
               </div>
 
               <div className="mt-5 flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pine-800 text-sm font-semibold text-white">
                   UP
                 </div>
                 <div className="min-w-0">
@@ -208,7 +208,7 @@ export default async function Home() {
 
               <a
                 href="/eslesme"
-                className="mt-6 block rounded-lg bg-slate-900 px-5 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="mt-6 block rounded-lg bg-pine-800 px-5 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-pine-900"
               >
                 Bu profille eşleş
               </a>
@@ -237,7 +237,7 @@ export default async function Home() {
               key={step.title}
               className="rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm"
             >
-              <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white">
+              <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-pine-800 text-sm font-semibold text-white">
                 {index + 1}
               </div>
               <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
@@ -345,7 +345,7 @@ export default async function Home() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-14">
+        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="grid gap-8 md:grid-cols-2">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
@@ -434,7 +434,7 @@ export default async function Home() {
 
             <a
               href="/uzman-basvuru"
-              className="mt-6 inline-block rounded-lg bg-slate-900 px-8 py-4 font-semibold text-white transition hover:bg-slate-800"
+              className="mt-6 inline-block rounded-lg bg-pine-800 px-8 py-4 font-semibold text-white transition hover:bg-pine-900"
             >
               Uzman olarak başvur
             </a>
@@ -487,7 +487,7 @@ export default async function Home() {
           <div className="mt-8">
             <a
               href="/eslesme"
-              className="inline-block rounded-lg bg-slate-900 px-9 py-4 font-semibold text-white transition hover:bg-slate-800"
+              className="inline-block rounded-lg bg-pine-800 px-9 py-4 font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz eşleş
             </a>

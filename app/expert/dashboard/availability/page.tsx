@@ -401,7 +401,7 @@ export default function ExpertAvailabilityPage() {
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
                 Görüşmeleri Gör
               </Link>
@@ -543,7 +543,7 @@ export default function ExpertAvailabilityPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center rounded-lg bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {saving ? 'Kaydediliyor...' : 'Müsaitlik Ekle'}
                 </button>
@@ -770,7 +770,7 @@ function EmptyState({ title, description }: { title: string; description: string
 function StepItem({ index, title }: { index: number; title: string }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-slate-200/80 bg-slate-50 p-4">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pine-800 text-xs font-semibold text-white">
         {index}
       </span>
       <p className="text-sm font-semibold text-slate-700">{title}</p>

@@ -178,7 +178,7 @@ export default function VerificationActions({
           type="button"
           disabled={Boolean(loadingAction) || status === "pending"}
           onClick={() => void updateStatus("pending")}
-          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-pine-800 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loadingAction === "pending" ? "Alınıyor..." : "İnceleme"}
         </button>
