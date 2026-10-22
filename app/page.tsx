@@ -1,506 +1,310 @@
-import Header from '@/components/Header';
-import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import Link from 'next/link'
+import Header from '@/components/Header'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
-// Homepage stays statically served for speed, but the approved-expert count
-// is real (not hardcoded) — this just caps how stale it can get between
-// deploys.
-export const revalidate = 3600;
+// Ana sayfa statik sunulur; onaylı uzman sayısı gerçek veridir ve en fazla
+// bir saat bayat kalabilir.
+export const revalidate = 3600
 
-const MIN_EXPERT_COUNT_TO_DISPLAY = 3;
+const MIN_EXPERT_COUNT_TO_DISPLAY = 3
 
 async function getApprovedExpertCount() {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = getSupabaseAdmin()
 
     const { count, error } = await supabase
       .from('experts')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'approved');
+      .eq('status', 'approved')
 
-    if (error || typeof count !== 'number') return null;
+    if (error || typeof count !== 'number') return null
 
-    return count;
+    return count
   } catch {
-    return null;
+    return null
   }
 }
 
+// Değerler /eslesme formundaki seçeneklerle birebir aynı olmalı
+const topics = [
+  { label: 'Kaygı ve stres', value: 'Kaygı / stres' },
+  { label: 'İlişki ve aile', value: 'İlişki / aile' },
+  { label: 'Özgüven', value: 'Özgüven' },
+  { label: 'Motivasyon', value: 'Motivasyon' },
+  { label: 'Depresif hisler', value: 'Depresif hisler' },
+  { label: 'Tükenmişlik', value: 'Tükenmişlik' },
+  { label: 'Henüz adını koyamadım', value: 'Diğer' },
+]
+
+const steps = [
+  {
+    title: 'Birkaç soruyu yanıtla',
+    text: 'Neyle uğraştığını, ne zaman müsait olduğunu ve nasıl bir uzman istediğini anlat. Yaklaşık üç dakika sürer.',
+  },
+  {
+    title: 'Sana uygun uzmanı öneriyoruz',
+    text: 'Yanıtlarına göre alanında çalışan, belgeleri doğrulanmış bir psikolog öneriyoruz. Kabul etmek zorunda değilsin.',
+  },
+  {
+    title: 'Online görüşmeye başla',
+    text: 'Ücreti görerek ödemeyi yap; mesajlaşma ve görüntülü görüşme Mindora içinde ilerlesin.',
+  },
+]
+
+const reasons = [
+  {
+    title: 'Kimi seçeceğini bilmen gerekmiyor',
+    text: 'Yüzlerce profil arasında kaybolmak yerine ihtiyacını anlatıyorsun, eşleşmeyi biz öneriyoruz.',
+  },
+  {
+    title: 'Belgeleri incelenmiş psikologlar',
+    text: 'Her uzmanın diploması ve unvanı platforma alınmadan önce tek tek kontrol edilir.',
+  },
+  {
+    title: 'Ücret baştan belli',
+    text: 'Seans ücreti ödeme adımından önce açıkça görünür. Ön eşleşme her zaman ücretsizdir.',
+  },
+  {
+    title: 'Her şey tek yerde',
+    text: 'Randevu, ödeme, mesajlaşma ve görüntülü görüşme için başka bir uygulamaya geçmen gerekmez.',
+  },
+]
+
+const privacyFacts = [
+  {
+    title: 'Görüşmeler kaydedilmez',
+    text: 'Görüntülü seanslar Mindora tarafından kaydedilmez, yalnızca iletim için işlenir.',
+  },
+  {
+    title: 'Erişim sınırlı',
+    text: 'Bir görüşmeyi yalnızca sen ve uzmanın görebilir. Ekibimiz yalnızca şikayet veya güvenlik durumunda erişir.',
+  },
+  {
+    title: 'Şifreli bağlantı',
+    text: 'Mesajlaşma dahil tüm trafik şifreli bağlantı (TLS) üzerinden iletilir.',
+  },
+]
+
+const faqs = [
+  {
+    q: 'Ön eşleşme ücretli mi?',
+    a: 'Hayır. Formu doldurmak ve uzman önerisi almak ücretsizdir, seans satın alma zorunluluğu oluşturmaz.',
+  },
+  {
+    q: 'Görüşmeler nasıl yapılıyor?',
+    a: 'Tamamen online. Mindora içindeki görüntülü görüşme odasına tarayıcından katılırsın, ayrı bir uygulama gerekmez.',
+  },
+  {
+    q: 'Önerilen uzman bana uymazsa ne olur?',
+    a: 'Öneriyi kabul etmek zorunda değilsin. İlk görüşmeden sonra uyum olmadığını düşünürsen yeni bir öneri isteyebilirsin.',
+  },
+  {
+    q: 'Mindora acil durumlarda yardımcı olur mu?',
+    a: 'Hayır, Mindora bir acil durum hizmeti değildir. Kendine veya başkasına zarar verme riski varsa 112’yi ara ya da en yakın acil servise başvur.',
+  },
+]
+
 export default async function Home() {
-  const approvedExpertCount = await getApprovedExpertCount();
-
-  const steps = [
-    {
-      title: "İhtiyacını paylaş",
-      text: "Destek almak istediğin konuyu, uygun zamanını ve uzman tercihlerini birkaç dakikada bizimle paylaş.",
-    },
-    {
-      title: "Uygun uzmanla eşleş",
-      text: "Yanıtların değerlendirilir ve ihtiyacına en uygun online psikolojik destek süreci planlanır.",
-    },
-    {
-      title: "Güvenli şekilde başla",
-      text: "Online görüşme, mesajlaşma ve randevu sürecini Mindora üzerinden sade bir şekilde yönet.",
-    },
-  ];
-
-  const reasons = [
-    {
-      title: "Doğru başlangıç",
-      text: "Kime başvuracağını bilemediğinde, ihtiyacına göre daha doğru bir ilk yönlendirme yapılmasını hedefler.",
-    },
-    {
-      title: "Gizlilik odaklı",
-      text: "Paylaştığın bilgiler yalnızca eşleşme ve yönlendirme süreci için değerlendirilir.",
-    },
-    {
-      title: "Online erişim",
-      text: "Bulunduğun yerden, sana uygun zamanda online psikolojik destek sürecine başlayabilirsin.",
-    },
-    {
-      title: "Sade süreç",
-      text: "Uzman seçimi, randevu, ödeme, chat ve video görüşme tek akışta ilerler.",
-    },
-  ];
-
-  const areas = [
-    "Kaygı ve stres",
-    "İlişki problemleri",
-    "Özgüven",
-    "Motivasyon",
-    "Tükenmişlik",
-    "Aile içi iletişim",
-    "Sınav kaygısı",
-    "Duygu düzenleme",
-  ];
-
-  const faqs = [
-    {
-      q: "Ön eşleşme ücretli mi?",
-      a: "Hayır. Mindora’da ilk ön eşleşme süreci ücretsizdir.",
-    },
-    {
-      q: "Görüşmeler online mı?",
-      a: "Evet. Süreç online ilerler ve uygun saatine göre planlanır.",
-    },
-    {
-      q: "Seans satın almak zorunda mıyım?",
-      a: "Hayır. Ön eşleşme başvurusu seans satın alma zorunluluğu oluşturmaz.",
-    },
-    {
-      q: "Mindora acil destek hattı mı?",
-      a: "Hayır. Acil risk durumlarında 112 veya en yakın sağlık kuruluşuna başvurulmalıdır.",
-    },
-  ];
-
-  const heroTrustBadges = ["KVKK Uyumlu", "Doğrulanmış Uzmanlar", "Ücretsiz Ön Eşleşme"];
-
-  const previewTags = ["Kaygı ve stres", "Özgüven", "İlişki problemleri"];
-
-  const expertCountLabel =
+  const approvedExpertCount = await getApprovedExpertCount()
+  const showExpertCount =
     approvedExpertCount !== null && approvedExpertCount >= MIN_EXPERT_COUNT_TO_DISPLAY
-      ? `${approvedExpertCount}+ onaylı uzman`
-      : "Titizlikle incelenen uzman kadrosu";
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
 
-      <section className="relative overflow-hidden border-b border-slate-200/80 bg-slate-50">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a08_1px,transparent_1px),linear-gradient(to_bottom,#0f172a08_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_60%_55%_at_50%_0%,black,transparent)]"
-        />
-
-        <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-5 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:py-28">
+      {/* Hero: ürünün ilk adımı doğrudan burada başlar */}
+      <section className="border-b border-slate-200">
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 pb-20 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-16 lg:pb-28 lg:pt-24">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold text-slate-500">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              {expertCountLabel}
-            </div>
-
-            <h1 className="mt-6 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 md:text-6xl">
-              Psikolojik desteğe doğru uzmanla, güvenli şekilde başla.
+            <h1 className="max-w-[13ch] text-[2.75rem] font-semibold leading-[1.02] text-slate-900 sm:text-6xl lg:text-[5.25rem]">
+              Kiminle konuşacağını bilmeden de başlayabilirsin.
             </h1>
-
-            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-500">
-              Mindora; uzman eşleşmesi, online randevu, güvenli ödeme, mesajlaşma
-              ve video görüşme sürecini tek platformda birleştirir.
+            <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600">
+              Neyle uğraştığını anlat, sana uygun psikoloğu biz önerelim.
+              Görüşmeler online, ücret baştan belli.
             </p>
-
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <a
-                href="/eslesme"
-                className="inline-block rounded-lg bg-slate-900 px-8 py-4 text-center text-base font-semibold text-white transition hover:bg-slate-800"
-              >
-                Hemen ücretsiz eşleş
-              </a>
-
-              <a
-                href="/uzmanlar"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-8 py-4 text-center text-base font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
-              >
-                Uzmanları incele
-                <span aria-hidden="true">→</span>
-              </a>
-            </div>
-
-            <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-500">
-              {heroTrustBadges.map((badge) => (
-                <span key={badge} className="inline-flex items-center gap-2">
-                  <span aria-hidden="true" className="text-slate-400">✓</span>
-                  {badge}
-                </span>
-              ))}
-            </div>
+            {showExpertCount ? (
+              <p className="mt-6 text-sm text-slate-500">
+                Şu anda {approvedExpertCount} psikolog, belgeleri doğrulanmış olarak hizmet veriyor.
+              </p>
+            ) : null}
           </div>
 
-          <div className="relative mx-auto w-full max-w-md">
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-6 -bottom-4 top-6 -z-10 rotate-2 rounded-2xl border border-slate-200 bg-white"
-            />
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8">
+            <h2 className="text-2xl font-semibold text-slate-900">
+              Şu sıralar seni en çok ne yoruyor?
+            </h2>
+            <p className="mt-2 text-[0.95rem] text-slate-500">
+              Birini seç, formun geri kalanını birlikte dolduralım.
+            </p>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/[0.06]">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Ürün önizleme
-                </p>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Online
-                </span>
-              </div>
-
-              <div className="mt-5 flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
-                  UP
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">Uzman Psikolog</p>
-                  <p className="text-xs text-slate-500">Mindora tarafından onaylı</p>
-                </div>
-                <span className="ml-auto shrink-0 rounded-full border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-500">
-                  Doğrulanmış
-                </span>
-              </div>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                {previewTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600"
+            <ul className="mt-6 flex flex-wrap gap-2.5">
+              {topics.map((topic, index) => (
+                <li
+                  key={topic.value}
+                  className="animate-rise-in"
+                  style={{ animationDelay: `${120 + index * 55}ms` }}
+                >
+                  <Link
+                    href={`/eslesme?konu=${encodeURIComponent(topic.value)}`}
+                    className="inline-flex rounded-full border border-slate-300 bg-slate-50 px-4 py-2.5 text-[0.95rem] font-medium text-slate-800 transition-colors hover:border-pine-600 hover:bg-pine-50 hover:text-pine-900"
                   >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+                    {topic.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
 
-              <div className="mt-5 space-y-2">
-                <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
-                  <span className="text-slate-500">Uygun zaman</span>
-                  <span className="font-semibold text-slate-900">Hafta sonu</span>
-                </div>
-                <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
-                  <span className="text-slate-500">Görüşme türü</span>
-                  <span className="font-semibold text-slate-900">Online</span>
-                </div>
-              </div>
-
-              <a
-                href="/eslesme"
-                className="mt-6 block rounded-lg bg-slate-900 px-5 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                Bu profille eşleş
-              </a>
-
-              <p className="mt-3 text-center text-[11px] leading-4 text-slate-400">
-                Örnek arayüz — gerçek eşleşmen ihtiyacına göre yapılır.
+            <div className="mt-8 flex flex-col gap-4 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm leading-6 text-slate-500">
+                Ücretsiz, yaklaşık 3 dakika.
+                <br className="hidden sm:block" /> Seans almak zorunda değilsin.
               </p>
+              <Link
+                href="/eslesme"
+                className="inline-flex justify-center rounded-full bg-pine-800 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-pine-900"
+              >
+                Formu aç
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-            Nasıl çalışır?
-          </p>
-          <h2 className="mt-3 text-3xl font-bold text-slate-900 md:text-4xl">
-            3 adımda online destek sürecine başla.
-          </h2>
-        </div>
+      {/* Nasıl işler: gerçek bir sıra olduğu için numaralı */}
+      <section className="mx-auto max-w-7xl px-5 py-20 lg:py-28">
+        <h2 className="max-w-xl text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
+          Üç adımda ilk görüşmene
+        </h2>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
+        <ol className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
           {steps.map((step, index) => (
-            <div
-              key={step.title}
-              className="rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm"
-            >
-              <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white">
-                {index + 1}
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
-              <p className="mt-3 leading-7 text-slate-500">{step.text}</p>
-            </div>
+            <li key={step.title} className="border-t-2 border-slate-900 pt-6">
+              <span className="font-display text-sm font-semibold text-pine-700">
+                {index + 1}. adım
+              </span>
+              <h3 className="mt-3 text-xl font-semibold text-slate-900">{step.title}</h3>
+              <p className="mt-3 max-w-sm leading-7 text-slate-600">{step.text}</p>
+            </li>
           ))}
+        </ol>
+      </section>
+
+      {/* Neden Mindora */}
+      <section className="border-y border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-[0.8fr_1.2fr] lg:py-28">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <h2 className="text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
+              Destek aramanın en zor kısmı, doğru kişiyi bulmak.
+            </h2>
+            <p className="mt-5 max-w-md leading-7 text-slate-600">
+              Mindora bu kısmı senin için kolaylaştırmak için var.
+            </p>
+          </div>
+
+          <dl className="divide-y divide-slate-200 border-y border-slate-200">
+            {reasons.map((reason) => (
+              <div key={reason.title} className="grid gap-2 py-7 sm:grid-cols-[0.9fr_1.1fr] sm:gap-8">
+                <dt className="font-display text-lg font-semibold text-slate-900">{reason.title}</dt>
+                <dd className="leading-7 text-slate-600">{reason.text}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
-      <section className="border-y border-slate-200/80 bg-slate-50">
-        <div className="mx-auto max-w-7xl px-5 py-20">
-          <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Neden Mindora?
-            </p>
-            <h2 className="mt-3 text-3xl font-bold text-slate-900 md:text-4xl">
-              Destek almaya başlamayı kolaylaştırır.
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-5 md:grid-cols-4">
-            {reasons.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm"
-              >
-                <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-3 leading-7 text-slate-500">{item.text}</p>
+      {/* Gizlilik */}
+      <section className="bg-pine-950 text-white">
+        <div className="mx-auto max-w-7xl px-5 py-20 lg:py-24">
+          <h2 className="max-w-2xl text-3xl font-semibold leading-tight sm:text-4xl">
+            Anlattıkların seninle uzmanın arasında kalır.
+          </h2>
+          <div className="mt-12 grid gap-10 md:grid-cols-3">
+            {privacyFacts.map((fact) => (
+              <div key={fact.title}>
+                <h3 className="text-lg font-semibold text-white">{fact.title}</h3>
+                <p className="mt-3 leading-7 text-pine-200">{fact.text}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
+      {/* Psikologlar için */}
+      <section className="bg-lilac-50">
+        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 lg:grid-cols-2 lg:items-center lg:py-24">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Ücretlendirme
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-slate-900 md:text-4xl">
-              Şeffaf ücretlendirme, gizli hiçbir ek ücret yok.
+            <h2 className="text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
+              Psikolog musun? Danışanını da süpervizörünü de burada bul.
             </h2>
-            <p className="mt-5 text-lg leading-8 text-slate-500">
-              Seans ücreti, eşleştiğin uzmana göre değişir ve ödeme adımına
-              geçmeden önce açıkça gösterilir. Ödeme yalnızca sen onayladıktan
-              sonra alınır.
+            <p className="mt-5 max-w-lg leading-7 text-slate-600">
+              Mindora&apos;da danışan alabilir, kıdemli meslektaşlarından online
+              süpervizyon alabilir ve süpervizyon saatlerini tek bir yerde kayıt
+              altında tutabilirsin.
             </p>
           </div>
-
-          <div className="space-y-3">
-            {[
-              { title: "Ön eşleşme her zaman ücretsiz", text: "Form doldurmak ve uzman önerisi almak seans satın alma zorunluluğu oluşturmaz." },
-              { title: "Ücret ödemeden önce görünür", text: "Uzmana özel seans ücreti, ödeme ekranına geçmeden önce net şekilde gösterilir." },
-              { title: "Esnek planlama", text: "Randevu saatini ihtiyacına göre, uzmanın uygunluğu dahilinde sen belirlersin." },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-lg border border-slate-200/80 px-5 py-4"
-              >
-                <p className="font-semibold text-slate-900">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-500">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-y border-slate-200/80 bg-slate-50">
-        <div className="mx-auto max-w-7xl px-5 py-20">
-          <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Güvenlik ve gizlilik
-            </p>
-            <h2 className="mt-3 text-3xl font-bold text-slate-900 md:text-4xl">
-              Bilgilerin korunarak, kontrollü şekilde işlenir.
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {[
-              {
-                title: "Şifreli bağlantı",
-                text: "Platformdaki tüm veri trafiği (mesajlaşma dahil) şifreli bağlantı (HTTPS/TLS) üzerinden iletilir.",
-              },
-              {
-                title: "Sınırlı erişim",
-                text: "Bir görüşmeye yalnızca ilgili danışan ve uzman; destek/güvenlik amacıyla yetkili Mindora ekibi erişebilir.",
-              },
-              {
-                title: "KVKK odaklı işleme",
-                text: "Paylaştığın bilgiler yalnızca eşleşme ve yönlendirme sürecinde, amacıyla sınırlı şekilde değerlendirilir.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm"
-              >
-                <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-3 leading-7 text-slate-500">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-14">
-          <div className="grid gap-8 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-                Destek alanları
-              </p>
-              <h2 className="mt-4 text-3xl font-bold md:text-4xl">
-                Hangi konuda destek alacağını birlikte netleştirelim.
-              </h2>
-            </div>
-
-            <div>
-              <p className="text-lg leading-8 text-slate-300">
-                Bazen problemin adını koymak bile zor olabilir. Mindora,
-                ihtiyacını anlamaya ve seni uygun destek sürecine yönlendirmeye
-                yardımcı olur.
-              </p>
-
-              <a
-                href="/eslesme"
-                className="mt-6 inline-block rounded-lg bg-white px-8 py-4 font-semibold text-slate-900 transition hover:bg-slate-100"
-              >
-                Destek almaya başla
-              </a>
-            </div>
-          </div>
-
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-            {areas.map((area) => (
-              <div
-                key={area}
-                className="rounded-lg border border-white/10 px-5 py-4 text-sm font-medium text-slate-200"
-              >
-                {area}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Platform deneyimi
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-slate-900 md:text-4xl">
-              Randevu, ödeme, chat ve video görüşme tek yerde.
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            {[
-              "Uzmanlarla online randevu süreci",
-              "Güvenli ödeme sonrası erişim",
-              "Danışan ve uzman için özel görüşme bağlantıları",
-              "Chat ve video görüşme akışı",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-lg border border-slate-200/80 px-5 py-4 font-medium text-slate-600"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-8 shadow-sm md:grid-cols-2 md:p-14">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Uzmanlar için
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-slate-900 md:text-4xl">
-              Mindora uzman ağına katıl.
-            </h2>
-          </div>
-
-          <div>
-            <p className="text-lg leading-8 text-slate-500">
-              Online danışan yönlendirmesi almak, uzmanlık alanına uygun
-              kişilerle buluşmak ve dijital danışmanlık sürecini daha düzenli
-              yürütmek isteyen uzmanlar için başvuru süreci açıktır.
-            </p>
-
-            <a
+          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+            <Link
               href="/uzman-basvuru"
-              className="mt-6 inline-block rounded-lg bg-slate-900 px-8 py-4 font-semibold text-white transition hover:bg-slate-800"
+              className="inline-flex justify-center rounded-full bg-lilac-700 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-lilac-800"
             >
               Uzman olarak başvur
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-y border-slate-200/80 bg-slate-50">
-        <div className="mx-auto max-w-5xl px-5 py-20">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
-              Sık sorulan sorular
-            </h2>
-            <p className="mt-4 text-slate-500">
-              Başlamadan önce bilmen gereken kısa cevaplar.
-            </p>
-          </div>
-
-          <div className="mt-10 space-y-4">
-            {faqs.map((faq) => (
-              <div
-                key={faq.q}
-                className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm"
-              >
-                <h3 className="text-base font-semibold text-slate-900">{faq.q}</h3>
-                <p className="mt-2 leading-7 text-slate-500">{faq.a}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 text-center">
-            <a href="/sss" className="font-semibold text-slate-900 underline underline-offset-4">
-              Tüm sık sorulan soruları görüntüle
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm md:p-14">
-          <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
-            Kendin için ilk adımı bugün at.
-          </h2>
-
-          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-500">
-            Kısa bilgilerini paylaş, sana uygun psikolojik destek sürecini
-            birlikte planlayalım.
-          </p>
-
-          <div className="mt-8">
-            <a
-              href="/eslesme"
-              className="inline-block rounded-lg bg-slate-900 px-9 py-4 font-semibold text-white transition hover:bg-slate-800"
+            </Link>
+            <Link
+              href="/supervizyon"
+              className="inline-flex justify-center rounded-full border border-lilac-300 bg-white px-6 py-3.5 font-semibold text-lilac-800 transition-colors hover:border-lilac-500"
             >
-              Ücretsiz eşleş
-            </a>
+              Süpervizyonu incele
+            </Link>
           </div>
-
-          <p className="mx-auto mt-6 max-w-3xl text-xs leading-6 text-slate-400">
-            Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar
-            verme riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da 112
-            ile iletişime geç.
-          </p>
         </div>
       </section>
 
+      {/* SSS */}
+      <section className="mx-auto max-w-3xl px-5 py-20 lg:py-28">
+        <h2 className="text-3xl font-semibold text-slate-900 sm:text-4xl">Sık sorulanlar</h2>
+        <div className="mt-10 divide-y divide-slate-200 border-y border-slate-200">
+          {faqs.map((faq) => (
+            <details key={faq.q} className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-display text-lg font-semibold text-slate-900">
+                {faq.q}
+                <span
+                  aria-hidden="true"
+                  className="text-2xl font-normal leading-none text-slate-400 transition-transform group-open:rotate-45"
+                >
+                  +
+                </span>
+              </summary>
+              <p className="mt-3 max-w-2xl leading-7 text-slate-600">{faq.a}</p>
+            </details>
+          ))}
+        </div>
+        <Link
+          href="/sss"
+          className="mt-8 inline-block font-semibold text-pine-800 underline decoration-pine-300 underline-offset-4 hover:decoration-pine-700"
+        >
+          Tüm soruları gör
+        </Link>
+      </section>
+
+      {/* Kapanış */}
+      <section className="px-5 pb-24">
+        <div className="mx-auto max-w-7xl rounded-3xl bg-pine-800 px-6 py-16 text-center text-white sm:px-12 lg:py-20">
+          <h2 className="mx-auto max-w-2xl text-3xl font-semibold leading-tight sm:text-5xl">
+            İlk adım üç dakika.
+          </h2>
+          <p className="mx-auto mt-5 max-w-xl leading-7 text-pine-100">
+            Ne hissettiğini tam anlatamasan da olur. Formu doldur, gerisini birlikte netleştirelim.
+          </p>
+          <Link
+            href="/eslesme"
+            className="mt-9 inline-flex rounded-full bg-white px-7 py-3.5 font-semibold text-pine-900 transition-colors hover:bg-pine-50"
+          >
+            Ücretsiz eşleşmeyi başlat
+          </Link>
+        </div>
+      </section>
     </main>
-  );
+  )
 }

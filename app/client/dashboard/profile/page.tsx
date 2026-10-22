@@ -402,7 +402,7 @@ function ClientProfileContent() {
           <div className="border-b border-slate-200/80 bg-white p-6 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Mindora Danışan Paneli
                 </p>
                 <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">
@@ -439,7 +439,7 @@ function ClientProfileContent() {
                 </Link>
                 <Link
                   href={safeChatHref}
-                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800"
+                  className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Sohbete Git
                 </Link>
@@ -525,7 +525,7 @@ function ClientProfileContent() {
               }
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-xl font-semibold text-white">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-pine-800 text-xl font-semibold text-white">
                   {expert.photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={expert.photoUrl} alt={expert.name} className="h-full w-full object-cover" />
@@ -563,7 +563,7 @@ function ClientProfileContent() {
               <div className="mt-5 grid gap-3">
                 <Link
                   href={safeChatHref}
-                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                  className="inline-flex items-center justify-center rounded-full bg-pine-800 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Uzmanla Sohbete Git
                 </Link>
@@ -635,7 +635,7 @@ function Panel({ title, description, children }: { title: string; description: s
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="text-xs font-semibold text-slate-400">{label}</p>
       <p className="mt-2 break-words text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )

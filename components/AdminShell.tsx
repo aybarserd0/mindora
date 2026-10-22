@@ -28,6 +28,12 @@ const menuGroups = [
     ],
   },
   {
+    title: "Süpervizyon",
+    items: [
+      { href: "/admin/supervizorler", label: "Süpervizörler" },
+    ],
+  },
+  {
     title: "Finans",
     items: [
       { href: "/admin/payments", label: "Ödemeler" },
@@ -45,7 +51,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Menü, açıldığı sayfaya bağlıdır; sayfa değişince kendiliğinden kapanır
+  const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
+  const mobileMenuOpen = menuOpenFor === pathname;
+  const setMobileMenuOpen = (value: boolean | ((v: boolean) => boolean)) => {
+    const next = typeof value === 'function' ? value(mobileMenuOpen) : value;
+    setMenuOpenFor(next ? pathname : null);
+  };
   const [totalUnread, setTotalUnread] = useState(0);
   const [loadingUnread, setLoadingUnread] = useState(false);
 
@@ -176,54 +188,55 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     };
   }, [isLoginPage, loadTotalUnread]);
 
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
-
   if (isLoginPage) {
     return <>{children}</>;
   }
 
   const sidebar = (
-    <aside className="flex h-full flex-col bg-white">
-      <div className="border-b border-slate-200/80 px-5 py-5">
-        <div className="flex items-start justify-between gap-3">
-          <Link href="/admin" className="block no-underline">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Mindora Admin
-            </p>
-            <p className="mt-1 text-xl font-bold leading-none text-slate-900">
-              Yönetim
-            </p>
+    <aside className="flex h-full flex-col bg-slate-900 text-slate-300">
+      <div className="px-5 pb-5 pt-6">
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/admin" className="flex items-center gap-2.5 no-underline">
+            <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
+            <span className="leading-tight">
+              <span className="block font-display text-lg font-semibold text-white">mindora</span>
+              <span className="block text-xs text-slate-400">Yönetim</span>
+            </span>
           </Link>
 
-          <NotificationBell role="admin" />
+          <NotificationBell role="admin" align="left" />
         </div>
 
-        <div
-          className={`mt-4 inline-flex rounded-full border px-3 py-2 text-xs font-semibold ${
+        <Link
+          href="/admin/conversations"
+          className={`mt-5 flex items-center justify-between rounded-lg px-3 py-2.5 text-sm no-underline transition-colors ${
             totalUnread > 0
-              ? "border-rose-200 bg-rose-50 text-rose-700"
-              : "border-emerald-200 bg-emerald-50 text-emerald-700"
+              ? "bg-rose-500/15 text-rose-100 hover:bg-rose-500/25"
+              : "bg-white/5 text-slate-400 hover:bg-white/10"
           }`}
         >
-          {loadingUnread
-            ? "Mesajlar kontrol ediliyor"
-            : totalUnread > 0
-              ? `${totalUnread} okunmamış mesaj`
-              : "Mesaj yok"}
-        </div>
+          <span>
+            {loadingUnread
+              ? "Mesajlar kontrol ediliyor"
+              : totalUnread > 0
+                ? "Okunmamış mesaj"
+                : "Okunmamış mesaj yok"}
+          </span>
+          {totalUnread > 0 ? (
+            <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-semibold text-white">
+              {totalUnread}
+            </span>
+          ) : null}
+        </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-4 py-5">
+      <nav aria-label="Yönetim menüsü" className="flex-1 overflow-y-auto px-3 pb-6">
         <div className="space-y-6">
           {menuGroups.map((group) => (
             <div key={group.title}>
-              <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                {group.title}
-              </p>
+              <p className="px-3 text-xs font-medium text-slate-500">{group.title}</p>
 
-              <div className="mt-2 space-y-1">
+              <div className="mt-1.5 space-y-0.5">
                 {group.items.map((item) => {
                   const active = isActivePath(pathname, item.href);
                   const isConversation = item.href === "/admin/conversations";
@@ -233,16 +246,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold no-underline transition-all duration-200 ease-out ${
+                      aria-current={active ? "page" : undefined}
+                      className={`relative flex items-center justify-between rounded-lg px-3 py-2.5 text-[0.94rem] no-underline transition-colors ${
                         active
-                          ? "bg-slate-900 text-white shadow-sm"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          ? "bg-white/10 font-semibold text-white before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-pine-300"
+                          : "text-slate-300 hover:bg-white/5 hover:text-white"
                       }`}
                     >
                       <span>{item.label}</span>
 
                       {hasUnread ? (
-                        <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+                        <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-semibold text-white">
                           {totalUnread}
                         </span>
                       ) : null}
@@ -255,21 +269,21 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
       </nav>
 
-      <div className="border-t border-slate-200/80 p-4">
+      <div className="border-t border-white/10 p-3">
         <div className="grid grid-cols-2 gap-2">
           <Link
             href="/"
-            className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 no-underline transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+            className="rounded-lg px-3 py-2.5 text-center text-sm font-medium text-slate-300 no-underline transition-colors hover:bg-white/5 hover:text-white"
           >
-            Site
+            Siteye git
           </Link>
 
           <button
             type="button"
             onClick={logout}
-            className="rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="rounded-lg bg-white/10 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/15"
           >
-            Çıkış
+            Çıkış yap
           </button>
         </div>
       </div>
@@ -278,18 +292,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:block lg:w-72 lg:border-r lg:border-slate-200/80">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:block lg:w-64">
         {sidebar}
       </div>
 
-      <div className="lg:pl-72">
-        <div className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
+      <div className="lg:pl-64">
+        <div className="sticky top-0 z-40 border-b border-slate-200 bg-slate-50/90 px-4 py-3 backdrop-blur lg:hidden">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/admin" className="no-underline">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Mindora Admin
-              </p>
-              <p className="text-lg font-bold text-slate-900">Yönetim</p>
+            <Link href="/admin" className="flex items-center gap-2 no-underline">
+              <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
+              <span className="font-display text-lg font-semibold text-slate-900">Yönetim</span>
             </Link>
 
             <div className="flex items-center gap-2">
@@ -298,7 +310,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen((value) => !value)}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                aria-expanded={mobileMenuOpen}
+                className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800"
               >
                 Menü
               </button>
@@ -307,19 +320,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
 
         {mobileMenuOpen ? (
-          <div className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden">
-            <div className="h-full w-80 max-w-[86vw] border-r border-slate-200/80 bg-white shadow-lg">
-              <div className="flex items-center justify-between border-b border-slate-200/80 px-5 py-4">
-                <p className="text-sm font-semibold text-slate-900">Yönetim Menüsü</p>
-                <button
-                  type="button"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200"
-                >
-                  Kapat
-                </button>
-              </div>
-
+          <div
+            className="fixed inset-0 z-50 bg-slate-950/50 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <div
+              className="h-full w-72 max-w-[86vw] shadow-xl"
+              onClick={(event) => event.stopPropagation()}
+            >
               {sidebar}
             </div>
           </div>

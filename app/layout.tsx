@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
+import '@fontsource-variable/onest'
+import '@fontsource-variable/bricolage-grotesque'
 import './globals.css'
 import ToastProvider from '@/components/ToastProvider'
 import RootAppShell from '@/components/RootAppShell'
@@ -98,7 +100,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#4f46e5',
+  themeColor: '#254a3f',
 }
 
 function JsonLd() {

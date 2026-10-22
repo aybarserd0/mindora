@@ -582,7 +582,7 @@ export default function ExpertSessionPage() {
 
           <button
             onClick={() => router.back()}
-            className="w-full rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="w-full rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Geri Dön
           </button>
@@ -611,7 +611,7 @@ export default function ExpertSessionPage() {
                 : '↩'}
           </div>
 
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="mb-2 text-sm font-semibold text-slate-400">
             Mindora Expert Session
           </p>
 
@@ -638,7 +638,7 @@ export default function ExpertSessionPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               onClick={() => router.back()}
-              className="rounded-lg bg-slate-900 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+              className="rounded-full bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
             >
               Chat’e Dön
             </button>
@@ -706,7 +706,7 @@ export default function ExpertSessionPage() {
                 }
                 className={`rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                   deviceState.audioEnabled
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    ? 'bg-pine-800 text-white hover:bg-pine-900'
                     : 'bg-rose-600 text-white hover:bg-rose-700'
                 }`}
               >
@@ -721,7 +721,7 @@ export default function ExpertSessionPage() {
                 }
                 className={`rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                   deviceState.videoEnabled
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    ? 'bg-pine-800 text-white hover:bg-pine-900'
                     : 'bg-rose-600 text-white hover:bg-rose-700'
                 }`}
               >
@@ -732,7 +732,7 @@ export default function ExpertSessionPage() {
 
           <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div className="mb-6">
-              <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-2 text-sm font-semibold text-slate-400">
                 Mindora Expert Session
               </p>
 
@@ -807,7 +807,7 @@ export default function ExpertSessionPage() {
               <button
                 onClick={handleJoinSession}
                 disabled={!token || !serverUrl || joining || !isBrowserOnline}
-                className="mt-2 w-full rounded-lg bg-slate-900 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-2 w-full rounded-full bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {joining ? 'Bağlanılıyor...' : 'Görüşmeye Katıl'}
               </button>
@@ -1314,7 +1314,7 @@ function HeaderPill({
 }) {
   return (
     <div className="min-w-[92px] rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-slate-400">
+      <p className="text-[10px] text-slate-400">
         {label}
       </p>
 
@@ -1630,7 +1630,7 @@ function FocusVideoTile({
           compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[10px]'
         }`}
       >
-        <span className="font-semibold uppercase tracking-wide text-slate-300">
+        <span className="font-semibold text-slate-300">
           {isScreenShare
             ? 'Ekran paylaşımı'
             : playableTrackRef
@@ -1751,7 +1751,7 @@ function ConnectionRecoveryOverlay({
           <button
             onClick={onRetry}
             disabled={!isOnline}
-            className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Tekrar Dene
           </button>

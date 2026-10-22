@@ -334,7 +334,7 @@ function AnalyticsContent() {
         <header className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 C12 Analytics Dashboard
               </p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -358,7 +358,7 @@ function AnalyticsContent() {
                 type="button"
                 onClick={() => void fetchAnalytics("refresh")}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? "Yükleniyor..." : "Verileri Yenile"}
               </button>
@@ -393,7 +393,7 @@ function AnalyticsContent() {
           <section className="rounded-xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm md:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Öne Çıkan Uzman
                 </p>
                 <h2 className="mt-2 text-2xl font-bold text-slate-900">
@@ -503,7 +503,7 @@ function ConversionMetrics({
     <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             C12.2 Conversion Metrics
           </p>
           <h2 className="mt-2 text-xl font-bold text-slate-900">Dönüşüm Hunisi</h2>
@@ -567,7 +567,7 @@ function ConversionMetrics({
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-indigo-200 bg-white px-4 py-3 text-center shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="text-xs font-semibold text-slate-500">{label}</p>
       <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
     </div>
   );
@@ -678,7 +678,7 @@ function ExpertPerformanceTable({
         ) : safeRows.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-[920px] w-full border-collapse text-left">
-              <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+              <thead className="bg-slate-50 text-xs font-semibold text-slate-500">
                 <tr>
                   <th className="px-4 py-4">Uzman</th>
                   <th className="px-4 py-4">Rozet</th>

@@ -1,125 +1,86 @@
+import Link from 'next/link'
+
+const columns = [
+  {
+    title: 'Danışanlar için',
+    links: [
+      { label: 'Ücretsiz ön eşleşme', href: '/eslesme' },
+      { label: 'Uzmanlar', href: '/uzmanlar' },
+      { label: 'Psikolojik testler', href: '/psikolojik-testler' },
+      { label: 'Sık sorulan sorular', href: '/sss' },
+    ],
+  },
+  {
+    title: 'Psikologlar için',
+    links: [
+      { label: 'Uzman başvurusu', href: '/uzman-basvuru' },
+      { label: 'Süpervizyon', href: '/supervizyon' },
+      { label: 'Uzman girişi', href: '/expert/login' },
+    ],
+  },
+  {
+    title: 'Mindora',
+    links: [
+      { label: 'Hakkımızda', href: '/hakkimizda' },
+      { label: 'mindora.live@gmail.com', href: 'mailto:mindora.live@gmail.com' },
+      { label: 'Instagram: @mindora.live', href: 'https://instagram.com/mindora.live' },
+    ],
+  },
+]
+
 export default function Footer() {
-  const platformLinks = [
-    { label: 'Ana Sayfa', href: '/' },
-    { label: 'Uzmanlar', href: '/uzmanlar' },
-    { label: 'Psikolojik Testler', href: '/psikolojik-testler' },
-    { label: 'Hakkımızda', href: '/hakkimizda' },
-    { label: 'SSS', href: '/sss' },
-  ]
-
-  const actionLinks = [
-    { label: 'Ücretsiz Ön Eşleşme', href: '/eslesme' },
-    { label: 'Uzman Başvurusu', href: '/uzman-basvuru' },
-  ]
-
-  const trustItems = [
-    'Ücretsiz ön eşleşme',
-    'Online görüşme süreci',
-    'Gizlilik odaklı yönlendirme',
-    'Acil kriz hattı değildir',
-  ]
-
   return (
-    <footer className="border-t border-slate-200/80 bg-white px-5 py-12 text-slate-900">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr]">
-          <div>
-            <a href="/" className="inline-flex items-center gap-3">
-              <img
-                src="/logo.png"
-                alt="Mindora"
-                className="h-10 w-10 rounded-xl object-cover ring-1 ring-slate-200"
-              />
-              <div>
-                <p className="text-base font-bold leading-none">Mindora</p>
-                <p className="mt-1 text-xs font-medium text-slate-500">
-                  Online psikolojik destek platformu
-                </p>
-              </div>
-            </a>
-
-            <p className="mt-5 max-w-sm text-sm leading-7 text-slate-500">
-              Mindora, psikolojik destek almak isteyen kişilerin ihtiyaçlarını
-              daha iyi anlamayı ve uygun uzmanlarla güvenli bir başlangıç
-              yapmasını kolaylaştırmayı hedefler.
+    <footer className="bg-pine-950 text-pine-100">
+      <div className="mx-auto max-w-7xl px-5 pb-10 pt-16">
+        <div className="grid gap-12 lg:grid-cols-[1.3fr_repeat(3,1fr)]">
+          <div className="max-w-sm">
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <img src="/logo.png" alt="" className="h-9 w-9 rounded-lg object-cover" />
+              <span className="font-display text-2xl font-semibold tracking-tight text-white">
+                mindora
+              </span>
+            </Link>
+            <p className="mt-5 text-[0.95rem] leading-7 text-pine-200">
+              Psikolojik desteğe başlamak isteyenleri, belgeleri doğrulanmış
+              psikologlarla online olarak buluşturuyoruz.
             </p>
+          </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              {trustItems.map((item) => (
-                <span
-                  key={item}
-                  className="rounded-md border border-slate-200/80 px-3 py-1.5 text-xs font-medium text-slate-600"
-                >
-                  {item}
-                </span>
-              ))}
+          {columns.map((column) => (
+            <div key={column.title}>
+              <h2 className="font-display text-base font-semibold text-white">{column.title}</h2>
+              <ul className="mt-4 space-y-3 text-[0.95rem]">
+                {column.links.map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      className="text-pine-200 transition-colors hover:text-white"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-
-          <div>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Platform
-            </p>
-
-            <nav className="space-y-3 text-sm font-medium text-slate-600">
-              {platformLinks.map((link) => (
-                <p key={link.href}>
-                  <a href={link.href} className="transition hover:text-slate-900">
-                    {link.label}
-                  </a>
-                </p>
-              ))}
-            </nav>
-          </div>
-
-          <div>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Başvuru
-            </p>
-
-            <nav className="space-y-3 text-sm font-medium text-slate-600">
-              {actionLinks.map((link) => (
-                <p key={link.href}>
-                  <a href={link.href} className="transition hover:text-slate-900">
-                    {link.label}
-                  </a>
-                </p>
-              ))}
-            </nav>
-          </div>
-
-          <div>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
-              İletişim
-            </p>
-
-            <div className="space-y-3 text-sm font-medium text-slate-600">
-              <p>Instagram: @mindora.live</p>
-              <p>Mail: mindora.live@gmail.com</p>
-            </div>
-
-            <div className="mt-6 rounded-lg border border-slate-200/80 p-5 text-xs leading-6 text-slate-500">
-              Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar
-              verme riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da
-              112 ile iletişime geç.
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div className="mt-10 rounded-lg border border-slate-200/80 p-5 text-xs leading-6 text-slate-500">
-          Mindora, fiziksel bir ofise bağlı olmadan tamamen online yürütülen bir
-          psikolojik destek eşleştirme hizmetidir. Danışan ve uzman iletişimi
-          yalnızca platform üzerinden, yukarıdaki resmi kanallardan yürütülür.
+        <div className="mt-14 rounded-2xl border border-pine-800 bg-pine-900/60 p-6 sm:flex sm:items-center sm:justify-between sm:gap-8">
+          <p className="max-w-2xl text-[0.95rem] leading-7 text-pine-100">
+            Mindora bir acil durum hizmeti değildir. Kendine ya da başkasına zarar
+            verme riski varsa hemen 112&apos;yi ara veya en yakın acil servise başvur.
+          </p>
+          <a
+            href="tel:112"
+            className="mt-4 inline-flex shrink-0 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-pine-950 sm:mt-0"
+          >
+            112&apos;yi ara
+          </a>
         </div>
 
-        <div className="mt-6 flex flex-col justify-between gap-4 border-t border-slate-200/80 pt-6 text-xs font-medium text-slate-400 md:flex-row md:items-center">
-          <p>© {new Date().getFullYear()} Mindora. Tüm hakları saklıdır.</p>
-
-          <div className="flex flex-wrap gap-4">
-            <span>Gizlilik odaklı süreç</span>
-            <span>KVKK uyum hazırlığı</span>
-            <span>Güvenli online deneyim</span>
-          </div>
+        <div className="mt-10 flex flex-col gap-3 border-t border-pine-800 pt-6 text-sm text-pine-300 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Mindora</p>
+          <p>Görüşmeler yalnızca platform üzerinden, online olarak yapılır.</p>
         </div>
       </div>
     </footer>

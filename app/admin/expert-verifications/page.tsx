@@ -167,7 +167,7 @@ export default function ExpertVerificationsAdminPage() {
         <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 C14 Admin
               </p>
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -183,7 +183,7 @@ export default function ExpertVerificationsAdminPage() {
                 type="button"
                 onClick={() => void fetchVerifications("refresh")}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? "Yükleniyor..." : "Verileri Yenile"}
               </button>
@@ -245,7 +245,7 @@ export default function ExpertVerificationsAdminPage() {
             ) : filteredItems.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-[1120px] w-full border-collapse text-left">
-                  <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  <thead className="bg-slate-50 text-xs font-semibold text-slate-500">
                     <tr>
                       <th className="px-4 py-4">Uzman</th>
                       <th className="px-4 py-4">Belge</th>
@@ -339,7 +339,7 @@ function FilterButton({
       onClick={onClick}
       className={`rounded-lg border px-4 py-2 text-xs font-semibold transition-all duration-200 ease-out ${
         active
-          ? "border-slate-900 bg-slate-900 text-white"
+          ? "border-pine-800 bg-pine-800 text-white"
           : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
       }`}
     >

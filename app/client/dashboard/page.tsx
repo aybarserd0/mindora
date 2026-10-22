@@ -422,7 +422,7 @@ function ClientDashboardContent() {
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+              <p className="text-xs font-black text-indigo-600">
                 Mindora Danışan Paneli
               </p>
 
@@ -494,7 +494,7 @@ function ClientDashboardContent() {
 
         {dashboard.conversation.paymentStatus !== 'paid' ? (
           <section className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6 text-center shadow-sm sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-700">
+            <p className="text-xs font-black text-amber-700">
               Son adım
             </p>
             <h2 className="mt-2 text-2xl font-black text-amber-950 sm:text-3xl">
@@ -534,7 +534,7 @@ function ClientDashboardContent() {
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+                  <p className="text-xs font-black text-indigo-600">
                     Sonraki Seans
                   </p>
                   <h2 className="mt-2 text-2xl font-black text-slate-950">
@@ -610,7 +610,7 @@ function ClientDashboardContent() {
 
           <div className="space-y-6">
             <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+              <p className="text-xs font-black text-indigo-600">
                 Hızlı İşlemler
               </p>
               <h2 className="mt-2 text-xl font-black text-slate-950">Kısayollar</h2>
@@ -690,7 +690,7 @@ function InactiveDashboardState({
       <div className="mx-auto max-w-7xl space-y-6">
         <section className="overflow-hidden rounded-[2rem] border border-indigo-100 bg-white shadow-sm">
           <div className="bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6 lg:p-8">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600">
+            <p className="text-xs font-black text-indigo-600">
               Mindora Danışan Paneli
             </p>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
@@ -755,7 +755,7 @@ function InactiveDashboardState({
 
         <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+            <p className="text-xs font-black text-indigo-600">
               Panelde Neler Olacak?
             </p>
             <h2 className="mt-2 text-xl font-black text-slate-950">Mindora süreciniz</h2>
@@ -768,7 +768,7 @@ function InactiveDashboardState({
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">
+            <p className="text-xs font-black text-indigo-600">
               Hızlı Erişim
             </p>
             <h2 className="mt-2 text-xl font-black text-slate-950">Panel bölümleri</h2>
@@ -804,7 +804,7 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: 'green' | '
 function MetricCard({ title, value, subtitle }: { title: string; value: string; subtitle: string }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{title}</p>
+      <p className="text-xs font-black text-slate-500">{title}</p>
       <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
       <p className="mt-1 text-xs font-bold text-slate-500">{subtitle}</p>
     </div>
@@ -814,7 +814,7 @@ function MetricCard({ title, value, subtitle }: { title: string; value: string; 
 function MiniCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-300">{label}</p>
+      <p className="text-[10px] font-black text-slate-300">{label}</p>
       <p className="mt-1 truncate text-sm font-black text-white">{value}</p>
     </div>
   )
@@ -876,7 +876,7 @@ function ListCard({
     <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-600">{eyebrow}</p>
+          <p className="text-xs font-black text-indigo-600">{eyebrow}</p>
           <h2 className="mt-2 text-xl font-black text-slate-950">{title}</h2>
         </div>
         {actionHref && actionLabel ? (

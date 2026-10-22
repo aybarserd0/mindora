@@ -1324,7 +1324,7 @@ export default function ClientChatPage({
 
           <Link
             href={dashboardHref}
-            className="mt-7 block rounded-lg bg-slate-900 px-6 py-4 text-center text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+            className="mt-7 block rounded-full bg-pine-800 px-6 py-4 text-center text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
             Ödemeyi Tamamla
           </Link>
@@ -1343,7 +1343,7 @@ export default function ClientChatPage({
         <header className="mb-6 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Mindora Güvenli Görüşme
               </p>
 
@@ -1430,7 +1430,7 @@ export default function ClientChatPage({
                     type="button"
                     onClick={handleEnableNotifications}
                     disabled={notificationLoading}
-                    className="mt-4 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-4 rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {notificationLoading ? 'Bildirim izni alınıyor...' : '🔔 Bildirimleri Aç'}
                   </button>
@@ -1452,7 +1452,7 @@ export default function ClientChatPage({
                 disabled={!canStartVideoSession || videoSessionLoading}
                 title={videoButtonTitle}
                 data-ready={String(isConversationReady)}
-                className="rounded-full bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-pine-800 px-5 py-3 text-center text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {videoSessionLoading ? 'Seans hazırlanıyor...' : '🎥 Video Görüşmeye Katıl'}
               </button>
@@ -1473,7 +1473,7 @@ export default function ClientChatPage({
           {conversation && (
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Chat
                 </p>
                 <p className="mt-2 text-lg font-bold text-slate-900">
@@ -1486,7 +1486,7 @@ export default function ClientChatPage({
               </div>
 
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Ödeme
                 </p>
                 <p className="mt-2 text-lg font-bold text-green-700">
@@ -1495,7 +1495,7 @@ export default function ClientChatPage({
               </div>
 
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-4">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-sm font-semibold text-slate-400">
                   Video
                 </p>
                 <p
@@ -1569,13 +1569,13 @@ export default function ClientChatPage({
                         <div
                           className={`max-w-[82%] rounded-lg p-4 text-sm shadow-sm ${
                             isMine
-                              ? 'bg-slate-900 text-white'
+                              ? 'bg-pine-800 text-white'
                               : isAdmin
                                 ? 'border border-purple-200 bg-purple-50 text-purple-900'
                                 : 'border border-slate-200/80 bg-white text-slate-900'
                           }`}
                         >
-                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide opacity-70">
+                          <p className="mb-2 text-xs font-semibold opacity-70">
                             {getSenderName(item)}
                           </p>
 
@@ -1635,7 +1635,7 @@ export default function ClientChatPage({
                                       className={`mt-3 w-full rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60 ${
                                         isMine
                                           ? 'bg-white text-slate-900 hover:bg-white/90'
-                                          : 'bg-slate-900 text-white hover:bg-slate-800'
+                                          : 'bg-pine-800 text-white hover:bg-pine-900'
                                       }`}
                                     >
                                       {openingAttachmentId === attachment.id
@@ -1729,7 +1729,7 @@ export default function ClientChatPage({
                     <button
                       type="button"
                       onClick={stopVoiceRecording}
-                      className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                      className="rounded-full bg-pine-800 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                     >
                       Kaydı Bitir
                     </button>
@@ -1838,7 +1838,7 @@ export default function ClientChatPage({
                       isRecording ||
                       (!message.trim() && !selectedAttachment)
                     }
-                    className="flex-1 rounded-lg bg-slate-900 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-full bg-pine-800 px-6 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {uploadingAttachment
                       ? 'Yükleniyor...'

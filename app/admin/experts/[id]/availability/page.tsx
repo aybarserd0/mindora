@@ -158,14 +158,14 @@ export default function ExpertAvailabilityAdminPage() {
           <button
             onClick={loadAvailability}
             disabled={loading}
-            className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:opacity-50"
+            className="rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:opacity-50"
           >
             Yenile
           </button>
         </div>
 
         <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             C7 Scheduling
           </p>
 
@@ -186,7 +186,7 @@ export default function ExpertAvailabilityAdminPage() {
 
             <div className="mt-5 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <label className="mb-2 block text-sm font-semibold text-slate-400">
                   Gün
                 </label>
                 <select
@@ -204,7 +204,7 @@ export default function ExpertAvailabilityAdminPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold uppercase tracking-wide text-slate-400">
+                  <label className="mb-2 block text-sm font-semibold text-slate-400">
                     Başlangıç
                   </label>
                   <input
@@ -216,7 +216,7 @@ export default function ExpertAvailabilityAdminPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold uppercase tracking-wide text-slate-400">
+                  <label className="mb-2 block text-sm font-semibold text-slate-400">
                     Bitiş
                   </label>
                   <input
@@ -230,7 +230,7 @@ export default function ExpertAvailabilityAdminPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold uppercase tracking-wide text-slate-400">
+                  <label className="mb-2 block text-sm font-semibold text-slate-400">
                     Seans dk
                   </label>
                   <input
@@ -246,7 +246,7 @@ export default function ExpertAvailabilityAdminPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold uppercase tracking-wide text-slate-400">
+                  <label className="mb-2 block text-sm font-semibold text-slate-400">
                     Buffer dk
                   </label>
                   <input
@@ -263,7 +263,7 @@ export default function ExpertAvailabilityAdminPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold uppercase tracking-wide text-slate-400">
+                <label className="mb-2 block text-sm font-semibold text-slate-400">
                   Timezone
                 </label>
                 <input
@@ -278,7 +278,7 @@ export default function ExpertAvailabilityAdminPage() {
                   type="checkbox"
                   checked={isActive}
                   onChange={(event) => setIsActive(event.target.checked)}
-                  className="h-5 w-5 accent-slate-900"
+                  className="h-5 w-5 accent-pine-700"
                 />
                 Aktif müsaitlik olarak kaydet
               </label>
@@ -298,7 +298,7 @@ export default function ExpertAvailabilityAdminPage() {
               <button
                 onClick={createAvailability}
                 disabled={saving}
-                className="w-full rounded-lg bg-slate-900 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:opacity-50"
+                className="w-full rounded-full bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:opacity-50"
               >
                 {saving ? 'Kaydediliyor...' : 'Müsaitliği Kaydet'}
               </button>
@@ -337,7 +337,7 @@ export default function ExpertAvailabilityAdminPage() {
 
                 {inactiveAvailability.length > 0 && (
                   <div className="pt-4">
-                    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
+                    <h3 className="mb-3 text-sm font-semibold text-slate-400">
                       Pasif Kayıtlar
                     </h3>
 
@@ -393,7 +393,7 @@ function AvailabilityCard({ item }: { item: AvailabilityRow }) {
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200/80 bg-slate-50 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+      <p className="text-[10px] font-semibold text-slate-400">
         {label}
       </p>
       <p className="mt-1 truncate text-sm font-semibold text-slate-900">{value}</p>

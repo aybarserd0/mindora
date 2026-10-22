@@ -396,7 +396,7 @@ export default function UzmanlarPage() {
       <section className="border-b border-slate-200/80 bg-slate-50">
         <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 md:py-20 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Mindora Uzman Ağı
             </p>
 
@@ -413,7 +413,7 @@ export default function UzmanlarPage() {
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/eslesme"
-                className="rounded-lg bg-slate-900 px-8 py-4 text-center font-semibold text-white transition hover:bg-slate-800"
+                className="rounded-full bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
               >
                 Ücretsiz ön eşleşme başlat
               </Link>
@@ -447,7 +447,7 @@ export default function UzmanlarPage() {
       <section id="uzman-listesi" className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
         <div className="mb-8 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Uzmanlar
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -483,7 +483,7 @@ export default function UzmanlarPage() {
                     onClick={() => setSelectedArea(area)}
                     className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                       selectedArea === area
-                        ? "border-slate-900 bg-slate-900 text-white"
+                        ? "border-pine-800 bg-pine-800 text-white"
                         : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                     }`}
                   >
@@ -570,10 +570,10 @@ export default function UzmanlarPage() {
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-xl bg-slate-900 p-8 text-white md:p-14">
+        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
           <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Eşleşme mantığı
               </p>
 
@@ -615,7 +615,7 @@ export default function UzmanlarPage() {
 
       <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Destek alanları
           </p>
 
@@ -655,7 +655,7 @@ export default function UzmanlarPage() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="/eslesme"
-              className="rounded-lg bg-slate-900 px-9 py-4 font-semibold text-white transition hover:bg-slate-800"
+              className="rounded-full bg-pine-800 px-9 py-4 font-semibold text-white transition hover:bg-pine-900"
             >
               Ücretsiz ön eşleşme başlat
             </Link>
@@ -692,7 +692,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
   return (
     <article className="flex h-full min-w-0 flex-col rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
       <div className="flex items-start gap-4">
-        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-slate-900 text-white">
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-pine-800 text-white">
           {showPhoto ? (
             <Image
               src={expert.photo_url || ""}
@@ -765,7 +765,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
       <div className="mt-5 grid gap-2.5">
         <Link
           href={profileHref}
-          className="rounded-lg bg-slate-900 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
+          className="rounded-full bg-pine-800 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-pine-900"
         >
           Profili incele
         </Link>
@@ -826,7 +826,7 @@ function EmptyState({
       {href && actionLabel ? (
         <Link
           href={href}
-          className="mt-6 inline-block rounded-lg bg-slate-900 px-7 py-3 font-semibold text-white transition hover:bg-slate-800"
+          className="mt-6 inline-block rounded-full bg-pine-800 px-7 py-3 font-semibold text-white transition hover:bg-pine-900"
         >
           {actionLabel}
         </Link>
@@ -836,7 +836,7 @@ function EmptyState({
         <button
           type="button"
           onClick={onAction}
-          className="mt-6 rounded-lg bg-slate-900 px-7 py-3 font-semibold text-white transition hover:bg-slate-800"
+          className="mt-6 rounded-full bg-pine-800 px-7 py-3 font-semibold text-white transition hover:bg-pine-900"
         >
           {actionLabel}
         </button>

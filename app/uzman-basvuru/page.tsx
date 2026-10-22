@@ -205,8 +205,8 @@ export default function UzmanBasvuruPage() {
             ))}
           </div>
 
-          <div className="mt-8 rounded-xl bg-slate-900 p-6 text-white">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="mt-8 rounded-xl bg-pine-800 p-6 text-white">
+            <p className="text-sm font-semibold text-slate-400">
               Başvuru süreci
             </p>
 
@@ -241,7 +241,7 @@ export default function UzmanBasvuruPage() {
 
         <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="border-b border-slate-200/80 pb-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Uzman başvuru formu
             </p>
 
@@ -336,7 +336,7 @@ export default function UzmanBasvuruPage() {
                     key={item}
                     className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-white"
                   >
-                    <input name="areas" type="checkbox" value={item} className="h-4 w-4 accent-slate-900" />
+                    <input name="areas" type="checkbox" value={item} className="h-4 w-4 accent-pine-700" />
                     {item}
                   </label>
                 ))}
@@ -392,7 +392,7 @@ export default function UzmanBasvuruPage() {
                     key={item}
                     className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-white"
                   >
-                    <input name="availability" type="checkbox" value={item} className="h-4 w-4 accent-slate-900" />
+                    <input name="availability" type="checkbox" value={item} className="h-4 w-4 accent-pine-700" />
                     {item}
                   </label>
                 ))}
@@ -431,7 +431,7 @@ export default function UzmanBasvuruPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-slate-900 px-6 py-4 text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full bg-pine-800 px-6 py-4 text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Başvuru gönderiliyor...' : 'Uzman başvurusunu gönder'}
             </button>

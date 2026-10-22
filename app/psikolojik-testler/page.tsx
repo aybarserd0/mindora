@@ -187,7 +187,7 @@ export default function PsikolojikTestler() {
 
       <section className="mx-auto max-w-7xl px-5 pb-14 pt-16 md:pt-20">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Psikolojik Testler
           </p>
 
@@ -227,14 +227,14 @@ export default function PsikolojikTestler() {
                 style={{ animationDelay: `${index * 60}ms` }}
                 className={`animate-fade-in-up rounded-xl border p-5 text-left shadow-sm transition-all duration-200 ease-out ${
                   isActive
-                    ? 'border-slate-900 bg-slate-900 text-white'
+                    ? 'border-pine-800 bg-pine-800 text-white'
                     : 'border-slate-200/80 bg-white text-slate-900 hover:border-slate-300'
                 }`}
               >
                 <p
-                  className={`text-xs font-semibold uppercase tracking-wide ${
-                    isActive ? 'text-slate-400' : 'text-slate-400'
-                  }`}
+                  className={`text-xs font-semibold ${
+ isActive ? 'text-slate-400' : 'text-slate-400'
+ }`}
                 >
                   Aktif test
                 </p>
@@ -254,7 +254,7 @@ export default function PsikolojikTestler() {
 
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[0.75fr_1.25fr]">
         <aside className="h-fit rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm lg:sticky lg:top-24">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-sm font-semibold text-slate-400">
             Seçili test
           </p>
           <h2 className="mt-3 text-2xl font-bold text-slate-900">{activeTest.title}</h2>
@@ -276,7 +276,7 @@ export default function PsikolojikTestler() {
             </p>
           </div>
 
-          <div className="mt-6 rounded-lg bg-slate-900 p-5 text-white">
+          <div className="mt-6 rounded-lg bg-pine-800 p-5 text-white">
             <p className="font-semibold">Önemli not</p>
             <p className="mt-2 text-sm leading-6 text-slate-300">
               Bu test tıbbi/klinik tanı koymaz. Sonuçların seni düşündürüyorsa
@@ -288,7 +288,7 @@ export default function PsikolojikTestler() {
         <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col justify-between gap-4 border-b border-slate-200/80 pb-6 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Test soruları
               </p>
               <h2 className="mt-2 text-2xl font-bold text-slate-900">{activeTest.title}</h2>
@@ -325,7 +325,7 @@ export default function PsikolojikTestler() {
                         onClick={() => setAnswer(question.id, option.value)}
                         className={`rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 ease-out ${
                           selected
-                            ? 'bg-slate-900 text-white'
+                            ? 'bg-pine-800 text-white'
                             : 'border border-slate-200/80 bg-white text-slate-700 hover:border-slate-300'
                         }`}
                       >
@@ -343,7 +343,7 @@ export default function PsikolojikTestler() {
               type="button"
               disabled={!isComplete}
               onClick={() => setShowResult(true)}
-              className="rounded-lg bg-slate-900 px-8 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+              className="rounded-full bg-pine-800 px-8 py-4 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
             >
               Sonucumu göster
             </button>
@@ -364,7 +364,7 @@ export default function PsikolojikTestler() {
 
           {showResult ? (
             <div className="animate-fade-in-up mt-8 rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-sm font-semibold text-slate-400">
                 Test sonucu
               </p>
 
@@ -386,7 +386,7 @@ export default function PsikolojikTestler() {
 
                 <a
                   href="/eslesme"
-                  className="mt-5 inline-block rounded-lg bg-slate-900 px-7 py-3 font-semibold text-white transition-all duration-200 ease-out hover:bg-slate-800"
+                  className="mt-5 inline-block rounded-full bg-pine-800 px-7 py-3 font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
                 >
                   Ücretsiz ön eşleşme başlat
                 </a>
@@ -397,9 +397,9 @@ export default function PsikolojikTestler() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-16">
-        <div className="grid gap-8 rounded-xl bg-slate-900 p-8 text-white md:grid-cols-2 md:p-14">
+        <div className="grid gap-8 rounded-xl bg-pine-800 p-8 text-white md:grid-cols-2 md:p-14">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Testten sonra ne olacak?
             </p>
 
