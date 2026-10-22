@@ -204,7 +204,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </span>
           </Link>
 
-          <NotificationBell role="admin" />
+          <NotificationBell role="admin" align="left" />
         </div>
 
         <Link
@@ -292,7 +292,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:block lg:w-64">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:block lg:w-64">
         {sidebar}
       </div>
 

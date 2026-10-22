@@ -18,6 +18,8 @@ type NotificationItem = {
 
 type Props = {
   role: Role
+  /** Açılır listenin hangi yöne açılacağı. Sol menüde 'left' kullanılır. */
+  align?: 'left' | 'right'
   token?: string
   userId?: string
   conversationId?: string
@@ -73,6 +75,7 @@ export default function NotificationBell({
   conversationId = '',
   adminSecret = '',
   refreshIntervalMs = 15000,
+  align = 'right',
 }: Props) {
   const { showToast } = useToast()
 
@@ -268,7 +271,7 @@ export default function NotificationBell({
       </button>
 
       {open ? (
-        <div className="animate-fade-in-up absolute right-0 mt-3 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg">
+        <div className={`animate-fade-in-up absolute ${align === 'left' ? 'left-0' : 'right-0'} mt-3 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200/80 bg-white text-slate-900 shadow-lg`}>
           <div className="border-b border-slate-200/80 bg-slate-50 px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <div>
