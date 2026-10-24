@@ -320,6 +320,31 @@ export function ThreadLine({ className = '', d, length = 1200 }: { className?: s
   )
 }
 
+/** Süpervizör listesinden bir kart (psikologlara yönelik) */
+export function SupervisorCardMock({ className = '' }: { className?: string }) {
+  return (
+    <div className={`w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl ring-1 ring-slate-200/80 ${className}`}>
+      <div className="flex items-center gap-3">
+        <Avatar initials="SK" size="lg" />
+        <div className="min-w-0">
+          <p className="truncate font-display text-lg font-semibold text-slate-900">Doç. Dr. Selin K.</p>
+          <p className="text-sm text-slate-500">Klinik psikolog · 14 yıl</p>
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Chip tone="lilac">Şema Terapi</Chip>
+        <Chip tone="lilac">BDT</Chip>
+        <Chip tone="neutral">Travma</Chip>
+      </div>
+      <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+        <span className="text-slate-500">50 dk bireysel</span>
+        <span className="font-display font-semibold text-slate-900">Ücret profilde</span>
+      </div>
+      <div className="mt-4 rounded-full bg-lilac-800 px-4 py-2.5 text-center text-sm font-semibold text-white">15 dk ücretsiz tanışma</div>
+    </div>
+  )
+}
+
 export function SampleCaption({ className = '' }: { className?: string }) {
   return <p className={`text-xs text-slate-400 ${className}`}>Örnek arayüz. İsimler temsilidir.</p>
 }

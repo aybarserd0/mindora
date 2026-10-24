@@ -4,6 +4,10 @@ import Header from "@/components/Header";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Reveal from "@/components/marketing/Reveal";
+import PageHero from "@/components/marketing/PageHero";
+import CtaBand from "@/components/marketing/CtaBand";
+import { Avatar, Chip, FloatingNote, IconBadge, Icons, SampleCaption, ThreadLine } from "@/components/marketing/Mocks";
 
 type SortOption = "recommended" | "rating" | "review_count" | "newest" | "price_low" | "price_high";
 
@@ -26,6 +30,7 @@ type Expert = {
   ranking_score?: number | string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  supervised?: boolean;
 };
 
 type ExpertsResponse = {
@@ -46,6 +51,18 @@ const SUPPORT_AREAS = [
   "Tükenmişlik",
 ];
 
+// Uzman listesi alanlarını eşleşme formundaki konu seçeneklerine bağlar
+const MATCH_TOPIC: Record<string, string> = {
+  "Kaygı ve stres": "Kaygı / stres",
+  "İlişki problemleri": "İlişki / aile",
+  "Özgüven": "Özgüven",
+  "Depresif duygu durumu": "Depresif hisler",
+  "Aile içi iletişim": "İlişki / aile",
+  "Sınav ve gelecek kaygısı": "Kaygı / stres",
+  "Motivasyon eksikliği": "Motivasyon",
+  "Tükenmişlik": "Tükenmişlik",
+};
+
 const SORT_OPTIONS: Array<{ label: string; value: SortOption }> = [
   { label: "Önerilen", value: "recommended" },
   { label: "En yüksek puan", value: "rating" },
@@ -57,23 +74,35 @@ const SORT_OPTIONS: Array<{ label: string; value: SortOption }> = [
 
 const TRUST_ITEMS = [
   {
-    title: "Onaylı uzman profilleri",
-    text: "Listelenen uzmanlar Mindora başvuru ve profil inceleme sürecinden sonra görünür olur.",
+    icon: Icons.shield,
+    tone: "pine" as const,
+    title: "Belgeler tek tek kontrol edildi",
+    text: "Diploma ve unvan incelenmeden hiçbir profil bu listede yer almaz.",
   },
   {
-    title: "Gerçek değerlendirme altyapısı",
-    text: "Yorumlar yalnızca tamamlanan seanslardan sonra alınır ve yayınlanmadan önce moderasyondan geçer.",
+    icon: Icons.people,
+    tone: "lilac" as const,
+    title: "Süpervizyonlu Uzman rozeti",
+    text: "Son üç ayda kıdemli bir meslektaşıyla düzenli süpervizyon yapan psikologlar rozetle görünür.",
   },
   {
-    title: "Tek yerden süreç",
-    text: "Eşleşme, randevu, ödeme, mesajlaşma ve video görüşme akışı aynı platformda ilerler.",
+    icon: Icons.tag,
+    tone: "pine" as const,
+    title: "Ücret baştan belli",
+    text: "Seans ücreti profilde yazar; ödeme adımında sürpriz bir tutarla karşılaşmazsın.",
+  },
+  {
+    icon: Icons.noRecord,
+    tone: "pine" as const,
+    title: "Görüşmeler kaydedilmez",
+    text: "Görüntülü seanslar yalnızca sen ve psikoloğun arasında kalır.",
   },
 ];
 
 const PROCESS_ITEMS = [
-  "Kısa ön eşleşme formunu doldur",
-  "İhtiyacına uygun uzman profillerini incele",
-  "Randevu, ödeme ve görüşme akışını güvenli şekilde tamamla",
+  { title: "Kısa formu doldur", text: "Ne yaşadığını kendi kelimelerinle anlat, yaklaşık üç dakika." },
+  { title: "Önerileri incele", text: "İhtiyacına ve bütçene uygun psikologları birlikte gözden geçir." },
+  { title: "Randevunu al", text: "Takvimden saat seç, ödemeyi güvenle tamamla ve görüşmeye katıl." },
 ];
 
 function toText(value: unknown, fallback = "") {
@@ -390,78 +419,82 @@ export default function UzmanlarPage() {
   const approvedExpertCount = visibleExperts.length;
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="min-h-screen overflow-x-clip bg-white text-slate-900">
       <Header />
 
-      <section className="border-b border-slate-200/80 bg-slate-50">
-        <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 md:py-20 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold text-slate-400">
-              Mindora Uzman Ağı
-            </p>
-
-            <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-6xl">
-              Sana uygun uzmanı güvenle bul.
-            </h1>
-
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-500">
-              Mindora, yalnızca uzman listeleyen bir platform değil; ihtiyacını,
-              uygun zamanını ve beklentini birlikte dikkate alan daha güvenli bir
-              başlangıç deneyimidir.
-            </p>
-
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/eslesme"
-                className="rounded-full bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
-              >
-                Ücretsiz ön eşleşme başlat
-              </Link>
-
-              <Link
-                href="#uzman-listesi"
-                className="rounded-lg border border-slate-200 bg-white px-8 py-4 text-center font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
-              >
-                Uzmanları incele
-              </Link>
+      <PageHero
+        title="Listedeki her psikolog bir kontrolden geçti."
+        lead="Profiller incelenmeden yayınlanmaz, ücretler baştan yazar, görüşmeler kaydedilmez. Düzenli süpervizyon alan uzmanları da rozetinden tanırsın."
+        visual={
+          <>
+            <ThreadLine className="absolute inset-0 h-full w-full" d="M10 360 C 150 220, 250 400, 360 240 S 520 60, 570 100" length={850} />
+            <div className="relative z-10 w-full max-w-sm space-y-3">
+              {[
+                { i: "DA", n: "Uzm. Klinik Psk. Deniz A.", t: "Kaygı · İlişkiler", b: true },
+                { i: "EK", n: "Psk. Elif K.", t: "Özgüven · Tükenmişlik", b: false },
+                { i: "MY", n: "Uzm. Psk. Mert Y.", t: "Depresif duygu durumu", b: true },
+              ].map((c, idx) => (
+                <div
+                  key={c.n}
+                  className="animate-drift flex items-center gap-3 rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200/70"
+                  style={{ ["--drift-delay" as string]: `${idx * 0.7}s`, ["--tilt" as string]: `${idx % 2 ? 1.2 : -1.2}deg`, marginLeft: `${idx === 1 ? 32 : 0}px` }}
+                >
+                  <Avatar initials={c.i} tone={idx === 1 ? "pine" : "lilac"} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display font-semibold text-slate-900">{c.n}</p>
+                    <p className="truncate text-xs text-slate-500">{c.t}</p>
+                  </div>
+                  {c.b ? <Chip tone="lilac" icon={Icons.people}>Süpervizyonlu</Chip> : <Chip icon={Icons.shield}>Doğrulandı</Chip>}
+                </div>
+              ))}
             </div>
+            <FloatingNote className="-bottom-2 left-2 z-20" tilt="-2deg" delay="1.2s" icon={<IconBadge>{Icons.tag}</IconBadge>}>
+              Seans ücreti profilde yazar
+            </FloatingNote>
+            <SampleCaption className="absolute -bottom-8 right-0" />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link href="/eslesme" className="inline-flex justify-center rounded-full bg-pine-800 px-7 py-3.5 font-semibold text-white transition-colors hover:bg-pine-900">
+            Benim için seçsinler
+          </Link>
+          <Link href="#uzman-listesi" className="inline-flex justify-center rounded-full border border-slate-300 bg-white px-7 py-3.5 font-semibold text-slate-800 transition-colors hover:border-slate-400">
+            Listeye göz at
+          </Link>
+        </div>
+        {approvedExpertCount > 0 ? (
+          <p className="mt-5 text-sm text-slate-500">Şu anda {approvedExpertCount} onaylı uzman listeleniyor.</p>
+        ) : null}
+      </PageHero>
 
-            {approvedExpertCount > 0 ? (
-              <p className="mt-6 text-sm font-medium text-slate-400">
-                Şu anda {approvedExpertCount} onaylı uzman profili listeleniyor.
-              </p>
-            ) : null}
-          </div>
-
-          <div className="mt-14 grid gap-4 md:grid-cols-3">
-            {TRUST_ITEMS.map((item) => (
-              <div key={item.title} className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
-                <h2 className="text-base font-semibold text-slate-900">{item.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">{item.text}</p>
-              </div>
-            ))}
-          </div>
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-4 px-5 py-12 sm:grid-cols-2 lg:grid-cols-4">
+          {TRUST_ITEMS.map((item, i) => (
+            <Reveal key={item.title} delay={i * 70} className="rounded-3xl bg-slate-50 p-6 ring-1 ring-slate-200/70">
+              <IconBadge tone={item.tone}>{item.icon}</IconBadge>
+              <h2 className="mt-4 font-display text-lg font-semibold text-slate-900">{item.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+            </Reveal>
+          ))}
         </div>
       </section>
 
       <section id="uzman-listesi" className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
         <div className="mb-8 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
-            <p className="text-sm font-semibold text-slate-400">
-              Uzmanlar
-            </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-              Onaylı uzman profilleri.
+            <h2 className="text-3xl font-semibold leading-tight text-slate-900 sm:text-5xl">
+              Onaylı psikologlar
             </h2>
           </div>
 
           <p className="text-base leading-7 text-slate-500 lg:justify-self-end lg:text-right">
-            Uzman seçimini kolaylaştırmak için destek konusu, uzmanlık alanı,
-            ücret, görüşme tipi ve uygunluk bilgisi birlikte gösterilir.
+            Konuya, ücrete ya da puana göre filtrele. Karar veremezsen ücretsiz ön eşleşme
+            seçimi senin yerine kolaylaştırır.
           </p>
         </div>
 
-        <div className="mb-8 rounded-xl border border-slate-200/80 bg-white p-5">
+        <div className="mb-8 rounded-3xl border border-slate-200/80 bg-slate-50 p-5">
           <div className="grid gap-4 xl:grid-cols-[0.75fr_1.1fr_0.65fr] xl:items-start">
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Uzman ara</span>
@@ -562,119 +595,73 @@ export default function UzmanlarPage() {
           />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredExperts.map((expert) => (
-              <ExpertCard key={expert.id} expert={expert} />
+            {filteredExperts.map((expert, index) => (
+              <Reveal key={expert.id} delay={(index % 3) * 70} className="h-full">
+                <ExpertCard expert={expert} />
+              </Reveal>
             ))}
           </div>
         )}
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
-          <div className="grid gap-8 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold text-slate-400">
-                Eşleşme mantığı
+      <section className="bg-pine-950 text-white">
+        <div className="relative mx-auto max-w-7xl overflow-hidden px-5 py-20 lg:py-28">
+          <ThreadLine className="absolute inset-0 h-full w-full opacity-25" d="M-20 420 C 240 200, 520 480, 800 240 S 1150 60, 1300 160" length={1600} />
+          <div className="relative grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <Reveal>
+              <h2 className="text-3xl font-semibold leading-tight sm:text-5xl">Kimi seçeceğini bilmiyor musun? Normal.</h2>
+              <p className="mt-5 max-w-lg text-lg leading-8 text-white/75">
+                Çoğu platformda yüzlerce profil arasında tek başına karar vermen beklenir. Mindora&apos;da ihtiyacını
+                anlatman yeterli; uygun psikologları sana biz önerelim.
               </p>
-
-              <h2 className="mt-4 text-3xl font-bold md:text-4xl">
-                Herkes için aynı uzman değil, sana uygun başlangıç.
-              </h2>
-            </div>
-
-            <div className="space-y-5 text-lg leading-8 text-slate-300">
-              <p>
-                Mindora’da amaç rastgele yönlendirme yapmak değil; kişinin ihtiyacını
-                anlayarak uygun uzmanla daha güvenli bir başlangıç yapmasını sağlamaktır.
-              </p>
-
-              <div className="space-y-3">
-                {PROCESS_ITEMS.map((item, index) => (
-                  <div
-                    key={item}
-                    className="flex gap-3 rounded-lg border border-white/10 p-4 text-sm font-medium text-white"
-                  >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-900">
-                      {index + 1}
-                    </span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Link
-                href="/eslesme"
-                className="inline-block rounded-lg bg-white px-7 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-              >
-                Eşleşme formunu doldur
+              <Link href="/eslesme" className="mt-8 inline-flex rounded-full bg-white px-7 py-3.5 font-semibold text-slate-900 transition-colors hover:bg-slate-100">
+                Ücretsiz eşleşmeyi başlat
               </Link>
-            </div>
+            </Reveal>
+            <ol className="space-y-3">
+              {PROCESS_ITEMS.map((item, index) => (
+                <Reveal as="li" key={item.title} delay={index * 90} className="flex gap-4 rounded-3xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lilac-200 font-display font-semibold text-lilac-950">
+                    {index + 1}
+                  </span>
+                  <span>
+                    <span className="block font-display text-lg font-semibold">{item.title}</span>
+                    <span className="mt-1 block text-sm leading-6 text-white/70">{item.text}</span>
+                  </span>
+                </Reveal>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <p className="text-sm font-semibold text-slate-400">
-            Destek alanları
+      <section className="mx-auto w-full max-w-7xl px-5 py-20 lg:py-24">
+        <Reveal className="text-center">
+          <h2 className="text-3xl font-semibold leading-tight text-slate-900 sm:text-5xl">Hangi konuda destek arıyorsun?</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-600">
+            Birini seç, formu o konuyla başlatalım. Tam tarif edemesen de sorun değil.
           </p>
-
-          <h2 className="mt-3 text-3xl font-bold text-slate-900 md:text-4xl">
-            Hangi konuda destek alabilirsin?
-          </h2>
-
-          <p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-500">
-            Konunu tam tarif edemesen bile ön eşleşme formu ihtiyacını daha anlaşılır
-            hale getirmek için tasarlanmıştır.
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {SUPPORT_AREAS.filter((area) => area !== "Tümü").map((area) => (
-            <div
-              key={area}
-              className="rounded-lg border border-slate-200/80 p-5 text-center font-medium text-slate-600"
-            >
-              {area}
-            </div>
+        </Reveal>
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
+          {SUPPORT_AREAS.filter((area) => area !== "Tümü").map((area, i) => (
+            <Reveal key={area} delay={i * 40}>
+              <Link
+                href={`/eslesme?konu=${encodeURIComponent(MATCH_TOPIC[area] || "Diğer")}`}
+                className="inline-flex rounded-full border border-slate-200 bg-white px-5 py-3 font-medium text-slate-700 transition hover:-translate-y-0.5 hover:border-pine-300 hover:text-pine-800"
+              >
+                {area}
+              </Link>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm md:p-14">
-          <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
-            Sana uygun uzmanı birlikte bulalım.
-          </h2>
-
-          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-500">
-            Kısa formu doldur, ihtiyacına uygun psikolojik destek süreci için ücretsiz
-            ön eşleşmeyi başlat.
-          </p>
-
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link
-              href="/eslesme"
-              className="rounded-full bg-pine-800 px-9 py-4 font-semibold text-white transition hover:bg-pine-900"
-            >
-              Ücretsiz ön eşleşme başlat
-            </Link>
-
-            <Link
-              href="/uzman-basvuru"
-              className="rounded-lg border border-slate-200 bg-white px-9 py-4 font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
-            >
-              Uzman olarak başvur
-            </Link>
-          </div>
-
-          <p className="mx-auto mt-6 max-w-3xl text-xs leading-6 text-slate-400">
-            Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme
-            riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da 112 ile
-            iletişime geç.
-          </p>
-        </div>
-      </section>
+      <CtaBand
+        title="Sana uygun psikoloğu birlikte bulalım."
+        text="Kısa formu doldur, ihtiyacına uygun uzmanları ücretsiz olarak önerelim."
+        primary={{ label: "Ücretsiz eşleşmeyi başlat", href: "/eslesme" }}
+        secondary={{ label: "Uzman olarak başvur", href: "/uzman-basvuru" }}
+      />
     </main>
   );
 }
@@ -690,7 +677,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
   const reviewCount = getReviewCount(expert);
 
   return (
-    <article className="flex h-full min-w-0 flex-col rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
+    <article className="flex h-full min-w-0 flex-col rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
       <div className="flex items-start gap-4">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-pine-800 text-white">
           {showPhoto ? (
@@ -715,10 +702,21 @@ function ExpertCard({ expert }: { expert: Expert }) {
 
           <p className="truncate text-sm font-medium text-slate-500">{formatTitle(expert.title)}</p>
 
-          <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-500">
-            <span aria-hidden="true">✓</span>
-            Kimlik/diploma doğrulandı
-          </span>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-pine-50 px-2.5 py-1 text-[11px] font-semibold text-pine-800 ring-1 ring-pine-100">
+              {Icons.shield}
+              Belgeleri doğrulandı
+            </span>
+            {expert.supervised ? (
+              <span
+                title="Son üç ayda kıdemli bir meslektaşıyla düzenli süpervizyon görüşmesi yaptı."
+                className="inline-flex items-center gap-1 rounded-full bg-lilac-50 px-2.5 py-1 text-[11px] font-semibold text-lilac-800 ring-1 ring-lilac-100"
+              >
+                {Icons.people}
+                Süpervizyonlu Uzman
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -772,7 +770,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
 
         <Link
           href={matchHref}
-          className="rounded-lg border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+          className="rounded-full border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
         >
           Ücretsiz ön eşleşme iste
         </Link>

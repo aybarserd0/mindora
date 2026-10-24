@@ -5,6 +5,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getSiteUrl } from "@/lib/site-url";
+import { getSupervisedExpertIds } from "@/lib/supervision/badge";
+import Reveal from "@/components/marketing/Reveal";
+import { IconBadge, Icons, ThreadLine } from "@/components/marketing/Mocks";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -638,12 +641,13 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const reviews = await getPublicReviews(expert.id);
+  const [reviews, supervisedIds] = await Promise.all([getPublicReviews(expert.id), getSupervisedExpertIds()]);
+  const isSupervised = supervisedIds.has(expert.id);
   const matchingHref = `/eslesme?expert=${encodeURIComponent(expert.slug)}`;
   const jsonLd = buildJsonLd(expert, reviews);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white pb-24 text-slate-900 lg:pb-0">
+    <main className="min-h-screen overflow-x-clip bg-white pb-24 text-slate-900 lg:pb-0">
       <Header />
 
       {jsonLd.map((item, index) => (
@@ -670,10 +674,10 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-10">
-        <div className="grid gap-8 rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-8 lg:grid-cols-[1fr_390px] lg:p-10">
+        <div className="relative grid gap-8 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-[radial-gradient(60%_80%_at_90%_0%,var(--color-lilac-50),transparent_70%),white] p-5 shadow-sm md:p-8 lg:grid-cols-[1fr_390px] lg:p-10">
           <div className="min-w-0">
             <div className="flex flex-col gap-7 md:flex-row">
-              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-pine-800 text-white md:h-36 md:w-36">
+              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-[1.75rem] bg-[linear-gradient(135deg,#d3c8ec,#b8e0d2)] text-lilac-950 md:h-36 md:w-36">
                 {hasRealProfileImage(expert) ? (
                   <img
                     src={expert.profileImageUrl || ""}
@@ -691,11 +695,12 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
               <div className="min-w-0 flex-1">
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Badge tone="success">Kimlik/diploma doğrulandı</Badge>
+                  <Badge tone="success">Belgeleri doğrulandı</Badge>
+                  {isSupervised ? <Badge tone="lilac">Süpervizyonlu Uzman</Badge> : null}
                   <Badge tone="neutral">{expert.onlineText}</Badge>
                 </div>
 
-                <h1 className="max-w-3xl text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl">
+                <h1 className="max-w-3xl text-3xl font-semibold leading-tight text-slate-900 md:text-5xl">
                   {expert.name}
                 </h1>
 
@@ -902,29 +907,45 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 pb-16">
-        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-12">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <section className="mx-auto max-w-7xl px-5 pb-12">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { icon: Icons.shield, tone: "pine" as const, title: "Belgeleri kontrol edildi", text: "Diploma ve unvan, profil yayınlanmadan önce Mindora ekibi tarafından incelendi." },
+            isSupervised
+              ? { icon: Icons.people, tone: "lilac" as const, title: "Düzenli süpervizyon alıyor", text: "Son üç ayda kıdemli bir meslektaşıyla süpervizyon görüşmeleri yaptı." }
+              : { icon: Icons.people, tone: "lilac" as const, title: "Süpervizyon ağına açık", text: "Mindora psikologları zor vakalarda kıdemli meslektaşlarına danışabilir." },
+            { icon: Icons.tag, tone: "pine" as const, title: "Ücret baştan belli", text: "Ödeme adımında burada yazandan farklı bir tutar görmezsin." },
+            { icon: Icons.noRecord, tone: "pine" as const, title: "Görüşmeler kaydedilmez", text: "Görüntülü seans yalnızca ikinizin arasında kalır." },
+          ].map((item, i) => (
+            <Reveal key={item.title} delay={i * 70} className="rounded-3xl bg-slate-50 p-6 ring-1 ring-slate-200/70">
+              <IconBadge tone={item.tone}>{item.icon}</IconBadge>
+              <h2 className="mt-4 font-display text-lg font-semibold text-slate-900">{item.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pb-20">
+        <Reveal className="relative overflow-hidden rounded-[2.5rem] bg-pine-800 p-8 text-white md:p-12">
+          <ThreadLine className="absolute inset-0 h-full w-full opacity-30" d="M-20 260 C 200 60, 440 320, 700 140 S 1050 40, 1300 180" length={1500} />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold text-slate-400">
-                Ücretsiz ön eşleşme
-              </p>
-              <h2 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">
-                Bu uzman senin için uygun mu birlikte değerlendirelim.
+              <h2 className="text-2xl font-semibold leading-tight md:text-4xl">
+                {expert.name} senin için uygun mu?
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                Kısa formu doldur. Mindora ekibi ihtiyacına, beklentine ve uygun zamanına göre süreci güvenli şekilde başlatsın.
+              <p className="mt-3 max-w-2xl leading-7 text-white/75">
+                Kısa formu doldur; ihtiyacına, beklentine ve uygun zamanına bakarak birlikte karar verelim. Ön eşleşme ücretsizdir.
               </p>
             </div>
-
             <Link
               href={matchingHref}
-              className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100"
+              className="inline-flex shrink-0 items-center justify-center rounded-full bg-white px-7 py-3.5 font-semibold text-slate-900 transition-colors hover:bg-slate-100"
             >
-              Ücretsiz Ön Eşleşmeye Başla
+              Ücretsiz ön eşleşmeye başla
             </Link>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 px-4 py-3 shadow-lg backdrop-blur lg:hidden">
@@ -953,12 +974,14 @@ function Badge({
   tone,
 }: {
   children: ReactNode;
-  tone: "success" | "neutral";
+  tone: "success" | "neutral" | "lilac";
 }) {
   const className =
     tone === "success"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-slate-200 bg-slate-50 text-slate-600";
+      ? "border-pine-100 bg-pine-50 text-pine-800"
+      : tone === "lilac"
+        ? "border-lilac-100 bg-lilac-50 text-lilac-800"
+        : "border-slate-200 bg-slate-50 text-slate-600";
 
   return <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${className}`}>{children}</span>;
 }

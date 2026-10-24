@@ -2,6 +2,9 @@
 
 import Header from '@/components/Header'
 import { FormEvent, useMemo, useState } from 'react'
+import PageHero from '@/components/marketing/PageHero'
+import Reveal from '@/components/marketing/Reveal'
+import { FloatingNote, IconBadge, Icons, LogbookMock, SampleCaption, ThreadLine } from '@/components/marketing/Mocks'
 
 type SubmitState =
   | { type: 'idle'; message: '' }
@@ -28,16 +31,28 @@ const AVAILABILITY_OPTIONS = [
 
 const TRUST_ITEMS = [
   {
-    title: 'Ücretsiz başvuru',
-    text: 'Mindora uzman ağına başvuru yapmak ücretsizdir.',
+    icon: Icons.people,
+    tone: 'pine' as const,
+    title: 'Sana uygun danışanlar',
+    text: 'Danışanlar ihtiyaçlarına göre eşleştirilir; alanın dışındaki taleplerle uğraşmazsın.',
   },
   {
-    title: 'Alanına uygun danışan',
-    text: 'Yönlendirmeler uzmanlık alanı, uygunluk ve danışan ihtiyacına göre değerlendirilir.',
+    icon: Icons.calendar,
+    tone: 'pine' as const,
+    title: 'Tek yerden çalışma akışı',
+    text: 'Takvim, ödeme, mesajlaşma ve görüntülü görüşme aynı panelde. Görüşmeler kaydedilmez.',
   },
   {
-    title: 'Online çalışma akışı',
-    text: 'Randevu, ödeme, chat ve video görüşme süreçleri platform üzerinden ilerler.',
+    icon: Icons.spark,
+    tone: 'lilac' as const,
+    title: 'Süpervizyon bir tık uzakta',
+    text: 'Kıdemli süpervizörlerle anonim vaka kartı üzerinden çalış; saatlerin deftere otomatik işlensin.',
+  },
+  {
+    icon: Icons.shield,
+    tone: 'lilac' as const,
+    title: 'Görünür bir kalite işareti',
+    text: 'Düzenli süpervizyon alan uzmanlar profillerinde "Süpervizyonlu Uzman" rozetiyle öne çıkar.',
   },
 ]
 
@@ -172,74 +187,81 @@ export default function UzmanBasvuruPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <main className="min-h-screen overflow-x-clip bg-slate-50 text-slate-900">
       <Header />
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="inline-flex rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-            Uzman başvuruları açık
-          </div>
-
-          <h1 className="mt-6 max-w-4xl text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
-            Mindora uzman ağına katıl.
-          </h1>
-
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-500">
-            Uzmanlık alanına uygun danışanlarla çalışmak, online yönlendirme almak
-            ve Mindora ekosisteminde yer almak için başvurunu iletebilirsin.
-          </p>
-
-          <div className="mt-8 grid gap-3 text-sm font-semibold text-slate-700 sm:grid-cols-2">
-            {TRUST_ITEMS.map((item, index) => (
-              <div
-                key={item.title}
-                style={{ animationDelay: `${index * 80}ms` }}
-                className="animate-fade-in-up rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-200 ease-out hover:border-slate-300"
-              >
-                <p>{item.title}</p>
-                <p className="mt-2 text-xs font-medium leading-5 text-slate-500">
-                  {item.text}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 rounded-xl bg-pine-800 p-6 text-white">
-            <p className="text-sm font-semibold text-slate-400">
-              Başvuru süreci
-            </p>
-
-            <div className="mt-5 space-y-4">
-              {PROCESS_STEPS.map((step, index) => (
-                <div
-                  key={step.title}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                  className="animate-fade-in-up flex gap-4"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-slate-900">
-                    {index + 1}
-                  </div>
-
-                  <div>
-                    <p className="font-semibold">{step.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-300">
-                      {step.text}
-                    </p>
-                  </div>
-                </div>
-              ))}
+      <PageHero
+        tone="lilac"
+        title="Danışanını düşün. Gerisini platform düşünsün."
+        lead="Mindora'da sana uygun danışanlar gelir, takvim ve ödeme kendiliğinden işler. Zor bir vakada da yalnız kalmazsın: kıdemli bir meslektaşa danışmak birkaç tık uzağında."
+        visual={
+          <>
+            <ThreadLine className="absolute inset-0 h-full w-full" d="M20 360 C 150 200, 270 420, 370 230 S 520 60, 570 100" length={850} />
+            <div className="animate-drift relative z-10 w-full max-w-sm" style={{ ['--tilt' as string]: '1deg' }}>
+              <LogbookMock />
             </div>
-          </div>
+            <FloatingNote className="-top-3 left-0 z-20" tilt="-2deg" delay="0.9s" icon={<IconBadge tone="lilac">{Icons.people}</IconBadge>}>
+              Yeni süpervizyon onaylandı
+            </FloatingNote>
+            <FloatingNote className="-bottom-3 right-0 z-20" tilt="2deg" delay="1.7s" icon={<IconBadge>{Icons.calendar}</IconBadge>}>
+              Perşembe 19:00 · yeni danışan
+            </FloatingNote>
+            <SampleCaption className="absolute -bottom-10 left-0" />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <a href="#basvuru-formu" className="inline-flex justify-center rounded-full bg-lilac-900 px-7 py-3.5 font-semibold text-white transition-colors hover:bg-lilac-950">
+            Başvuru formuna geç
+          </a>
+          <a href="/supervizyon" className="inline-flex justify-center rounded-full border border-slate-300 bg-white px-7 py-3.5 font-semibold text-slate-800 transition-colors hover:border-slate-400">
+            Süpervizyon nasıl işliyor?
+          </a>
+        </div>
+      </PageHero>
 
-          <div className="mt-6 rounded-xl border border-slate-200/80 bg-white p-4 text-xs leading-6 text-slate-500">
-            Başvuru yapmak Mindora uzman ağına otomatik kabul anlamına gelmez.
-            Başvurular profil uygunluğu, uzmanlık alanı ve platform ihtiyacına göre
-            değerlendirilir.
-          </div>
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-4 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
+          {TRUST_ITEMS.map((item, index) => (
+            <Reveal key={item.title} delay={index * 70} className="rounded-3xl bg-slate-50 p-6 ring-1 ring-slate-200/70">
+              <IconBadge tone={item.tone}>{item.icon}</IconBadge>
+              <h2 className="mt-4 font-display text-lg font-semibold text-slate-900">{item.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section id="basvuru-formu" className="mx-auto grid max-w-7xl scroll-mt-20 gap-10 px-5 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          <h2 className="text-3xl font-semibold leading-tight text-slate-900 sm:text-5xl">Başvurun üç adımda sonuçlanır.</h2>
+          <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Başvuru ücretsizdir. Bilgilerini paylaş, belgelerini birlikte kontrol edelim.</p>
+
+          <ol className="relative mt-8 space-y-5 rounded-3xl bg-lilac-950 p-6 text-white before:absolute before:bottom-9 before:left-[41px] before:top-9 before:w-px before:bg-white/20">
+            {PROCESS_STEPS.map((step, index) => (
+              <li
+                key={step.title}
+                style={{ animationDelay: `${index * 100}ms` }}
+                className="animate-fade-in-up relative flex gap-4"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lilac-200 font-display text-sm font-semibold text-lilac-950">
+                  {index + 1}
+                </span>
+                <div>
+                  <p className="font-semibold">{step.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-white/70">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <p className="mt-6 text-xs leading-6 text-slate-500">
+            Başvuru yapmak Mindora uzman ağına otomatik kabul anlamına gelmez. Başvurular profil uygunluğu,
+            uzmanlık alanı ve platform ihtiyacına göre değerlendirilir.
+          </p>
         </aside>
 
-        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
+        <section className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/50 md:p-8">
           <div className="border-b border-slate-200/80 pb-6">
             <p className="text-sm font-semibold text-slate-400">
               Uzman başvuru formu

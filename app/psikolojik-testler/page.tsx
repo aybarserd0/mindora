@@ -2,6 +2,10 @@
 
 import Header from '@/components/Header'
 import { useMemo, useState } from 'react'
+import PageHero from '@/components/marketing/PageHero'
+import CtaBand from '@/components/marketing/CtaBand'
+import Reveal from '@/components/marketing/Reveal'
+import { FloatingNote, IconBadge, Icons, ThreadLine } from '@/components/marketing/Mocks'
 
 type TestKey = 'kaygi' | 'stres' | 'depresif' | 'ozguven'
 
@@ -182,39 +186,45 @@ export default function PsikolojikTestler() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <main className="min-h-screen overflow-x-clip bg-slate-50 text-slate-900">
       <Header />
 
-      <section className="mx-auto max-w-7xl px-5 pb-14 pt-16 md:pt-20">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="text-sm font-semibold text-slate-400">
-            Psikolojik Testler
-          </p>
+      <PageHero
+        title="Bugün nasıl hissettiğine iki dakika ayır."
+        lead="Kaygı, stres, duygu durumu ve özgüven üzerine kısa farkındalık testleri. Yanıtların bu cihazdan çıkmaz, hiçbir yere kaydedilmez. Sonuçlar tanı koymaz; ne hissettiğini adlandırmana yardım eder."
+        visual={
+          <>
+            <ThreadLine className="absolute inset-0 h-full w-full" d="M20 360 C 150 220, 260 420, 360 240 S 520 70, 560 110" length={850} />
+            <div className="animate-drift relative z-10 w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200/80" style={{ ['--tilt' as string]: '-1deg' }}>
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                <span>Kaygı farkındalığı</span>
+                <span>3 / 6</span>
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full w-1/2 rounded-full bg-pine-600" />
+              </div>
+              <p className="mt-5 font-display text-lg font-semibold leading-snug text-slate-900">Son iki haftada, endişelerini durdurmakta zorlandın mı?</p>
+              <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-semibold">
+                {['Hiç', 'Bazen', 'Sık sık', 'Neredeyse her gün'].map((o, i) => (
+                  <span key={o} className={`rounded-xl px-3 py-2.5 text-center ${i === 1 ? 'bg-pine-800 text-white' : 'bg-slate-50 text-slate-700 ring-1 ring-slate-200'}`}>{o}</span>
+                ))}
+              </div>
+            </div>
+            <FloatingNote className="-top-2 right-0 z-20" tilt="2deg" delay="0.8s" icon={<IconBadge>{Icons.shield}</IconBadge>}>
+              Yanıtlar cihazında kalır
+            </FloatingNote>
+            <FloatingNote className="-bottom-4 left-0 z-20" tilt="-2deg" delay="1.6s" icon={<IconBadge tone="lilac">{Icons.spark}</IconBadge>}>
+              Tanı değil, farkındalık
+            </FloatingNote>
+          </>
+        }
+      >
+        <a href="#testler" className="inline-flex justify-center rounded-full bg-pine-800 px-7 py-3.5 font-semibold text-white transition-colors hover:bg-pine-900">
+          Bir test seç
+        </a>
+      </PageHero>
 
-          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl">
-            Kendini daha iyi anlamak için kısa farkındalık testleri.
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-500">
-            Mindora testleri, destek ihtiyacını daha net fark etmene yardımcı
-            olmak için hazırlanır. Sonuçlar tanı koymaz; farkındalık ve doğru
-            destek sürecine yönlendirme amacı taşır.
-          </p>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            {NOTES.map((note) => (
-              <span
-                key={note}
-                className="rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm"
-              >
-                {note}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-10">
+      <section id="testler" className="mx-auto max-w-7xl scroll-mt-24 px-5 py-12">
         <div className="grid gap-4 md:grid-cols-4">
           {TESTS.map((test, index) => {
             const isActive = test.key === activeKey
@@ -225,20 +235,16 @@ export default function PsikolojikTestler() {
                 type="button"
                 onClick={() => selectTest(test.key)}
                 style={{ animationDelay: `${index * 60}ms` }}
-                className={`animate-fade-in-up rounded-xl border p-5 text-left shadow-sm transition-all duration-200 ease-out ${
+                className={`animate-fade-in-up rounded-3xl border p-6 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 ${
                   isActive
-                    ? 'border-pine-800 bg-pine-800 text-white'
+                    ? 'border-pine-800 bg-pine-800 text-white shadow-lg'
                     : 'border-slate-200/80 bg-white text-slate-900 hover:border-slate-300'
                 }`}
               >
-                <p
-                  className={`text-xs font-semibold ${
- isActive ? 'text-slate-400' : 'text-slate-400'
- }`}
-                >
-                  Aktif test
+                <p className={`text-xs font-semibold ${isActive ? 'text-lilac-200' : 'text-slate-400'}`}>
+                  {isActive ? 'Şu an açık' : `${test.questions.length} soru`}
                 </p>
-                <h2 className="mt-3 text-lg font-bold">{test.shortTitle}</h2>
+                <h2 className="mt-3 font-display text-xl font-semibold">{test.shortTitle}</h2>
                 <p
                   className={`mt-2 text-sm leading-6 ${
                     isActive ? 'text-slate-300' : 'text-slate-500'
@@ -253,7 +259,7 @@ export default function PsikolojikTestler() {
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[0.75fr_1.25fr]">
-        <aside className="h-fit rounded-xl border border-slate-200/80 bg-white p-7 shadow-sm lg:sticky lg:top-24">
+        <aside className="h-fit rounded-3xl border border-slate-200/80 bg-white p-7 shadow-sm lg:sticky lg:top-24">
           <p className="text-sm font-semibold text-slate-400">
             Seçili test
           </p>
@@ -267,7 +273,7 @@ export default function PsikolojikTestler() {
             </div>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
               <div
-                className="h-full rounded-full bg-slate-900 transition-all duration-300 ease-out"
+                className="h-full rounded-full bg-pine-600 transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -285,7 +291,7 @@ export default function PsikolojikTestler() {
           </div>
         </aside>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
+        <div className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col justify-between gap-4 border-b border-slate-200/80 pb-6 md:flex-row md:items-end">
             <div>
               <p className="text-sm font-semibold text-slate-400">
@@ -397,33 +403,30 @@ export default function PsikolojikTestler() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-16">
-        <div className="grid gap-8 rounded-xl bg-pine-800 p-8 text-white md:grid-cols-2 md:p-14">
-          <div>
-            <p className="text-sm font-semibold text-slate-400">
-              Testten sonra ne olacak?
-            </p>
-
-            <h2 className="mt-4 text-3xl font-bold md:text-4xl">
-              Sonuca göre değil, ihtiyacına göre destek planlanır.
-            </h2>
-          </div>
-
-          <div>
-            <p className="text-lg leading-8 text-slate-300">
-              Testler yalnızca farkındalık sağlar. Asıl eşleşme; destek almak
-              istediğin konu, uzman tercihin, uygun zamanın ve beklentin
-              değerlendirilerek yapılır.
-            </p>
-
-            <a
-              href="/eslesme"
-              className="mt-8 inline-block rounded-lg bg-white px-9 py-4 font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-100"
-            >
-              Ücretsiz ön eşleşme başlat
-            </a>
-          </div>
+        <Reveal>
+          <h2 className="max-w-3xl text-3xl font-semibold leading-tight sm:text-5xl">Sonuç seni düşündürdüyse, bir sonraki adım hazır.</h2>
+        </Reveal>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {[
+            { icon: Icons.spark, tone: 'pine' as const, title: 'Seçim sende değil, bizde', text: 'Test sonucunu ve ihtiyacını anlat; uygun psikologları sana biz önerelim.' },
+            { icon: Icons.shield, tone: 'pine' as const, title: 'Belgeleri kontrol edilmiş uzmanlar', text: 'Önerdiğimiz her psikoloğun diploması ve unvanı incelendi.' },
+            { icon: Icons.people, tone: 'lilac' as const, title: 'Yalnız çalışmayan psikologlar', text: 'Zor vakalarda kıdemli meslektaşlarına danışabilen bir ağın parçasılar.' },
+          ].map((item, i) => (
+            <Reveal key={item.title} delay={i * 80} className="rounded-3xl bg-white p-7 ring-1 ring-slate-200/70">
+              <IconBadge tone={item.tone}>{item.icon}</IconBadge>
+              <h3 className="mt-5 font-display text-xl font-semibold">{item.title}</h3>
+              <p className="mt-2 leading-7 text-slate-600">{item.text}</p>
+            </Reveal>
+          ))}
         </div>
       </section>
+
+      <CtaBand
+        title="Test bir başlangıç. Asıl adım bir konuşma."
+        text="Ücretsiz ön eşleşmeyle sana uygun psikoloğu birlikte bulalım."
+        primary={{ label: 'Ücretsiz eşleşmeyi başlat', href: '/eslesme' }}
+        secondary={{ label: 'Uzmanları incele', href: '/uzmanlar' }}
+      />
     </main>
   )
 }

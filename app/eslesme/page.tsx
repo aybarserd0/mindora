@@ -2,6 +2,7 @@
 
 import Header from '@/components/Header'
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { IconBadge, Icons } from '@/components/marketing/Mocks'
 
 type SubmitState =
   | { type: 'idle'; message: '' }
@@ -16,33 +17,16 @@ const AVAILABILITY_OPTIONS = [
 ]
 
 const TRUST_ITEMS = [
-  {
-    title: 'Ücretsiz ön eşleşme',
-    text: 'Formu doldurmak seans satın alma zorunluluğu oluşturmaz.',
-  },
-  {
-    title: 'Gizlilik odaklı süreç',
-    text: 'Bilgilerin yalnızca uygun yönlendirme için değerlendirilir.',
-  },
-  {
-    title: 'Online destek akışı',
-    text: 'Randevu, ödeme, chat ve video görüşme süreci tek platformda ilerler.',
-  },
+  { icon: Icons.spark, tone: 'pine' as const, title: 'Tamamen ücretsiz', text: 'Formu doldurmak seans satın alma zorunluluğu getirmez.' },
+  { icon: Icons.shield, tone: 'pine' as const, title: 'Kontrol edilmiş uzmanlar', text: 'Önerdiğimiz herkesin belgeleri incelendi.' },
+  { icon: Icons.people, tone: 'lilac' as const, title: 'Süpervizyon desteği', text: 'Psikologlarımız zor vakalarda kıdemli meslektaşlarına danışabilir.' },
+  { icon: Icons.noRecord, tone: 'pine' as const, title: 'Kayıt yok', text: 'Görüntülü seanslar kaydedilmez.' },
 ]
 
 const PROCESS_STEPS = [
-  {
-    title: 'Formu doldur',
-    text: 'İhtiyacını, uygun zamanını ve uzman tercihini paylaş.',
-  },
-  {
-    title: 'Ön değerlendirme',
-    text: 'Yanıtların uygun uzman ve destek konusu açısından incelenir.',
-  },
-  {
-    title: 'Başlangıç planı',
-    text: 'Uygun uzmanla online destek sürecine başlaman için yönlendirilirsin.',
-  },
+  { title: 'Formu gönderirsin', text: 'İhtiyacını, uygun zamanını ve tercihlerini paylaşırsın.' },
+  { title: 'Yanıtların okunur', text: 'Konuna ve beklentine uygun psikologlar belirlenir.' },
+  { title: 'Önerini alırsın', text: 'Uygun uzmanla nasıl başlayacağını sana iletiriz. Karar her zaman senin.' },
 ]
 
 function getFormValue(form: FormData, key: string) {
@@ -166,74 +150,70 @@ export default function EslesmePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <main className="min-h-screen overflow-x-clip bg-slate-50 text-slate-900">
       <Header />
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
-        <aside className="lg:sticky lg:top-28 lg:self-start">
-          <div className="inline-flex rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-            Ücretsiz ön eşleşme
-          </div>
+      <section className="relative mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(50%_60%_at_15%_10%,var(--color-lilac-100),transparent_70%),radial-gradient(40%_50%_at_60%_0%,var(--color-pine-100),transparent_70%)]" />
+        <aside className="relative lg:sticky lg:top-28 lg:self-start">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-pine-800 shadow-sm ring-1 ring-slate-200/80">
+            <span className="animate-soft-pulse h-2 w-2 rounded-full bg-pine-500" />
+            Ücretsiz ön eşleşme · yaklaşık 3 dakika
+          </span>
 
-          <h1 className="mt-6 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
-            Sana uygun psikolojik desteği birlikte planlayalım.
+          <h1 className="mt-6 max-w-[15ch] text-[2.5rem] font-semibold leading-[1.05] text-slate-900 sm:text-6xl">
+            Doğru psikoloğu aramak senin işin olmasın.
           </h1>
 
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-500">
-            Kısa bilgilerini paylaş. Mindora, ihtiyacını ve beklentini
-            değerlendirerek sana daha uygun bir başlangıç yolu sunmayı hedefler.
+          <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
+            Yüzlerce profil arasında kaybolma. Ne yaşadığını birkaç cümleyle anlat; belgeleri kontrol edilmiş
+            psikologlar arasından sana uygun olanları biz önerelim.
           </p>
 
-          <div className="mt-8 grid gap-3 text-sm font-semibold text-slate-700 sm:grid-cols-2">
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
             {TRUST_ITEMS.map((item, index) => (
               <div
                 key={item.title}
                 style={{ animationDelay: `${index * 80}ms` }}
-                className="animate-fade-in-up rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-200 ease-out hover:border-slate-300"
+                className="animate-fade-in-up flex gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70"
               >
-                <p>{item.title}</p>
-                <p className="mt-2 text-xs font-medium leading-5 text-slate-500">
-                  {item.text}
-                </p>
+                <IconBadge tone={item.tone}>{item.icon}</IconBadge>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{item.text}</p>
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-8 rounded-xl bg-pine-800 p-6 text-white">
-            <p className="text-sm font-semibold text-slate-400">
-              Süreç
-            </p>
-
-            <div className="mt-5 space-y-4">
+          <div className="mt-8 rounded-3xl bg-pine-900 p-6 text-white">
+            <p className="font-display text-lg font-semibold">Formdan sonra ne olur?</p>
+            <ol className="relative mt-5 space-y-5 before:absolute before:bottom-3 before:left-[17px] before:top-3 before:w-px before:bg-white/20">
               {PROCESS_STEPS.map((step, index) => (
-                <div
+                <li
                   key={step.title}
                   style={{ animationDelay: `${index * 100}ms` }}
-                  className="animate-fade-in-up flex gap-4"
+                  className="animate-fade-in-up relative flex gap-4"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-slate-900">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lilac-200 font-display text-sm font-semibold text-lilac-950">
                     {index + 1}
-                  </div>
-
+                  </span>
                   <div>
                     <p className="font-semibold">{step.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-300">
-                      {step.text}
-                    </p>
+                    <p className="mt-1 text-sm leading-6 text-white/70">{step.text}</p>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
 
-          <p className="mt-6 rounded-xl border border-slate-200/80 bg-white p-4 text-xs leading-6 text-slate-500">
-            Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar
-            verme riski varsa lütfen en yakın sağlık kuruluşuna başvur ya da 112
-            ile iletişime geç.
+          <p className="mt-6 text-xs leading-6 text-slate-500">
+            Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski varsa lütfen en yakın
+            sağlık kuruluşuna başvur ya da 112 ile iletişime geç.
           </p>
         </aside>
 
-        <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
+        <section className="relative rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/50 md:p-8">
           <div className="border-b border-slate-200/80 pb-6">
             <p className="text-sm font-semibold text-slate-400">
               Eşleşme formu

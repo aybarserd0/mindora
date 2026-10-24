@@ -1,7 +1,11 @@
 import Header from '@/components/Header'
 import type { Metadata } from 'next'
 import { getSiteUrl } from '@/lib/site-url'
+import Link from 'next/link'
 import FaqAccordion from './FaqAccordion'
+import PageHero from '@/components/marketing/PageHero'
+import CtaBand from '@/components/marketing/CtaBand'
+import { ThreadLine } from '@/components/marketing/Mocks'
 
 const SITE_URL = getSiteUrl()
 
@@ -114,6 +118,24 @@ const FAQ_GROUPS = [
     ],
   },
   {
+    category: 'Uzmanlar ve süpervizyon',
+    description: 'Mindora’daki psikologların nasıl seçildiği ve nasıl desteklendiği.',
+    items: [
+      {
+        q: 'Uzmanlar nasıl kontrol ediliyor?',
+        a: 'Her psikoloğun diploması ve unvanı, danışan kabul etmeden önce Mindora ekibi tarafından tek tek kontrol edilir.',
+      },
+      {
+        q: '"Süpervizyonlu Uzman" rozeti ne anlama geliyor?',
+        a: 'Son üç ayda kıdemli bir meslektaşıyla düzenli süpervizyon görüşmesi yapmış psikologların profilinde görünür. Süpervizyon, terapistin zor vakalarda deneyimli birinden destek almasıdır.',
+      },
+      {
+        q: 'Süpervizyonda benim bilgilerim paylaşılıyor mu?',
+        a: 'Hayır. Vaka; adın, iletişim bilgilerin, şehrin, işyerin gibi seni tanıtan hiçbir bilgi olmadan anlatılır. Mindora bu tür bilgileri otomatik olarak işaretler ve süpervizör yalnızca anonim vaka kartını görebilir.',
+      },
+    ],
+  },
+  {
     category: 'Uzman başvurusu',
     description: 'Mindora uzman ağına katılmak isteyen psikologlar için bilgiler.',
     items: [
@@ -193,101 +215,51 @@ function JsonLd() {
 
 export default function SSS() {
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="min-h-screen overflow-x-clip bg-slate-50 text-slate-900">
       <Header />
       <JsonLd />
 
-      <section className="border-b border-slate-200/80 bg-slate-50">
-        <div className="mx-auto max-w-4xl px-5 py-20 text-center md:py-24">
-          <p className="text-sm font-semibold text-slate-400">
-            Sık Sorulan Sorular
-          </p>
-
-          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-6xl">
-            Mindora’ya başlamadan önce aklına takılanlar.
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-500">
-            Ön eşleşme, online görüşme, gizlilik, ücretlendirme ve uzman
-            başvurusu hakkında en çok merak edilen soruları burada topladık.
-          </p>
-
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <a
-              href="/eslesme"
-              className="rounded-full bg-pine-800 px-8 py-4 text-center font-semibold text-white transition hover:bg-pine-900"
-            >
-              Ücretsiz ön eşleşme başlat
-            </a>
-
-            <a
-              href="/uzmanlar"
-              className="rounded-lg border border-slate-200 bg-white px-8 py-4 text-center font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
-            >
-              Uzmanları incele
-            </a>
-          </div>
-
-          <div className="mx-auto mt-10 grid max-w-3xl gap-3 sm:grid-cols-2 md:grid-cols-4">
-            {TRUST_ITEMS.map((item) => (
-              <div
-                key={item}
-                className="rounded-lg border border-slate-200/80 bg-white px-5 py-4 text-center text-sm font-medium text-slate-600"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
+      <PageHero
+        title="Başlamadan önce aklına takılanlar."
+        lead="Ön eşleşme, görüşmeler, ücretler, gizlilik ve uzmanlarımız hakkında en çok sorulan soruları topladık. Cevabını bulamazsan bize yazabilirsin."
+        visual={
+          <>
+            <ThreadLine className="absolute inset-0 h-full w-full" d="M30 340 C 140 200, 260 380, 360 220 S 520 60, 560 90" length={800} />
+            <div className="relative z-10 w-full max-w-sm space-y-3">
+              {['Ön eşleşme ücretli mi?', 'Görüşmeler kaydediliyor mu?', 'Uzmanlar nasıl kontrol ediliyor?'].map((q, i) => (
+                <div
+                  key={q}
+                  className="animate-drift rounded-2xl bg-white px-5 py-4 shadow-lg ring-1 ring-slate-200/70"
+                  style={{ ['--drift-delay' as string]: `${i * 0.8}s`, ['--tilt' as string]: `${i % 2 ? 1.5 : -1.5}deg`, marginLeft: `${i * 24}px` }}
+                >
+                  <p className="font-display text-base font-semibold text-slate-900">{q}</p>
+                  <p className="mt-1 text-sm text-slate-500">{['Hayır, her zaman ücretsiz.', 'Hayır, görüntülü seanslar kaydedilmez.', 'Diploma ve unvan tek tek kontrol edilir.'][i]}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link href="/eslesme" className="inline-flex justify-center rounded-full bg-pine-800 px-7 py-3.5 font-semibold text-white transition-colors hover:bg-pine-900">
+            Ücretsiz eşleşmeyi başlat
+          </Link>
+          <a href="mailto:mindora.live@gmail.com" className="inline-flex justify-center rounded-full border border-slate-300 bg-white px-7 py-3.5 font-semibold text-slate-800 transition-colors hover:border-slate-400">
+            Bize yaz
+          </a>
         </div>
-      </section>
+      </PageHero>
 
-      <section className="mx-auto max-w-7xl px-5 py-16">
+      <section className="mx-auto max-w-7xl px-5 py-16 lg:py-20">
         <FaqAccordion groups={FAQ_GROUPS} />
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 pb-20">
-        <div className="rounded-xl bg-pine-800 p-8 text-white md:p-14">
-          <div className="grid gap-8 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold text-slate-400">
-                İlk adım
-              </p>
-              <h2 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">
-                Aklındaki soru netleştiyse uygun destek sürecini birlikte planlayalım.
-              </h2>
-            </div>
-
-            <div>
-              <p className="text-lg leading-8 text-slate-300">
-                Kısa formu doldur, destek ihtiyacını paylaş ve sana uygun online
-                psikolojik destek süreci için ücretsiz ön eşleşmeyi başlat.
-              </p>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="/eslesme"
-                  className="rounded-lg bg-white px-8 py-4 text-center font-semibold text-slate-900 transition hover:bg-slate-100"
-                >
-                  Ücretsiz ön eşleşme başlat
-                </a>
-
-                <a
-                  href="/psikolojik-testler"
-                  className="rounded-lg border border-white/15 px-8 py-4 text-center font-semibold text-white transition hover:bg-white/10"
-                >
-                  Testleri incele
-                </a>
-              </div>
-
-              <p className="mt-6 text-xs leading-6 text-slate-400">
-                Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar
-                verme riski varsa lütfen 112 ile iletişime geç ya da en yakın
-                sağlık kuruluşuna başvur.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <CtaBand
+        title="Sorun netleştiyse, ilk adım üç dakika."
+        text="Kısa formu doldur, sana uygun psikoloğu önerelim."
+        primary={{ label: 'Ücretsiz eşleşmeyi başlat', href: '/eslesme' }}
+        secondary={{ label: 'Testleri incele', href: '/psikolojik-testler' }}
+      />
     </main>
   )
 }
