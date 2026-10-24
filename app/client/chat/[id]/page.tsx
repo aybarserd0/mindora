@@ -1315,7 +1315,7 @@ export default function ClientChatPage({
             🔒
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900">Görüşme alanı kilitli</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Görüşme alanı kilitli</h1>
 
           <p className="mt-3 text-sm font-medium leading-6 text-slate-500">
             Eşleşmeniz hazır! Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
@@ -1347,7 +1347,7 @@ export default function ClientChatPage({
                 Mindora Güvenli Görüşme
               </p>
 
-              <h1 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+              <h1 className="mt-2 text-2xl font-semibold text-slate-900 md:text-3xl">
                 Danışan Chat Alanı
               </h1>
 
@@ -1476,7 +1476,7 @@ export default function ClientChatPage({
                 <p className="text-sm font-semibold text-slate-400">
                   Chat
                 </p>
-                <p className="mt-2 text-lg font-bold text-slate-900">
+                <p className="mt-2 text-lg font-semibold text-slate-900">
                   {conversation.status === 'active'
                     ? 'Aktif'
                     : conversation.status === 'locked'
@@ -1489,7 +1489,7 @@ export default function ClientChatPage({
                 <p className="text-sm font-semibold text-slate-400">
                   Ödeme
                 </p>
-                <p className="mt-2 text-lg font-bold text-green-700">
+                <p className="mt-2 text-lg font-semibold text-green-700">
                   {getPaymentText(conversation.payment_status)}
                 </p>
               </div>
@@ -1499,7 +1499,7 @@ export default function ClientChatPage({
                   Video
                 </p>
                 <p
-                  className={`mt-2 text-lg font-bold ${
+                  className={`mt-2 text-lg font-semibold ${
                     canStartVideoSession ? 'text-emerald-700' : 'text-orange-700'
                   }`}
                 >
@@ -1518,14 +1518,14 @@ export default function ClientChatPage({
           </section>
         ) : error ? (
           <section className="rounded-xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
-            <p className="text-lg font-bold text-red-700">Erişim reddedildi</p>
+            <p className="text-lg font-semibold text-red-700">Erişim reddedildi</p>
             <p className="mt-2 text-sm font-medium text-red-600">{error}</p>
           </section>
         ) : (
           <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
             {showChatLockedBanner && (
               <div className="border-b border-orange-200 bg-orange-50 p-5">
-                <p className="text-lg font-bold text-orange-800">
+                <p className="text-lg font-semibold text-orange-800">
                   🔒 Chat şu anda kilitli
                 </p>
 
@@ -1544,7 +1544,7 @@ export default function ClientChatPage({
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="max-w-md rounded-xl border border-slate-200/80 bg-white p-6 text-center shadow-sm animate-fade-in-up">
-                    <p className="text-lg font-bold text-slate-900">
+                    <p className="text-lg font-semibold text-slate-900">
                       Henüz mesaj yok
                     </p>
                     <p className="mt-2 text-sm font-medium text-slate-500">

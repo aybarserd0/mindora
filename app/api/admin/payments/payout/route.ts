@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getPayoutEligibility } from '@/lib/payments/policy'
 
 export const runtime = 'nodejs'
 
@@ -10,6 +11,8 @@ type PaymentRecord = {
   id: string
   status: PaymentStatus
   expert_payout_status: ExpertPayoutStatus
+  booking_id: string | null
+  refund_status: string | null
 }
 
 function toText(value: unknown) {
@@ -33,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const { data: paymentData, error: readError } = await supabase
       .from('payments')
-      .select('id, status, expert_payout_status')
+      .select('id, status, expert_payout_status, booking_id, refund_status')
       .eq('id', paymentId)
       .maybeSingle()
 
@@ -55,6 +58,31 @@ export async function POST(req: NextRequest) {
         {
           ok: false,
           error: 'Sadece başarılı ödemeler için uzman payout yapılabilir.',
+        },
+        { status: 400 }
+      )
+    }
+
+    // Bağlı seans henüz gerçekleşmediyse ya da iade süreci açıksa aktarım yapılmaz
+    let booking: { status: string | null; late_cancellation: boolean | null } | null = null
+    if (payment.booking_id) {
+      const { data: bookingData } = await supabase
+        .from('session_bookings')
+        .select('status, late_cancellation')
+        .eq('id', payment.booking_id)
+        .maybeSingle()
+      booking = bookingData || null
+    }
+
+    const eligibility = getPayoutEligibility(payment, booking)
+    if (eligibility === 'waiting_session' || eligibility === 'refund_pending') {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            eligibility === 'waiting_session'
+              ? 'Seans henüz tamamlanmadı. Uzman payı seans gerçekleştikten sonra aktarılabilir.'
+              : 'Bu ödeme için iade süreci açık; uzman payı aktarılamaz.',
         },
         { status: 400 }
       )

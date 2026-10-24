@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { applyRateLimit } from "@/lib/security/rate-limit";
 import { enforceAdminRequest } from "@/lib/security/admin-auth";
 import { cleanText, cleanUuid } from "@/lib/security/validation";
+import { linkPaymentToBooking } from "@/lib/sessions/cancellation";
 import { createNotification } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -211,6 +212,13 @@ export async function POST(req: NextRequest) {
 
       throw error;
     }
+
+    // Danışanın henüz bir seansa bağlanmamış ödemesi varsa bu randevuya bağla
+    await linkPaymentToBooking({
+      id: (data as unknown as { id: string }).id,
+      client_id: clientId || null,
+      expert_id: expertId,
+    }).catch((linkError) => console.error("Payment link error:", linkError));
 
     const scheduledStartText = new Intl.DateTimeFormat("tr-TR", {
       day: "2-digit",

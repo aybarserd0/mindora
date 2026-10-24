@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { applyRateLimit } from '@/lib/security/rate-limit'
+import { resolveCommission, splitAmount } from '@/lib/payments/policy'
 
 export const runtime = 'nodejs'
 
@@ -158,7 +159,7 @@ export async function POST(req: NextRequest) {
 
     const { data: expert, error: expertError } = await supabase
       .from('experts')
-      .select('id, name, email, session_price, status')
+      .select('id, name, email, session_price, status, account_type, commission_rate, founding_member, founding_until')
       .eq('id', client.matched_expert_id)
       .maybeSingle()
 
@@ -173,7 +174,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (expert.status !== 'approved') {
+    if (expert.status !== 'approved' || expert.account_type === 'supervision_only') {
       return NextResponse.json(
         { ok: false, error: 'Eşleşen psikolog aktif/onaylı değil.' },
         { status: 400 }
@@ -189,8 +190,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const commissionAmount = Math.round(amount * 0.3)
-    const expertAmount = amount - commissionAmount
+    const { rate: commissionRate } = resolveCommission(expert as any)
+    const { commissionAmount, expertAmount } = splitAmount(amount, commissionRate)
 
     const now = Date.now()
     const randomKey = `${now}${Math.floor(Math.random() * 100000)}`
@@ -324,6 +325,7 @@ export async function POST(req: NextRequest) {
         expert_id: expert.id,
         amount,
         commission_amount: commissionAmount,
+        commission_rate: commissionRate,
         expert_amount: expertAmount,
         iyzico_token: iyzicoData.token,
         iyzico_conversation_id: conversationId,

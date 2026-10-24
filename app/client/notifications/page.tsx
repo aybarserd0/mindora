@@ -217,7 +217,7 @@ function NotificationsContent() {
               <p className="text-sm font-semibold text-slate-400">
                 Mindora Notification Center
               </p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
                 Danışan Bildirimleri
               </h1>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
@@ -266,12 +266,12 @@ function NotificationsContent() {
           </section>
         ) : error ? (
           <section className="rounded-xl border border-rose-200 bg-rose-50 p-8 text-center shadow-sm">
-            <p className="text-lg font-bold text-rose-700">Bildirimler alınamadı</p>
+            <p className="text-lg font-semibold text-rose-700">Bildirimler alınamadı</p>
             <p className="mt-2 text-sm font-semibold text-rose-600">{error}</p>
           </section>
         ) : notifications.length === 0 ? (
           <section className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
-            <p className="text-lg font-bold text-slate-900">Henüz bildirim yok</p>
+            <p className="text-lg font-semibold text-slate-900">Henüz bildirim yok</p>
             <p className="mt-2 text-sm font-semibold text-slate-500">
               Yeni mesaj, seans veya sistem güncellemesi olduğunda burada görünecek.
             </p>
@@ -331,12 +331,12 @@ function NotificationCard({
                 Yeni
               </span>
             ) : null}
-            <span className="text-xs font-bold text-slate-500">
+            <span className="text-xs font-semibold text-slate-500">
               {formatDateTime(notification.createdAt)}
             </span>
           </div>
 
-          <h2 className="mt-3 text-lg font-bold text-slate-900">{notification.title}</h2>
+          <h2 className="mt-3 text-lg font-semibold text-slate-900">{notification.title}</h2>
           <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
             {getPreview(notification.message, 260)}
           </p>

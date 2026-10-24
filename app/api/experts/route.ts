@@ -22,6 +22,7 @@ export async function GET() {
       `
       )
       .eq('status', 'approved')
+      .neq('account_type', 'supervision_only')
       .order('created_at', { ascending: false })
 
     if (error) {

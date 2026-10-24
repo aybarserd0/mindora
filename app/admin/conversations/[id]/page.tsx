@@ -592,6 +592,7 @@ export default function AdminConversationPage({
 
     const statusLabel = getBookingStatusLabel(status)
     let cancellationReason = ''
+    let refund: boolean | undefined
 
     if (status === 'cancelled') {
       const reason = window.prompt(
@@ -601,6 +602,10 @@ export default function AdminConversationPage({
 
       if (reason === null) return
       cancellationReason = reason.trim()
+
+      refund = window.confirm(
+        'Bu seansın ödemesi danışana iade edilsin mi?\n\nTamam: tam iade (Iyzico üzerinden otomatik)\nVazgeç: iade yapılmaz, ücret uzmana hakediş olarak kalır'
+      )
     }
 
     const shouldConfirm = window.confirm(
@@ -620,17 +625,28 @@ export default function AdminConversationPage({
         body: JSON.stringify({
           status,
           cancellationReason,
+          refund,
         }),
       })
 
-      const data = (await res.json()) as BookingResponse
+      const data = (await res.json()) as BookingResponse & {
+        outcome?: { refund?: string; refundError?: string }
+      }
 
       if (!res.ok || !data.ok) {
         setBookingActionError(data.error || 'Randevu durumu güncellenemedi.')
         return
       }
 
-      setBookingActionSuccess(`Randevu durumu güncellendi: ${statusLabel}`)
+      const refundNote =
+        data.outcome?.refund === 'refunded'
+          ? ' Ödeme iade edildi.'
+          : data.outcome?.refund === 'failed'
+            ? ` İade otomatik yapılamadı (${data.outcome.refundError || 'bilinmeyen hata'}); Ödemeler ekranından tekrar dene.`
+            : data.outcome?.refund === 'kept_for_expert'
+              ? ' Ücret uzmana hakediş olarak bırakıldı.'
+              : ''
+      setBookingActionSuccess(`Randevu durumu güncellendi: ${statusLabel}.${refundNote}`)
       await loadBookings(conversationId)
       if (safeExpertId) await loadSlots(safeExpertId)
     } catch {

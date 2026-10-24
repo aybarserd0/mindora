@@ -43,6 +43,7 @@ type ExpertRow = {
   certificates?: string[] | string | null;
   status?: string | null;
   account_status?: string | null;
+  account_type?: string | null;
   photo_url?: string | null;
   profile_image_url?: string | null;
   average_rating?: number | string | null;
@@ -325,6 +326,7 @@ function isPublicExpert(row: ExpertRow) {
   const hiddenStatuses = ["rejected", "passive", "inactive", "hidden", "blocked"];
 
   if (hiddenStatuses.includes(status) || hiddenStatuses.includes(accountStatus)) return false;
+  if (toText(row.account_type).toLowerCase() === "supervision_only") return false;
   if (!status) return true;
 
   return approvedStatuses.includes(status);

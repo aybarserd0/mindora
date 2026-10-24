@@ -35,6 +35,7 @@ type EarningsApiResponse = {
   earnings?: Partial<EarningPayment>[]
   payments?: Partial<EarningPayment>[]
   summary?: Partial<EarningsSummary>
+  commission?: { rate: number; source: 'custom' | 'founding' | 'standard'; foundingUntil: string | null }
   error?: string
 }
 
@@ -227,6 +228,7 @@ function sortPayments(payments: EarningPayment[]) {
 export default function ExpertEarningsPage() {
   const [payments, setPayments] = useState<EarningPayment[]>([])
   const [summary, setSummary] = useState<EarningsSummary>(EMPTY_SUMMARY)
+  const [commission, setCommission] = useState<EarningsApiResponse['commission'] | null>(null)
   const [filter, setFilter] = useState<PayoutFilter>('all')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -261,6 +263,7 @@ export default function ExpertEarningsPage() {
 
       setPayments(normalizedPayments)
       setSummary(mergeSummary(data.summary, fallbackSummary))
+      setCommission(data.commission || null)
     } catch (error) {
       setPayments([])
       setSummary(EMPTY_SUMMARY)
@@ -302,7 +305,12 @@ export default function ExpertEarningsPage() {
   }, [payments, filter, search])
 
   const hasPayments = payments.length > 0
-  const commissionRate = summary.totalGross > 0 ? Math.round((summary.totalCommission / summary.totalGross) * 100) : 30
+  const commissionRate =
+    summary.totalGross > 0
+      ? Math.round((summary.totalCommission / summary.totalGross) * 100)
+      : commission
+        ? Math.round(commission.rate * 100)
+        : 25
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -313,7 +321,7 @@ export default function ExpertEarningsPage() {
               <p className="text-sm font-semibold text-slate-400">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Kazançlar
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
@@ -327,15 +335,15 @@ export default function ExpertEarningsPage() {
                 type="button"
                 onClick={() => void fetchEarnings('refresh')}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href="/expert/dashboard"
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
-                Dashboard
+                Genel bakış
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
@@ -346,6 +354,25 @@ export default function ExpertEarningsPage() {
             </div>
           </div>
         </header>
+
+        {commission ? (
+          <section className="flex flex-col gap-2 rounded-xl border border-lilac-100 bg-lilac-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-slate-900">
+                Platform hizmet bedelin: %{Math.round(commission.rate * 100)}
+                {commission.source === 'founding' ? ' · Kurucu uzman' : commission.source === 'custom' ? ' · Sana özel oran' : ''}
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                {commission.source === 'founding' && commission.foundingUntil
+                  ? `Kurucu uzman indirimin ${new Date(commission.foundingUntil).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihine kadar geçerli. Sonrasında standart oran %25 uygulanır.`
+                  : 'Oran, her ödeme oluştuğu anda sabitlenir; sonradan yapılan değişiklikler geçmiş ödemeleri etkilemez.'}
+              </p>
+            </div>
+            <p className="text-xs leading-5 text-slate-500 sm:max-w-xs sm:text-right">
+              Danışan seansa 24 saatten az kala iptal ederse ücret sana hakediş olarak kalır.
+            </p>
+          </section>
+        ) : null}
 
         {notice ? (
           <NoticeCard
@@ -497,7 +524,7 @@ function EarningsTable({ payments }: { payments: EarningPayment[] }) {
               <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-700">
                 {formatMoney(payment.commissionAmount)}
               </td>
-              <td className="whitespace-nowrap px-5 py-4 font-bold text-indigo-700">
+              <td className="whitespace-nowrap px-5 py-4 font-semibold text-indigo-700">
                 {formatMoney(payment.expertAmount)}
               </td>
               <td className="whitespace-nowrap px-5 py-4">
@@ -550,7 +577,7 @@ function SummaryCard({ title, value, description }: { title: string; value: stri
   return (
     <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
       <p className="text-sm font-semibold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -560,7 +587,7 @@ function InfoBlock({ title, value, description }: { title: string; value: string
   return (
     <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
       <p className="text-sm font-semibold text-slate-500">{title}</p>
-      <p className="mt-2 text-lg font-bold text-slate-900">{value}</p>
+      <p className="mt-2 text-lg font-semibold text-slate-900">{value}</p>
       <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
     </div>
   )
@@ -570,7 +597,7 @@ function MiniMetric({ label, value, emphasized = false }: { label: string; value
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3">
       <p className="text-xs font-semibold text-slate-500">{label}</p>
-      <p className={`mt-1 font-bold ${emphasized ? 'text-indigo-700' : 'text-slate-900'}`}>{value}</p>
+      <p className={`mt-1 font-semibold ${emphasized ? 'text-indigo-700' : 'text-slate-900'}`}>{value}</p>
     </div>
   )
 }
@@ -648,7 +675,7 @@ function NoticeCard({
           <button
             type="button"
             onClick={onRetry}
-            className="inline-flex items-center justify-center rounded-lg border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-amber-100"
+            className="inline-flex items-center justify-center rounded-full border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-amber-100"
           >
             Tekrar Dene
           </button>

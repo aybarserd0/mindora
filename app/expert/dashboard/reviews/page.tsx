@@ -222,7 +222,7 @@ function ExpertReviewsContent() {
               <p className="text-sm font-semibold text-indigo-600">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Yorumlar ve Puanlar
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
@@ -235,7 +235,7 @@ function ExpertReviewsContent() {
                 type="button"
                 onClick={() => void fetchReviews("refresh")}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? "Yükleniyor..." : "Yenile"}
               </button>
@@ -243,7 +243,7 @@ function ExpertReviewsContent() {
                 href={buildTokenUrl("/expert/dashboard", token)}
                 className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
-                Dashboard
+                Genel bakış
               </Link>
             </div>
           </div>
@@ -270,7 +270,7 @@ function ExpertReviewsContent() {
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.5fr]">
           <article className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900">Puan Dağılımı</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Puan Dağılımı</h2>
             <p className="mt-1 text-sm text-slate-500">Yayındaki onaylı yorumlara göre hesaplanır.</p>
 
             <div className="mt-6 space-y-3">
@@ -296,7 +296,7 @@ function ExpertReviewsContent() {
           <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Filtrele ve Ara</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Filtrele ve Ara</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Yorum metni, danışan kodu, puan veya durum bilgisine göre arama yapın.
                 </p>
@@ -349,7 +349,7 @@ function ExpertReviewsContent() {
         <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Yorum Listesi</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Yorum Listesi</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Danışan değerlendirmeleri ve yayın durumları.
               </p>
@@ -395,8 +395,8 @@ function SummaryCard({
     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-bold text-slate-500">{title}</p>
-          <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+          <p className="text-sm font-semibold text-slate-500">{title}</p>
+          <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
         </div>
         {accent ? <div className="pt-1">{accent}</div> : null}
       </div>
@@ -414,10 +414,10 @@ function ReviewCard({ review, token }: { review: ExpertReview; token: string }) 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <StarRating rating={review.rating} size="text-xl" />
-            <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}>
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${config.className}`}>
               {config.label}
             </span>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">
               {review.clientDisplayName || "Danışan"}
             </span>
           </div>
@@ -426,7 +426,7 @@ function ReviewCard({ review, token }: { review: ExpertReview; token: string }) 
             {review.reviewText?.trim() || "Danışan yalnızca puan bıraktı."}
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-500">
+          <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-500">
             <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">
               {formatDate(review.createdAt)}
             </span>
@@ -442,7 +442,7 @@ function ReviewCard({ review, token }: { review: ExpertReview; token: string }) 
           {review.conversationId ? (
             <Link
               href={buildTokenUrl(`/expert/chat/${encodeURIComponent(review.conversationId)}`, token)}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
             >
               Sohbete Git
             </Link>
@@ -451,7 +451,7 @@ function ReviewCard({ review, token }: { review: ExpertReview; token: string }) 
           {review.sessionId ? (
             <Link
               href={buildTokenUrl(`/expert/session/${encodeURIComponent(review.sessionId)}`, token)}
-              className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-full bg-pine-800 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
             >
               Seansı Aç
             </Link>
@@ -465,7 +465,7 @@ function ReviewCard({ review, token }: { review: ExpertReview; token: string }) 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <p className="text-sm font-black text-slate-800">{title}</p>
+      <p className="text-sm font-semibold text-slate-800">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
     </div>
   );
@@ -475,9 +475,9 @@ export default function ExpertDashboardReviewsPage() {
   return (
     <Suspense
       fallback={
-        <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+        <section className="px-4 py-6 text-slate-900 md:px-6 md:py-10">
           <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Yorumlar yükleniyor...</p>
+            <p className="font-semibold text-slate-600">Yorumlar yükleniyor...</p>
           </div>
         </section>
       }

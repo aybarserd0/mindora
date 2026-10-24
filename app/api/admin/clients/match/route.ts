@@ -181,6 +181,7 @@ export async function POST(req: NextRequest) {
       )
       .eq('id', expertId)
       .eq('status', 'approved')
+      .neq('account_type', 'supervision_only')
       .single()
 
     if (expertError || !expert) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { STANDARD_COMMISSION_RATE } from '@/lib/payments/policy';
 import { createClient } from "@supabase/supabase-js";
 import { toSafeNumber } from "@/lib/security/validation";
 
@@ -7,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const DEFAULT_COMMISSION_RATE = 0.3;
+const DEFAULT_COMMISSION_RATE = STANDARD_COMMISSION_RATE;
 
 type FinanceStatus = "paid" | "pending" | "refunded" | "cancelled" | "unknown" | string;
 

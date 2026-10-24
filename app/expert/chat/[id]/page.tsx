@@ -1369,7 +1369,7 @@ export default function ExpertChatPage({
             🔒
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900">Görüşme alanı kilitli</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Görüşme alanı kilitli</h1>
 
           <p className="mt-3 text-sm font-medium leading-6 text-slate-500">
             Danışan ödemesini tamamladığında bu görüşme alanı otomatik olarak açılacak ve
@@ -1401,7 +1401,7 @@ export default function ExpertChatPage({
                 Mindora Uzman Paneli
               </p>
 
-              <h1 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+              <h1 className="mt-2 text-2xl font-semibold text-slate-900 md:text-3xl">
                 Uzman Chat Alanı
               </h1>
 
