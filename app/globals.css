@@ -182,3 +182,173 @@ h1 {
     scroll-behavior: auto;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Görsel anlatım katmanı: ekran kurguları, kaydırma girişleri, hareket */
+/* ------------------------------------------------------------------ */
+
+/* Kaydırınca beliren içerik. JS yoksa ya da hareket kapalıysa içerik görünür kalır. */
+.reveal {
+  opacity: 1;
+}
+.js-motion .reveal:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(18px);
+}
+.js-motion .reveal {
+  transition:
+    opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* Yavaş süzülme: ekran kurgularındaki kartlar */
+@keyframes drift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--tilt, 0deg));
+  }
+  50% {
+    transform: translateY(-8px) rotate(var(--tilt, 0deg));
+  }
+}
+.animate-drift {
+  animation: drift 9s ease-in-out infinite;
+  animation-delay: var(--drift-delay, 0s);
+}
+
+/* Logodaki iç içe geçen çizgiden türetilen bağ çizgisi kendini çizer */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: var(--line-length, 1200);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.thread-line {
+  stroke-dasharray: var(--line-length, 1200);
+  stroke-dashoffset: 0;
+}
+.js-motion .reveal[data-shown] .thread-line,
+.js-motion .thread-line.autoplay {
+  animation: draw-line 2.6s cubic-bezier(0.45, 0, 0.2, 1) both;
+}
+
+/* Vaka kartının anonimleşmesi: kişisel bilgi önce işaretlenir, sonra kapatılır */
+@keyframes redact {
+  0%,
+  18% {
+    background-color: transparent;
+    color: inherit;
+  }
+  30%,
+  44% {
+    background-color: var(--color-rose-100, #ffe4e6);
+    color: var(--color-rose-700, #be123c);
+  }
+  56%,
+  92% {
+    background-color: var(--color-slate-800);
+    color: transparent;
+  }
+  100% {
+    background-color: transparent;
+    color: inherit;
+  }
+}
+.redact {
+  border-radius: 4px;
+  padding: 0 3px;
+  margin: 0 -1px;
+  animation: redact 7s ease-in-out infinite;
+  animation-delay: var(--redact-delay, 0s);
+}
+
+/* Sohbet balonları sırayla gelir */
+@keyframes bubble-in {
+  0%,
+  8% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  14%,
+  88% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.bubble {
+  animation: bubble-in 10s ease-out infinite;
+  animation-delay: var(--bubble-delay, 0s);
+}
+
+/* Seçili zaman dilimi ve canlı göstergeler için hafif nabız */
+@keyframes soft-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(67 120 102 / 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgb(67 120 102 / 0);
+  }
+}
+.animate-soft-pulse {
+  animation: soft-pulse 2.8s ease-in-out infinite;
+}
+
+/* Adım vitrininde ekranlar arası geçiş */
+.showcase-panel {
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.showcase-panel:not([data-active]) {
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  pointer-events: none;
+}
+
+/* "Hareketi durdur" ya da sistemde hareketi azalt açıksa her şey durur */
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-play-state: paused !important;
+}
+html[data-motion="off"] .reveal {
+  opacity: 1 !important;
+  transform: none !important;
+}
+html[data-motion="off"] .thread-line {
+  animation: none !important;
+  stroke-dashoffset: 0 !important;
+}
+html[data-motion="off"] .redact,
+html[data-motion="off"] .bubble {
+  animation: none !important;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .js-motion .reveal:not([data-shown]) {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .animate-drift,
+  .animate-soft-pulse,
+  .redact,
+  .bubble,
+  .thread-line {
+    animation: none !important;
+  }
+  .bubble {
+    opacity: 1;
+  }
+  .showcase-panel {
+    transition: none;
+  }
+}

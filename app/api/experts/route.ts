@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getSupervisedExpertIds } from '@/lib/supervision/badge'
 
 export async function GET() {
   try {
@@ -35,9 +36,14 @@ export async function GET() {
       )
     }
 
+    const supervised = await getSupervisedExpertIds()
+
     return NextResponse.json({
       ok: true,
-      experts: data || [],
+      experts: (data || []).map((expert) => ({
+        ...expert,
+        supervised: supervised.has(expert.id),
+      })),
     })
   } catch (error) {
     console.error('PUBLIC EXPERTS API ERROR:', error)
