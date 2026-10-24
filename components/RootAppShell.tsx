@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Footer from '@/components/Footer'
+import MotionToggle from '@/components/marketing/MotionToggle'
 
 const FOOTER_HIDDEN_PREFIXES = [
   '/admin',
@@ -34,6 +35,7 @@ export default function RootAppShell({ children }: { children: React.ReactNode }
     <div className="flex min-h-screen flex-col">
       <div className="flex-1">{children}</div>
       <Footer />
+      <MotionToggle />
     </div>
   )
 }
