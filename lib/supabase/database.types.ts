@@ -441,6 +441,10 @@ export type Database = {
       }
       experts: {
         Row: {
+          account_type: string
+          founding_member: boolean
+          founding_until: string | null
+          commission_rate: number | null
           areas: string | null
           availability: string | null
           average_rating: number
@@ -478,6 +482,10 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          account_type?: string
+          founding_member?: boolean
+          founding_until?: string | null
+          commission_rate?: number | null
           areas?: string | null
           availability?: string | null
           average_rating?: number
@@ -515,6 +523,10 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          account_type?: string
+          founding_member?: boolean
+          founding_until?: string | null
+          commission_rate?: number | null
           areas?: string | null
           availability?: string | null
           average_rating?: number
@@ -641,6 +653,13 @@ export type Database = {
       }
       payments: {
         Row: {
+          commission_rate: number | null
+          booking_id: string | null
+          refund_status: string
+          refund_amount: number | null
+          refund_requested_at: string | null
+          refund_error: string | null
+          iyzico_refund_id: string | null
           admin_note: string | null
           amount: number
           client_id: string | null
@@ -661,6 +680,13 @@ export type Database = {
           status: string
         }
         Insert: {
+          commission_rate?: number | null
+          booking_id?: string | null
+          refund_status?: string
+          refund_amount?: number | null
+          refund_requested_at?: string | null
+          refund_error?: string | null
+          iyzico_refund_id?: string | null
           admin_note?: string | null
           amount: number
           client_id?: string | null
@@ -681,6 +707,13 @@ export type Database = {
           status?: string
         }
         Update: {
+          commission_rate?: number | null
+          booking_id?: string | null
+          refund_status?: string
+          refund_amount?: number | null
+          refund_requested_at?: string | null
+          refund_error?: string | null
+          iyzico_refund_id?: string | null
           admin_note?: string | null
           amount?: number
           client_id?: string | null
@@ -907,6 +940,9 @@ export type Database = {
       }
       session_bookings: {
         Row: {
+          cancelled_by: string | null
+          cancelled_at: string | null
+          late_cancellation: boolean
           admin_join_url: string | null
           cancellation_reason: string | null
           client_id: string | null
@@ -932,6 +968,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancelled_by?: string | null
+          cancelled_at?: string | null
+          late_cancellation?: boolean
           admin_join_url?: string | null
           cancellation_reason?: string | null
           client_id?: string | null
@@ -957,6 +996,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancelled_by?: string | null
+          cancelled_at?: string | null
+          late_cancellation?: boolean
           admin_join_url?: string | null
           cancellation_reason?: string | null
           client_id?: string | null

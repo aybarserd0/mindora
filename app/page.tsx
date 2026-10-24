@@ -34,6 +34,7 @@ async function getApprovedExpertCount() {
       .from('experts')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'approved')
+      .neq('account_type', 'supervision_only')
     if (error || typeof count !== 'number') return null
     return count
   } catch {

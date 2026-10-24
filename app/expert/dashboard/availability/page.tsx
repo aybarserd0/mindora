@@ -375,7 +375,7 @@ export default function ExpertAvailabilityPage() {
               <p className="text-sm font-semibold text-slate-400">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Müsaitlik Takvimi
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
@@ -389,15 +389,15 @@ export default function ExpertAvailabilityPage() {
                 type="button"
                 onClick={() => void fetchAvailability()}
                 disabled={loading}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href="/expert/dashboard"
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
-                Dashboard
+                Genel bakış
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
@@ -610,8 +610,8 @@ function SummaryCard({
 }) {
   return (
     <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -717,7 +717,7 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2">
       <p className="font-semibold text-slate-900">{value}</p>
-      <p className="mt-0.5 font-bold text-slate-500">{label}</p>
+      <p className="mt-0.5 font-semibold text-slate-500">{label}</p>
     </div>
   )
 }

@@ -22,6 +22,11 @@ type Payment = {
   expert_payout_status: PayoutStatus | null;
   expert_payout_paid_at: string | null;
   created_at: string;
+  commission_rate?: number | string | null;
+  refund_status?: "none" | "pending" | "refunded" | "failed" | null;
+  refund_error?: string | null;
+  payout_eligibility?: "ready" | "waiting_session" | "refunded" | "refund_pending" | "unlinked" | "not_paid";
+  booking?: { id: string; status: string | null; late_cancellation: boolean | null; scheduled_start_at: string | null } | null;
   client_applications?: {
     id: string;
     name: string | null;
@@ -126,6 +131,7 @@ export default function PaymentsPage() {
   const [filter, setFilter] = useState<PaymentFilter>("all");
   const [search, setSearch] = useState("");
   const [payoutLoadingId, setPayoutLoadingId] = useState<string | null>(null);
+  const [refundLoadingId, setRefundLoadingId] = useState<string | null>(null);
 
   const filteredPayments = useMemo(() => {
     const keyword = normalizeText(search);
@@ -262,6 +268,27 @@ export default function PaymentsPage() {
     }
   }
 
+  async function retryRefund(paymentId: string) {
+    if (!window.confirm("Bu ödeme Iyzico üzerinden danışana tam tutarla iade edilsin mi?")) return;
+    try {
+      setRefundLoadingId(paymentId);
+      const response = await fetch("/api/admin/payments/refund", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!response.ok || !data.ok) {
+        window.alert(data.error || "İade yapılamadı.");
+      }
+      await fetchPayments();
+    } catch {
+      window.alert("İade sırasında hata oluştu.");
+    } finally {
+      setRefundLoadingId(null);
+    }
+  }
+
   useEffect(() => {
     void fetchPayments();
   }, [fetchPayments]);
@@ -365,6 +392,35 @@ export default function PaymentsPage() {
                         <StatusPill className={getStatusStyle(payment.status)}>
                           {getStatusLabel(payment.status)}
                         </StatusPill>
+
+                        {payment.refund_status === "pending" || payment.refund_status === "failed" ? (
+                          <div className="mt-2 max-w-[200px]">
+                            <p className="text-xs font-semibold text-rose-700">
+                              {payment.refund_status === "failed" ? "İade başarısız" : "İade bekliyor"}
+                            </p>
+                            {payment.refund_error ? (
+                              <p className="mt-1 text-xs text-slate-500">{payment.refund_error}</p>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {payment.booking?.status === "cancelled" ? (
+                          <p className="mt-2 text-xs font-medium text-slate-500">
+                            {payment.booking.late_cancellation ? "Seans geç iptal edildi" : "Seans iptal edildi"}
+                          </p>
+                        ) : null}
+
+                        {payment.status === "paid" &&
+                        (payment.refund_status === "pending" || payment.refund_status === "failed") ? (
+                          <button
+                            type="button"
+                            disabled={refundLoadingId === payment.id}
+                            onClick={() => retryRefund(payment.id)}
+                            className="mt-3 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
+                          >
+                            {refundLoadingId === payment.id ? "İşleniyor..." : "İadeyi tekrar dene"}
+                          </button>
+                        ) : null}
                       </td>
 
                       <td className="px-5 py-4">
@@ -378,7 +434,25 @@ export default function PaymentsPage() {
                           </p>
                         ) : null}
 
-                        {payment.status === "paid" && payment.expert_payout_status !== "paid" ? (
+                        {payment.payout_eligibility && payment.expert_payout_status !== "paid" ? (
+                          <p className="mt-2 max-w-[180px] text-xs font-medium text-slate-500">
+                            {
+                              {
+                                ready: "Seans gerçekleşti, aktarılabilir.",
+                                waiting_session: "Seans henüz yapılmadı.",
+                                refunded: "İade edildi, aktarılmaz.",
+                                refund_pending: "İade süreci açık.",
+                                unlinked: "Randevuya bağlı değil; seansı kontrol et.",
+                                not_paid: "",
+                              }[payment.payout_eligibility]
+                            }
+                          </p>
+                        ) : null}
+
+                        {payment.status === "paid" &&
+                        payment.expert_payout_status !== "paid" &&
+                        payment.payout_eligibility !== "waiting_session" &&
+                        payment.payout_eligibility !== "refund_pending" ? (
                           <button
                             type="button"
                             disabled={payoutLoadingId === payment.id}
@@ -417,6 +491,11 @@ export default function PaymentsPage() {
 
                       <td className="px-5 py-4 font-semibold text-emerald-700">
                         {formatMoney(payment.commission_amount)}
+                        {payment.commission_rate !== null && payment.commission_rate !== undefined ? (
+                          <span className="block text-xs font-medium text-slate-400">
+                            %{Math.round(Number(payment.commission_rate) * 100)}
+                          </span>
+                        ) : null}
                       </td>
 
                       <td className="px-5 py-4 font-semibold text-violet-700">

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { getPayoutEligibility } from '@/lib/payments/policy'
 
 export const runtime = 'nodejs'
 
@@ -22,6 +23,17 @@ type PaymentRow = {
   expert_payout_note: string | null
   refunded_at: string | null
   admin_note: string | null
+  booking_id: string | null
+  commission_rate: number | string | null
+  refund_status: string | null
+  refund_error: string | null
+}
+
+type BookingRow = {
+  id: string
+  status: string | null
+  late_cancellation: boolean | null
+  scheduled_start_at: string | null
 }
 
 type ClientRow = {
@@ -62,7 +74,11 @@ export async function GET() {
         expert_payout_paid_at,
         expert_payout_note,
         refunded_at,
-        admin_note
+        admin_note,
+        booking_id,
+        commission_rate,
+        refund_status,
+        refund_error
       `
       )
       .order('created_at', { ascending: false })
@@ -96,7 +112,11 @@ export async function GET() {
       )
     )
 
-    const [clientsResult, expertsResult] = await Promise.all([
+    const bookingIds = Array.from(
+      new Set(paymentRows.map((payment) => payment.booking_id).filter((id): id is string => Boolean(id)))
+    )
+
+    const [clientsResult, expertsResult, bookingsResult] = await Promise.all([
       clientIds.length > 0
         ? supabase
             .from('client_applications')
@@ -107,7 +127,18 @@ export async function GET() {
       expertIds.length > 0
         ? supabase.from('experts').select('id, name, email').in('id', expertIds)
         : Promise.resolve({ data: [], error: null }),
+
+      bookingIds.length > 0
+        ? supabase
+            .from('session_bookings')
+            .select('id, status, late_cancellation, scheduled_start_at')
+            .in('id', bookingIds)
+        : Promise.resolve({ data: [], error: null }),
     ])
+
+    const bookingsById = new Map<string, BookingRow>(
+      ((bookingsResult.data || []) as BookingRow[]).map((booking) => [booking.id, booking])
+    )
 
     if (clientsResult.error) {
       return NextResponse.json(
@@ -151,6 +182,11 @@ export async function GET() {
         ? clientsById.get(payment.client_id) || null
         : null,
       experts: payment.expert_id ? expertsById.get(payment.expert_id) || null : null,
+      booking: payment.booking_id ? bookingsById.get(payment.booking_id) || null : null,
+      payout_eligibility: getPayoutEligibility(
+        payment,
+        payment.booking_id ? bookingsById.get(payment.booking_id) || null : null
+      ),
     }))
 
     return NextResponse.json(

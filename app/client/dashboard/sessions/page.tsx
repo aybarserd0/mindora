@@ -50,6 +50,11 @@ type ApiClientSession = {
   joinHref?: string | null;
   chatHref?: string | null;
   createdAt?: string | null;
+  canCancel?: boolean | null;
+  freeCancellation?: boolean | null;
+  lateCancellation?: boolean | null;
+  cancelledBy?: string | null;
+  refundStatus?: string | null;
 };
 
 type ClientSessionsResponse = {
@@ -81,6 +86,11 @@ type UiSession = {
   hasReview: boolean;
   joinHref: string;
   chatHref: string;
+  canCancel: boolean;
+  freeCancellation: boolean;
+  lateCancellation: boolean;
+  cancelledBy: string | null;
+  refundStatus: string | null;
 };
 
 type SessionFilter = "all" | "upcoming" | "completed" | "cancelled";
@@ -265,6 +275,11 @@ function toUiSession(session: ApiClientSession, index: number, token: string): U
     hasReview,
     joinHref: buildTokenUrl(rawJoinHref, token),
     chatHref: buildTokenUrl(rawChatHref, token),
+    canCancel: Boolean(session.canCancel),
+    freeCancellation: Boolean(session.freeCancellation),
+    lateCancellation: Boolean(session.lateCancellation),
+    cancelledBy: session.cancelledBy || null,
+    refundStatus: session.refundStatus || null,
   };
 }
 
@@ -302,6 +317,7 @@ function ClientSessionsContent() {
   const [filter, setFilter] = useState<SessionFilter>("all");
   const [search, setSearch] = useState("");
   const [reviewSession, setReviewSession] = useState<UiSession | null>(null);
+  const [cancelSession, setCancelSession] = useState<UiSession | null>(null);
   const [submittedReviewBookingIds, setSubmittedReviewBookingIds] = useState<Set<string>>(new Set());
 
   const fetchSessions = useCallback(
@@ -461,15 +477,15 @@ function ClientSessionsContent() {
   }, []);
 
   return (
-    <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+    <section className="px-4 py-6 text-slate-900 md:px-6 md:py-10">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black text-indigo-600">
+              <p className="text-xs font-semibold text-indigo-600">
                 Mindora Danışan Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Seanslarım
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
@@ -483,20 +499,20 @@ function ClientSessionsContent() {
                 type="button"
                 onClick={() => void fetchSessions("refresh")}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? "Yükleniyor..." : "Yenile"}
               </button>
               <Link
                 href={buildTokenUrl("/client/dashboard", token)}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
-                Dashboard
+                Genel bakış
               </Link>
               {nextSession?.canJoin ? (
                 <a
                   href={nextSession.joinHref}
-                  className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
+                  className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
                 >
                   Görüşmeye Katıl
                 </a>
@@ -523,37 +539,37 @@ function ClientSessionsContent() {
         </section>
 
         {nextSession ? (
-          <section className="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-sm">
+          <section className="rounded-[2rem] border border-pine-900 bg-pine-900 p-6 text-white shadow-sm">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-xs font-black text-slate-300">
+                <p className="text-xs font-semibold text-slate-300">
                   Sıradaki Seans
                 </p>
-                <h2 className="mt-3 text-3xl font-black">{nextSession.date}</h2>
-                <p className="mt-2 text-sm font-bold text-slate-300">
+                <h2 className="mt-3 text-3xl font-semibold">{nextSession.date}</h2>
+                <p className="mt-2 text-sm font-semibold text-slate-300">
                   {nextSession.timeRange} • {nextSession.duration} • {nextSession.timezone}
                 </p>
                 <p className="mt-3 text-sm text-slate-300">
-                  Uzman: <span className="font-black text-white">{nextSession.expertName}</span>
+                  Uzman: <span className="font-semibold text-white">{nextSession.expertName}</span>
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href={nextSession.chatHref}
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
+                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
                 >
                   Sohbete Git
                 </Link>
                 {nextSession.canJoin ? (
                   <a
                     href={nextSession.joinHref}
-                    className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
+                    className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
                   >
                     Görüşmeye Katıl
                   </a>
                 ) : (
-                  <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-white/10 px-5 py-3 text-sm font-black text-slate-300">
+                  <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-white/10 px-5 py-3 text-sm font-semibold text-slate-300">
                     Görüşme Hazırlanıyor
                   </span>
                 )}
@@ -565,7 +581,7 @@ function ClientSessionsContent() {
         <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Filtrele ve Ara</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Filtrele ve Ara</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Uzman adı, durum, tarih veya saat bilgisine göre arama yapın.
               </p>
@@ -585,9 +601,9 @@ function ClientSessionsContent() {
                 key={item.value}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`rounded-2xl px-4 py-3 text-sm font-black ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                className={`rounded-2xl px-4 py-3 text-sm font-semibold ring-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   filter === item.value
-                    ? "bg-slate-950 text-white ring-slate-950"
+                    ? "bg-pine-800 text-white ring-pine-800"
                     : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"
                 }`}
               >
@@ -600,13 +616,13 @@ function ClientSessionsContent() {
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Seans Listesi</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Seans Listesi</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Seans detayları, durum bilgileri ve hızlı aksiyonlar.
               </p>
             </div>
 
-            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
               {loading ? "Yükleniyor" : `${filteredSessions.length} kayıt`}
             </span>
           </div>
@@ -620,6 +636,7 @@ function ClientSessionsContent() {
                   key={session.id}
                   session={session}
                   onReview={() => setReviewSession(session)}
+                  onCancel={() => setCancelSession(session)}
                 />
               ))}
             </div>
@@ -637,6 +654,17 @@ function ClientSessionsContent() {
         onClose={() => setReviewSession(null)}
         onSubmitted={handleReviewSubmitted}
       />
+
+      <CancelModal
+        key={cancelSession?.bookingId || "none"}
+        session={cancelSession}
+        token={token}
+        onClose={() => setCancelSession(null)}
+        onCancelled={() => {
+          setCancelSession(null);
+          void fetchSessions("refresh");
+        }}
+      />
     </section>
   );
 }
@@ -644,21 +672,29 @@ function ClientSessionsContent() {
 function SummaryCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   );
 }
 
-function SessionCard({ session, onReview }: { session: UiSession; onReview: () => void }) {
+function SessionCard({
+  session,
+  onReview,
+  onCancel,
+}: {
+  session: UiSession;
+  onReview: () => void;
+  onCancel: () => void;
+}) {
   const config = statusConfig[session.status] || statusConfig.unknown;
 
   return (
     <article className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-lg">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-indigo-600 text-lg font-black text-white">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-indigo-600 text-lg font-semibold text-white">
             {session.expertPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={session.expertPhotoUrl} alt={session.expertName} className="h-full w-full object-cover" />
@@ -674,54 +710,77 @@ function SessionCard({ session, onReview }: { session: UiSession; onReview: () =
 
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-black text-slate-950">{session.expertName}</h3>
-              <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}>
+              <h3 className="text-base font-semibold text-slate-900">{session.expertName}</h3>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${config.className}`}>
                 {config.label}
               </span>
               {session.hasReview ? (
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
                   Yorum gönderildi
                 </span>
               ) : null}
             </div>
             <p className="mt-1 text-sm font-semibold text-slate-600">{session.expertTitle}</p>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-slate-600">
+            <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
               <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">{session.date}</span>
               <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">{session.timeRange}</span>
               <span className="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">{session.duration}</span>
             </div>
+            {session.status === "cancelled" ? (
+              <p className="mt-3 text-xs font-medium text-slate-500">
+                {session.refundStatus === "refunded"
+                  ? "Ödemen iade edildi."
+                  : session.refundStatus === "pending" || session.refundStatus === "failed"
+                    ? "İaden işleniyor."
+                    : session.lateCancellation
+                      ? "Seansa 24 saatten az kala iptal edildiği için ücret iade edilmedi."
+                      : session.cancelledBy === "expert"
+                        ? "Seans psikoloğun tarafından iptal edildi."
+                        : null}
+              </p>
+            ) : null}
           </div>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
           <Link
             href={session.chatHref}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
+            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
           >
             Sohbete Git
           </Link>
+
+          {session.canCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-50"
+            >
+              İptal et
+            </button>
+          ) : null}
 
           {session.canReview ? (
             <button
               type="button"
               onClick={onReview}
-              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
             >
               Yorum Bırak
             </button>
           ) : session.hasReview ? (
-            <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700 ring-1 ring-emerald-100">
+            <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
               Yorumunuz Gönderildi
             </span>
           ) : session.canJoin ? (
             <a
               href={session.joinHref}
-              className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
             >
               Görüşmeye Katıl
             </a>
           ) : (
-            <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-slate-200 px-4 py-2 text-sm font-black text-slate-500">
+            <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-500">
               Görüşme Hazırlanıyor
             </span>
           )}
@@ -815,10 +874,10 @@ function ReviewModal({
       <div className="w-full max-w-xl rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-slate-200">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black text-indigo-600">
+            <p className="text-xs font-semibold text-indigo-600">
               Seans Değerlendirmesi
             </p>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">Uzmanı değerlendir</h2>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">Uzmanı değerlendir</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               {session.expertName} ile tamamlanan seansınız için deneyiminizi paylaşabilirsiniz.
               Yorumunuz admin onayından sonra yayınlanır.
@@ -829,7 +888,7 @@ function ReviewModal({
             type="button"
             onClick={onClose}
             disabled={submitState.loading}
-            className="rounded-2xl bg-slate-100 px-3 py-2 text-sm font-black text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-2xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
             aria-label="Modalı kapat"
           >
             ✕
@@ -837,7 +896,7 @@ function ReviewModal({
         </div>
 
         <div className="mt-6 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
-          <p className="text-sm font-black text-slate-800">Puanınız</p>
+          <p className="text-sm font-semibold text-slate-800">Puanınız</p>
           <div className="mt-3 flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -854,11 +913,11 @@ function ReviewModal({
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs font-bold text-slate-500">{rating}/5 puan</p>
+          <p className="mt-2 text-xs font-semibold text-slate-500">{rating}/5 puan</p>
         </div>
 
         <label className="mt-5 block">
-          <span className="text-sm font-black text-slate-800">Yorumunuz</span>
+          <span className="text-sm font-semibold text-slate-800">Yorumunuz</span>
           <textarea
             value={reviewText}
             onChange={(event) => setReviewText(event.target.value.slice(0, 2000))}
@@ -871,19 +930,19 @@ function ReviewModal({
 
         <div className="mt-2 flex items-center justify-between gap-3">
           <p className="text-xs font-semibold text-slate-500">Yorumlar yayınlanmadan önce kontrol edilir.</p>
-          <p className={`text-xs font-black ${remainingChars < 100 ? "text-rose-600" : "text-slate-400"}`}>
+          <p className={`text-xs font-semibold ${remainingChars < 100 ? "text-rose-600" : "text-slate-400"}`}>
             {remainingChars} karakter
           </p>
         </div>
 
         {submitState.error ? (
-          <div className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 ring-1 ring-rose-100">
+          <div className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 ring-1 ring-rose-100">
             {submitState.error}
           </div>
         ) : null}
 
         {submitState.success ? (
-          <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 ring-1 ring-emerald-100">
+          <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
             {submitState.success}
           </div>
         ) : null}
@@ -893,7 +952,7 @@ function ReviewModal({
             type="button"
             onClick={onClose}
             disabled={submitState.loading}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitState.success ? "Kapat" : "Vazgeç"}
           </button>
@@ -902,7 +961,7 @@ function ReviewModal({
               type="button"
               onClick={() => void handleSubmit()}
               disabled={submitState.loading}
-              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitState.loading ? "Gönderiliyor..." : "Yorumu Gönder"}
             </button>
@@ -928,14 +987,14 @@ function NoticeCard({
     <section className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 text-indigo-950 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-black">{title}</p>
+          <p className="text-sm font-semibold">{title}</p>
           <p className="mt-1 text-sm leading-6 text-indigo-800">{description}</p>
           {detail ? <p className="mt-1 text-xs font-semibold text-indigo-500">{detail}</p> : null}
         </div>
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-indigo-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-md"
+          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-800 ring-1 ring-indigo-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-md"
         >
           Yenile
         </button>
@@ -947,7 +1006,7 @@ function NoticeCard({
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <p className="text-sm font-black text-slate-800">{title}</p>
+      <p className="text-sm font-semibold text-slate-800">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
     </div>
   );
@@ -957,14 +1016,101 @@ export default function ClientDashboardSessionsPage() {
   return (
     <Suspense
       fallback={
-        <section className="px-4 py-6 text-slate-950 md:px-6 md:py-10">
+        <section className="px-4 py-6 text-slate-900 md:px-6 md:py-10">
           <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Seanslar yükleniyor...</p>
+            <p className="font-semibold text-slate-600">Seanslar yükleniyor...</p>
           </div>
         </section>
       }
     >
       <ClientSessionsContent />
     </Suspense>
+  );
+}
+
+function CancelModal({
+  session,
+  token,
+  onClose,
+  onCancelled,
+}: {
+  session: UiSession | null;
+  token: string;
+  onClose: () => void;
+  onCancelled: () => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [state, setState] = useState<{ loading: boolean; error: string }>({ loading: false, error: "" });
+
+  if (!session) return null;
+
+  async function confirmCancel() {
+    if (!session) return;
+    setState({ loading: true, error: "" });
+    try {
+      const response = await fetch(`/api/sessions/bookings/${encodeURIComponent(session.bookingId)}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, reason: reason.trim() || undefined }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!response.ok || !data.ok) throw new Error(data.error || "Seans iptal edilemedi.");
+      onCancelled();
+    } catch (err) {
+      setState({ loading: false, error: err instanceof Error ? err.message : "Seans iptal edilemedi." });
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-4 sm:items-center" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <h2 className="text-xl font-semibold text-slate-900">Seansı iptal et</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          {session.expertName} · {session.date} {session.timeRange}
+        </p>
+
+        <div
+          className={`mt-5 rounded-2xl p-4 text-sm leading-6 ${
+            session.freeCancellation ? "bg-pine-50 text-pine-900" : "bg-amber-50 text-amber-900"
+          }`}
+        >
+          {session.freeCancellation
+            ? "Seansa 24 saatten fazla var. İptal edersen ödemenin tamamı kartına iade edilir."
+            : "Seansa 24 saatten az kaldı. İptal kuralı gereği bu seansın ücreti iade edilmez ve psikoloğuna ödenir."}
+        </div>
+
+        <label className="mt-5 block text-sm font-semibold text-slate-700">
+          İstersen sebebini yaz
+          <textarea
+            value={reason}
+            onChange={(event) => setReason(event.target.value.slice(0, 500))}
+            rows={3}
+            className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal outline-none focus:border-slate-400 focus:bg-white"
+            placeholder="Örneğin: o saatte işim çıktı"
+          />
+        </label>
+
+        {state.error ? <p className="mt-3 text-sm font-semibold text-rose-700">{state.error}</p> : null}
+
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={state.loading}
+            className="rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
+          >
+            Vazgeç
+          </button>
+          <button
+            type="button"
+            onClick={() => void confirmCancel()}
+            disabled={state.loading}
+            className="rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+          >
+            {state.loading ? "İptal ediliyor..." : "Seansı iptal et"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

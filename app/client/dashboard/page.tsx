@@ -396,7 +396,7 @@ function ClientDashboardContent() {
     return (
       <section className="px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-          <p className="font-black text-slate-600">Dashboard yükleniyor...</p>
+          <p className="font-semibold text-slate-600">Dashboard yükleniyor...</p>
         </div>
       </section>
     )
@@ -417,16 +417,16 @@ function ClientDashboardContent() {
   const canJoinSession = isSessionJoinable(nextSession, sessionUrl)
 
   return (
-    <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+    <section className="px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs font-black text-indigo-600">
+              <p className="text-xs font-semibold text-indigo-600">
                 Mindora Danışan Paneli
               </p>
 
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
                 Hoş geldin, {safeText(dashboard.client.name, 'Danışan')}
               </h1>
 
@@ -452,7 +452,7 @@ function ClientDashboardContent() {
                 type="button"
                 onClick={() => void loadDashboard('refresh')}
                 disabled={refreshing}
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center text-sm font-black text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center text-sm font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
@@ -460,14 +460,14 @@ function ClientDashboardContent() {
               {chatUrl !== '#' ? (
                 <Link
                   href={chatUrl}
-                  className="rounded-2xl bg-slate-950 px-5 py-4 text-center text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
+                  className="rounded-full bg-pine-800 px-5 py-4 text-center text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
                 >
                   Sohbete Git
                 </Link>
               ) : (
                 <button
                   disabled
-                  className="cursor-not-allowed rounded-2xl bg-slate-100 px-5 py-4 text-sm font-black text-slate-500"
+                  className="cursor-not-allowed rounded-2xl bg-slate-100 px-5 py-4 text-sm font-semibold text-slate-500"
                 >
                   Sohbet Beklemede
                 </button>
@@ -476,14 +476,14 @@ function ClientDashboardContent() {
               {canJoinSession ? (
                 <a
                   href={sessionUrl}
-                  className="rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
+                  className="rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
                 >
                   Görüşmeye Katıl
                 </a>
               ) : (
                 <button
                   disabled
-                  className="cursor-not-allowed rounded-2xl bg-emerald-100 px-5 py-4 text-sm font-black text-emerald-500"
+                  className="cursor-not-allowed rounded-2xl bg-emerald-100 px-5 py-4 text-sm font-semibold text-emerald-500"
                 >
                   Görüşme Beklemede
                 </button>
@@ -494,10 +494,10 @@ function ClientDashboardContent() {
 
         {dashboard.conversation.paymentStatus !== 'paid' ? (
           <section className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6 text-center shadow-sm sm:p-8">
-            <p className="text-xs font-black text-amber-700">
+            <p className="text-xs font-semibold text-amber-700">
               Son adım
             </p>
-            <h2 className="mt-2 text-2xl font-black text-amber-950 sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-semibold text-amber-950 sm:text-3xl">
               Eşleşmeniz hazır! Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm font-semibold leading-6 text-amber-800">
@@ -515,7 +515,7 @@ function ClientDashboardContent() {
               type="button"
               onClick={() => void handlePayNow()}
               disabled={payLoading || !dashboard.client.id}
-              className="mx-auto mt-6 block w-full max-w-sm rounded-2xl bg-amber-600 px-8 py-5 text-center text-lg font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+              className="mx-auto mt-6 block w-full max-w-sm rounded-2xl bg-amber-600 px-8 py-5 text-center text-lg font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
             >
               {payLoading ? 'Ödeme bağlantısı hazırlanıyor...' : 'Ödemeyi Yap ve Görüşmeyi Başlat'}
             </button>
@@ -534,16 +534,16 @@ function ClientDashboardContent() {
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-black text-indigo-600">
+                  <p className="text-xs font-semibold text-indigo-600">
                     Sonraki Seans
                   </p>
-                  <h2 className="mt-2 text-2xl font-black text-slate-950">
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-900">
                     Yaklaşan Görüşme
                   </h2>
                 </div>
 
                 {nextSession ? (
-                  <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700 ring-1 ring-amber-100">
+                  <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-100">
                     {normalizeBookingStatus(nextSession.status)}
                   </span>
                 ) : null}
@@ -551,17 +551,17 @@ function ClientDashboardContent() {
 
               {!nextSession ? (
                 <div className="mt-5 rounded-3xl bg-slate-50 p-6 text-center ring-1 ring-slate-100">
-                  <p className="font-black text-slate-950">Şu anda yaklaşan seans görünmüyor.</p>
+                  <p className="font-semibold text-slate-900">Şu anda yaklaşan seans görünmüyor.</p>
                   <p className="mt-2 text-sm font-semibold text-slate-600">
                     Yeni seans planlandığında burada görünecek.
                   </p>
                 </div>
               ) : (
-                <div className="mt-5 rounded-3xl bg-slate-950 p-6 text-white">
-                  <p className="text-sm font-bold text-slate-300">
+                <div className="mt-5 rounded-3xl bg-pine-900 p-6 text-white">
+                  <p className="text-sm font-semibold text-slate-300">
                     {formatDateTime(nextSession.scheduled_start_at)}
                   </p>
-                  <h3 className="mt-2 text-3xl font-black">
+                  <h3 className="mt-2 text-3xl font-semibold">
                     {formatTimeRange(nextSession.scheduled_start_at, nextSession.scheduled_end_at)}
                   </h3>
 
@@ -576,7 +576,7 @@ function ClientDashboardContent() {
                     {canJoinSession ? (
                       <a
                         href={sessionUrl}
-                        className="flex-1 rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-black text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
+                        className="flex-1 rounded-2xl bg-emerald-600 px-5 py-4 text-center text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
                       >
                         Güvenli Görüşmeye Katıl
                       </a>
@@ -585,7 +585,7 @@ function ClientDashboardContent() {
                     {chatUrl !== '#' ? (
                       <Link
                         href={chatUrl}
-                        className="flex-1 rounded-2xl bg-white px-5 py-4 text-center text-sm font-black text-slate-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
+                        className="flex-1 rounded-2xl bg-white px-5 py-4 text-center text-sm font-semibold text-slate-900 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-md"
                       >
                         Sohbete Git
                       </Link>
@@ -610,10 +610,10 @@ function ClientDashboardContent() {
 
           <div className="space-y-6">
             <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-              <p className="text-xs font-black text-indigo-600">
+              <p className="text-xs font-semibold text-indigo-600">
                 Hızlı İşlemler
               </p>
-              <h2 className="mt-2 text-xl font-black text-slate-950">Kısayollar</h2>
+              <h2 className="mt-2 text-xl font-semibold text-slate-900">Kısayollar</h2>
               <div className="mt-5 grid gap-3">
                 <QuickLink href={sessionsHref} title="Seanslarım" description="Yaklaşan ve geçmiş seanslar" />
                 <QuickLink href={paymentsHref} title="Ödemelerim" description="Ödeme geçmişi ve durumlar" />
@@ -642,10 +642,10 @@ function ClientDashboardContent() {
                   className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">
                       {getSenderLabel(message.sender_type)}
                     </span>
-                    <span className="text-xs font-bold text-slate-500">
+                    <span className="text-xs font-semibold text-slate-500">
                       {formatDateTime(message.created_at)}
                     </span>
                   </div>
@@ -686,14 +686,14 @@ function InactiveDashboardState({
   const notificationsHref = buildTokenUrl('/client/notifications', token)
 
   return (
-    <section className="px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+    <section className="px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <section className="overflow-hidden rounded-[2rem] border border-indigo-100 bg-white shadow-sm">
           <div className="bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6 lg:p-8">
-            <p className="text-xs font-black text-indigo-600">
+            <p className="text-xs font-semibold text-indigo-600">
               Mindora Danışan Paneli
             </p>
-            <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
               Danışan paneli henüz aktif değil
             </h1>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
@@ -704,7 +704,7 @@ function InactiveDashboardState({
 
             {notice ? (
               <div className="mt-5 rounded-3xl border border-indigo-100 bg-indigo-50 p-4">
-                <p className="text-sm font-black text-indigo-950">Süreç bilgilendirmesi</p>
+                <p className="text-sm font-semibold text-indigo-950">Süreç bilgilendirmesi</p>
                 <p className="mt-1 text-sm leading-6 text-indigo-800">{notice}</p>
               </div>
             ) : null}
@@ -714,19 +714,19 @@ function InactiveDashboardState({
                 type="button"
                 onClick={onRetry}
                 disabled={refreshing}
-                className="inline-flex items-center justify-center rounded-2xl border border-indigo-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-2xl border border-indigo-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {refreshing ? 'Kontrol ediliyor...' : 'Tekrar Kontrol Et'}
               </button>
               <Link
                 href="/eslesme"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
               >
                 Ücretsiz Ön Eşleşme
               </Link>
               <Link
                 href="/"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
                 Ana Sayfa
               </Link>
@@ -755,10 +755,10 @@ function InactiveDashboardState({
 
         <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <p className="text-xs font-black text-indigo-600">
+            <p className="text-xs font-semibold text-indigo-600">
               Panelde Neler Olacak?
             </p>
-            <h2 className="mt-2 text-xl font-black text-slate-950">Mindora süreciniz</h2>
+            <h2 className="mt-2 text-xl font-semibold text-slate-900">Mindora süreciniz</h2>
             <div className="mt-5 space-y-3">
               <StepLine index="1" title="Ön eşleşme" text="İhtiyacınıza göre uygun uzman ve süreç belirlenir." />
               <StepLine index="2" title="Güvenli ödeme" text="Ödeme tamamlandığında chat ve seans erişiminiz açılır." />
@@ -768,10 +768,10 @@ function InactiveDashboardState({
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <p className="text-xs font-black text-indigo-600">
+            <p className="text-xs font-semibold text-indigo-600">
               Hızlı Erişim
             </p>
-            <h2 className="mt-2 text-xl font-black text-slate-950">Panel bölümleri</h2>
+            <h2 className="mt-2 text-xl font-semibold text-slate-900">Panel bölümleri</h2>
             <div className="mt-5 grid gap-3">
               <QuickLink href={sessionsHref} title="Seanslarım" description="Randevu ve görüşme takibi" />
               <QuickLink href={paymentsHref} title="Ödemelerim" description="Ödeme geçmişi ve durumlar" />
@@ -795,7 +795,7 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: 'green' | '
         : 'bg-blue-50 text-blue-700 ring-blue-100'
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${className}`}>
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${className}`}>
       {children}
     </span>
   )
@@ -804,9 +804,9 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: 'green' | '
 function MetricCard({ title, value, subtitle }: { title: string; value: string; subtitle: string }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-      <p className="text-xs font-black text-slate-500">{title}</p>
-      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
-      <p className="mt-1 text-xs font-bold text-slate-500">{subtitle}</p>
+      <p className="text-xs font-semibold text-slate-500">{title}</p>
+      <p className="mt-2 text-3xl font-semibold text-slate-900">{value}</p>
+      <p className="mt-1 text-xs font-semibold text-slate-500">{subtitle}</p>
     </div>
   )
 }
@@ -814,8 +814,8 @@ function MetricCard({ title, value, subtitle }: { title: string; value: string; 
 function MiniCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
-      <p className="text-[10px] font-black text-slate-300">{label}</p>
-      <p className="mt-1 truncate text-sm font-black text-white">{value}</p>
+      <p className="text-[10px] font-semibold text-slate-300">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
     </div>
   )
 }
@@ -826,7 +826,7 @@ function QuickLink({ href, title, description }: { href: string; title: string; 
       href={href}
       className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-lg"
     >
-      <p className="text-sm font-black text-slate-950">{title}</p>
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mt-1 text-xs font-semibold text-slate-500">{description}</p>
     </Link>
   )
@@ -835,7 +835,7 @@ function QuickLink({ href, title, description }: { href: string; title: string; 
 function ProcessCard({ title, description }: { title: string; description: string }) {
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lg">
-      <p className="text-sm font-black text-slate-950">{title}</p>
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
     </article>
   )
@@ -844,11 +844,11 @@ function ProcessCard({ title, description }: { title: string; description: strin
 function StepLine({ index, title, text }: { index: string; title: string; text: string }) {
   return (
     <div className="flex gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-black text-white">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
         {index}
       </span>
       <div>
-        <p className="text-sm font-black text-slate-950">{title}</p>
+        <p className="text-sm font-semibold text-slate-900">{title}</p>
         <p className="mt-1 text-sm leading-6 text-slate-500">{text}</p>
       </div>
     </div>
@@ -876,11 +876,11 @@ function ListCard({
     <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black text-indigo-600">{eyebrow}</p>
-          <h2 className="mt-2 text-xl font-black text-slate-950">{title}</h2>
+          <p className="text-xs font-semibold text-indigo-600">{eyebrow}</p>
+          <h2 className="mt-2 text-xl font-semibold text-slate-900">{title}</h2>
         </div>
         {actionHref && actionLabel ? (
-          <Link href={actionHref} className="text-sm font-black text-indigo-600 transition hover:text-indigo-700">
+          <Link href={actionHref} className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
             {actionLabel}
           </Link>
         ) : null}
@@ -891,7 +891,7 @@ function ListCard({
           children
         ) : (
           <div className="rounded-2xl bg-slate-50 p-5 text-center ring-1 ring-slate-100">
-            <p className="text-sm font-bold text-slate-600">{emptyText}</p>
+            <p className="text-sm font-semibold text-slate-600">{emptyText}</p>
           </div>
         )}
       </div>
@@ -918,7 +918,7 @@ function NotificationRow({
     >
       <div className="flex items-start justify-between gap-3">
         <span
-          className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${
+          className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
             notification.isRead
               ? 'bg-white text-slate-600 ring-slate-200'
               : 'bg-white text-indigo-700 ring-indigo-100'
@@ -927,12 +927,12 @@ function NotificationRow({
           {getNotificationTypeLabel(notification.type)}
         </span>
 
-        <span className="text-xs font-bold text-slate-500">
+        <span className="text-xs font-semibold text-slate-500">
           {formatDateTime(notification.createdAt)}
         </span>
       </div>
 
-      <p className="mt-3 text-sm font-black text-slate-950">
+      <p className="mt-3 text-sm font-semibold text-slate-900">
         {notification.title}
       </p>
 
@@ -941,7 +941,7 @@ function NotificationRow({
       </p>
 
       {!notification.isRead ? (
-        <p className="mt-2 text-xs font-black text-indigo-600">Yeni bildirim</p>
+        <p className="mt-2 text-xs font-semibold text-indigo-600">Yeni bildirim</p>
       ) : null}
     </div>
   )
@@ -960,17 +960,17 @@ function SessionRow({ booking, compact = false }: { booking: DashboardBooking; c
     <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-50 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-black text-slate-950">
+          <p className="text-sm font-semibold text-slate-900">
             {formatDateTime(booking.scheduled_start_at)}
           </p>
           {!compact ? (
-            <p className="mt-1 text-xs font-bold text-slate-500">
+            <p className="mt-1 text-xs font-semibold text-slate-500">
               {formatTimeRange(booking.scheduled_start_at, booking.scheduled_end_at)}
             </p>
           ) : null}
         </div>
 
-        <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-black text-slate-600 ring-1 ring-slate-200">
+        <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
           {normalizeBookingStatus(booking.status)}
         </span>
       </div>
@@ -984,7 +984,7 @@ export default function ClientDashboardPage() {
       fallback={
         <section className="px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-            <p className="font-black text-slate-600">Dashboard yükleniyor...</p>
+            <p className="font-semibold text-slate-600">Dashboard yükleniyor...</p>
           </div>
         </section>
       }

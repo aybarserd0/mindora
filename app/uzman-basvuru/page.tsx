@@ -88,6 +88,8 @@ function getFormList(form: FormData, key: string) {
 
 export default function UzmanBasvuruPage() {
   const [loading, setLoading] = useState(false)
+  const [accountType, setAccountType] = useState<'therapist' | 'supervision_only'>('therapist')
+  const seesClients = accountType === 'therapist'
   const [submitState, setSubmitState] = useState<SubmitState>({
     type: 'idle',
     message: '',
@@ -114,7 +116,7 @@ export default function UzmanBasvuruPage() {
 
     setSubmitState({ type: 'idle', message: '' })
 
-    if (areas.length === 0) {
+    if (seesClients && areas.length === 0) {
       setSubmitState({
         type: 'error',
         message: 'Lütfen en az bir uzmanlık alanı seç.',
@@ -122,7 +124,7 @@ export default function UzmanBasvuruPage() {
       return
     }
 
-    if (availability.length === 0) {
+    if (seesClients && availability.length === 0) {
       setSubmitState({
         type: 'error',
         message: 'Lütfen en az bir genel müsaitlik seçeneği seç.',
@@ -143,6 +145,7 @@ export default function UzmanBasvuruPage() {
       availability,
       expectation: getFormValue(form, 'expectation'),
       note: getFormValue(form, 'note'),
+      account_type: accountType,
     }
 
     try {
@@ -288,6 +291,34 @@ export default function UzmanBasvuruPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <fieldset>
+              <legend className="mb-3 block text-sm font-semibold text-slate-700">Mindora&apos;yı nasıl kullanmak istiyorsun?</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { value: 'therapist' as const, title: 'Danışan görmek istiyorum', text: 'Profilin listelenir, danışan eşleştirilir. Süpervizyon da alabilirsin.' },
+                  { value: 'supervision_only' as const, title: 'Yalnızca süpervizyon', text: 'Danışan almazsın; süpervizör bulur, vakalarını konuşur, saatlerini biriktirirsin.' },
+                ].map((option) => (
+                  <label
+                    key={option.value}
+                    className={`cursor-pointer rounded-2xl border p-4 transition ${
+                      accountType === option.value ? 'border-lilac-400 bg-lilac-50 ring-2 ring-lilac-100' : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="account_type"
+                      value={option.value}
+                      checked={accountType === option.value}
+                      onChange={() => setAccountType(option.value)}
+                      className="sr-only"
+                    />
+                    <span className="block font-semibold text-slate-900">{option.title}</span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">{option.text}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
             <div className="grid gap-5 md:grid-cols-2">
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-slate-700">Ad Soyad</span>
@@ -350,6 +381,7 @@ export default function UzmanBasvuruPage() {
               />
             </label>
 
+            {seesClients ? (
             <fieldset>
               <legend className="mb-3 block text-sm font-semibold text-slate-700">Uzmanlık alanların</legend>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -364,6 +396,7 @@ export default function UzmanBasvuruPage() {
                 ))}
               </div>
             </fieldset>
+            ) : null}
 
             <div className="grid gap-5 md:grid-cols-3">
               <label className="block">
@@ -380,6 +413,8 @@ export default function UzmanBasvuruPage() {
                 </select>
               </label>
 
+              {seesClients ? (
+                <>
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-slate-700">Online görüşme yapıyor musun?</span>
                 <select
@@ -404,8 +439,11 @@ export default function UzmanBasvuruPage() {
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
                 />
               </label>
+                </>
+              ) : null}
             </div>
 
+            {seesClients ? (
             <fieldset>
               <legend className="mb-3 block text-sm font-semibold text-slate-700">Genel müsaitlik</legend>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -420,6 +458,7 @@ export default function UzmanBasvuruPage() {
                 ))}
               </div>
             </fieldset>
+            ) : null}
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Mindora’dan beklentin nedir?</span>

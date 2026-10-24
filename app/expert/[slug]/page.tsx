@@ -78,7 +78,7 @@ export default function PublicExpertProfilePage({
       <section className="border-b border-slate-200/80 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-14">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-100 text-3xl font-bold text-indigo-700">
+            <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-100 text-3xl font-semibold text-indigo-700">
               {expert.imageInitials}
             </div>
 
@@ -92,7 +92,7 @@ export default function PublicExpertProfilePage({
                 </span>
               </div>
 
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                 {expert.name}
               </h1>
               <p className="mt-2 text-base font-semibold text-slate-500">
@@ -122,7 +122,7 @@ export default function PublicExpertProfilePage({
 
           <aside className="w-full rounded-xl border border-slate-200/80 bg-slate-50 p-5 shadow-sm lg:max-w-sm">
             <p className="text-sm font-semibold text-slate-500">Seans ücreti</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
+            <p className="mt-2 text-3xl font-semibold text-slate-900">
               {formatMoney(expert.sessionPrice)}
             </p>
             <p className="mt-1 text-sm text-slate-500">
@@ -201,7 +201,7 @@ export default function PublicExpertProfilePage({
         <div className="rounded-xl bg-pine-800 p-8 text-white shadow-sm sm:p-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">
+              <h2 className="text-2xl font-semibold tracking-tight">
                 Bu uzmanla görüşmek ister misiniz?
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
@@ -231,7 +231,7 @@ function InfoCard({
 }) {
   return (
     <section className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-bold tracking-tight text-slate-900">{title}</h2>
+      <h2 className="text-lg font-semibold tracking-tight text-slate-900">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );

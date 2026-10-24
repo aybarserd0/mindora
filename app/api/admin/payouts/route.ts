@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { STANDARD_COMMISSION_RATE } from '@/lib/payments/policy';
 import { createClient } from "@supabase/supabase-js";
 import { cleanMultilineText, cleanText, cleanUuid, toSafeNumber } from "@/lib/security/validation";
 
@@ -87,7 +88,7 @@ function getCommissionAmount(payment: PaymentRow) {
 
   if (explicit > 0) return explicit;
 
-  return Math.round(getPaymentAmount(payment) * 0.3);
+  return Math.round(getPaymentAmount(payment) * STANDARD_COMMISSION_RATE);
 }
 
 function getExpertNetAmount(payment: PaymentRow) {

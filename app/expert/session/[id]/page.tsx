@@ -1527,18 +1527,18 @@ function CustomVideoGrid({ videoFitMode }: { videoFitMode: VideoFitMode }) {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />
 
         <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2 sm:left-4 sm:top-4">
-          <div className="rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-bold text-white shadow-sm backdrop-blur sm:px-4 sm:text-xs">
+          <div className="rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-semibold text-white shadow-sm backdrop-blur sm:px-4 sm:text-xs">
             {hasRemoteParticipant ? 'Canlı görüşme aktif' : 'Danışan bekleniyor'}
           </div>
 
           {activeSpeakerId && (
-            <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-100 shadow-sm backdrop-blur sm:px-4 sm:text-xs">
+            <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[11px] font-semibold text-emerald-100 shadow-sm backdrop-blur sm:px-4 sm:text-xs">
               Konuşan: {activeSpeakerId}
             </div>
           )}
 
           {isScreenShareMain && (
-            <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-[11px] font-bold text-sky-100 shadow-sm backdrop-blur sm:px-4 sm:text-xs">
+            <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-[11px] font-semibold text-sky-100 shadow-sm backdrop-blur sm:px-4 sm:text-xs">
               Ekran paylaşımı
             </div>
           )}
@@ -1663,14 +1663,14 @@ function VideoAvatarFallback({
   return (
     <div className="flex h-full w-full flex-col items-center justify-center bg-black px-6 text-center">
       <div
-        className={`mb-4 flex items-center justify-center rounded-full border border-white/10 bg-white/10 font-bold text-white shadow-sm ${
+        className={`mb-4 flex items-center justify-center rounded-full border border-white/10 bg-white/10 font-semibold text-white shadow-sm ${
           large ? 'h-24 w-24 text-4xl sm:h-32 sm:w-32 sm:text-5xl' : 'h-14 w-14 text-xl sm:h-16 sm:w-16 sm:text-2xl'
         }`}
       >
         {initial}
       </div>
 
-      <p className={`${large ? 'text-xl sm:text-2xl' : 'text-sm'} font-bold text-white`}>
+      <p className={`${large ? 'text-xl sm:text-2xl' : 'text-sm'} font-semibold text-white`}>
         {name}
       </p>
       <p className="mt-1 text-xs font-semibold text-slate-400">{label}</p>

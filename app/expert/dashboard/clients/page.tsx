@@ -344,7 +344,7 @@ export default function ExpertClientsPage() {
               <p className="text-sm font-semibold text-slate-400">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Danışanlar
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
@@ -358,15 +358,15 @@ export default function ExpertClientsPage() {
                 type="button"
                 onClick={() => void fetchClients('refresh')}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href="/expert/dashboard"
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
-                Dashboard
+                Genel bakış
               </Link>
               <Link
                 href="/expert/dashboard/sessions"
@@ -604,7 +604,7 @@ function ClientActions({ client, fullWidth = false }: { client: ClientRow; fullW
     <div className={`flex gap-2 ${fullWidth ? 'flex-col' : 'justify-end'}`}>
       <Link
         href={client.conversationHref}
-        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+        className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
       >
         Chat
       </Link>
@@ -653,7 +653,7 @@ function SummaryCard({
   return (
     <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
       <p className="text-sm font-semibold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -698,7 +698,7 @@ function EmptyClientState({
         )}
         <Link
           href="/expert/dashboard"
-          className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
         >
           Panele Dön
         </Link>
@@ -746,7 +746,7 @@ function StatusBadge({ status }: { status: ClientStatus }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-black ring-1 ring-inset ${config.className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${config.className}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${config.dotClassName}`} />
       {config.label}
@@ -764,7 +764,7 @@ function TableHead({
   return (
     <th
       scope="col"
-      className={`whitespace-nowrap px-5 py-3 text-xs font-black text-slate-500 sm:px-6 ${
+      className={`whitespace-nowrap px-5 py-3 text-xs font-semibold text-slate-500 sm:px-6 ${
  align === 'right' ? 'text-right' : 'text-left'
  }`}
     >
@@ -795,14 +795,14 @@ function NoticeCard({
     <section className={`rounded-3xl border p-5 shadow-sm ${className}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-black">{title}</p>
+          <p className="text-sm font-semibold">{title}</p>
           <p className="mt-1 text-sm leading-6 opacity-80">{description}</p>
         </div>
         {onRetry ? (
           <button
             type="button"
             onClick={onRetry}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
           >
             Tekrar Dene
           </button>
@@ -815,7 +815,7 @@ function NoticeCard({
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <span className="text-xs font-black text-slate-400">{label}</span>
+      <span className="text-xs font-semibold text-slate-400">{label}</span>
       <span className="text-right font-semibold text-slate-700">{value}</span>
     </div>
   )

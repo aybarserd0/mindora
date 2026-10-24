@@ -10,6 +10,7 @@ type ExpertSitemapRow = {
   slug?: string | null
   status?: string | null
   account_status?: string | null
+  account_type?: string | null
   updated_at?: string | null
   created_at?: string | null
 }
@@ -71,6 +72,9 @@ function isPublicExpert(expert: ExpertSitemapRow) {
     return false
   }
 
+  // Yalnızca süpervizyon için katılan psikologlar danışana listelenmez
+  if (normalizeStatus(expert.account_type) === 'supervision_only') return false
+
   if (!status) return true
 
   return approvedStatuses.includes(status)
@@ -82,7 +86,7 @@ async function getExpertRoutes(): Promise<MetadataRoute.Sitemap> {
 
     const { data, error } = await supabase
       .from('experts')
-      .select('slug, status, account_status, updated_at, created_at')
+      .select('slug, status, account_status, account_type, updated_at, created_at')
       .not('slug', 'is', null)
       .limit(5000)
 

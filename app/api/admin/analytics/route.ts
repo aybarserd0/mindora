@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { STANDARD_COMMISSION_RATE } from '@/lib/payments/policy';
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
@@ -150,7 +151,7 @@ function getCommissionAmount(payment: PaymentRow) {
 
   if (explicitCommission > 0) return explicitCommission;
 
-  return Math.round(getPaymentAmount(payment) * 0.3);
+  return Math.round(getPaymentAmount(payment) * STANDARD_COMMISSION_RATE);
 }
 
 function getExpertId(row: PaymentRow | SessionRow | ReviewRow | ClientRow) {

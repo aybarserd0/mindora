@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminHeader from "@/components/AdminHeader";
+import { formatRate, resolveCommission } from "@/lib/payments/policy";
 
 type ExpertStatus = "pending" | "approved" | "rejected" | "passive";
 type StatusFilter = "all" | ExpertStatus;
@@ -22,6 +23,10 @@ type Expert = {
   note: string | null;
   status: ExpertStatus;
   created_at: string;
+  founding_member?: boolean | null;
+  founding_until?: string | null;
+  commission_rate?: number | string | null;
+  account_type?: string | null;
 };
 
 const statusOptions: Array<{ value: StatusFilter; label: string }> = [
@@ -309,6 +314,11 @@ export default function UzmanBasvurulariPage() {
                       >
                         {getStatusLabel(expert.status)}
                       </span>
+                      {expert.account_type === "supervision_only" ? (
+                        <span className="rounded-full border border-lilac-200 bg-lilac-50 px-3 py-1 text-xs font-semibold text-lilac-800">
+                          Yalnızca süpervizyon
+                        </span>
+                      ) : null}
                     </div>
 
                     <p className="mt-2 text-sm font-semibold text-slate-500">
@@ -349,6 +359,13 @@ export default function UzmanBasvurulariPage() {
                     </button>
                   </div>
                 </div>
+
+                <CommissionPanel
+                  expert={expert}
+                  onSaved={(patch) =>
+                    setExperts((prev) => prev.map((item) => (item.id === expert.id ? { ...item, ...patch } : item)))
+                  }
+                />
 
                 <div className="mt-6 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600 md:grid-cols-2">
                   <InfoRow label="Telefon" value={safeText(expert.phone)} />
@@ -445,5 +462,89 @@ function StateBox({
       <p className="text-sm font-semibold">{title}</p>
       <p className="mt-2 text-sm font-semibold">{description}</p>
     </section>
+  );
+}
+
+function CommissionPanel({
+  expert,
+  onSaved,
+}: {
+  expert: Expert;
+  onSaved: (patch: Partial<Expert>) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [customRate, setCustomRate] = useState(
+    expert.commission_rate !== null && expert.commission_rate !== undefined && expert.commission_rate !== ""
+      ? String(Math.round(Number(expert.commission_rate) * 10000) / 100)
+      : ""
+  );
+  const [message, setMessage] = useState("");
+
+  const commission = resolveCommission(expert);
+  const sourceLabel =
+    commission.source === "custom" ? "Özel oran" : commission.source === "founding" ? "Kurucu uzman" : "Standart";
+
+  async function save(payload: Record<string, unknown>) {
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/admin/experts/commission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: expert.id, ...payload }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) throw new Error(data?.error || "Kaydedilemedi.");
+      onSaved(data.expert);
+      setMessage("Kaydedildi. Yeni oran bundan sonraki ödemelere uygulanır.");
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Kaydedilemedi.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-6 flex flex-col gap-4 rounded-xl border border-lilac-100 bg-lilac-50/60 p-5 text-sm lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <p className="font-semibold text-slate-900">
+          Komisyon: {formatRate(commission.rate)} <span className="font-medium text-slate-500">· {sourceLabel}</span>
+        </p>
+        {expert.founding_member && expert.founding_until ? (
+          <p className="mt-1 text-xs text-slate-500">
+            Kurucu indirimi {formatDate(expert.founding_until)} tarihine kadar geçerli.
+          </p>
+        ) : null}
+        {message ? <p className="mt-1 text-xs font-semibold text-lilac-800">{message}</p> : null}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => void save({ founding: !expert.founding_member })}
+          className="rounded-full border border-lilac-200 bg-white px-4 py-2 font-semibold text-lilac-900 transition hover:border-lilac-400 disabled:opacity-50"
+        >
+          {expert.founding_member ? "Kurucu indirimini kaldır" : "Kurucu uzman yap (12 ay)"}
+        </button>
+        <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-4 pr-1">
+          <span className="text-xs font-semibold text-slate-500">Özel %</span>
+          <input
+            value={customRate}
+            onChange={(event) => setCustomRate(event.target.value.replace(/[^0-9.,]/g, "").replace(",", "."))}
+            inputMode="decimal"
+            placeholder="—"
+            className="w-14 bg-transparent text-sm font-semibold outline-none"
+          />
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void save({ commissionRate: customRate === "" ? null : Number(customRate) })}
+            className="rounded-full bg-pine-800 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+          >
+            Kaydet
+          </button>
+        </label>
+      </div>
+    </div>
   );
 }
