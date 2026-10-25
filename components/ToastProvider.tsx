@@ -105,7 +105,9 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
 
   const timeoutMap = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-  const notificationsSupported = canUseNotifications()
+  // Sunucuda 'unknown' kalır, tarayıcıda efektle belirlenir: render sırasında
+  // window'a bakmak sunucu/istemci metinlerini farklılaştırıp hydration hatası veriyordu
+  const notificationsSupported = notificationPermission !== 'unknown' && notificationPermission !== 'unsupported'
   const notificationsEnabled = notificationPermission === 'granted'
 
   useEffect(() => {

@@ -345,6 +345,16 @@ export default function ExpertSessionPage() {
     initializeDevices()
   }, [initializeDevices, previewReady, serverUrl, token])
 
+  // Ön izleme <video> öğesi izin verildikten sonra render ediliyor; akış ondan önce
+  // alındığı için ref boş kalıyor ve ön izleme siyah görünüyordu. Öğe göründüğünde bağla.
+  useEffect(() => {
+    const video = previewVideoRef.current
+    const stream = previewStreamRef.current
+    if (permissionState === 'granted' && deviceState.videoEnabled && video && stream && video.srcObject !== stream) {
+      video.srcObject = stream
+    }
+  }, [permissionState, deviceState.videoEnabled, previewReady])
+
   async function refreshPreview(nextState?: Partial<DeviceState>) {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices) return
 
@@ -612,7 +622,7 @@ export default function ExpertSessionPage() {
           </div>
 
           <p className="mb-2 text-sm font-semibold text-slate-400">
-            Mindora Expert Session
+            Mindora görüşme odası
           </p>
 
           <h1 className="mb-3 text-2xl font-semibold text-slate-900">
@@ -640,7 +650,7 @@ export default function ExpertSessionPage() {
               onClick={() => router.back()}
               className="rounded-full bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
             >
-              Chat’e Dön
+              Sohbete dön
             </button>
 
             {exitReason !== 'completed' && (
@@ -733,7 +743,7 @@ export default function ExpertSessionPage() {
           <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div className="mb-6">
               <p className="mb-2 text-sm font-semibold text-slate-400">
-                Mindora Expert Session
+                Mindora görüşme odası
               </p>
 
               <h1 className="text-2xl font-semibold text-slate-900">
@@ -816,7 +826,7 @@ export default function ExpertSessionPage() {
                 onClick={() => router.back()}
                 className="w-full rounded-lg border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
-                Chat’e Geri Dön
+                Sohbete geri dön
               </button>
             </div>
           </div>
@@ -1256,7 +1266,7 @@ function SessionTopBar({
       <div className="mx-auto flex max-w-7xl flex-col gap-2 rounded-xl border border-white/10 bg-black/70 p-3 text-white shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="min-w-0">
           <p className="truncate text-xs text-slate-400">
-            Mindora Expert Session
+            Mindora görüşme odası
           </p>
           <p className="truncate text-sm font-semibold">{connectionStatus}</p>
         </div>
@@ -1760,7 +1770,7 @@ function ConnectionRecoveryOverlay({
             onClick={isLost ? onExit : onBackToChat}
             className="rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
           >
-            Chat’e Dön
+            Sohbete dön
           </button>
         </div>
       </div>

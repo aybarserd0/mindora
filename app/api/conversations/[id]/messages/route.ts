@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { hasAdminSession } from '@/lib/security/admin-auth'
 import {
   createConversationAccessToken,
   verifyConversationAccessToken,
@@ -362,7 +363,10 @@ async function verifyChatApiAccess({
   const accessRole = role || getAccessRoleFromRequest(req, body)
 
   if (accessRole === 'admin') {
-    return { ok: true }
+    // Admin rolü yalnızca geçerli admin oturum çereziyle kabul edilir
+    return hasAdminSession(req)
+      ? { ok: true }
+      : { ok: false, error: 'Admin erişimi doğrulanamadı.' }
   }
 
   const token = getAccessTokenFromRequest(req, body)

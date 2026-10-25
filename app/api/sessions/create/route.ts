@@ -29,6 +29,7 @@ type SessionRow = {
   created_at?: string | null;
 };
 
+const JOIN_WINDOW_MINUTES = 15;
 const REUSABLE_SESSION_STATUSES = ["scheduled", "waiting", "active"] as const;
 const MAX_ADVANCE_DAYS = 120;
 
@@ -205,6 +206,37 @@ export async function POST(req: NextRequest) {
       return jsonError("Konuşmada gerekli danışan veya uzman bilgisi eksik.", 409);
     }
 
+    // Danışan ve uzman yalnızca planlanmış bir randevunun saatinde görüşme
+    // açabilir; aksi halde tek ödemeyle sınırsız görüntülü görüşme yapılabiliyordu.
+    let windowBookingId: string | null = null
+    if (createdBy !== "admin") {
+      const nowMs = Date.now()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: windowBookings, error: windowError } = await (supabase as any)
+        .from("session_bookings")
+        .select("id, live_session_id, scheduled_start_at, scheduled_end_at")
+        .eq("conversation_id", conversation.id)
+        .in("status", ["scheduled", "confirmed", "active"])
+        .lte("scheduled_start_at", new Date(nowMs + JOIN_WINDOW_MINUTES * 60_000).toISOString())
+        .gte("scheduled_end_at", new Date(nowMs - JOIN_WINDOW_MINUTES * 60_000).toISOString())
+        .order("scheduled_start_at", { ascending: true })
+        .limit(1)
+
+      if (windowError) {
+        console.error("SESSION_CREATE_BOOKING_WINDOW_ERROR", windowError)
+        return jsonError("Randevu bilgisi kontrol edilemedi.", 500)
+      }
+
+      const booking = (windowBookings || [])[0] as { id: string; live_session_id: string | null } | undefined
+      if (!booking) {
+        return jsonError(
+          `Görüntülü görüşme, planlanmış seans saatinden ${JOIN_WINDOW_MINUTES} dakika önce açılır. Yaklaşan bir seansın yoksa önce randevu oluşturulmalı.`,
+          403
+        )
+      }
+      windowBookingId = booking.id
+    }
+
     const { data: existingSessionsData, error: existingError } = await supabase
       .from("sessions")
       .select("id, status, room_name, scheduled_at, conversation_id, started_at, created_at")
@@ -250,6 +282,16 @@ export async function POST(req: NextRequest) {
       console.error("SESSION_CREATE_INSERT_ERROR", insertError);
 
       return jsonError("Session oluşturulamadı.", 500);
+    }
+
+    if (windowBookingId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: linkError } = await (supabase as any)
+        .from("session_bookings")
+        .update({ live_session_id: (sessionData as SessionRow).id, updated_at: new Date().toISOString() })
+        .eq("id", windowBookingId)
+        .is("live_session_id", null)
+      if (linkError) console.error("SESSION_CREATE_BOOKING_LINK_ERROR", linkError)
     }
 
     return NextResponse.json({

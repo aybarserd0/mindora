@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { hasAdminSession } from '@/lib/security/admin-auth'
 import { verifyConversationAccessToken } from '@/lib/chat-access-tokens'
 
 type UserType = 'client' | 'expert' | 'admin'
@@ -24,7 +25,9 @@ async function verifyReadWriteAccess({
   userType: UserType
   body?: any
 }) {
-  if (userType === 'admin') return { ok: true }
+  if (userType === 'admin') {
+    return hasAdminSession(req) ? { ok: true } : { ok: false, error: 'Admin erişimi doğrulanamadı.' }
+  }
 
   const token =
     toText(req.nextUrl.searchParams.get('token')) ||

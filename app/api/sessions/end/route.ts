@@ -166,9 +166,10 @@ async function markBookingCompleted({
 }) {
   const supabase = getSupabaseAdmin()
 
+  // session_bookings tablosunda completed_at sütunu yok; olmayan sütun güncellemeyi
+  // tamamen düşürüyor ve randevu "tamamlandı" olmuyordu
   const updatePayload = {
     status: 'completed',
-    completed_at: endedAt,
     updated_at: endedAt,
   }
 
@@ -203,7 +204,7 @@ export async function POST(req: NextRequest) {
 
     if (!body || typeof body !== 'object') {
       return NextResponse.json(
-        { ok: false, error: 'Invalid request body.' },
+        { ok: false, error: 'Geçersiz istek.' },
         { status: 400 }
       )
     }
@@ -219,21 +220,21 @@ export async function POST(req: NextRequest) {
 
     if (!sessionId) {
       return NextResponse.json(
-        { ok: false, error: 'Session id is required.' },
+        { ok: false, error: 'Görüşme bilgisi eksik.' },
         { status: 400 }
       )
     }
 
     if (!accessToken) {
       return NextResponse.json(
-        { ok: false, error: 'Access token is required.' },
+        { ok: false, error: 'Güvenli bağlantı anahtarı eksik. Sana gönderilen bağlantıyı kullan.' },
         { status: 401 }
       )
     }
 
     if (requestedRole && requestedRole !== 'expert') {
       return NextResponse.json(
-        { ok: false, error: 'Only expert can end this session.' },
+        { ok: false, error: 'Görüşmeyi yalnızca uzman bitirebilir.' },
         { status: 403 }
       )
     }
@@ -268,14 +269,14 @@ export async function POST(req: NextRequest) {
       console.error('SESSION_END_QUERY_ERROR', sessionError)
 
       return NextResponse.json(
-        { ok: false, error: 'Session could not be checked.' },
+        { ok: false, error: 'Görüşme bilgisi kontrol edilemedi. Biraz sonra tekrar dene.' },
         { status: 500 }
       )
     }
 
     if (!session) {
       return NextResponse.json(
-        { ok: false, error: 'Session not found.' },
+        { ok: false, error: 'Görüşme bulunamadı.' },
         { status: 404 }
       )
     }
@@ -284,7 +285,7 @@ export async function POST(req: NextRequest) {
 
     if (!conversation) {
       return NextResponse.json(
-        { ok: false, error: 'Conversation not found for this session.' },
+        { ok: false, error: 'Bu görüşmeye ait sohbet bulunamadı.' },
         { status: 404 }
       )
     }
@@ -327,7 +328,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'Only authorized expert can end this session.',
+          error: 'Görüşmeyi yalnızca yetkili uzman bitirebilir.',
         },
         { status: 401 }
       )
@@ -360,7 +361,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          error: `Session cannot be completed from current status: ${session.status}`,
+          error: 'Görüşme bu durumdayken tamamlanamaz.',
         },
         { status: 409 }
       )
@@ -388,7 +389,7 @@ export async function POST(req: NextRequest) {
       console.error('SESSION_END_UPDATE_ERROR', updateError)
 
       return NextResponse.json(
-        { ok: false, error: 'Session could not be completed.' },
+        { ok: false, error: 'Görüşme tamamlanamadı.' },
         { status: 500 }
       )
     }
@@ -415,7 +416,7 @@ export async function POST(req: NextRequest) {
     console.error('SESSION_END_ERROR', error)
 
     return NextResponse.json(
-      { ok: false, error: 'Internal server error.' },
+      { ok: false, error: 'Beklenmeyen bir hata oluştu. Biraz sonra tekrar dene.' },
       { status: 500 }
     )
   }
