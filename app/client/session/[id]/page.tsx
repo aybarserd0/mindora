@@ -339,6 +339,16 @@ export default function ClientSessionPage() {
     initializeDevices()
   }, [initializeDevices, previewReady, serverUrl, token])
 
+  // Ön izleme <video> öğesi izin verildikten sonra render ediliyor; akış ondan önce
+  // alındığı için ref boş kalıyor ve ön izleme siyah görünüyordu. Öğe göründüğünde bağla.
+  useEffect(() => {
+    const video = previewVideoRef.current
+    const stream = previewStreamRef.current
+    if (permissionState === 'granted' && deviceState.videoEnabled && video && stream && video.srcObject !== stream) {
+      video.srcObject = stream
+    }
+  }, [permissionState, deviceState.videoEnabled, previewReady])
+
   async function refreshPreview(nextState?: Partial<DeviceState>) {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices) return
 
@@ -516,7 +526,7 @@ export default function ClientSessionPage() {
           </div>
 
           <p className="mb-2 text-sm font-semibold text-slate-400">
-            Mindora Secure Session
+            Mindora görüşme odası
           </p>
 
           <h1 className="mb-3 text-2xl font-semibold text-slate-900">
@@ -540,7 +550,7 @@ export default function ClientSessionPage() {
               onClick={() => router.back()}
               className="rounded-full bg-pine-800 px-5 py-4 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
             >
-              Chat’e Dön
+              Sohbete dön
             </button>
 
             {exitReason === 'connection_lost' && (
@@ -633,7 +643,7 @@ export default function ClientSessionPage() {
           <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <div className="mb-6">
               <p className="mb-2 text-sm font-semibold text-slate-400">
-                Mindora Secure Session
+                Mindora görüşme odası
               </p>
 
               <h1 className="text-2xl font-semibold text-slate-900">
@@ -716,7 +726,7 @@ export default function ClientSessionPage() {
                 onClick={() => router.back()}
                 className="w-full rounded-lg border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
-                Chat’e Geri Dön
+                Sohbete geri dön
               </button>
             </div>
           </div>
@@ -966,7 +976,7 @@ function InCallControls({
           disabled={disabled}
           active
           mobileLabel={fitMode === 'contain' ? 'Fit' : 'Fill'}
-          label={fitMode === 'contain' ? 'Fit: Tam Gör' : 'Fit: Doldur'}
+          label={fitMode === 'contain' ? 'Görüntü: sığdır' : 'Görüntü: doldur'}
           ariaLabel="Video görünüm modunu değiştir"
         />
 
@@ -1141,7 +1151,7 @@ function SessionTopBar({
       <div className="mx-auto flex max-w-7xl flex-col gap-2 rounded-xl border border-white/10 bg-black/70 p-3 text-white shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="min-w-0">
           <p className="truncate text-xs text-slate-400">
-            Mindora Secure Session
+            Mindora görüşme odası
           </p>
           <p className="truncate text-sm font-semibold">{connectionStatus}</p>
         </div>
@@ -1373,12 +1383,12 @@ function CustomVideoGrid({ fitMode }: { fitMode: VideoFitMode }) {
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />
 
-        <div className="absolute left-3 top-3 z-20 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-bold text-white shadow-sm backdrop-blur sm:left-4 sm:top-4 sm:px-4 sm:text-xs">
+        <div className="absolute left-3 top-3 z-20 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-[11px] font-semibold text-white shadow-sm backdrop-blur sm:left-4 sm:top-4 sm:px-4 sm:text-xs">
           {hasRemoteParticipant ? 'Canlı görüşme aktif' : 'Uzman bekleniyor'}
         </div>
 
         {orderedParticipants.some((participant) => participant.isSpeaking) && (
-          <div className="absolute right-3 top-3 z-20 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-2 text-[11px] font-bold text-emerald-100 shadow-sm backdrop-blur sm:right-4 sm:top-4 sm:px-4 sm:text-xs">
+          <div className="absolute right-3 top-3 z-20 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-2 text-[11px] font-semibold text-emerald-100 shadow-sm backdrop-blur sm:right-4 sm:top-4 sm:px-4 sm:text-xs">
             Konuşan: {getParticipantLabel(
               orderedParticipants.find((participant) => participant.isSpeaking) ||
                 orderedParticipants[0]
@@ -1456,7 +1466,7 @@ function FocusVideoTile({
         className={`absolute left-2 top-2 z-20 flex items-center gap-2 rounded-full border bg-black/65 text-white shadow-sm backdrop-blur sm:left-3 sm:top-3 ${
           isActiveSpeaker ? 'border-emerald-400/60' : 'border-white/10'
         } ${
-          compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[11px] font-bold sm:px-4 sm:text-xs'
+          compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[11px] font-semibold sm:px-4 sm:text-xs'
         }`}
       >
         <span
@@ -1474,7 +1484,7 @@ function FocusVideoTile({
           compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-[10px]'
         }`}
       >
-        <span className="font-bold text-slate-300">
+        <span className="font-semibold text-slate-300">
           {playableTrackRef ? 'Kamera açık' : 'Kamera kapalı'}
         </span>
       </div>
@@ -1520,14 +1530,14 @@ function VideoAvatarFallback({
   return (
     <div className="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_center,#27272a_0%,#09090b_58%,#000_100%)] px-6 text-center">
       <div
-        className={`mb-4 flex items-center justify-center rounded-full border border-white/10 bg-white/10 font-bold text-white shadow-sm ${
+        className={`mb-4 flex items-center justify-center rounded-full border border-white/10 bg-white/10 font-semibold text-white shadow-sm ${
           large ? 'h-24 w-24 text-4xl sm:h-32 sm:w-32 sm:text-5xl' : 'h-14 w-14 text-xl sm:h-16 sm:w-16 sm:text-2xl'
         }`}
       >
         {initial}
       </div>
 
-      <p className={`${large ? 'text-xl sm:text-2xl' : 'text-sm'} font-bold text-white`}>
+      <p className={`${large ? 'text-xl sm:text-2xl' : 'text-sm'} font-semibold text-white`}>
         {name}
       </p>
       <p className="mt-1 text-xs font-semibold text-slate-400">{label}</p>
@@ -1617,7 +1627,7 @@ function ConnectionRecoveryOverlay({
             onClick={isLost ? onExit : onBackToChat}
             className="rounded-lg border border-white/10 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-white/10"
           >
-            Chat’e Dön
+            Sohbete dön
           </button>
         </div>
       </div>

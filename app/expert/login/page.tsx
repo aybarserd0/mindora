@@ -60,7 +60,7 @@ function ExpertLoginContent() {
           />
         </div>
 
-        <h1 className="text-center text-2xl font-bold text-slate-900">Uzman Girişi</h1>
+        <h1 className="text-center text-2xl font-semibold text-slate-900">Uzman Girişi</h1>
 
         <p className="mt-2 text-center text-slate-500">
           Onaylı uzman hesabınızın e-posta adresini girin, size güvenli bir giriş bağlantısı gönderelim.

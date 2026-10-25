@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { sendMail } from '@/lib/mail/smtp'
 import { reviewRequestClientTemplate } from '@/lib/mail/templates'
 import { isAuthorizedCronRequest } from '@/lib/security/cron-auth'
+import { autoCompleteFinishedBookings } from '@/lib/sessions/auto-complete'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -510,10 +511,13 @@ export async function GET(req: NextRequest) {
       )
     }
 
+    // Önce bitişi geçmiş ama kapatılmamış görüşmeleri tamamla; yorum hatırlatması onları da kapsasın
+    const autoCompleted = await autoCompleteFinishedBookings()
     const result = await runReviewReminders(req)
 
     return NextResponse.json({
       ok: true,
+      autoCompleted: autoCompleted.completed,
       ...result,
     })
   } catch (error) {

@@ -402,7 +402,7 @@ function ClientPaymentsContent() {
               <p className="text-sm font-semibold text-slate-400">
                 Mindora Danışan Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
                 Ödemelerim
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
@@ -416,15 +416,15 @@ function ClientPaymentsContent() {
                 type="button"
                 onClick={() => void fetchPayments('refresh')}
                 disabled={loading || refreshing}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
               </button>
               <Link
                 href={buildTokenUrl('/client/dashboard', token)}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
-                Dashboard
+                Genel bakış
               </Link>
               <Link
                 href={buildTokenUrl('/client/dashboard/sessions', token)}
@@ -486,7 +486,7 @@ function ClientPaymentsContent() {
         <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Filtrele ve Ara</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Filtrele ve Ara</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Uzman adı, ödeme ID, tutar veya durum bilgisine göre arama yapın.
               </p>
@@ -521,7 +521,7 @@ function ClientPaymentsContent() {
         <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
           <div className="flex flex-col gap-2 border-b border-slate-200/80 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Ödeme Geçmişi</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Ödeme Geçmişi</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Tüm ödeme kayıtlarınız ve ödeme durumlarınız.
               </p>
@@ -640,7 +640,7 @@ function SummaryCard({ title, value, description }: { title: string; value: stri
   return (
     <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:border-slate-300">
       <p className="text-sm font-semibold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </article>
   )
@@ -677,7 +677,7 @@ function NoticeCard({
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
         >
           Yenile
         </button>

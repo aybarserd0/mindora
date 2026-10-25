@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { getExpertIdFromRequest } from '@/lib/security/expert-session'
+import { resolveCommission } from '@/lib/payments/policy'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -340,6 +341,13 @@ export async function GET(req: NextRequest) {
       limit,
     })
 
+    const { data: expertRow } = await (getSupabaseAdmin() as any)
+      .from('experts')
+      .select('commission_rate, founding_member, founding_until')
+      .eq('id', expertId)
+      .maybeSingle()
+    const commission = resolveCommission(expertRow || {})
+
     const clientIds = rawPayments.map(getPaymentClientId).filter(Boolean)
     const clientsById = await fetchClientApplications(clientIds)
 
@@ -362,6 +370,11 @@ export async function GET(req: NextRequest) {
         limit,
       },
       summary: buildSummary(earnings),
+      commission: {
+        rate: commission.rate,
+        source: commission.source,
+        foundingUntil: expertRow?.founding_member ? expertRow?.founding_until || null : null,
+      },
       earnings,
     })
   } catch (error) {

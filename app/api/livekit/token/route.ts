@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { AccessToken } from 'livekit-server-sdk'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { verifyConversationAccessToken } from '@/lib/chat-access-tokens'
+import { applyRateLimit } from '@/lib/security/rate-limit'
 
 type UserType = 'client' | 'expert'
 
@@ -85,6 +86,31 @@ function getPublicLivekitUrl(rawUrl: string) {
   const url = rawUrl.trim()
   if (!url) return ''
   return url
+}
+
+async function resolveDisplayName(userType: UserType, session: SessionRecord, fallback: string) {
+  const supabase = getSupabaseAdmin()
+  const generic = userType === 'expert' ? 'Uzman' : 'Danışan'
+  const isPlaceholder = !fallback || /^(client|expert)-user$/i.test(fallback)
+
+  try {
+    if (userType === 'expert' && session.expert_id) {
+      const { data } = await supabase.from('experts').select('name').eq('id', session.expert_id).maybeSingle()
+      if (data?.name) return data.name
+    }
+    if (userType === 'client' && session.client_application_id) {
+      const { data } = await supabase
+        .from('client_applications')
+        .select('name')
+        .eq('id', session.client_application_id)
+        .maybeSingle()
+      if (data?.name) return data.name
+    }
+  } catch (error) {
+    console.error('LIVEKIT_DISPLAY_NAME_ERROR', error)
+  }
+
+  return isPlaceholder ? generic : fallback
 }
 
 async function markSessionWaitingIfNeeded(sessionId: string) {
@@ -246,11 +272,14 @@ async function verifyAnyValidAccessToken({
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = applyRateLimit(req, { scope: 'livekit-token', limit: 30, windowMs: 60_000 })
+    if (limited) return limited
+
     const body = await req.json().catch(() => null)
 
     if (!body || typeof body !== 'object') {
       return NextResponse.json(
-        { ok: false, error: 'Invalid request body.' },
+        { ok: false, error: 'Geçersiz istek.' },
         { status: 400 }
       )
     }
@@ -264,28 +293,28 @@ export async function POST(req: NextRequest) {
 
     if (!sessionId) {
       return NextResponse.json(
-        { ok: false, error: 'Session id is required.' },
+        { ok: false, error: 'Görüşme bilgisi eksik.' },
         { status: 400 }
       )
     }
 
     if (!participantName) {
       return NextResponse.json(
-        { ok: false, error: 'Participant name is required.' },
+        { ok: false, error: 'Katılımcı bilgisi eksik.' },
         { status: 400 }
       )
     }
 
     if (!isValidUserType(userTypeRaw)) {
       return NextResponse.json(
-        { ok: false, error: 'Invalid user type.' },
+        { ok: false, error: 'Geçersiz kullanıcı tipi.' },
         { status: 400 }
       )
     }
 
     if (!accessToken) {
       return NextResponse.json(
-        { ok: false, error: 'Access token is required.' },
+        { ok: false, error: 'Güvenli bağlantı anahtarı eksik. Sana gönderilen bağlantıyı kullan.' },
         { status: 401 }
       )
     }
@@ -302,7 +331,7 @@ export async function POST(req: NextRequest) {
       })
 
       return NextResponse.json(
-        { ok: false, error: 'LiveKit environment variables are missing.' },
+        { ok: false, error: 'Görüntülü görüşme altyapısı şu anda yapılandırılmamış.' },
         { status: 500 }
       )
     }
@@ -339,14 +368,14 @@ export async function POST(req: NextRequest) {
       console.error('LIVEKIT_SESSION_QUERY_ERROR', sessionError)
 
       return NextResponse.json(
-        { ok: false, error: 'Session could not be checked.' },
+        { ok: false, error: 'Görüşme bilgisi kontrol edilemedi. Biraz sonra tekrar dene.' },
         { status: 500 }
       )
     }
 
     if (!session) {
       return NextResponse.json(
-        { ok: false, error: 'Session not found.' },
+        { ok: false, error: 'Görüşme bulunamadı.' },
         { status: 404 }
       )
     }
@@ -355,7 +384,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          error: `Session is not joinable. Current status: ${session.status}`,
+          error: session.status === 'completed' ? 'Bu görüşme sona erdi.' : session.status === 'cancelled' ? 'Bu görüşme iptal edildi.' : 'Bu görüşmeye şu anda katılınamıyor.',
         },
         { status: 403 }
       )
@@ -365,35 +394,35 @@ export async function POST(req: NextRequest) {
 
     if (!conversation) {
       return NextResponse.json(
-        { ok: false, error: 'Conversation not found for this session.' },
+        { ok: false, error: 'Bu görüşmeye ait sohbet bulunamadı.' },
         { status: 404 }
       )
     }
 
     if (conversation.status !== 'active') {
       return NextResponse.json(
-        { ok: false, error: 'Conversation is not active.' },
+        { ok: false, error: 'Bu sohbet şu anda aktif değil.' },
         { status: 403 }
       )
     }
 
     if (conversation.payment_status !== 'paid') {
       return NextResponse.json(
-        { ok: false, error: 'Payment is required before joining session.' },
+        { ok: false, error: 'Görüşmeye katılmak için önce ödemenin tamamlanması gerekiyor.' },
         { status: 402 }
       )
     }
 
     if (!session.room_name) {
       return NextResponse.json(
-        { ok: false, error: 'Session room is not configured.' },
+        { ok: false, error: 'Görüşme odası henüz hazırlanmadı.' },
         { status: 500 }
       )
     }
 
     if (session.conversation_id !== conversation.id) {
       return NextResponse.json(
-        { ok: false, error: 'Session conversation mismatch.' },
+        { ok: false, error: 'Görüşme bilgileri uyuşmuyor.' },
         { status: 409 }
       )
     }
@@ -404,7 +433,7 @@ export async function POST(req: NextRequest) {
       session.client_application_id !== conversation.client_application_id
     ) {
       return NextResponse.json(
-        { ok: false, error: 'Session client mismatch.' },
+        { ok: false, error: 'Görüşme bilgileri uyuşmuyor.' },
         { status: 409 }
       )
     }
@@ -415,7 +444,7 @@ export async function POST(req: NextRequest) {
       session.expert_id !== conversation.expert_id
     ) {
       return NextResponse.json(
-        { ok: false, error: 'Session expert mismatch.' },
+        { ok: false, error: 'Görüşme bilgileri uyuşmuyor.' },
         { status: 409 }
       )
     }
@@ -429,7 +458,7 @@ export async function POST(req: NextRequest) {
 
     if (!verified.ok) {
       return NextResponse.json(
-        { ok: false, error: 'Invalid or expired access token.' },
+        { ok: false, error: 'Bağlantının süresi dolmuş ya da geçersiz. Yeni bağlantı için Mindora ile iletişime geç.' },
         { status: 401 }
       )
     }
@@ -442,11 +471,14 @@ export async function POST(req: NextRequest) {
       await markSessionActiveIfNeeded(session.id)
     }
 
-    const identity = createSafeIdentity(userTypeRaw, participantName, session.id)
+    // Görüşmede karşı tarafa görünecek ad istemciden değil kayıttan gelir;
+    // sayfalar sabit "client-user"/"expert-user" gönderiyordu ve kutucukta bu yazıyordu
+    const displayName = await resolveDisplayName(userTypeRaw, session, participantName)
+    const identity = createSafeIdentity(userTypeRaw, displayName, session.id)
 
     const livekitToken = new AccessToken(apiKey, apiSecret, {
       identity,
-      name: participantName.slice(0, 80),
+      name: displayName.slice(0, 80),
       ttl: '2h',
       metadata: JSON.stringify({
         sessionId: session.id,
@@ -488,7 +520,7 @@ export async function POST(req: NextRequest) {
     console.error('LIVEKIT_TOKEN_ERROR', error)
 
     return NextResponse.json(
-      { ok: false, error: 'Internal server error.' },
+      { ok: false, error: 'Beklenmeyen bir hata oluştu. Biraz sonra tekrar dene.' },
       { status: 500 }
     )
   }

@@ -443,7 +443,7 @@ export default async function ExpertDashboardPage() {
               <p className="text-sm font-semibold text-slate-400">
                 Mindora Uzman Paneli
               </p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Hoş geldiniz.
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
@@ -462,13 +462,13 @@ export default async function ExpertDashboardPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/expert/dashboard/sessions"
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
                 Görüşmeleri Aç
               </Link>
               <Link
                 href="/expert/dashboard/verification"
-                className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-all duration-200 ease-out hover:bg-indigo-100"
+                className="inline-flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-all duration-200 ease-out hover:bg-indigo-100"
               >
                 Belgeleri Doğrula
               </Link>
@@ -582,7 +582,7 @@ export default async function ExpertDashboardPage() {
               <p className="text-sm font-semibold text-indigo-700">
                 C14 Uzman Doğrulama
               </p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
                 Güven rozetinizi tamamlayın.
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
@@ -741,7 +741,7 @@ function MetricCard({
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <p className="text-sm font-semibold text-slate-500">{title}</p>
-      <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
+      <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
     </article>
   )
@@ -862,7 +862,7 @@ function ClientItem({
 
       <Link
         href={`/expert/chat/${conversation.id}`}
-        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100"
+        className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100"
       >
         Mesaj
       </Link>

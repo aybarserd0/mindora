@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { STANDARD_COMMISSION_RATE } from '@/lib/payments/policy';
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
@@ -8,7 +9,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const QUERY_LIMIT = 1500;
-const COMMISSION_RATE = 0.3;
+const COMMISSION_RATE = STANDARD_COMMISSION_RATE;
 
 type PaymentRow = {
   id: string;

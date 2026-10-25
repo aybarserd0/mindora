@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { enforceAdminRequest } from '@/lib/security/admin-auth'
-import { sendMail } from '@/lib/mail/smtp'
-import { bookingCancelledTemplate } from '@/lib/mail/templates'
-import { createNotification } from '@/lib/notifications'
+import { cancelBooking, getBookingForCancellation } from '@/lib/sessions/cancellation'
 
 type BookingStatus =
   | 'scheduled'
@@ -17,6 +15,7 @@ type BookingStatus =
 type UpdateBookingPayload = {
   status?: BookingStatus
   cancellationReason?: string
+  refund?: boolean
 }
 
 const VALID_STATUSES: BookingStatus[] = [
@@ -58,106 +57,6 @@ function formatDateTime(value: string | null | undefined) {
   }).format(date)
 }
 
-async function notifyBookingCancelled({
-  supabase,
-  booking,
-  cancellationReason,
-}: {
-  supabase: ReturnType<typeof getSupabaseAdmin>
-  booking: {
-    client_id: string | null
-    expert_id: string | null
-    scheduled_start_at: string | null
-  }
-  cancellationReason: string | null
-}) {
-  const [{ data: client }, { data: expert }] = await Promise.all([
-    booking.client_id
-      ? supabase
-          .from('client_applications' as never)
-          .select('name,email')
-          .eq('id', booking.client_id as never)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    booking.expert_id
-      ? supabase
-          .from('experts' as never)
-          .select('name,email')
-          .eq('id', booking.expert_id as never)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-  ])
-
-  const clientInfo = client as unknown as { name?: string; email?: string } | null
-  const expertInfo = expert as unknown as { name?: string; email?: string } | null
-  const scheduledStartText = formatDateTime(booking.scheduled_start_at)
-
-  const jobs: Array<Promise<unknown>> = []
-
-  if (clientInfo?.email) {
-    jobs.push(
-      sendMail({
-        to: clientInfo.email,
-        subject: 'Mindora randevunuz iptal edildi',
-        text: bookingCancelledTemplate({
-          recipientName: clientInfo.name || 'Danışan',
-          otherPartyName: expertInfo?.name || 'Uzman',
-          scheduledStartText,
-          cancellationReason: cancellationReason || undefined,
-        }),
-      })
-    )
-  }
-
-  if (expertInfo?.email) {
-    jobs.push(
-      sendMail({
-        to: expertInfo.email,
-        subject: 'Mindora randevusu iptal edildi',
-        text: bookingCancelledTemplate({
-          recipientName: expertInfo.name || 'Uzman',
-          otherPartyName: clientInfo?.name || 'Danışan',
-          scheduledStartText,
-          cancellationReason: cancellationReason || undefined,
-        }),
-      })
-    )
-  }
-
-  if (booking.client_id) {
-    jobs.push(
-      createNotification({
-        supabase,
-        userType: 'client',
-        userId: booking.client_id,
-        title: 'Randevunuz iptal edildi',
-        message: `${scheduledStartText} tarihine planlanan seansınız iptal edildi.`,
-        type: 'session',
-      })
-    )
-  }
-
-  if (booking.expert_id) {
-    jobs.push(
-      createNotification({
-        supabase,
-        userType: 'expert',
-        userId: booking.expert_id,
-        title: 'Randevu iptal edildi',
-        message: `${scheduledStartText} tarihine planlanan seans iptal edildi.`,
-        type: 'session',
-      })
-    )
-  }
-
-  const results = await Promise.allSettled(jobs)
-  const failed = results.filter((result) => result.status === 'rejected')
-
-  if (failed.length > 0) {
-    console.error('Booking cancellation mail error:', failed)
-  }
-}
-
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -188,45 +87,42 @@ export async function PATCH(
 
     const supabase = getSupabaseAdmin()
 
-    const updatePayload: Record<string, unknown> = {
-      status: body.status,
-      updated_at: new Date().toISOString(),
-    }
-
     if (body.status === 'cancelled') {
-      updatePayload.cancellation_reason =
-        typeof body.cancellationReason === 'string'
-          ? body.cancellationReason.trim()
-          : null
+      // İptal her zaman ortak akıştan geçer: iade ve bildirimler orada yönetilir
+      const booking = await getBookingForCancellation(bookingId)
+      if (!booking) {
+        return NextResponse.json({ ok: false, error: 'Randevu bulunamadı.' }, { status: 404 })
+      }
+
+      const result = await cancelBooking({
+        booking,
+        actor: 'admin',
+        reason: typeof body.cancellationReason === 'string' ? body.cancellationReason.trim().slice(0, 500) || null : null,
+        ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+        forceRefund: typeof body.refund === 'boolean' ? body.refund : undefined,
+      })
+
+      if (!result.ok) {
+        return NextResponse.json({ ok: false, error: result.error }, { status: result.status })
+      }
+
+      const { data: cancelled } = await supabase
+        .from('session_bookings' as never)
+        .select('*')
+        .eq('id', bookingId as never)
+        .maybeSingle()
+
+      return NextResponse.json({ ok: true, booking: cancelled, outcome: result.outcome })
     }
 
     const { data, error } = await supabase
       .from('session_bookings' as never)
-      .update(updatePayload as never)
+      .update({ status: body.status, updated_at: new Date().toISOString() } as never)
       .eq('id', bookingId as never)
       .select('*')
       .single()
 
     if (error) throw error
-
-    if (body.status === 'cancelled') {
-      const booking = data as unknown as {
-        client_id: string | null
-        expert_id: string | null
-        scheduled_start_at: string | null
-        cancellation_reason?: string | null
-      }
-
-      try {
-        await notifyBookingCancelled({
-          supabase,
-          booking,
-          cancellationReason: booking.cancellation_reason ?? null,
-        })
-      } catch (mailError) {
-        console.error('Booking cancellation notify error:', mailError)
-      }
-    }
 
     return NextResponse.json({
       ok: true,

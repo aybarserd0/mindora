@@ -255,7 +255,11 @@ export async function POST(
       return jsonError('Dosya adı geçersiz.', 400)
     }
 
-    if (!isAllowedMimeType(file.type)) {
+    // Tarayıcılar ses kaydını "audio/webm;codecs=opus" gibi parametreli türle
+    // gönderir; tam eşleşme Chrome/Android'de sesli mesajları reddediyordu
+    const mimeType = file.type.split(';')[0].trim().toLowerCase()
+
+    if (!isAllowedMimeType(mimeType)) {
       return jsonError(
         'Bu dosya türü desteklenmiyor. Sadece görsel, PDF, DOC, DOCX ve ses dosyaları yüklenebilir.',
         415
@@ -278,7 +282,7 @@ export async function POST(
       conversationId,
       userType,
       attachmentId,
-      mimeType: file.type,
+      mimeType: mimeType,
     })
 
     uploadedFilePath = filePath
@@ -288,7 +292,7 @@ export async function POST(
     const { error: uploadError }: UploadResult = await supabase.storage
       .from(BUCKET_NAME)
       .upload(filePath, fileBuffer, {
-        contentType: file.type,
+        contentType: mimeType,
         cacheControl: '3600',
         upsert: false,
       })
@@ -298,7 +302,7 @@ export async function POST(
         conversationId,
         userType,
         fileName: originalName,
-        mimeType: file.type,
+        mimeType: mimeType,
         fileSize: file.size,
         error: uploadError,
       })
@@ -314,7 +318,7 @@ export async function POST(
         uploaded_by_type: userType,
         file_name: originalName,
         file_path: filePath,
-        mime_type: file.type,
+        mime_type: mimeType,
         file_size: file.size,
       })
       .select(
@@ -337,7 +341,7 @@ export async function POST(
         conversationId,
         userType,
         fileName: originalName,
-        mimeType: file.type,
+        mimeType: mimeType,
         fileSize: file.size,
         error: insertError,
       })

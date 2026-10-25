@@ -73,6 +73,7 @@ type UiSession = {
   scheduledEndAt: string | null
   startTime: number
   endTime: number
+  cancellable: boolean
 }
 
 const JOINABLE_STATUSES: NormalizedSessionStatus[] = ['confirmed', 'active']
@@ -233,6 +234,7 @@ function toUiSession(session: ApiSession, index: number): UiSession {
     scheduledEndAt: session.scheduledEndAt,
     startTime,
     endTime,
+    cancellable: (status === 'scheduled' || status === 'confirmed') && startTime > Date.now(),
   }
 }
 
@@ -284,6 +286,7 @@ export default function ExpertDashboardSessionsPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [softError, setSoftError] = useState('')
   const [activeFilter, setActiveFilter] = useState<SessionFilter>('all')
+  const [cancelTarget, setCancelTarget] = useState<UiSession | null>(null)
 
   const fetchSessions = useCallback(async (mode: 'initial' | 'refresh' = 'refresh') => {
     const controller = new AbortController()
@@ -438,10 +441,10 @@ export default function ExpertDashboardSessionsPage() {
           <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs font-black text-indigo-600">
+                <p className="text-xs font-semibold text-indigo-600">
                   Seans yönetimi
                 </p>
-                <h2 className="mt-2 text-xl font-black text-slate-950 sm:text-2xl">
+                <h2 className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl">
                   Görüşme Akışı
                 </h2>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
@@ -451,7 +454,7 @@ export default function ExpertDashboardSessionsPage() {
 
               <Link
                 href="/expert/dashboard/availability"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white shadow-sm shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
               >
                 Müsaitlikleri Düzenle
               </Link>
@@ -472,6 +475,7 @@ export default function ExpertDashboardSessionsPage() {
                     key={`${activeFilter}-${session.id}`}
                     session={session}
                     mode={isPastSession(session) ? 'past' : 'upcoming'}
+                    onCancel={() => setCancelTarget(session)}
                   />
                 ))}
               </div>
@@ -498,10 +502,10 @@ export default function ExpertDashboardSessionsPage() {
         <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black text-slate-400">
+              <p className="text-xs font-semibold text-slate-400">
                 Arşiv
               </p>
-              <h2 className="mt-2 text-xl font-black text-slate-950">Geçmiş Görüşmeler</h2>
+              <h2 className="mt-2 text-xl font-semibold text-slate-900">Geçmiş Görüşmeler</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Tamamlanan, iptal edilen veya tarihi geçmiş görüşmeler.
               </p>
@@ -520,6 +524,15 @@ export default function ExpertDashboardSessionsPage() {
           )}
         </section>
       </section>
+      <ExpertCancelModal
+        key={cancelTarget?.id || 'none'}
+        session={cancelTarget}
+        onClose={() => setCancelTarget(null)}
+        onCancelled={() => {
+          setCancelTarget(null)
+          void fetchSessions('refresh')
+        }}
+      />
     </main>
   )
 }
@@ -541,10 +554,10 @@ function HeroHeader({
         <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-indigo-50 blur-3xl" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs font-black text-indigo-600">
+            <p className="text-xs font-semibold text-indigo-600">
               Mindora Uzman Paneli
             </p>
-            <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
               Görüşmeler
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
@@ -554,7 +567,7 @@ function HeroHeader({
 
             <div className="mt-5 inline-flex max-w-full items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
               <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
-              <span className="truncate font-bold">Sıradaki görüşme: {getNextSessionLabel(nextSession)}</span>
+              <span className="truncate font-semibold">Sıradaki görüşme: {getNextSessionLabel(nextSession)}</span>
             </div>
           </div>
 
@@ -563,19 +576,19 @@ function HeroHeader({
               type="button"
               onClick={onRefresh}
               disabled={loading || refreshing}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
             >
               {loading || refreshing ? 'Yükleniyor...' : 'Yenile'}
             </button>
             <Link
               href="/expert/dashboard"
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
             >
-              Dashboard
+              Genel bakış
             </Link>
             <Link
               href="/expert/dashboard/availability"
-              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md"
             >
               Müsaitlik
             </Link>
@@ -607,10 +620,10 @@ function FilterBar({
             key={filter}
             type="button"
             onClick={() => onChange(filter)}
-            className={`inline-flex min-w-max items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-black transition ${
+            className={`inline-flex min-w-max items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
               isActive
                 ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200'
-                : 'text-slate-600 hover:bg-white/70 hover:text-slate-950'
+                : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'
             }`}
           >
             {filterLabels[filter]}
@@ -635,19 +648,19 @@ function PastSessionsTable({ sessions }: { sessions: UiSession[] }) {
         <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead className="bg-slate-50 text-xs text-slate-500">
             <tr>
-              <th className="px-5 py-4 font-black">Danışan</th>
-              <th className="px-5 py-4 font-black">Tarih</th>
-              <th className="px-5 py-4 font-black">Saat</th>
-              <th className="px-5 py-4 font-black">Süre</th>
-              <th className="px-5 py-4 font-black">Durum</th>
-              <th className="px-5 py-4 font-black">İşlem</th>
+              <th className="px-5 py-4 font-semibold">Danışan</th>
+              <th className="px-5 py-4 font-semibold">Tarih</th>
+              <th className="px-5 py-4 font-semibold">Saat</th>
+              <th className="px-5 py-4 font-semibold">Süre</th>
+              <th className="px-5 py-4 font-semibold">Durum</th>
+              <th className="px-5 py-4 font-semibold">İşlem</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
             {sessions.map((session) => (
               <tr key={session.id} className="align-top transition hover:bg-slate-50">
                 <td className="px-5 py-4">
-                  <p className="font-black text-slate-950">{session.clientName}</p>
+                  <p className="font-semibold text-slate-900">{session.clientName}</p>
                   <p className="mt-1 text-xs text-slate-500">{session.topic}</p>
                 </td>
                 <td className="whitespace-nowrap px-5 py-4 text-slate-600">{session.date}</td>
@@ -659,7 +672,7 @@ function PastSessionsTable({ sessions }: { sessions: UiSession[] }) {
                 <td className="whitespace-nowrap px-5 py-4">
                   <Link
                     href={session.conversationHref}
-                    className="text-sm font-black text-indigo-600 transition hover:text-indigo-700"
+                    className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
                   >
                     Sohbete git
                   </Link>
@@ -673,8 +686,17 @@ function PastSessionsTable({ sessions }: { sessions: UiSession[] }) {
   )
 }
 
-function SessionCard({ session, mode }: { session: UiSession; mode: 'upcoming' | 'past' }) {
+function SessionCard({
+  session,
+  mode,
+  onCancel,
+}: {
+  session: UiSession
+  mode: 'upcoming' | 'past'
+  onCancel?: () => void
+}) {
   const config = statusConfig[session.status] || statusConfig.unknown
+  const canCancel = mode === 'upcoming' && session.cancellable
 
   return (
     <article className="group rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md sm:p-5">
@@ -682,7 +704,7 @@ function SessionCard({ session, mode }: { session: UiSession; mode: 'upcoming' |
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`h-2.5 w-2.5 rounded-full ${config.dotClassName}`} />
-            <h3 className="truncate text-base font-black text-slate-950">{session.clientName}</h3>
+            <h3 className="truncate text-base font-semibold text-slate-900">{session.clientName}</h3>
             <StatusBadge status={session.status} />
           </div>
 
@@ -692,7 +714,7 @@ function SessionCard({ session, mode }: { session: UiSession; mode: 'upcoming' |
             <p className="mt-1 truncate text-xs text-slate-400">{session.clientEmail}</p>
           ) : null}
 
-          <div className="mt-4 grid gap-2 text-xs font-bold text-slate-600 sm:flex sm:flex-wrap">
+          <div className="mt-4 grid gap-2 text-xs font-semibold text-slate-600 sm:flex sm:flex-wrap">
             <InfoPill label={session.date} />
             <InfoPill label={session.time} />
             <InfoPill label={session.duration} />
@@ -702,7 +724,7 @@ function SessionCard({ session, mode }: { session: UiSession; mode: 'upcoming' |
         <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[250px]">
           <Link
             href={session.conversationHref}
-            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-100"
+            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
           >
             Sohbete Git
           </Link>
@@ -711,23 +733,33 @@ function SessionCard({ session, mode }: { session: UiSession; mode: 'upcoming' |
             session.canJoin ? (
               <Link
                 href={session.sessionHref}
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-indigo-700"
+                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
               >
                 Görüşmeye Katıl
               </Link>
             ) : (
-              <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-slate-100 px-4 py-2.5 text-sm font-black text-slate-500 ring-1 ring-slate-200">
+              <span className="inline-flex cursor-not-allowed items-center justify-center rounded-2xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-500 ring-1 ring-slate-200">
                 Görüşme Hazırlanıyor
               </span>
             )
           ) : (
             <Link
               href={session.conversationHref}
-              className="inline-flex items-center justify-center rounded-2xl bg-pine-800 px-4 py-2.5 text-sm font-black text-white transition hover:bg-pine-900"
+              className="inline-flex items-center justify-center rounded-2xl bg-pine-800 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-pine-900"
             >
               Detayları Gör
             </Link>
           )}
+
+          {canCancel && onCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 sm:col-span-2"
+            >
+              Seansı iptal et
+            </button>
+          ) : null}
         </div>
       </div>
     </article>
@@ -739,10 +771,10 @@ function TodayFlowCard({ sessions, loading }: { sessions: UiSession[]; loading: 
     <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-slate-950">Bugünün Akışı</h2>
+          <h2 className="text-xl font-semibold text-slate-900">Bugünün Akışı</h2>
           <p className="mt-1 text-sm text-slate-500">Gün içindeki görüşme planınız.</p>
         </div>
-        <span className="rounded-2xl bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+        <span className="rounded-2xl bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
           {sessions.length} seans
         </span>
       </div>
@@ -758,17 +790,17 @@ function TodayFlowCard({ sessions, loading }: { sessions: UiSession[]; loading: 
               className="block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-200 hover:bg-indigo-50/50"
             >
               <div className="flex items-center justify-between gap-3">
-                <p className="truncate text-sm font-black text-slate-900">{session.clientName}</p>
+                <p className="truncate text-sm font-semibold text-slate-900">{session.clientName}</p>
                 <StatusBadge status={session.status} />
               </div>
-              <p className="mt-2 text-xs font-bold text-slate-500">
+              <p className="mt-2 text-xs font-semibold text-slate-500">
                 {session.time} · {session.duration}
               </p>
             </Link>
           ))
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center">
-            <p className="text-sm font-black text-slate-800">Bugün planlı görüşme yok</p>
+            <p className="text-sm font-semibold text-slate-800">Bugün planlı görüşme yok</p>
             <p className="mt-2 text-xs leading-5 text-slate-500">
               Uygunluk takviminizden yeni saat aralıkları ekleyebilirsiniz.
             </p>
@@ -782,7 +814,7 @@ function TodayFlowCard({ sessions, loading }: { sessions: UiSession[]; loading: 
 function PreparationCard() {
   return (
     <section className="rounded-[2rem] border border-indigo-100 bg-indigo-50 p-5 shadow-sm sm:p-6">
-      <h2 className="text-lg font-black text-indigo-950">Görüşme Hazırlığı</h2>
+      <h2 className="text-lg font-semibold text-indigo-950">Görüşme Hazırlığı</h2>
       <p className="mt-2 text-sm leading-6 text-indigo-800">
         Görüşme başlamadan önce internet bağlantınızı, kamera ve mikrofon izinlerinizi kontrol edin.
         Hazır görüşmelerde katılım butonu aktif olur.
@@ -811,13 +843,13 @@ function NoticeCard({
     <section className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-black">{title}</p>
+          <p className="text-sm font-semibold">{title}</p>
           <p className="mt-1 text-sm leading-6 text-amber-800">{description}</p>
         </div>
         <button
           type="button"
           onClick={onAction}
-          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
+          className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-800 ring-1 ring-amber-200 transition hover:bg-amber-100"
         >
           Tekrar Dene
         </button>
@@ -839,10 +871,10 @@ function SummaryCard({
 }) {
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-100 hover:shadow-md">
-      <p className="text-sm font-bold text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
+      <p className="text-sm font-semibold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
-      <p className="mt-4 truncate rounded-2xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-500">
+      <p className="mt-4 truncate rounded-2xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">
         {detail}
       </p>
     </article>
@@ -854,7 +886,7 @@ function StatusBadge({ status }: { status: NormalizedSessionStatus }) {
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${config.className}`}
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ${config.className}`}
     >
       {config.label}
     </span>
@@ -882,15 +914,15 @@ function EmptyState({
 }) {
   return (
     <div className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-lg font-black text-indigo-600 ring-1 ring-slate-200">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-lg font-semibold text-indigo-600 ring-1 ring-slate-200">
         +
       </div>
-      <p className="mt-4 text-sm font-black text-slate-800">{title}</p>
+      <p className="mt-4 text-sm font-semibold text-slate-800">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
       {actionHref && actionLabel ? (
         <Link
           href={actionHref}
-          className="mt-5 inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-black text-white transition hover:bg-indigo-700"
+          className="mt-5 inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
         >
           {actionLabel}
         </Link>
@@ -909,7 +941,7 @@ function LoadingState({ message, compact = false }: { message: string; compact?:
       <div className="mx-auto mb-3 h-2 w-24 overflow-hidden rounded-full bg-slate-200">
         <div className="h-full w-1/2 animate-pulse rounded-full bg-slate-400" />
       </div>
-      <p className="text-sm font-black text-slate-800">{message}</p>
+      <p className="text-sm font-semibold text-slate-800">{message}</p>
     </div>
   )
 }
@@ -917,10 +949,93 @@ function LoadingState({ message, compact = false }: { message: string; compact?:
 function ChecklistItem({ title }: { title: string }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-white/70 px-4 py-3 ring-1 ring-indigo-100">
-      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-black text-indigo-600 ring-1 ring-indigo-100">
+      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-semibold text-indigo-600 ring-1 ring-indigo-100">
         ✓
       </span>
-      <span className="text-sm font-black text-indigo-950">{title}</span>
+      <span className="text-sm font-semibold text-indigo-950">{title}</span>
+    </div>
+  )
+}
+
+function ExpertCancelModal({
+  session,
+  onClose,
+  onCancelled,
+}: {
+  session: UiSession | null
+  onClose: () => void
+  onCancelled: () => void
+}) {
+  const [reason, setReason] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  if (!session) return null
+
+  async function confirmCancel() {
+    if (!session) return
+    if (!reason.trim()) {
+      setError('Danışanına iletilecek kısa bir sebep yaz.')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch(`/api/sessions/bookings/${encodeURIComponent(session.id)}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason.trim() }),
+      })
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Seans iptal edilemedi.')
+      onCancelled()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Seans iptal edilemedi.')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-4 sm:items-center" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <h2 className="text-xl font-semibold text-slate-900">Seansı iptal et</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          {session.clientName} · {session.date} {session.time}
+        </p>
+        <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+          Seansı sen iptal edersen danışanın ödemesi tamamen iade edilir ve bu seans için hakediş oluşmaz.
+          Mümkünse önce sohbetten yeni bir saat önermeyi dene.
+        </div>
+        <label className="mt-5 block text-sm font-semibold text-slate-700">
+          Danışanına iletilecek sebep
+          <textarea
+            value={reason}
+            onChange={(event) => setReason(event.target.value.slice(0, 500))}
+            rows={3}
+            className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal outline-none focus:border-slate-400 focus:bg-white"
+            placeholder="Örneğin: beklenmedik bir sağlık durumu nedeniyle"
+          />
+        </label>
+        {error ? <p className="mt-3 text-sm font-semibold text-rose-700">{error}</p> : null}
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
+          >
+            Vazgeç
+          </button>
+          <button
+            type="button"
+            onClick={() => void confirmCancel()}
+            disabled={loading}
+            className="rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+          >
+            {loading ? 'İptal ediliyor...' : 'Seansı iptal et'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

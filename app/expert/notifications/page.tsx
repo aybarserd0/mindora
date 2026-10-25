@@ -217,7 +217,7 @@ function NotificationsContent() {
               <p className="text-sm font-semibold text-indigo-600">
                 Mindora Notification Center
               </p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
                 Uzman Bildirimleri
               </h1>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">

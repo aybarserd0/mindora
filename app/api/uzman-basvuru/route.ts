@@ -8,6 +8,15 @@ function toText(value: unknown) {
   return String(value).trim()
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function isValidUrl(value: string) {
   if (!value) return true
 
@@ -35,6 +44,7 @@ export async function POST(req: NextRequest) {
     const availability = toText(body.availability)
     const expectation = toText(body.expectation)
     const note = toText(body.note)
+    const accountType = body.account_type === 'supervision_only' ? 'supervision_only' : 'therapist'
 
     if (!name || !phone || !email || !title) {
       return NextResponse.json(
@@ -73,6 +83,7 @@ export async function POST(req: NextRequest) {
         availability,
         expectation,
         note,
+        account_type: accountType,
         status: 'pending',
       },
     ])
@@ -99,23 +110,24 @@ export async function POST(req: NextRequest) {
     await transporter.sendMail({
       from: `"Mindora Uzman Başvurusu" <${process.env.SMTP_USER}>`,
       to: process.env.CONTACT_TO,
-      subject: 'Yeni Uzman Başvurusu',
+      subject: accountType === 'supervision_only' ? 'Yeni Uzman Başvurusu (yalnızca süpervizyon)' : 'Yeni Uzman Başvurusu',
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2>Yeni Uzman Başvurusu</h2>
+          <p><b>Başvuru türü:</b> ${accountType === 'supervision_only' ? 'Yalnızca süpervizyon' : 'Danışan görmek'}</p>
 
-          <p><b>Ad Soyad:</b> ${name}</p>
-          <p><b>Telefon:</b> ${phone}</p>
-          <p><b>E-posta:</b> ${email}</p>
-          <p><b>Profil Fotoğrafı:</b> ${photo_url || '-'}</p>
-          <p><b>Ünvan:</b> ${title}</p>
-          <p><b>Uzmanlık Alanları:</b> ${areas || '-'}</p>
-          <p><b>Deneyim:</b> ${experience || '-'}</p>
-          <p><b>Online Görüşme:</b> ${online || '-'}</p>
-          <p><b>Seans Ücreti:</b> ${price || '-'}</p>
-          <p><b>Müsaitlik:</b> ${availability || '-'}</p>
-          <p><b>Mindora’dan Beklenti:</b> ${expectation || '-'}</p>
-          <p><b>Ek Not:</b> ${note || '-'}</p>
+          <p><b>Ad Soyad:</b> ${escapeHtml(name)}</p>
+          <p><b>Telefon:</b> ${escapeHtml(phone)}</p>
+          <p><b>E-posta:</b> ${escapeHtml(email)}</p>
+          <p><b>Profil Fotoğrafı:</b> ${escapeHtml(photo_url || '-')}</p>
+          <p><b>Ünvan:</b> ${escapeHtml(title)}</p>
+          <p><b>Uzmanlık Alanları:</b> ${escapeHtml(areas || '-')}</p>
+          <p><b>Deneyim:</b> ${escapeHtml(experience || '-')}</p>
+          <p><b>Online Görüşme:</b> ${escapeHtml(online || '-')}</p>
+          <p><b>Seans Ücreti:</b> ${escapeHtml(price || '-')}</p>
+          <p><b>Müsaitlik:</b> ${escapeHtml(availability || '-')}</p>
+          <p><b>Mindora’dan Beklenti:</b> ${escapeHtml(expectation || '-')}</p>
+          <p><b>Ek Not:</b> ${escapeHtml(note || '-')}</p>
 
           <hr />
           <p style="font-size: 13px; color: #666;">
