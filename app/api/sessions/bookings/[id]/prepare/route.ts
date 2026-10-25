@@ -310,7 +310,7 @@ async function getClientInfo({
 
   const { data, error } = await supabase
     .from('client_applications' as never)
-    .select('full_name,name,email,client_email')
+    .select('name,email')
     .eq('id', clientApplicationId as never)
     .maybeSingle()
 
@@ -340,7 +340,7 @@ async function getExpertInfo({
 
   const { data, error } = await supabase
     .from('experts' as never)
-    .select('full_name,name,title,email,expert_email')
+    .select('full_name,name,title,email')
     .eq('id', expertId as never)
     .maybeSingle()
 

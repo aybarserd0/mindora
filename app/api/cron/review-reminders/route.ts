@@ -297,7 +297,7 @@ async function getConversationContact({
   if (clientApplicationId && isValidUuid(clientApplicationId)) {
     const { data, error } = await supabase
       .from('client_applications')
-      .select('id, name, full_name, email, client_email')
+      .select('id, name, email')
       .eq('id', clientApplicationId)
       .maybeSingle()
 
@@ -315,7 +315,7 @@ async function getConversationContact({
   if (expertId && isValidUuid(expertId)) {
     const { data, error } = await supabase
       .from('experts')
-      .select('id, name, full_name, title, email, expert_email')
+      .select('id, name, full_name, title, email')
       .eq('id', expertId)
       .maybeSingle()
 

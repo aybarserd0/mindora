@@ -134,7 +134,7 @@ async function fetchPayments(supabase: NonNullable<ReturnType<typeof getSupabase
   const { data, error } = await supabase
     .from("payments")
     .select(
-      "id, expert_id, amount, total_amount, price, commission_amount, expert_amount, status, payment_status, created_at"
+      "id, expert_id, amount, commission_amount, expert_amount, status, created_at"
     )
     .order("created_at", { ascending: false })
     .limit(2000);

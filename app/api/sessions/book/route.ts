@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
 
     const { data: expert, error: expertError } = await supabase
       .from("experts" as never)
-      .select("id, status, account_status")
+      .select("id, status")
       .eq("id", expertId as never)
       .maybeSingle();
 
@@ -172,6 +172,10 @@ export async function POST(req: NextRequest) {
 
     if (!expert) {
       return jsonError("Uzman bulunamadı.", 404);
+    }
+
+    if ((expert as unknown as { status?: string }).status !== "approved") {
+      return jsonError("Uzman aktif değil; randevu oluşturulamaz.", 400);
     }
 
     const { data: existingBookings, error: existingError } = await supabase

@@ -293,7 +293,7 @@ export async function GET() {
       safeSelect<ExpertRow>(
         supabase,
         "experts",
-        "id, name, status, account_status, created_at"
+        "id, name, status, created_at"
       ),
       safeSelect<ClientRow>(
         supabase,

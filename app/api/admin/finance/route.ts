@@ -245,7 +245,7 @@ async function fetchClients(
 
   const { data, error } = await supabase
     .from("client_applications")
-    .select("id, name, full_name, email")
+    .select("id, name, email")
     .in("id", clientIds);
 
   if (error) {

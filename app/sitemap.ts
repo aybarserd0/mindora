@@ -86,7 +86,7 @@ async function getExpertRoutes(): Promise<MetadataRoute.Sitemap> {
 
     const { data, error } = await supabase
       .from('experts')
-      .select('slug, status, account_status, account_type, updated_at, created_at')
+      .select('slug, status, account_type, updated_at, created_at')
       .not('slug', 'is', null)
       .limit(5000)
 
