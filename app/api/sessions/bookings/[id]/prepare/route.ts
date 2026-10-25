@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { enforceAdminRequest } from '@/lib/security/admin-auth'
+import { createConversationAccessToken } from '@/lib/chat-access-tokens'
 import { sendMail } from '@/lib/mail/smtp'
 import {
   bookingPreparedClientTemplate,
@@ -147,6 +148,7 @@ function buildLinks({
   clientToken,
   expertToken,
   adminToken,
+  clientChatToken,
 }: {
   baseUrl: string
   booking: BookingRow
@@ -154,6 +156,7 @@ function buildLinks({
   clientToken: string
   expertToken: string
   adminToken: string
+  clientChatToken?: string | null
 }): PreparedLinks {
   const conversationId = booking.conversation_id || ''
   const encodedConversationId = encodeURIComponent(conversationId)
@@ -163,7 +166,8 @@ function buildLinks({
     clientJoinUrl: `${baseUrl}/client/session/${encodedLiveSessionId}?token=${encodeURIComponent(clientToken)}`,
     expertJoinUrl: `${baseUrl}/expert/session/${encodedLiveSessionId}?token=${encodeURIComponent(expertToken)}`,
     adminJoinUrl: `${baseUrl}/admin/conversations/${encodedConversationId}?session=${encodedLiveSessionId}&token=${encodeURIComponent(adminToken)}`,
-    clientChatUrl: `${baseUrl}/client/chat/${encodedConversationId}`,
+    // Danışan sohbeti token olmadan açılmıyor; e-postadaki bağlantı işe yarasın diye ekleniyor
+    clientChatUrl: `${baseUrl}/client/chat/${encodedConversationId}${clientChatToken ? `?token=${encodeURIComponent(clientChatToken)}` : ''}`,
     expertChatUrl: `${baseUrl}/expert/chat/${encodedConversationId}`,
     adminConversationUrl: `${baseUrl}/admin/conversations/${encodedConversationId}`,
   }
@@ -571,6 +575,20 @@ export async function POST(
       )
     }
 
+    let clientChatToken: string | null = null
+    if (booking.conversation_id) {
+      try {
+        const chatAccess = await createConversationAccessToken({
+          conversationId: booking.conversation_id,
+          role: 'client',
+          expiresInHours: 24 * 30,
+        })
+        clientChatToken = chatAccess.token
+      } catch (chatTokenError) {
+        console.error('PREPARE_CLIENT_CHAT_TOKEN_ERROR', chatTokenError)
+      }
+    }
+
     const links = buildLinks({
       baseUrl,
       booking,
@@ -578,6 +596,7 @@ export async function POST(
       clientToken: clientAccess.token,
       expertToken: expertAccess.token,
       adminToken: adminAccess.token,
+      clientChatToken,
     })
 
     const now = new Date().toISOString()
