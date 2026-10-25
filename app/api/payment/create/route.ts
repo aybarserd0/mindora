@@ -121,6 +121,7 @@ export async function POST(req: NextRequest) {
         'id, client_id, expert_id, amount, commission_amount, expert_amount, iyzico_token, iyzico_conversation_id, payment_page_url, status'
       )
       .eq('client_id', client.id)
+      .is('booking_id', null)
       .in('status', ['pending', 'paid'])
       .order('created_at', { ascending: false })
       .limit(1)

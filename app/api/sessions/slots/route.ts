@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { generateSlots, OCCUPYING_STATUSES } from '@/lib/scheduling/slots'
+import { expireStalePaymentHolds } from '@/lib/scheduling/holds'
 
 type AvailabilityRow = {
   id: string
@@ -30,8 +32,6 @@ type Slot = {
   bufferMinutes: number
 }
 
-const DEFAULT_TIMEZONE = 'Europe/Istanbul'
-const BOOKED_STATUSES = ['scheduled', 'confirmed', 'active'] as const
 const MAX_RANGE_DAYS = 60
 
 function isValidUuid(value: unknown): value is string {
@@ -56,21 +56,9 @@ function toStartOfDay(value: string) {
   return date
 }
 
-function formatDate(date: Date) {
-  return date.toISOString().split('T')[0]
-}
-
-function addMinutes(date: Date, minutes: number) {
-  return new Date(date.getTime() + minutes * 60_000)
-}
-
 function diffDays(start: Date, end: Date) {
   const ms = end.getTime() - start.getTime()
   return Math.ceil(ms / 86_400_000)
-}
-
-function normalizeTime(value: string) {
-  return value.length === 5 ? `${value}:00` : value
 }
 
 export async function GET(req: NextRequest) {
@@ -141,71 +129,33 @@ export async function GET(req: NextRequest) {
       })
     }
 
+    await expireStalePaymentHolds(expertId)
+
     const { data: rawBookingRows, error: bookingError } = await supabase
       .from('session_bookings' as never)
       .select('id,expert_id,scheduled_start_at,scheduled_end_at,status')
       .eq('expert_id', expertId as never)
-      .in('status' as never, BOOKED_STATUSES as unknown as never)
+      .in('status' as never, OCCUPYING_STATUSES as unknown as never)
 
     if (bookingError) throw bookingError
 
     const bookingRows = (rawBookingRows || []) as unknown as BookingRow[]
-    const slots: Slot[] = []
-
-    const current = new Date(start)
-
-    while (current <= end) {
-      const currentDay = current.getDay()
-      const dateString = formatDate(current)
-
-      const matchingAvailability = availabilityRows.filter(
-        (row) => row.day_of_week === currentDay
-      )
-
-      for (const availability of matchingAvailability) {
-        const slotDuration = Number(availability.slot_duration_minutes)
-        const buffer = Number(availability.buffer_minutes || 0)
-
-        if (!Number.isFinite(slotDuration) || slotDuration <= 0) continue
-        if (!Number.isFinite(buffer) || buffer < 0) continue
-
-        let slotStart = new Date(
-          `${dateString}T${normalizeTime(availability.start_time)}`
-        )
-
-        const availabilityEnd = new Date(
-          `${dateString}T${normalizeTime(availability.end_time)}`
-        )
-
-        while (slotStart < availabilityEnd) {
-          const slotEnd = addMinutes(slotStart, slotDuration)
-
-          if (slotEnd > availabilityEnd) break
-
-          const hasConflict = bookingRows.some((booking) => {
-            const bookingStart = new Date(booking.scheduled_start_at)
-            const bookingEnd = new Date(booking.scheduled_end_at)
-
-            return slotStart < bookingEnd && slotEnd > bookingStart
-          })
-
-          if (!hasConflict && slotStart.getTime() > Date.now() - 60_000) {
-            slots.push({
-              expertId,
-              startAt: slotStart.toISOString(),
-              endAt: slotEnd.toISOString(),
-              timezone: availability.timezone || DEFAULT_TIMEZONE,
-              slotDurationMinutes: slotDuration,
-              bufferMinutes: buffer,
-            })
-          }
-
-          slotStart = addMinutes(slotStart, slotDuration + buffer)
-        }
-      }
-
-      current.setDate(current.getDate() + 1)
-    }
+    const days = diffDays(start, end) + 1
+    const slots: Slot[] = generateSlots({
+      availability: availabilityRows,
+      busy: bookingRows,
+      fromDate: startDate.slice(0, 10),
+      days,
+    }).map((slot) => ({
+      expertId,
+      startAt: slot.startAt,
+      endAt: slot.endAt,
+      timezone: slot.timezone,
+      slotDurationMinutes: slot.slotDurationMinutes,
+      bufferMinutes: Number(
+        availabilityRows.find((row) => Number(row.slot_duration_minutes) === slot.slotDurationMinutes)?.buffer_minutes || 0
+      ),
+    }))
 
     return NextResponse.json({
       ok: true,

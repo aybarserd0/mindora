@@ -65,6 +65,10 @@ export async function POST(req: NextRequest) {
       siteUrl,
     })
 
+    if (result.redirectPath) {
+      return NextResponse.redirect(`${siteUrl}${result.redirectPath}`, 303)
+    }
+
     switch (result.outcome) {
       case 'not_found':
         return NextResponse.json(

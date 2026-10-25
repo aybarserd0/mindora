@@ -113,7 +113,7 @@ const FINISHED_STATUSES: NormalizedSessionStatus[] = ["completed", "cancelled", 
 const REVIEWABLE_STATUSES: NormalizedSessionStatus[] = ["completed"];
 
 const statusConfig: Record<NormalizedSessionStatus, { label: string; className: string }> = {
-  pending: { label: "Beklemede", className: "bg-amber-50 text-amber-700 ring-amber-100" },
+  pending: { label: "Ödeme bekleniyor", className: "bg-amber-50 text-amber-700 ring-amber-100" },
   scheduled: { label: "Planlandı", className: "bg-blue-50 text-blue-700 ring-blue-100" },
   confirmed: { label: "Onaylandı", className: "bg-emerald-50 text-emerald-700 ring-emerald-100" },
   active: { label: "Aktif", className: "bg-indigo-50 text-indigo-700 ring-indigo-100" },
@@ -147,6 +147,7 @@ function normalizeStatus(value: string | null | undefined): NormalizedSessionSta
   }
 
   if (normalized === "cancelled" || normalized === "canceled") return "cancelled";
+  if (normalized === "pending_payment") return "pending";
 
   return "unknown";
 }
@@ -318,6 +319,7 @@ function ClientSessionsContent() {
   const [search, setSearch] = useState("");
   const [reviewSession, setReviewSession] = useState<UiSession | null>(null);
   const [cancelSession, setCancelSession] = useState<UiSession | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(() => searchParams.get("yeni") === "1");
   const [submittedReviewBookingIds, setSubmittedReviewBookingIds] = useState<Set<string>>(new Set());
 
   const fetchSessions = useCallback(
@@ -495,6 +497,15 @@ function ClientSessionsContent() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
+              {token ? (
+                <button
+                  type="button"
+                  onClick={() => setBookingOpen(true)}
+                  className="inline-flex items-center justify-center rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-pine-900"
+                >
+                  Yeni seans al
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => void fetchSessions("refresh")}
@@ -654,6 +665,8 @@ function ClientSessionsContent() {
         onClose={() => setReviewSession(null)}
         onSubmitted={handleReviewSubmitted}
       />
+
+      {bookingOpen ? <BookSessionModal token={token} onClose={() => setBookingOpen(false)} /> : null}
 
       <CancelModal
         key={cancelSession?.bookingId || "none"}
@@ -1110,6 +1123,172 @@ function CancelModal({
             {state.loading ? "İptal ediliyor..." : "Seansı iptal et"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+type BookableSlot = { startAt: string; endAt: string; slotDurationMinutes: number };
+
+function istanbulDayKey(iso: string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+}
+
+function BookSessionModal({ token, onClose }: { token: string; onClose: () => void }) {
+  const [state, setState] = useState<{ loading: boolean; error: string }>({ loading: true, error: "" });
+  const [expert, setExpert] = useState<{ name: string | null; title: string | null; price: number } | null>(null);
+  const [slots, setSlots] = useState<BookableSlot[]>([]);
+  const [freeHours, setFreeHours] = useState(24);
+  const [day, setDay] = useState("");
+  const [selected, setSelected] = useState<BookableSlot | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/client/slots?token=${encodeURIComponent(token)}`, { cache: "no-store" })
+      .then((res) => res.json().then((data) => ({ res, data })))
+      .then(({ res, data }) => {
+        if (cancelled) return;
+        if (!res.ok || !data?.ok) throw new Error(data?.error || "Uygun saatler alınamadı.");
+        const list = (data.slots || []) as BookableSlot[];
+        setExpert(data.expert);
+        setSlots(list);
+        setFreeHours(Number(data.freeCancellationHours) || 24);
+        setDay(list[0] ? istanbulDayKey(list[0].startAt) : "");
+        setState({ loading: false, error: "" });
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setState({ loading: false, error: err instanceof Error ? err.message : "Uygun saatler alınamadı." });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  const days = useMemo(() => {
+    const map = new Map<string, BookableSlot[]>();
+    for (const slot of slots) {
+      const key = istanbulDayKey(slot.startAt);
+      map.set(key, [...(map.get(key) || []), slot]);
+    }
+    return [...map.entries()];
+  }, [slots]);
+
+  const daySlots = days.find(([key]) => key === day)?.[1] || [];
+  const fmtDay = (iso: string) =>
+    new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", weekday: "short", day: "numeric", month: "short" }).format(new Date(iso));
+  const fmtTime = (iso: string) =>
+    new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+  const fmtLong = (iso: string) =>
+    new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+  const price = expert ? new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(expert.price) : "";
+
+  async function goToPayment() {
+    if (!selected) return;
+    setSubmitting(true);
+    setState((s) => ({ ...s, error: "" }));
+    try {
+      const res = await fetch("/api/client/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, startAt: selected.startAt }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok || !data?.paymentPageUrl) throw new Error(data?.error || "Ödeme başlatılamadı.");
+      window.location.href = data.paymentPageUrl;
+    } catch (err) {
+      setSubmitting(false);
+      setState((s) => ({ ...s, error: err instanceof Error ? err.message : "Ödeme başlatılamadı." }));
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Yeni seans al">
+      <div className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Yeni seans al</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              {expert ? `${expert.name || "Psikoloğun"} · 50 dakika online · ${price}` : "Psikoloğunun uygun saatleri"}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-full px-3 py-1 text-sm font-semibold text-slate-500 hover:bg-slate-100" aria-label="Kapat">
+            Kapat
+          </button>
+        </div>
+
+        <div className="overflow-y-auto p-6">
+          {state.loading ? (
+            <p className="py-10 text-center text-sm text-slate-500">Uygun saatler yükleniyor...</p>
+          ) : !expert ? (
+            <p className="rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">{state.error}</p>
+          ) : days.length === 0 ? (
+            <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+              Önümüzdeki üç haftada psikoloğunun boş saati görünmüyor. Sohbetten ona yazabilir ya da Mindora ekibinden destek isteyebilirsin.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm font-semibold text-slate-700">Gün seç</p>
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                {days.map(([key, list]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setDay(key);
+                      setSelected(null);
+                    }}
+                    className={`shrink-0 rounded-2xl px-4 py-3 text-sm font-semibold ring-1 transition ${
+                      key === day ? "bg-pine-800 text-white ring-pine-800" : "bg-white text-slate-700 ring-slate-200 hover:ring-slate-300"
+                    }`}
+                  >
+                    {fmtDay(list[0].startAt)}
+                  </button>
+                ))}
+              </div>
+
+              <p className="mt-5 text-sm font-semibold text-slate-700">Saat seç</p>
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {daySlots.map((slot) => (
+                  <button
+                    key={slot.startAt}
+                    type="button"
+                    onClick={() => setSelected(slot)}
+                    className={`rounded-xl px-3 py-2.5 text-sm font-semibold ring-1 transition ${
+                      selected?.startAt === slot.startAt ? "bg-lilac-100 text-lilac-900 ring-lilac-300" : "bg-slate-50 text-slate-700 ring-slate-200 hover:bg-white"
+                    }`}
+                  >
+                    {fmtTime(slot.startAt)}
+                  </button>
+                ))}
+              </div>
+
+              {selected ? (
+                <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+                  <p className="font-semibold text-slate-900">{fmtLong(selected.startAt)}</p>
+                  <p className="mt-1">Seans ücreti: <span className="font-semibold text-slate-900">{price}</span>. Ek ücret yok.</p>
+                  <p className="mt-1">Seansa {freeHours} saatten fazla varken iptal edersen ücretin tamamı iade edilir.</p>
+                </div>
+              ) : null}
+
+              {state.error ? <p className="mt-4 text-sm font-semibold text-rose-700">{state.error}</p> : null}
+            </>
+          )}
+        </div>
+
+        {expert && days.length > 0 ? (
+          <div className="border-t border-slate-100 p-6">
+            <button
+              type="button"
+              onClick={() => void goToPayment()}
+              disabled={!selected || submitting}
+              className="w-full rounded-full bg-pine-800 px-5 py-3.5 font-semibold text-white transition hover:bg-pine-900 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {submitting ? "Ödeme sayfası açılıyor..." : selected ? `Ödemeye geç · ${price}` : "Bir saat seç"}
+            </button>
+            <p className="mt-3 text-center text-xs text-slate-500">Ödeme Iyzico güvencesiyle alınır. Saatin ödeme süresince 20 dakika senin için tutulur.</p>
+          </div>
+        ) : null}
       </div>
     </div>
   );
