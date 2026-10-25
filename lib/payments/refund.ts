@@ -102,11 +102,21 @@ export async function refundPayment(
     .eq('id', payment.id)
     .neq('expert_payout_status', 'paid')
 
+  // Tek bir seansın iadesi sohbeti kilitlememeli: danışanın başka ödenmiş
+  // seansı varsa sohbet açık kalır. Hiç ödenmiş seansı kalmadıysa iade
+  // olarak işaretlenir; yeni seans aldığında tekrar açılır.
   if (payment.client_id) {
-    await supabase
-      .from('conversations')
-      .update({ payment_status: 'refunded' })
-      .eq('client_application_id', payment.client_id)
+    const { count } = await supabase
+      .from('payments')
+      .select('id', { count: 'exact', head: true })
+      .eq('client_id', payment.client_id)
+      .eq('status', 'paid')
+    if (!count) {
+      await supabase
+        .from('conversations')
+        .update({ payment_status: 'refunded' })
+        .eq('client_application_id', payment.client_id)
+    }
   }
 
   return { ok: true, status: 'refunded' }
