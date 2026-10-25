@@ -45,3 +45,6 @@ supabase/.temp/
 next-env.d.ts
 
 .vercel
+
+# Instagram üretim çıktıları (görseller ve videolar repoya girmez)
+marketing/instagram/weeks/*/
