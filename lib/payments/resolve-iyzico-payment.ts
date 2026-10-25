@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { resolveBookingPayment } from './booking-payment'
 import { createConversationAccessToken } from '@/lib/chat-access-tokens'
 import { sendMail } from '@/lib/mail/smtp'
 import { paymentFailedClientTemplate } from '@/lib/mail/templates'
@@ -34,6 +35,8 @@ export type ResolvePaymentResult = {
   paymentId?: string
   clientId?: string
   detail?: string
+  /** Danışanın kendi aldığı seanslarda ödeme sonrası yönlendirilecek yol */
+  redirectPath?: string
 }
 
 function createAuthHeader(
@@ -288,6 +291,16 @@ export async function resolveIyzicoPaymentByToken({
   }
 
   const payment = paymentData as any
+
+  // Danışanın kendi aldığı seansın ödemesi ayrı akıştan geçer
+  if (payment.booking_id) {
+    const result = await resolveBookingPayment(payment, token)
+    const outcome: ResolvePaymentOutcome =
+      result.outcome === 'paid' || result.outcome === 'already_paid' || result.outcome === 'db_update_failed'
+        ? result.outcome
+        : 'verification_failed'
+    return { outcome, paymentId: result.paymentId, clientId: result.clientId, redirectPath: result.redirectPath }
+  }
 
   if (!payment.client_id) {
     console.error('PAYMENT RESOLVE MISSING CLIENT ID:', payment.id)

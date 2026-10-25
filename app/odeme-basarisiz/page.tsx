@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
@@ -8,6 +10,10 @@ type RetryState = 'idle' | 'loading' | 'error'
 function OdemeBasarisizContent() {
   const searchParams = useSearchParams()
   const clientId = searchParams.get('clientId') || ''
+  const isSession = searchParams.get('seans') === '1'
+  const refunded = searchParams.get('iade') === '1'
+  const sessionToken = searchParams.get('token') || ''
+  const newSlotHref = sessionToken ? `/client/dashboard/sessions?token=${encodeURIComponent(sessionToken)}&yeni=1` : null
 
   const [retryState, setRetryState] = useState<RetryState>('idle')
   const [retryError, setRetryError] = useState('')
@@ -40,6 +46,31 @@ function OdemeBasarisizContent() {
           : 'Yeni ödeme bağlantısı oluşturulamadı.'
       )
     }
+  }
+
+  if (isSession) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10 text-slate-900">
+        <section className="w-full max-w-md rounded-[2rem] bg-white p-8 text-center shadow-xl ring-1 ring-slate-200/80">
+          <h1 className="text-2xl font-semibold">{refunded ? 'Seçtiğin saat doldu' : 'Ödeme tamamlanmadı'}</h1>
+          <p className="mt-3 leading-7 text-slate-600">
+            {refunded
+              ? 'Ödeme sırasında bu saat başka bir danışana verildi. Ödemen kartına iade edildi; bankana göre hesabına yansıması birkaç iş günü sürebilir.'
+              : 'Kartından bir tutar çekilmedi ve randevu oluşturulmadı. Kart bilgilerini kontrol edip yeniden deneyebilirsin.'}
+          </p>
+          <div className="mt-7 space-y-3">
+            {newSlotHref ? (
+              <a href={newSlotHref} className="block rounded-full bg-pine-800 px-5 py-3.5 font-semibold text-white transition hover:bg-pine-900">
+                Yeniden saat seç
+              </a>
+            ) : null}
+            <Link href="/" className="block rounded-full border border-slate-200 px-5 py-3.5 font-semibold text-slate-700 transition hover:border-slate-300">
+              Ana sayfaya dön
+            </Link>
+          </div>
+        </section>
+      </main>
+    )
   }
 
   return (
@@ -82,19 +113,19 @@ function OdemeBasarisizContent() {
             </button>
           ) : null}
 
-          <a
+          <Link
             href="/"
             className="block rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
           >
             Ana Sayfaya Dön
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/uzmanlar"
             className="block rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
           >
             Uzmanları Gör
-          </a>
+          </Link>
         </div>
 
         <p className="mt-6 text-xs text-gray-400">

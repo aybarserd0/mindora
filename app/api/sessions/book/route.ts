@@ -29,7 +29,7 @@ type ExistingBookingRow = {
 };
 
 const DEFAULT_TIMEZONE = "Europe/Istanbul";
-const ACTIVE_BOOKING_STATUSES = ["scheduled", "confirmed", "active"] as const;
+const ACTIVE_BOOKING_STATUSES = ["scheduled", "confirmed", "active", "pending_payment"] as const;
 const ALLOWED_CREATED_BY = ["admin", "client", "expert", "system"] as const;
 const MIN_SESSION_MINUTES = 15;
 const MAX_SESSION_MINUTES = 180;

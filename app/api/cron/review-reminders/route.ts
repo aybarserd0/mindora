@@ -4,6 +4,7 @@ import { sendMail } from '@/lib/mail/smtp'
 import { reviewRequestClientTemplate } from '@/lib/mail/templates'
 import { isAuthorizedCronRequest } from '@/lib/security/cron-auth'
 import { autoCompleteFinishedBookings } from '@/lib/sessions/auto-complete'
+import { expireStalePaymentHolds } from '@/lib/scheduling/holds'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -512,6 +513,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Önce bitişi geçmiş ama kapatılmamış görüşmeleri tamamla; yorum hatırlatması onları da kapsasın
+    await expireStalePaymentHolds()
     const autoCompleted = await autoCompleteFinishedBookings()
     const result = await runReviewReminders(req)
 
