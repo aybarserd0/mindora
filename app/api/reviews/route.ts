@@ -135,15 +135,15 @@ async function hasPaidPaymentForBooking({
   supabase: SupabaseAdminClient;
   booking: BookingRow;
 }) {
-  const paymentQuery = supabase
-    .from("payments")
-    .select("id, status")
-    .eq("conversation_id", booking.conversation_id)
-    .limit(5);
-
   if (!booking.conversation_id) return false;
 
-  const { data, error } = await paymentQuery;
+  // payments tablosunda conversation_id yok; eski sorgu her seferinde hata verip
+  // yorum gönderimini tamamen engelliyordu. Ödeme bilgisi sohbet kaydında tutuluyor.
+  const { data: conversation, error } = await supabase
+    .from("conversations")
+    .select("payment_status")
+    .eq("id", booking.conversation_id)
+    .maybeSingle();
 
   if (error) {
     console.error("REVIEWS_PAYMENT_QUERY_ERROR", {
@@ -154,6 +154,7 @@ async function hasPaidPaymentForBooking({
     throw new Error("PAYMENT_QUERY_FAILED");
   }
 
+  const data = conversation ? [{ id: booking.conversation_id, status: (conversation as { payment_status?: string }).payment_status || "" }] : [];
   const payments = (data || []) as PaymentRow[];
   return payments.some((payment) => isPaidStatus(payment.status));
 }
