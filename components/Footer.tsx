@@ -8,6 +8,7 @@ const columns = [
       { label: 'Uzmanlar', href: '/uzmanlar' },
       { label: 'Psikolojik testler', href: '/psikolojik-testler' },
       { label: 'Sık sorulan sorular', href: '/sss' },
+      { label: 'Danışan girişi', href: '/danisan-girisi' },
     ],
   },
   {

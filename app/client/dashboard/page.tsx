@@ -707,6 +707,13 @@ function InactiveDashboardState({
               <div className="mt-5 rounded-3xl border border-indigo-100 bg-indigo-50 p-4">
                 <p className="text-sm font-semibold text-indigo-950">Süreç bilgilendirmesi</p>
                 <p className="mt-1 text-sm leading-6 text-indigo-800">{notice}</p>
+                <p className="mt-2 text-sm leading-6 text-indigo-800">
+                  Bağlantının süresi dolduysa{' '}
+                  <Link href="/danisan-girisi" className="font-semibold underline">
+                    yeni giriş bağlantısı iste
+                  </Link>
+                  .
+                </p>
               </div>
             ) : null}
 

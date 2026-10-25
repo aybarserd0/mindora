@@ -80,6 +80,10 @@ async function safeSendMail({
   }
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
 function clientPaymentEmailHtml({
   clientName,
   expertName,
@@ -89,28 +93,30 @@ function clientPaymentEmailHtml({
   expertName: string
   paymentUrl: string
 }) {
+  const safeClient = escapeHtml(clientName)
+  const safeExpert = escapeHtml(expertName)
   return `
-<div style="font-family:Arial,sans-serif;line-height:1.6;color:#171717;background:#f7f2eb;padding:32px 16px;">
+<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2a26;background:#f4f6f4;padding:32px 16px;">
   <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
-    <div style="background:#111111;color:#ffffff;padding:24px 28px;">
-      <div style="font-size:20px;font-weight:900;">Mindora</div>
-      <div style="margin-top:4px;font-size:13px;color:rgba(255,255,255,0.68);">Online psikolojik destek platformu</div>
+    <div style="background:#254a3f;color:#ffffff;padding:24px 28px;">
+      <div style="font-size:20px;font-weight:700;">Mindora</div>
+      <div style="margin-top:4px;font-size:13px;color:rgba(255,255,255,0.75);">Online psikolojik destek platformu</div>
     </div>
     <div style="padding:32px 28px;text-align:center;">
-      <h1 style="margin:0 0 12px;font-size:22px;font-weight:900;color:#111111;">Eşleşmeniz hazır!</h1>
-      <p style="margin:0 0 24px;font-size:15px;color:#333333;">
-        Merhaba ${clientName}, <strong>${expertName}</strong> ile eşleştirildiniz.
-        Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
+      <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1f2a26;">Psikoloğunla eşleştin</h1>
+      <p style="margin:0 0 24px;font-size:15px;color:#3b4a44;">
+        Merhaba ${safeClient}, seni <strong>${safeExpert}</strong> ile eşleştirdik.
+        Psikoloğunun boş saatlerinden sana uyanı seç, ödemeyi tamamla; randevun hemen onaylansın.
       </p>
-      <a href="${paymentUrl}" style="display:inline-block;background:#000000;color:#ffffff;text-decoration:none;padding:18px 32px;border-radius:999px;font-weight:900;font-size:16px;">
-        Ödemeyi Yap ve Görüşmeyi Başlat
+      <a href="${paymentUrl}" style="display:inline-block;background:#254a3f;color:#ffffff;text-decoration:none;padding:16px 30px;border-radius:999px;font-weight:700;font-size:16px;">
+        İlk seans saatini seç
       </a>
-      <p style="margin:24px 0 0;font-size:12px;color:#777777;">
-        Ödemeniz onaylandığı an sohbet ve görüşme alanınız otomatik olarak açılır.
+      <p style="margin:24px 0 0;font-size:12px;color:#6b7a74;">
+        Seansa 24 saatten fazla varken iptal edersen ücretin tamamı iade edilir. Bu bağlantı 30 gün geçerlidir; süresi dolarsa sitedeki “Danışan girişi” sayfasından yenisini isteyebilirsin.
       </p>
     </div>
-    <div style="padding:16px 28px;background:#fafafa;color:#777777;font-size:12px;">
-      Bu e-posta Mindora eşleştirme süreci kapsamında gönderilmiştir. Güvenliğiniz için ödeme ve iletişim adımlarını yalnızca Mindora üzerinden yürütün.
+    <div style="padding:16px 28px;background:#fafafa;color:#6b7a74;font-size:12px;">
+      Güvenliğin için ödeme ve iletişim adımlarını yalnızca Mindora üzerinden yürüt. Mindora acil durum hizmeti değildir; acil bir durumda 112'yi ara.
     </div>
   </div>
 </div>
@@ -295,7 +301,7 @@ export async function POST(req: NextRequest) {
         expiresInHours: 24 * 30,
       })
 
-      clientDashboardLink = `${baseUrl}/client/dashboard?token=${clientAccess.token}`
+      clientDashboardLink = `${baseUrl}/client/dashboard/sessions?token=${clientAccess.token}&yeni=1`
     } catch (tokenError) {
       console.error('MATCH CLIENT ACCESS TOKEN ERROR:', tokenError)
     }
@@ -378,19 +384,17 @@ Mindora Ekibi
     const clientText = `
 Merhaba ${toText(client.name)},
 
-Eşleşmeniz hazır! Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
+Seni ${toText(expert.name)} ile eşleştirdik.
 
-Eşleşen Uzman:
-${toText(expert.name)}
-
-Ödemeyi Yap ve Görüşmeyi Başlat:
+Psikoloğunun boş saatlerinden sana uyanı seç ve ödemeyi tamamla; randevun hemen onaylanır:
 ${clientDashboardLink}
 
-Ödemeniz onaylandığı an sohbet ve görüşme alanınız otomatik olarak açılır.
+Seansa 24 saatten fazla varken iptal edersen ücretin tamamı iade edilir.
+Bu bağlantı 30 gün geçerlidir. Süresi dolarsa sitedeki "Danışan girişi" sayfasından yenisini isteyebilirsin.
 
-Güvenliğiniz için iletişim ve ödeme adımlarını yalnızca Mindora üzerinden yürütün.
+Güvenliğin için iletişim ve ödeme adımlarını yalnızca Mindora üzerinden yürüt.
 
-Mindora Ekibi
+Mindora
 `
 
     const adminMail = await safeSendMail({
@@ -412,7 +416,7 @@ Mindora Ekibi
     const clientMail = await safeSendMail({
       transporter,
       to: client.email,
-      subject: 'Eşleşmeniz hazır — ödemenizi tamamlayın',
+      subject: 'Psikoloğunla eşleştin — ilk seans saatini seç',
       text: clientText,
       html: clientPaymentEmailHtml({
         clientName: toText(client.name) || 'Danışan',
