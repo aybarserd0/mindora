@@ -1429,6 +1429,12 @@ export default function ClientChatPage({
           <section className="rounded-xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
             <p className="text-lg font-semibold text-red-700">Erişim reddedildi</p>
             <p className="mt-2 text-sm font-medium text-red-600">{error}</p>
+            <Link
+              href="/danisan-girisi"
+              className="mt-5 inline-flex rounded-full bg-pine-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pine-900"
+            >
+              Yeni giriş bağlantısı iste
+            </Link>
           </section>
         ) : (
           <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">

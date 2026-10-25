@@ -51,7 +51,7 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`rounded-md px-3 py-2 text-[0.94rem] transition-colors ${
+                className={`whitespace-nowrap rounded-md px-2.5 py-2 text-[0.94rem] transition-colors xl:px-3 ${
                   active
                     ? 'font-semibold text-pine-800'
                     : 'font-medium text-slate-600 hover:text-slate-900'
@@ -65,14 +65,20 @@ export default function Header() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Link
+            href="/danisan-girisi"
+            className="hidden whitespace-nowrap rounded-md px-3 py-2 text-[0.94rem] font-medium text-slate-600 transition-colors hover:text-slate-900 xl:inline-flex"
+          >
+            Danışan girişi
+          </Link>
+          <Link
             href="/expert/login"
-            className="rounded-md px-3 py-2 text-[0.94rem] font-medium text-slate-600 transition-colors hover:text-slate-900"
+            className="whitespace-nowrap rounded-md px-3 py-2 text-[0.94rem] font-medium text-slate-600 transition-colors hover:text-slate-900"
           >
             Uzman girişi
           </Link>
           <Link
             href="/eslesme"
-            className="rounded-full bg-pine-800 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-pine-900"
+            className="whitespace-nowrap rounded-full bg-pine-800 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-pine-900"
           >
             Ücretsiz eşleş
           </Link>
@@ -103,6 +109,13 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            <Link
+              href="/danisan-girisi"
+              onClick={() => setIsOpen(false)}
+              className="border-b border-slate-200 py-4 text-base font-medium text-slate-600"
+            >
+              Danışan girişi
+            </Link>
             <Link
               href="/expert/login"
               onClick={() => setIsOpen(false)}
