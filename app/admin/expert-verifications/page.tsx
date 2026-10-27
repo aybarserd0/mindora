@@ -1,5 +1,6 @@
 "use client";
 
+import { professionLabel } from "@/lib/professions";
 import Link from "next/link";
 import VerificationActions from "./components/VerificationActions";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -12,6 +13,7 @@ type VerificationItem = {
   id: string;
   expertId: string | null;
   expertName: string;
+  expertProfession?: string;
   expertTitle: string | null;
   documentType: string | null;
   documentLabel: string;
@@ -261,7 +263,10 @@ export default function ExpertVerificationsAdminPage() {
                     {filteredItems.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50">
                         <td className="px-4 py-4">
-                          <p className="text-sm font-semibold text-slate-900">{item.expertName}</p>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {item.expertName}
+                            <span className="ml-2 rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800">{professionLabel(item.expertProfession)}</span>
+                          </p>
                           {item.expertTitle ? (
                             <p className="mt-0.5 text-xs font-semibold text-slate-500">{item.expertTitle}</p>
                           ) : null}

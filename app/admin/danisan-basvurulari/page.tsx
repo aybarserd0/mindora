@@ -1,5 +1,6 @@
 "use client";
 
+import ProfessionFilter, { type ProfessionFilterValue } from "@/components/admin/ProfessionFilter";
 import { professionLabel, toProfession } from "@/lib/professions";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -199,6 +200,7 @@ export default function DanisanBasvurulariPage() {
   const [paymentLoadingId, setPaymentLoadingId] = useState<string | null>(null);
   const [copiedClientId, setCopiedClientId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [professionFilter, setProfessionFilter] = useState<ProfessionFilterValue>("all");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
@@ -315,9 +317,11 @@ export default function DanisanBasvurulariPage() {
 
       const searchMatch = !keyword || text.includes(keyword);
 
-      return statusMatch && searchMatch;
+      const professionMatch = professionFilter === "all" || toProfession(client.profession) === professionFilter;
+
+      return statusMatch && searchMatch && professionMatch;
     });
-  }, [clients, filter, search, experts]);
+  }, [clients, filter, search, experts, professionFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredClients.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -559,6 +563,20 @@ export default function DanisanBasvurulariPage() {
           <SummaryCard title="Komisyon" value={formatMoney(paymentSummary.paidCommission)} description="Mindora payı" />
           <SummaryCard title="Sohbet Aktif" value={String(chatSummary.active)} description={`Kilitli: ${chatSummary.locked} • Toplam: ${chatSummary.total}`} />
         </section>
+
+        <ProfessionFilter
+          value={professionFilter}
+          onChange={(value) => {
+            setProfessionFilter(value);
+            setPage(1);
+          }}
+          counts={{
+            all: clients.length,
+            psychologist: clients.filter((c) => toProfession(c.profession) === "psychologist").length,
+            dietitian: clients.filter((c) => toProfession(c.profession) === "dietitian").length,
+            trainer: clients.filter((c) => toProfession(c.profession) === "trainer").length,
+          }}
+        />
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {statusOptions.map((option) => (

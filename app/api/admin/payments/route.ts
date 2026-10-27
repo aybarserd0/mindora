@@ -47,6 +47,7 @@ type ExpertRow = {
   id: string
   name: string | null
   email: string | null
+  profession?: string | null
 }
 
 export async function GET() {
@@ -125,7 +126,7 @@ export async function GET() {
         : Promise.resolve({ data: [], error: null }),
 
       expertIds.length > 0
-        ? supabase.from('experts').select('id, name, email').in('id', expertIds)
+        ? supabase.from('experts').select('id, name, email, profession').in('id', expertIds)
         : Promise.resolve({ data: [], error: null }),
 
       bookingIds.length > 0

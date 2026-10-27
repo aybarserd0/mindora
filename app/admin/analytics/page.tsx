@@ -1,5 +1,6 @@
 "use client";
 
+import ProfessionBreakdown from "@/components/admin/ProfessionBreakdown";
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -386,6 +387,8 @@ function AnalyticsContent() {
             </article>
           ))}
         </section>
+
+        <ProfessionBreakdown />
 
         <ConversionMetrics conversion={conversion} loading={loading} />
 
