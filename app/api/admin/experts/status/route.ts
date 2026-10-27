@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
         title: status === 'approved' ? 'Başvurunuz onaylandı' : 'Başvurunuz hakkında',
         message:
           status === 'approved'
-            ? 'Mindora uzman başvurunuz onaylandı. Panelinize giriş yapabilirsiniz.'
+            ? 'Mindora uzman başvurun onaylandı. Artık giriş yapıp danışanlarınla çalışmaya başlayabilirsin.'
             : 'Mindora uzman başvurunuz bu aşamada onaylanamadı.',
         type: 'system',
       })

@@ -300,7 +300,7 @@ function ClientDashboardContent() {
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (!token || isPlaceholderToken(token)) {
         setDashboard(null)
-        setSoftNotice('Danışan paneliniz henüz aktif bağlantı ile açılmadı.')
+        setSoftNotice('Mindora alanın henüz açılmadı.')
         setLoading(false)
         setRefreshing(false)
         return
@@ -326,7 +326,7 @@ function ClientDashboardContent() {
         const data = (await res.json().catch(() => null)) as DashboardResponse | null
 
         if (!res.ok || !data?.ok || !data.dashboard) {
-          throw new Error(data?.error || 'Panel bilgileri henüz hazırlanmadı.')
+          throw new Error(data?.error || 'Bilgilerin henüz hazırlanmadı.')
         }
 
         setDashboard(data.dashboard)
@@ -335,7 +335,7 @@ function ClientDashboardContent() {
         setSoftNotice(
           err instanceof Error && err.message.trim()
             ? err.message
-            : 'Danışan paneliniz henüz aktif hale getirilmedi.'
+            : 'Mindora alanın henüz hazır değil.'
         )
       } finally {
         setLoading(false)
@@ -423,7 +423,7 @@ function ClientDashboardContent() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-xs font-semibold text-indigo-600">
-                Mindora Danışan Paneli
+                Mindora alanın
               </p>
 
               <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
@@ -431,12 +431,12 @@ function ClientDashboardContent() {
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
-                Görüşmelerini, mesajlarını ve yaklaşan seanslarını güvenli Mindora
-                panelinden takip edebilirsin.
+                Görüşmelerini, mesajlarını ve yaklaşan seanslarını burada, sana özel ve güvenli
+                bu alanda takip edebilirsin.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <Pill tone="green">Güvenli panel</Pill>
+                <Pill tone="green">Sana özel</Pill>
                 <Pill tone="purple">Uzman: {safeText(dashboard.expert.name, 'Uzman')}</Pill>
                 <Pill tone="blue">
                   Chat: {normalizeConversationStatus(dashboard.conversation.status)}
@@ -692,15 +692,14 @@ function InactiveDashboardState({
         <section className="overflow-hidden rounded-[2rem] border border-indigo-100 bg-white shadow-sm">
           <div className="bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-6 lg:p-8">
             <p className="text-xs font-semibold text-indigo-600">
-              Mindora Danışan Paneli
+              Mindora alanın
             </p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-              Danışan paneli henüz aktif değil
+              Alanın henüz hazır değil
             </h1>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-              İlk eşleşme, ödeme veya seans hazırlığı tamamlandığında kişisel paneliniz
-              otomatik olarak aktif hale gelir. Bu alanda randevularınızı, ödemelerinizi,
-              dosyalarınızı ve uzman görüşmenizi takip edebilirsiniz.
+              İlk eşleşmen tamamlandığında bu alan kendiliğinden açılır. Randevularını, ödemelerini,
+              dosyalarını ve uzmanınla görüşmelerini buradan takip edebilirsin.
             </p>
 
             {notice ? (
@@ -757,21 +756,21 @@ function InactiveDashboardState({
           />
           <ProcessCard
             title="Dosyalar"
-            description="Görüşme sürecinde paylaşılan dosyalar bu panelde listelenir."
+            description="Görüşme sürecinde paylaşılan dosyalar burada listelenir."
           />
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
             <p className="text-xs font-semibold text-indigo-600">
-              Panelde Neler Olacak?
+              Burada neler olacak?
             </p>
             <h2 className="mt-2 text-xl font-semibold text-slate-900">Mindora süreciniz</h2>
             <div className="mt-5 space-y-3">
               <StepLine index="1" title="Ön eşleşme" text="İhtiyacınıza göre uygun uzman ve süreç belirlenir." />
               <StepLine index="2" title="Güvenli ödeme" text="Ödeme tamamlandığında chat ve seans erişiminiz açılır." />
               <StepLine index="3" title="Online görüşme" text="Hazır olan seanslara güvenli bağlantı üzerinden katılırsınız." />
-              <StepLine index="4" title="Takip ve dosyalar" text="Mesajlar, ödemeler ve paylaşımlar panelinizde kalır." />
+              <StepLine index="4" title="Takip ve dosyalar" text="Mesajlar, ödemeler ve paylaşımlar burada kalır." />
             </div>
           </section>
 

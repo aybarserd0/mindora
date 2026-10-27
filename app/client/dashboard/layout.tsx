@@ -14,7 +14,7 @@ type NavItem = {
 }
 
 const navigationItems: NavItem[] = [
-  { label: 'Genel Bakış', href: '/client/dashboard', description: 'Panel özeti', icon: '⌂' },
+  { label: 'Genel Bakış', href: '/client/dashboard', description: 'Özet', icon: '⌂' },
   { label: 'Seanslarım', href: '/client/dashboard/sessions', description: 'Randevu takibi', icon: '▷' },
   { label: 'Ödemelerim', href: '/client/dashboard/payments', description: 'Ödeme geçmişi', icon: '₺' },
   { label: 'Dosyalarım', href: '/client/dashboard/files', description: 'Paylaşılan dosyalar', icon: '▦' },

@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     await sendMail({
       to: expert.email,
-      subject: 'Mindora uzman paneli giriş bağlantınız',
+      subject: 'Mindora giriş bağlantın',
       text: expertLoginLinkTemplate({ expertName: expert.name || 'Uzman', loginUrl }),
     }).catch((mailError) => {
       console.error('EXPERT_LOGIN_MAIL_ERROR', mailError)

@@ -31,7 +31,7 @@ const PSYCH_TRUST_ITEMS = [
     icon: Icons.calendar,
     tone: 'pine' as const,
     title: 'Tek yerden çalışma akışı',
-    text: 'Takvim, ödeme, mesajlaşma ve görüntülü görüşme aynı panelde. Görüşmeler kaydedilmez.',
+    text: 'Takvim, ödeme, mesajlaşma ve görüntülü görüşme tek yerde. Görüşmeler kaydedilmez.',
   },
   {
     icon: Icons.spark,
@@ -58,7 +58,7 @@ const GENERAL_TRUST_ITEMS = [
     icon: Icons.calendar,
     tone: 'pine' as const,
     title: 'Tek yerden çalışma akışı',
-    text: 'Takvim, ödeme, mesajlaşma ve görüntülü görüşme aynı panelde. Görüşmeler kaydedilmez.',
+    text: 'Takvim, ödeme, mesajlaşma ve görüntülü görüşme tek yerde. Görüşmeler kaydedilmez.',
   },
   {
     icon: Icons.spark,
@@ -310,7 +310,7 @@ export default function UzmanBasvuruForm({ profession }: { profession: Professio
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs leading-5 text-slate-500">Belgeleri başvurun onaylandıktan sonra panelinden yüklersin.</p>
+            <p className="mt-3 text-xs leading-5 text-slate-500">Belgeleri başvurun onaylandıktan sonra Mindora'daki çalışma alanından yüklersin.</p>
           </div>
 
           <p className="mt-6 text-xs leading-6 text-slate-500">

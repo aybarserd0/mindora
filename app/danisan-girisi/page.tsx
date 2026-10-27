@@ -6,7 +6,7 @@ import ClientAccessForm from './ClientAccessForm'
 
 export const metadata: Metadata = {
   title: 'Danışan girişi',
-  description: 'Psikolog, diyetisyen ya da antrenörünle görüşmelerine girmek için panel bağlantını e-postana yeniden gönder.',
+  description: 'Psikolog, diyetisyen ya da antrenörünle görüşmelerine girmek için giriş bağlantını e-postana yeniden gönder.',
   alternates: { canonical: '/danisan-girisi' },
   robots: { index: false, follow: true },
 }
@@ -17,11 +17,11 @@ export default function ClientAccessPage() {
       <Header />
       <section className="mx-auto grid max-w-6xl gap-6 px-5 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:py-20">
         <ServicesAside
-          heading="Tüm görüşmelerin tek panelde."
+          heading="Tüm görüşmelerin tek yerde."
           lead="Psikoloğunla, diyetisyeninle ya da antrenörünle; görüşme saatlerin, mesajların ve paylaşılan planların hep aynı yerde."
           items={[
             { title: 'Saatini seç, ödemeni yap', text: 'Uzmanının boş saatlerinden birini seç; toplam ücreti ödemeden önce gör.' },
-            { title: 'Plan ve programların burada', text: 'Beslenme planın, antrenman programın ya da uzmanının paylaştığı her dosya panelinde.' },
+            { title: 'Plan ve programların burada', text: 'Beslenme planın, antrenman programın ya da uzmanının paylaştığı her dosya seni burada bekler.' },
             { title: 'Randevunu yönet', text: 'Görüşmeye 24 saatten fazla varken iptal edersen ücretin tamamı iade edilir.' },
           ]}
         />
@@ -29,7 +29,7 @@ export default function ClientAccessPage() {
         <div className="order-1 flex flex-col justify-center rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-200/80 sm:p-10 lg:order-2">
           <h1 className="text-3xl font-semibold">Danışan girişi</h1>
           <p className="mt-3 leading-7 text-slate-600">
-            Mindora&apos;da şifre yok. Başvururken kullandığın e-posta adresini yaz, panel bağlantını hemen gönderelim.
+            Mindora&apos;da şifre yok. Başvururken kullandığın e-posta adresini yaz, giriş bağlantını hemen gönderelim.
             Birden fazla uzmanla çalışıyorsan her biri için bağlantın aynı e-postada gelir.
           </p>
           <ClientAccessForm />

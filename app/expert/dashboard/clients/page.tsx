@@ -101,7 +101,7 @@ const infoPanels = [
   {
     title: 'Danışan Süreci',
     description:
-      'Eşleşme tamamlandığında danışanın süreç durumu, son seansı ve iletişim aksiyonları bu panelden takip edilir.',
+      'Eşleşme tamamlandığında danışanın süreç durumu, son seansı ve iletişim aksiyonları buradan takip edilir.',
     items: [
       'Aktif danışanları tek ekrandan takip et',
       'Chat ve seans ekranlarına hızlı geç',
@@ -342,7 +342,7 @@ export default function ExpertClientsPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-400">
-                Mindora Uzman Paneli
+                Mindora çalışma alanın
               </p>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Danışanlar
@@ -700,7 +700,7 @@ function EmptyClientState({
           href="/expert/dashboard"
           className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
         >
-          Panele Dön
+          Geri dön
         </Link>
       </div>
     </div>

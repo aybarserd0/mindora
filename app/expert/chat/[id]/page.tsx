@@ -1380,7 +1380,7 @@ export default function ExpertChatPage({
             href="/expert/dashboard"
             className="mt-7 block rounded-full bg-pine-800 px-6 py-4 text-center text-base font-semibold text-white transition-all duration-200 ease-out hover:bg-pine-900"
           >
-            Panele Dön
+            Geri dön
           </Link>
 
           <p className="mt-4 text-xs font-medium text-slate-400">
@@ -1467,7 +1467,7 @@ export default function ExpertChatPage({
                 href="/expert/dashboard"
                 className="text-center text-sm font-semibold text-slate-500 hover:text-slate-800"
               >
-                Panele dön
+                Geri dön
               </Link>
             </div>
           </div>
@@ -1495,7 +1495,7 @@ export default function ExpertChatPage({
                 href="/expert/dashboard"
                 className="rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 no-underline transition-all duration-200 ease-out hover:border-slate-300 hover:text-slate-900"
               >
-                Panele Dön
+                Geri dön
               </Link>
             </div>
           </section>

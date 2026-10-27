@@ -441,7 +441,7 @@ export default async function ExpertDashboardPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-400">
-                Mindora Uzman Paneli
+                Mindora çalışma alanın
               </p>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Hoş geldiniz.
@@ -452,7 +452,7 @@ export default async function ExpertDashboardPage() {
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <StatusPill tone="green">Panel erişimi aktif</StatusPill>
+                <StatusPill tone="green">Hesabın aktif</StatusPill>
                 <StatusPill>Güvenli uzman alanı</StatusPill>
                 <StatusPill tone="blue">{data.upcomingBookings.length} yaklaşan seans</StatusPill>
                 <StatusPill tone="blue">{data.unreadNotificationCount} okunmamış bildirim</StatusPill>
@@ -520,7 +520,7 @@ export default async function ExpertDashboardPage() {
             )}
           </Panel>
 
-          <Panel title="Hızlı İşlemler" description="Sık kullanılan uzman paneli adımları.">
+          <Panel title="Hızlı İşlemler" description="Sık kullandığın adımlar.">
             <div className="grid gap-3">
               <QuickLink
                 href="/expert/dashboard/availability"

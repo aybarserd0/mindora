@@ -21,7 +21,7 @@ function isEmail(value: string) {
 }
 
 /**
- * Danışan panel bağlantısını e-postayla yeniden gönderir. Kayıt olup olmadığı
+ * Danışan giriş bağlantısını e-postayla yeniden gönderir. Kayıt olup olmadığı
  * yanıttan anlaşılmaz (her durumda aynı mesaj döner).
  */
 export async function POST(req: NextRequest) {
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       subject: 'Mindora giriş bağlantın',
       text: `Merhaba ${client.name || ''},
 
-Mindora paneline girmek için ${lines.length > 1 ? 'uzmanlarına göre bağlantıların' : 'bağlantın'}:
+Mindora'daki alanına girmek için ${lines.length > 1 ? 'uzmanlarına göre bağlantıların' : 'bağlantın'}:
 
 ${lines.join('\n\n')}
 

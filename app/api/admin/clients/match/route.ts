@@ -448,7 +448,7 @@ Mindora
         userType: 'client',
         userId: clientId,
         title: 'Uzmanla eşleştiniz',
-        message: `${toText(expert.name)} ile eşleştirildiniz. Sonraki adım için panelinizi kontrol edin.`,
+        message: `${toText(expert.name)} ile eşleştin. Uygun bir saat seçip başlayabilirsin.`,
         type: 'system',
         link: `/client/chat/${conversation.id}`,
       }),

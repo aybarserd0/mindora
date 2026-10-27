@@ -59,7 +59,7 @@ const navigationItems: NavItem[] = [
     badge: "Yeni",
   },
   {
-    label: "Süpervizör paneli",
+    label: "Süpervizör alanı",
     href: "/expert/dashboard/supervizor",
     description: "Süpervizyon verdiğin psikologlar",
     icon: "◆",
@@ -160,7 +160,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
               <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
               <span className="leading-tight">
                 <span className="block font-display text-lg font-semibold text-slate-900">mindora</span>
-                <span className="block text-xs text-slate-500">Uzman paneli</span>
+                <span className="block text-xs text-slate-500">Çalışma alanın</span>
               </span>
             </Link>
           </div>
@@ -224,7 +224,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
             <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
               <Link href="/expert/dashboard" className="flex items-center gap-2 no-underline lg:hidden">
                 <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
-                <span className="font-display text-lg font-semibold text-slate-900">Uzman paneli</span>
+                <span className="font-display text-lg font-semibold text-slate-900">Çalışma alanın</span>
               </Link>
               <p className="hidden text-sm text-slate-500 lg:block">
                 {expertName ? `Hoş geldin, ${expertName.split(" ")[0]}` : "Hoş geldin"}

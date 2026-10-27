@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     userType: 'expert',
     userId: booking.supervisor_profiles?.expert_id || null,
     title: 'Süpervizyon seansı kesinleşti',
-    message: 'Ödeme tamamlandı. Seans saatinde Süpervizör paneli üzerinden görüşmeye katılabilirsin.',
+    message: 'Ödeme tamamlandı. Seans saatinde Süpervizör alanından görüşmeye katılabilirsin.',
     type: 'payment',
     link: '/expert/dashboard/supervizor',
   })

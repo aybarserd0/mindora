@@ -319,7 +319,7 @@ export default function ExpertEarningsPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-400">
-                Mindora Uzman Paneli
+                Mindora çalışma alanın
               </p>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Kazançlar

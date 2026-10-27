@@ -151,10 +151,10 @@ Merhaba ${safeExpertName},
 
 Mindora uzman başvurunuz onaylandı. Aramıza hoş geldiniz!
 
-${loginUrl ? `Uzman panelinize giriş bağlantınız:\n${loginUrl}\n\nBu bağlantı size özeldir, kimseyle paylaşmayın.\n` : ''}
+${loginUrl ? `Mindora'ya giriş bağlantınız:\n${loginUrl}\n\nBu bağlantı size özeldir, kimseyle paylaşmayın.\n` : ''}
 Sonraki adımlar:
 ${divider()}
-1. Uzman panelinize giriş yaparak profilinizi tamamlayabilirsiniz.
+1. Mindora'ya giriş yapıp profilinizi tamamlayabilirsiniz.
 2. Kimlik/diploma doğrulama belgelerinizi yükleyerek hesabınızı tam yetkili hale getirebilirsiniz.
 3. Uygunluk takviminizi oluşturduğunuzda danışan eşleştirmeleri başlayabilir.
 
@@ -244,7 +244,7 @@ Merhaba ${safeExpertName},
 
 ${documentLabel} belgeniz incelendi ve bu aşamada onaylanamadı.
 ${safeNote ? `\nGerekçe: ${safeNote}\n` : ''}
-Lütfen belgeyi kontrol ederek uzman panelinizden yeniden yükleyin.
+Belgeyi kontrol edip Mindora'daki çalışma alanınızdan yeniden yükleyebilirsiniz.
 
 ${footer()}
 `
@@ -265,7 +265,7 @@ Merhaba ${safeRecipientName},
 
 ${safeOtherPartyName} ile ${scheduledStartText} tarihine planlanan Mindora seansınız iptal edilmiştir.
 ${safeReason ? `\nİptal nedeni: ${safeReason}\n` : ''}
-Yeni bir randevu planlamak için Mindora panelinizi ziyaret edebilirsiniz.
+Yeni bir randevu planlamak için Mindora'ya göz atabilirsiniz.
 
 ${footer()}
 `
@@ -277,7 +277,7 @@ export function expertLoginLinkTemplate({ expertName, loginUrl }: ExpertLoginLin
   return `
 Merhaba ${safeExpertName},
 
-Mindora uzman panelinize giriş bağlantınız aşağıdadır. Bu bağlantı size özeldir, kimseyle paylaşmayın.
+Mindora'ya giriş bağlantınız aşağıda. Bu bağlantı size özeldir, kimseyle paylaşmayın.
 
 ${loginUrl}
 
@@ -323,7 +323,7 @@ Mindora üzerinden size yeni bir danışan atanmıştır.
 Danışan:
 ${safeClientName}
 
-Lütfen süreci Mindora paneliniz üzerinden takip ediniz.
+Süreci Mindora üzerinden takip edebilirsiniz.
 
 Önemli notlar:
 ${divider()}
@@ -377,7 +377,7 @@ Size atanmış danışan için ödeme başarıyla tamamlanmıştır.
 Danışan:
 ${safeClientName}
 
-Lütfen randevu ve görüşme sürecini Mindora paneliniz üzerinden takip ediniz.
+Randevu ve görüşme sürecini Mindora üzerinden takip edebilirsiniz.
 
 Seans bağlantısı planlama tamamlandıktan sonra ayrıca iletilecektir.
 

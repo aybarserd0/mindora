@@ -568,7 +568,7 @@ export default function ExpertProfilePage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-slate-400">
-                      Mindora Uzman Paneli
+                      Mindora çalışma alanın
                     </p>
                     <StatusBadge status={profile.status} />
                   </div>

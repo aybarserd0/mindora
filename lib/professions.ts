@@ -144,7 +144,7 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
     expert: {
       heroTitle: 'Danışanlarına odaklan. Takvim ve ödeme bizde.',
       heroLead:
-        "Mindora'da hedefine uygun danışanlar gelir; randevu, ödeme, mesajlaşma ve görüntülü görüşme tek panelde işler. Beslenme planlarını dosya olarak paylaşabilirsin.",
+        "Mindora'da hedefine uygun danışanlar gelir; randevu, ödeme, mesajlaşma ve görüntülü görüşme tek yerden işler. Beslenme planlarını dosya olarak paylaşabilirsin.",
       titlePlaceholder: 'Örn: Diyetisyen, Uzman Diyetisyen',
       areas: ['Kilo yönetimi', 'Sporcu beslenmesi', 'Hamilelik / emzirme', 'Çocuk ve ergen beslenmesi', 'Diyabet / insülin direnci', 'Bağırsak sağlığı', 'Vejetaryen / vegan beslenme', 'Diğer'],
       credentials: ['Beslenme ve Diyetetik lisans diploması', 'e-Devlet barkodlu mezun belgesi'],
@@ -199,7 +199,7 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
     expert: {
       heroTitle: 'Antrenmana odaklan. Danışan ve ödeme bizde.',
       heroLead:
-        "Mindora'da hedefine uygun danışanlar gelir; randevu, ödeme, mesajlaşma ve görüntülü görüşme tek panelde işler. Evde canlı antrenman yaptırabilir ya da salon programı hazırlayıp takip edebilirsin.",
+        "Mindora'da hedefine uygun danışanlar gelir; randevu, ödeme, mesajlaşma ve görüntülü görüşme tek yerden işler. Evde canlı antrenman yaptırabilir ya da salon programı hazırlayıp takip edebilirsin.",
       titlePlaceholder: 'Örn: Kişisel Antrenör, Spor Bilimci',
       areas: ['Yağ yakımı', 'Kas kazanımı / güç', 'Kondisyon', 'Esneklik / mobilite', 'Salon programı', 'Evde antrenman', 'Yeni başlayanlar', 'Kadınlara özel antrenman', 'Diğer'],
       credentials: [

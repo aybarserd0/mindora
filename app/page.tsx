@@ -456,7 +456,7 @@ export default async function Home() {
           <Reveal className="order-1 lg:order-2">
             <h2 className="text-3xl font-semibold leading-tight sm:text-5xl">Psikolog, diyetisyen ya da antrenör müsün? Danışanların burada.</h2>
             <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">
-              Sana uygun danışanlar gelir; takvim, ödeme, mesajlaşma ve görüntülü görüşme tek panelde.
+              Sana uygun danışanlar gelir; takvim, ödeme, mesajlaşma ve görüntülü görüşme tek yerde.
               Psikologlar kıdemli meslektaşlarından online süpervizyon da alabilir.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">

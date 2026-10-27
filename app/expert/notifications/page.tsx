@@ -254,7 +254,7 @@ function NotificationsContent() {
                 href={dashboardHref}
                 className="rounded-full bg-pine-800 px-5 py-3 text-center text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-pine-900"
               >
-                Panele Dön
+                Geri dön
               </Link>
             </div>
           </div>

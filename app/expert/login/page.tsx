@@ -49,12 +49,12 @@ function ExpertLoginContent() {
       <section className="mx-auto grid max-w-6xl gap-6 px-5 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:py-20">
         <ServicesAside
           tone="lilac"
-          heading="Danışanlarına odaklan. Gerisi panelde."
+          heading="Danışanlarına odaklan. Gerisi bizde."
           lead="Psikolog, diyetisyen ya da kişisel antrenör; takvimin, görüşmelerin, ödemelerin ve danışan mesajların tek yerde."
           items={[
             { title: 'Takvim ve görüşmeler', text: 'Müsait saatlerini belirle; danışanların saat seçip ödemeyi kendisi tamamlar.' },
             { title: 'Plan ve program paylaşımı', text: 'Beslenme planlarını ve antrenman programlarını danışanınla dosya olarak paylaş.' },
-            { title: 'Kazançların şeffaf', text: 'Her görüşmenin ücreti, platform payı ve sana aktarılacak tutar panelde görünür.' },
+            { title: 'Kazançların şeffaf', text: 'Her görüşmenin ücreti, platform payı ve sana aktarılacak tutar açıkça görünür.' },
           ]}
         />
 

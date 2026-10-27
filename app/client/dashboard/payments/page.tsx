@@ -305,7 +305,7 @@ function ClientPaymentsContent() {
   const fetchPayments = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (!token) {
-        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Size iletilen danışan paneli bağlantısını kullanabilirsiniz.')
+        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Sana e-postayla gelen giriş bağlantısını kullanabilirsin.')
         setPayments([])
         setSummary(EMPTY_SUMMARY)
         setLoading(false)
@@ -400,7 +400,7 @@ function ClientPaymentsContent() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-400">
-                Mindora Danışan Paneli
+                Mindora alanın
               </p>
               <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
                 Ödemelerim
@@ -475,7 +475,7 @@ function ClientPaymentsContent() {
           />
           <InfoBlock
             title="Ödeme sonrası erişim"
-            description="Ödeme tamamlandığında ilgili görüşme ve mesajlaşma bağlantıları panelinizde görünür hale gelir."
+            description="Ödeme tamamlandığında ilgili görüşme ve mesajlaşma bağlantıları burada görünür."
           />
           <InfoBlock
             title="İade ve başarısız kayıtlar"
