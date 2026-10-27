@@ -615,7 +615,7 @@ function ClientDashboardContent() {
               </p>
               <h2 className="mt-2 text-xl font-semibold text-slate-900">Kısayollar</h2>
               <div className="mt-5 grid gap-3">
-                <QuickLink href={`${sessionsHref}${sessionsHref.includes('?') ? '&' : '?'}yeni=1`} title="Yeni seans al" description="Psikoloğunun boş saatinden seç ve öde" />
+                <QuickLink href={`${sessionsHref}${sessionsHref.includes('?') ? '&' : '?'}yeni=1`} title="Yeni seans al" description="Uzmanının boş saatinden seç ve öde" />
                 <QuickLink href={sessionsHref} title="Seanslarım" description="Yaklaşan ve geçmiş seanslar" />
                 <QuickLink href={paymentsHref} title="Ödemelerim" description="Ödeme geçmişi ve durumlar" />
                 <QuickLink href={filesHref} title="Dosyalarım" description="Paylaşılan dosyalar" />

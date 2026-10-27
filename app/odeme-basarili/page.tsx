@@ -23,8 +23,8 @@ function Content() {
         <h1 className="mt-6 text-2xl font-semibold">{isSession ? 'Seansın onaylandı' : 'Ödemen alındı'}</h1>
         <p className="mt-3 leading-7 text-slate-600">
           {isSession
-            ? 'Ödemen alındı ve randevun psikoloğunun takvimine işlendi. Onay e-postası yolda.'
-            : 'Ödemen başarıyla alındı. Psikoloğunla sohbet alanın açıldı; bağlantı e-postana gönderildi.'}
+            ? 'Ödemen alındı ve randevun uzmanının takvimine işlendi. Onay e-postası yolda.'
+            : 'Ödemen başarıyla alındı. Uzmanınla sohbet alanın açıldı; bağlantı e-postana gönderildi.'}
         </p>
 
         {isSession ? (

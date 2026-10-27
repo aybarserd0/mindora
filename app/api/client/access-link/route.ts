@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { applyRateLimit } from '@/lib/security/rate-limit'
+import { professionLabel } from '@/lib/professions'
 import { createConversationAccessToken } from '@/lib/chat-access-tokens'
 import { sendMail } from '@/lib/mail/smtp'
 import { getSiteUrl } from '@/lib/site-url'
@@ -51,39 +52,57 @@ export async function POST(req: NextRequest) {
   const clientRows = (clients || []) as { id: string; name: string | null; email: string }[]
   if (!clientRows.length) return NextResponse.json(GENERIC_RESPONSE)
 
+  // Danışan birden fazla hizmette (psikolog, diyetisyen, antrenör) olabilir:
+  // her uzman için en güncel sohbetin bağlantısı tek e-postada gönderilir.
   const { data: conversations } = await supabase
     .from('conversations')
-    .select('id, client_application_id, updated_at')
+    .select('id, client_application_id, expert_id, updated_at')
     .in('client_application_id', clientRows.map((c) => c.id))
     .order('updated_at', { ascending: false })
-    .limit(1)
+    .limit(20)
 
-  const conversation = (conversations || [])[0] as { id: string; client_application_id: string } | undefined
-  if (!conversation) return NextResponse.json(GENERIC_RESPONSE)
+  const latestPerExpert = new Map<string, { id: string; client_application_id: string; expert_id: string }>()
+  for (const c of (conversations || []) as { id: string; client_application_id: string; expert_id: string }[]) {
+    if (!latestPerExpert.has(c.expert_id)) latestPerExpert.set(c.expert_id, c)
+  }
+  const targets = [...latestPerExpert.values()].slice(0, 3)
+  if (!targets.length) return NextResponse.json(GENERIC_RESPONSE)
 
   const { data: recent } = await supabase
     .from('conversation_access_tokens')
     .select('id')
-    .eq('conversation_id', conversation.id)
+    .in('conversation_id', targets.map((t) => t.id))
     .eq('role', 'client')
     .gte('created_at', new Date(Date.now() - RESEND_COOLDOWN_MS).toISOString())
     .limit(1)
   if ((recent || []).length) return NextResponse.json(GENERIC_RESPONSE)
 
   try {
-    const access = await createConversationAccessToken({ conversationId: conversation.id, role: 'client', expiresInHours: 24 * 30 })
-    const client = clientRows.find((c) => c.id === conversation.client_application_id) || clientRows[0]
-    const link = `${getSiteUrl()}/client/dashboard?token=${access.token}`
+    const { data: experts } = await supabase
+      .from('experts')
+      .select('id, name, profession')
+      .in('id', targets.map((t) => t.expert_id))
+    const expertById = new Map(((experts || []) as { id: string; name: string | null; profession: string | null }[]).map((e) => [e.id, e]))
+
+    const lines: string[] = []
+    for (const target of targets) {
+      const access = await createConversationAccessToken({ conversationId: target.id, role: 'client', expiresInHours: 24 * 30 })
+      const expert = expertById.get(target.expert_id)
+      const label = `${professionLabel(expert?.profession)}${expert?.name ? ` · ${expert.name}` : ''}`
+      lines.push(`${label}:\n${getSiteUrl()}/client/dashboard?token=${access.token}`)
+    }
+    const client = clientRows.find((c) => c.id === targets[0].client_application_id) || clientRows[0]
 
     await sendMail({
       to: client.email,
       subject: 'Mindora giriş bağlantın',
       text: `Merhaba ${client.name || ''},
 
-Mindora paneline girmek için bağlantın:
-${link}
+Mindora paneline girmek için ${lines.length > 1 ? 'uzmanlarına göre bağlantıların' : 'bağlantın'}:
 
-Bu bağlantı 30 gün geçerlidir ve yalnızca sana özeldir; kimseyle paylaşma.
+${lines.join('\n\n')}
+
+${lines.length > 1 ? 'Bu bağlantılar' : 'Bu bağlantı'} 30 gün geçerlidir ve yalnızca sana özeldir; kimseyle paylaşma.
 Bu isteği sen yapmadıysan bu e-postayı yok sayabilirsin.
 
 Mindora`,

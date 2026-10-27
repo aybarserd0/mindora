@@ -748,7 +748,7 @@ function SessionCard({
                     : session.lateCancellation
                       ? "Seansa 24 saatten az kala iptal edildiği için ücret iade edilmedi."
                       : session.cancelledBy === "expert"
-                        ? "Seans psikoloğun tarafından iptal edildi."
+                        ? "Seans uzmanın tarafından iptal edildi."
                         : null}
               </p>
             ) : null}
@@ -1089,7 +1089,7 @@ function CancelModal({
         >
           {session.freeCancellation
             ? "Seansa 24 saatten fazla var. İptal edersen ödemenin tamamı kartına iade edilir."
-            : "Seansa 24 saatten az kaldı. İptal kuralı gereği bu seansın ücreti iade edilmez ve psikoloğuna ödenir."}
+            : "Seansa 24 saatten az kaldı. İptal kuralı gereği bu seansın ücreti iade edilmez ve uzmanına ödenir."}
         </div>
 
         <label className="mt-5 block text-sm font-semibold text-slate-700">
@@ -1209,7 +1209,7 @@ function BookSessionModal({ token, onClose }: { token: string; onClose: () => vo
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Yeni seans al</h2>
             <p className="mt-1 text-sm text-slate-600">
-              {expert ? `${expert.name || "Psikoloğun"} · 50 dakika online · ${price}` : "Psikoloğunun uygun saatleri"}
+              {expert ? `${expert.name || "Uzmanın"} · 50 dakika online · ${price}` : "Uzmanının uygun saatleri"}
             </p>
           </div>
           <button type="button" onClick={onClose} className="rounded-full px-3 py-1 text-sm font-semibold text-slate-500 hover:bg-slate-100" aria-label="Kapat">
@@ -1224,7 +1224,7 @@ function BookSessionModal({ token, onClose }: { token: string; onClose: () => vo
             <p className="rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">{state.error}</p>
           ) : days.length === 0 ? (
             <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
-              Önümüzdeki üç haftada psikoloğunun boş saati görünmüyor. Sohbetten ona yazabilir ya da Mindora ekibinden destek isteyebilirsin.
+              Önümüzdeki üç haftada uzmanının boş saati görünmüyor. Sohbetten ona yazabilir ya da Mindora ekibinden destek isteyebilirsin.
             </p>
           ) : (
             <>

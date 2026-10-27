@@ -1343,9 +1343,9 @@ export default function ClientChatPage({
         <header className="mb-6 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Psikoloğunla mesajlaşma</h1>
+              <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Uzmanınla mesajlaşma</h1>
               <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                Mesajların yalnızca sen, psikoloğun ve gerektiğinde Mindora destek ekibi arasında kalır. Telefon, e-posta ya da IBAN paylaşma; her şey platform üzerinden ilerler.
+                Mesajların yalnızca sen, uzmanın ve gerektiğinde Mindora destek ekibi arasında kalır. Telefon, e-posta ya da IBAN paylaşma; her şey platform üzerinden ilerler.
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -1357,7 +1357,7 @@ export default function ClientChatPage({
                   }`}
                 >
                   <span className={`h-2 w-2 rounded-full ${onlineUsers.expert ? 'bg-pine-500' : 'bg-slate-400'}`} />
-                  {onlineUsers.expert ? 'Psikoloğun çevrimiçi' : 'Psikoloğun şu an çevrimdışı'}
+                  {onlineUsers.expert ? 'Uzmanın çevrimiçi' : 'Uzmanın şu an çevrimdışı'}
                 </span>
 
                 {conversation && conversation.payment_status !== 'paid' ? (
