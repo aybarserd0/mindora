@@ -13,13 +13,13 @@ import {
   FloatingNote,
   IconBadge,
   Icons,
-  LogbookMock,
   MatchCardMock,
   ThreadLine,
   TopicPickerMock,
   Avatar,
 } from '@/components/marketing/Mocks'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { PROFESSIONS, PROFESSION_CONFIG, matchHref } from '@/lib/professions'
 
 // Ana sayfa statik sunulur; onaylı uzman sayısı gerçek veridir ve en fazla
 // bir saat bayat kalabilir.
@@ -42,23 +42,19 @@ async function getApprovedExpertCount() {
   }
 }
 
-// Değerler /eslesme formundaki seçeneklerle birebir aynı olmalı
-const topics = [
-  { label: 'Kaygı ve stres', value: 'Kaygı / stres' },
-  { label: 'İlişki ve aile', value: 'İlişki / aile' },
-  { label: 'Özgüven', value: 'Özgüven' },
-  { label: 'Motivasyon', value: 'Motivasyon' },
-  { label: 'Depresif hisler', value: 'Depresif hisler' },
-  { label: 'Tükenmişlik', value: 'Tükenmişlik' },
-  { label: 'Henüz adını koyamadım', value: 'Diğer' },
+// Hero'daki hizmet seçimi
+const heroServices = [
+  { profession: 'psychologist' as const, hint: 'Kaygı, ilişkiler, tükenmişlik' },
+  { profession: 'dietitian' as const, hint: 'Kilo, düzenli ve sağlıklı beslenme' },
+  { profession: 'trainer' as const, hint: 'Salon ya da ev programı, kondisyon' },
 ]
 
 const services = [
   {
     title: 'Psikolog',
     text: 'Kaygı, ilişkiler, tükenmişlik ya da adını koyamadığın bir his. Süpervizyonla desteklenen psikologlarla konuş.',
-    cta: 'Psikolog eşleşmesi',
-    href: '/eslesme',
+    cta: 'Psikologları incele',
+    href: '/uzmanlar',
     photo: PHOTOS.laptopCall,
     tone: 'pine' as const,
   },
@@ -83,7 +79,7 @@ const services = [
 const promises = [
   { icon: Icons.spark, text: 'Ücretsiz ön eşleşme' },
   { icon: Icons.shield, text: 'Belgeleri tek tek doğrulanmış uzmanlar' },
-  { icon: Icons.people, text: 'Süpervizyonla desteklenen psikologlar' },
+  { icon: Icons.people, text: 'Psikolog, diyetisyen ve antrenör tek yerde' },
   { icon: Icons.noRecord, text: 'Kaydedilmeyen görüşmeler' },
 ]
 
@@ -91,34 +87,42 @@ const comparisonRows = [
   {
     topic: 'Uzman seçimi',
     others: 'Uzun bir profil listesinde kimin sana uygun olduğunu tek başına tahmin edersin.',
-    mindora: 'Neyle uğraştığını anlatırsın, alanında çalışan ve saatlerin uyan uzmanı biz öneririz.',
+    mindora: 'Neye ihtiyacın olduğunu anlatırsın; psikolog, diyetisyen ya da antrenör, alanında çalışan ve saatleri uyan uzmanı biz öneririz.',
   },
   {
     topic: 'Kalite',
     others: 'Uzman platforma bir kez kabul edilir, sonrasında nasıl çalıştığı görünmez.',
-    mindora: 'Psikologlar zor vakalarını kıdemli meslektaşlarıyla düzenli olarak değerlendirebilir. Bunu yapanların profilinde rozet görünür.',
+    mindora: 'Her uzman kendi mesleğinin belgesiyle doğrulanır. Psikologlar ayrıca zor vakalarını kıdemli meslektaşlarıyla düzenli olarak değerlendirebilir.',
   },
   {
     topic: 'Belgeler',
     others: 'Unvanlar çoğu zaman beyana dayanır.',
-    mindora: 'Diploma ve unvan, uzman danışan kabul etmeden önce tek tek kontrol edilir.',
+    mindora: 'Psikoloji ve diyetetik diplomaları, antrenörlük belgeleri; uzman danışan kabul etmeden önce tek tek kontrol edilir.',
   },
   {
     topic: 'Ücret',
     others: 'Paketler, abonelikler ve sonradan fark edilen ücretler.',
-    mindora: 'Seans ücreti ödeme adımından önce açıkça görünür. Abonelik yok, gizli ücret yok.',
+    mindora: 'Görüşme ücreti ödeme adımından önce açıkça görünür. Abonelik yok, gizli ücret yok.',
   },
   {
     topic: 'Görüşme kaydı',
     others: 'Görüşmelerin kaydedilip kaydedilmediği net değildir.',
-    mindora: 'Görüntülü seanslar kaydedilmez. Sadece sen ve uzmanın oradasınız.',
+    mindora: 'Görüntülü görüşmeler kaydedilmez. Sadece sen ve uzmanın oradasınız.',
   },
 ]
 
 const faqs = [
   {
     q: 'Ön eşleşme ücretli mi?',
-    a: 'Hayır. Formu doldurmak ve uzman önerisi almak ücretsizdir, seans satın alma zorunluluğu oluşturmaz.',
+    a: 'Hayır. Formu doldurmak ve uzman önerisi almak ücretsizdir, görüşme satın alma zorunluluğu oluşturmaz.',
+  },
+  {
+    q: 'Hangi alanlarda uzman var?',
+    a: 'Psikolog, diyetisyen ve kişisel antrenör. Formun başında hangisine ihtiyacın olduğunu seçersin; istersen birden fazlası için ayrı ayrı başvurabilirsin.',
+  },
+  {
+    q: 'Uzmanlar nasıl kontrol ediliyor?',
+    a: 'Psikologların ve diyetisyenlerin diploması e-Devlet barkodlu belgeyle, antrenörlerin diploması ya da antrenörlük belgesi tek tek incelenir. Belgesi doğrulanmayan profil yayına alınmaz.',
   },
   {
     q: '"Süpervizyonlu Uzman" ne demek?',
@@ -130,7 +134,7 @@ const faqs = [
   },
   {
     q: 'Görüşmeler nasıl yapılıyor?',
-    a: 'Tamamen online. Mindora içindeki görüntülü görüşme odasına tarayıcından katılırsın, ayrı bir uygulama gerekmez ve görüşme kaydedilmez.',
+    a: 'Tamamen online. Mindora içindeki görüntülü görüşme odasına tarayıcından katılırsın, ayrı bir uygulama gerekmez ve görüşme kaydedilmez. Antrenörünle salonda uygulayacağın bir program üzerinden de çalışabilirsin.',
   },
   {
     q: 'Mindora acil durumlarda yardımcı olur mu?',
@@ -156,23 +160,24 @@ export default async function Home() {
         <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pb-20 pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-10 lg:pb-28 lg:pt-20">
           <div>
             <h1 className="max-w-[14ch] text-[2.7rem] font-semibold leading-[1.02] text-slate-900 sm:text-6xl lg:text-[4.9rem]">
-              Kiminle konuşacağını bilmeden de başlayabilirsin.
+              Zihnin, beslenmen ve bedenin için doğru uzman.
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600">
-              Neyle uğraştığını anlat, sana uygun psikoloğu biz önerelim. Belgeleri doğrulanmış,
-              süpervizyonla desteklenen uzmanlarla online görüş; ücreti baştan gör.
+              Psikolog, diyetisyen ya da kişisel antrenör: neye ihtiyacın olduğunu anlat, belgeleri
+              kontrol edilmiş uzmanlar arasından sana uygun olanı biz önerelim. Online görüş, ücreti baştan gör.
             </p>
 
             <div className="mt-9">
-              <p className="text-sm font-medium text-slate-700">Şu sıralar seni en çok ne yoruyor?</p>
-              <ul className="mt-3 flex flex-wrap gap-2">
-                {topics.map((topic, index) => (
-                  <li key={topic.value} className="animate-rise-in" style={{ animationDelay: `${150 + index * 60}ms` }}>
+              <p className="text-sm font-medium text-slate-700">Ne için destek arıyorsun?</p>
+              <ul className="mt-3 grid gap-2 sm:grid-cols-3">
+                {heroServices.map((item, index) => (
+                  <li key={item.profession} className="animate-rise-in" style={{ animationDelay: `${150 + index * 80}ms` }}>
                     <Link
-                      href={`/eslesme?konu=${encodeURIComponent(topic.value)}`}
-                      className="inline-flex rounded-full border border-slate-300 bg-white/80 px-4 py-2.5 text-[0.95rem] font-medium text-slate-800 backdrop-blur transition-colors hover:border-pine-600 hover:bg-pine-50 hover:text-pine-900"
+                      href={matchHref(item.profession)}
+                      className="flex h-full flex-col rounded-2xl border border-slate-300 bg-white/80 px-4 py-3 backdrop-blur transition-colors hover:border-pine-600 hover:bg-pine-50"
                     >
-                      {topic.label}
+                      <span className="font-display text-base font-semibold text-slate-900">{PROFESSION_CONFIG[item.profession].label}</span>
+                      <span className="mt-0.5 text-xs leading-5 text-slate-500">{item.hint}</span>
                     </Link>
                   </li>
                 ))}
@@ -184,11 +189,11 @@ export default async function Home() {
                 >
                   Ücretsiz eşleşmeyi başlat
                 </Link>
-                <p className="text-sm text-slate-500">Yaklaşık 3 dakika. Seans almak zorunda değilsin.</p>
+                <p className="text-sm text-slate-500">Yaklaşık 3 dakika. Görüşme almak zorunda değilsin.</p>
               </div>
               {showExpertCount ? (
                 <p className="mt-5 text-sm text-slate-500">
-                  Şu anda {approvedExpertCount} psikolog, belgeleri doğrulanmış olarak hizmet veriyor.
+                  Şu anda {approvedExpertCount} uzman, belgeleri doğrulanmış olarak hizmet veriyor.
                 </p>
               ) : null}
             </div>
@@ -204,11 +209,11 @@ export default async function Home() {
             <div className="animate-drift absolute bottom-0 left-0 z-10 w-[88%] sm:w-[72%]" style={{ ['--tilt' as string]: '-1.5deg' }}>
               <MatchCardMock />
             </div>
-            <FloatingNote className="-left-2 top-8 z-20 sm:left-0" tilt="-3deg" delay="1.5s" icon={<IconBadge>{Icons.noRecord}</IconBadge>}>
-              Görüşmeler kaydedilmez
+            <FloatingNote className="-left-2 top-8 z-20 sm:left-0" tilt="-3deg" delay="1.5s" icon={<IconBadge>{Icons.spark}</IconBadge>}>
+              Diyetisyen · Dyt. Elif K.
             </FloatingNote>
-            <FloatingNote className="-right-2 top-1/3 z-20 hidden sm:flex" tilt="2deg" delay="0.6s" icon={<IconBadge>{Icons.shield}</IconBadge>}>
-              Diploma ve unvan kontrol edildi
+            <FloatingNote className="-right-2 top-1/3 z-20 hidden sm:flex" tilt="2deg" delay="0.6s" icon={<IconBadge tone="lilac">{Icons.calendar}</IconBadge>}>
+              Antrenör · Salon programı hazır
             </FloatingNote>
             <p className="absolute -bottom-7 right-2 text-xs text-slate-400">Temsili fotoğraf. Kart örnek arayüzdür.</p>
           </div>
@@ -229,9 +234,9 @@ export default async function Home() {
       {/* HİZMETLER */}
       <section className="mx-auto max-w-7xl px-5 pt-20 lg:pt-28">
         <Reveal>
-          <h2 className="max-w-2xl text-3xl font-semibold leading-tight sm:text-5xl">Neye ihtiyacın var?</h2>
+          <h2 className="max-w-2xl text-3xl font-semibold leading-tight sm:text-5xl">Üç alan, tek platform.</h2>
           <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">
-            Zihnin, beslenmen ya da bedenin için; belgesi kontrol edilmiş uzmanlarla online görüş.
+            Zihnin, beslenmen ya da bedenin için; belgesi kontrol edilmiş uzmanlarla online çalış.
           </p>
         </Reveal>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
@@ -260,19 +265,19 @@ export default async function Home() {
       <section id="nasil" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-20 lg:pt-28">
         <Reveal>
           <h2 className="max-w-2xl text-3xl font-semibold leading-tight sm:text-5xl">İlk görüşmene dört adım</h2>
-          <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Kimseyi aramadan, sıra beklemeden, bulunduğun yerden.</p>
+          <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Hangi alanda olursa olsun aynı yol: kimseyi aramadan, sıra beklemeden.</p>
         </Reveal>
         <div className="mt-6">
           <StepsShowcase
             steps={[
               {
-                title: 'Birkaç soruyu yanıtla',
-                text: 'Neyle uğraştığını, ne zaman müsait olduğunu ve nasıl bir uzmanla rahat edeceğini anlat. Adını koyamadığın bir his de olabilir.',
+                title: 'Alanını seç, birkaç soruyu yanıtla',
+                text: 'Psikolog, diyetisyen ya da antrenör. Neye ihtiyacın olduğunu, ne zaman müsait olduğunu ve nasıl bir uzmanla rahat edeceğini anlat.',
                 visual: <TopicPickerMock />,
               },
               {
                 title: 'Sana uygun uzmanı öneriyoruz',
-                text: 'Alanında çalışan, belgeleri doğrulanmış ve saatleri sana uyan bir psikolog öneriyoruz. Kabul etmek zorunda değilsin.',
+                text: 'Alanında çalışan, belgeleri doğrulanmış ve saatleri sana uyan bir uzman öneriyoruz. Kabul etmek zorunda değilsin.',
                 visual: <MatchCardMock />,
               },
               {
@@ -282,7 +287,7 @@ export default async function Home() {
               },
               {
                 title: 'Bulunduğun yerden görüş',
-                text: 'Seans saatinde tarayıcından görüntülü görüşmeye katıl. Görüşme kaydedilmez; mesajlaşma ve dosya paylaşımı da Mindora içinde kalır.',
+                text: 'Görüşme saatinde tarayıcından katıl. Beslenme planın ya da antrenman programın Mindora içinde paylaşılır; görüşmeler kaydedilmez.',
                 visual: (
                   <div className="relative w-full max-w-md">
                     <Photo photo={PHOTOS.tableCall} className="aspect-[4/3] w-full rounded-3xl shadow-xl" sizes="(min-width: 1024px) 40vw, 100vw" />
@@ -298,14 +303,14 @@ export default async function Home() {
         </div>
       </section>
 
-      <ExpertStrip />
+      <ExpertStrip profession="all" />
 
       {/* FARKLAR */}
       <section className="border-y border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-5 py-20 lg:py-28">
           <Reveal>
             <h2 className="max-w-3xl text-3xl font-semibold leading-tight sm:text-5xl">
-              Destek almak zaten zor. Platform bunu zorlaştırmamalı.
+              İlk adım zaten zor. Platform bunu zorlaştırmamalı.
             </h2>
           </Reveal>
 
@@ -315,8 +320,8 @@ export default async function Home() {
               <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-pine-950/90 via-pine-900/70 to-pine-900/20" />
               <h3 className="relative max-w-md text-2xl font-semibold sm:text-3xl">Doğru kişiyi aramak sende değil, bizde.</h3>
               <p className="relative mt-4 max-w-md leading-7 text-pine-100">
-                Yüzlerce profil arasında kaybolmazsın. Anlattıklarına göre alanı, yaklaşımı ve
-                saatleri sana uyan uzmanı öneririz; uymazsa yenisini.
+                Yüzlerce profil arasında kaybolmazsın. Psikolog, diyetisyen ya da antrenör; anlattıklarına
+                göre alanı, yaklaşımı ve saatleri sana uyan uzmanı öneririz, uymazsa yenisini.
               </p>
               <div className="relative mt-10 flex justify-end">
                 <MatchCardMock className="translate-y-6 rotate-[-2deg] sm:mr-4" />
@@ -326,7 +331,7 @@ export default async function Home() {
             <Reveal delay={80} className="rounded-[2rem] bg-slate-50 p-7 ring-1 ring-slate-200 lg:col-span-2">
               <IconBadge>{Icons.shield}</IconBadge>
               <h3 className="mt-5 text-xl font-semibold">Belgesi görülmüş uzmanlar</h3>
-              <p className="mt-2 leading-7 text-slate-600">Diploma ve unvan, uzman danışan kabul etmeden önce tek tek kontrol edilir.</p>
+              <p className="mt-2 leading-7 text-slate-600">Her uzmanın diploması ya da mesleki belgesi, danışan kabul etmeden önce tek tek kontrol edilir.</p>
             </Reveal>
 
             <Reveal delay={140} className="rounded-[2rem] bg-slate-50 p-7 ring-1 ring-slate-200 lg:col-span-2">
@@ -337,7 +342,7 @@ export default async function Home() {
 
             <Reveal delay={80} className="rounded-[2rem] bg-lilac-50 p-7 ring-1 ring-lilac-100 lg:col-span-3">
               <IconBadge tone="lilac">{Icons.people}</IconBadge>
-              <h3 className="mt-5 text-xl font-semibold">Uzmanın da yalnız çalışmıyor</h3>
+              <h3 className="mt-5 text-xl font-semibold">Psikologlarımız yalnız çalışmıyor</h3>
               <p className="mt-2 leading-7 text-slate-600">
                 Psikologlarımız zor vakalarını kıdemli meslektaşlarıyla düzenli olarak değerlendirebilir.
               </p>
@@ -350,7 +355,7 @@ export default async function Home() {
               <IconBadge>{Icons.noRecord}</IconBadge>
               <h3 className="mt-5 text-xl font-semibold">Görüşmeler kaydedilmez</h3>
               <p className="mt-2 leading-7 text-slate-300">
-                Görüntülü seanslar Mindora tarafından kaydedilmez. Anlattıkların o odada kalır.
+                Görüntülü görüşmeler Mindora tarafından kaydedilmez. Konuştukların o odada kalır.
               </p>
             </Reveal>
           </div>
@@ -362,7 +367,8 @@ export default async function Home() {
         <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(50%_60%_at_15%_20%,rgb(125_103_184/0.45),transparent_70%),radial-gradient(40%_50%_at_90%_80%,rgb(67_120_102/0.4),transparent_70%)]" />
         <div className="relative mx-auto grid max-w-7xl gap-14 px-5 py-20 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-28">
           <Reveal>
-            <h2 className="text-3xl font-semibold leading-tight sm:text-5xl">Psikoloğunun da danıştığı biri var.</h2>
+            <p className="text-sm font-semibold uppercase tracking-wide text-lilac-200">Psikologlar için kalite güvencesi</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight sm:text-5xl">Psikoloğunun da danıştığı biri var.</h2>
             <p className="mt-6 max-w-lg text-lg leading-8 text-lilac-100">
               İyi terapistler zor vakalarda yalnız kalmaz; deneyimli bir meslektaşla düşünür. Buna
               süpervizyon denir. Mindora bunu platformun doğal bir parçası yaptı.
@@ -420,13 +426,13 @@ export default async function Home() {
       <section className="bg-pine-950 text-white">
         <div className="mx-auto grid max-w-7xl gap-14 px-5 py-20 lg:grid-cols-2 lg:items-center lg:py-24">
           <Reveal>
-            <h2 className="max-w-xl text-3xl font-semibold leading-tight sm:text-5xl">Anlattıkların seninle uzmanın arasında kalır.</h2>
+            <h2 className="max-w-xl text-3xl font-semibold leading-tight sm:text-5xl">Paylaştıkların seninle uzmanın arasında kalır.</h2>
             <dl className="mt-10 grid gap-8 sm:grid-cols-2">
               {[
                 ['Sınırlı erişim', 'Bir görüşmeyi yalnızca sen ve uzmanın görebilirsiniz. Ekibimiz yalnızca şikayet veya güvenlik durumunda, kayıt altına alınarak erişir.'],
                 ['Şifreli bağlantı', 'Mesajlaşma dahil tüm trafik şifreli bağlantı üzerinden iletilir.'],
-                ['Kayıtsız görüşme', 'Görüntülü seanslar kaydedilmez.'],
-                ['Senin kararın', 'Seans almak, uzmanı kabul etmek ya da bırakmak her zaman senin elinde.'],
+                ['Kayıtsız görüşme', 'Görüntülü görüşmeler kaydedilmez.'],
+                ['Senin kararın', 'Görüşme almak, uzmanı kabul etmek ya da bırakmak her zaman senin elinde.'],
               ].map(([title, text]) => (
                 <div key={title}>
                   <dt className="font-display text-lg font-semibold">{title}</dt>
@@ -441,26 +447,32 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* PSİKOLOGLAR İÇİN */}
+      {/* UZMANLAR İÇİN */}
       <section className="bg-lilac-50">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-2 lg:items-center lg:py-24">
           <Reveal className="order-2 flex justify-center lg:order-1">
-            <LogbookMock />
+            <CalendarMock />
           </Reveal>
           <Reveal className="order-1 lg:order-2">
-            <h2 className="text-3xl font-semibold leading-tight sm:text-5xl">Psikolog musun? Danışanını da süpervizörünü de burada bul.</h2>
+            <h2 className="text-3xl font-semibold leading-tight sm:text-5xl">Psikolog, diyetisyen ya da antrenör müsün? Danışanların burada.</h2>
             <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">
-              Danışan al, kıdemli meslektaşlarından online süpervizyon al ve saatlerini
-              doğrulanabilir bir defterde biriktir. Hepsi tek panelde.
+              Sana uygun danışanlar gelir; takvim, ödeme, mesajlaşma ve görüntülü görüşme tek panelde.
+              Psikologlar kıdemli meslektaşlarından online süpervizyon da alabilir.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/uzman-basvuru" className="inline-flex justify-center rounded-full bg-lilac-700 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-lilac-800">
-                Uzman olarak başvur
-              </Link>
-              <Link href="/supervizyon" className="inline-flex justify-center rounded-full border border-lilac-300 bg-white px-6 py-3.5 font-semibold text-lilac-800 transition-colors hover:border-lilac-500">
-                Süpervizyonu incele
-              </Link>
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              {PROFESSIONS.map((p) => (
+                <Link
+                  key={p}
+                  href={p === 'psychologist' ? '/uzman-basvuru' : `/uzman-basvuru?meslek=${PROFESSION_CONFIG[p].slug}`}
+                  className="inline-flex justify-center rounded-full bg-lilac-700 px-5 py-3.5 text-center text-sm font-semibold text-white transition-colors hover:bg-lilac-800"
+                >
+                  {PROFESSION_CONFIG[p].label} başvurusu
+                </Link>
+              ))}
             </div>
+            <Link href="/supervizyon" className="mt-5 inline-block font-semibold text-lilac-800 underline decoration-lilac-300 underline-offset-4">
+              Psikologlar için süpervizyonu incele
+            </Link>
           </Reveal>
         </div>
       </section>
@@ -495,7 +507,7 @@ export default async function Home() {
           <div className="relative">
             <h2 className="mx-auto max-w-2xl text-3xl font-semibold leading-tight sm:text-6xl">İlk adım üç dakika.</h2>
             <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-pine-100">
-              Ne hissettiğini tam anlatamasan da olur. Formu doldur, gerisini birlikte netleştirelim.
+              Ne istediğini tam anlatamasan da olur. Alanını seç, formu doldur; gerisini birlikte netleştirelim.
             </p>
             <Link href="/eslesme" className="mt-9 inline-flex rounded-full bg-white px-8 py-4 font-semibold text-pine-900 transition-colors hover:bg-pine-50">
               Ücretsiz eşleşmeyi başlat

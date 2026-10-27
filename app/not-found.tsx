@@ -3,8 +3,8 @@ import Header from '@/components/Header'
 import { ThreadLine } from '@/components/marketing/Mocks'
 
 const links = [
-  { href: '/eslesme', title: 'Ücretsiz ön eşleşme', text: 'Sana uygun psikoloğu birlikte bulalım.' },
-  { href: '/uzmanlar', title: 'Onaylı psikologlar', text: 'Belgeleri kontrol edilmiş uzmanları incele.' },
+  { href: '/eslesme', title: 'Ücretsiz ön eşleşme', text: 'Psikolog, diyetisyen ya da antrenör; sana uygun uzmanı birlikte bulalım.' },
+  { href: '/uzmanlar', title: 'Onaylı uzmanlar', text: 'Belgeleri kontrol edilmiş psikolog, diyetisyen ve antrenörleri incele.' },
   { href: '/psikolojik-testler', title: 'Farkındalık testleri', text: 'İki dakikada nasıl hissettiğine bak.' },
   { href: '/sss', title: 'Sık sorulan sorular', text: 'Ücret, gizlilik ve süreç hakkında.' },
 ]

@@ -218,7 +218,7 @@ export function CalendarMock({ className = '' }: { className?: string }) {
       <div className="flex items-center gap-3">
         <Avatar initials="DA" size="sm" />
         <div>
-          <p className="text-sm font-semibold text-slate-900">İlk seansını planla</p>
+          <p className="text-sm font-semibold text-slate-900">İlk görüşmeni planla</p>
           <p className="text-xs text-slate-500">Online görüşme, 50 dakika</p>
         </div>
       </div>
@@ -282,7 +282,12 @@ export function TopicPickerMock({ className = '' }: { className?: string }) {
   const topics = ['Kaygı ve stres', 'İlişki ve aile', 'Özgüven', 'Tükenmişlik', 'Henüz adını koyamadım']
   return (
     <div className={`w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl ring-1 ring-slate-200/80 ${className}`}>
-      <p className="font-display text-lg font-semibold text-slate-900">Şu sıralar seni en çok ne yoruyor?</p>
+      <div className="grid grid-cols-3 gap-1 rounded-full bg-slate-100 p-1 text-center text-xs font-semibold">
+        {['Psikolog', 'Diyetisyen', 'Antrenör'].map((s, i) => (
+          <span key={s} className={`rounded-full py-1.5 ${i === 0 ? 'bg-white text-pine-900 shadow-sm' : 'text-slate-500'}`}>{s}</span>
+        ))}
+      </div>
+      <p className="mt-4 font-display text-lg font-semibold text-slate-900">Şu sıralar seni en çok ne yoruyor?</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {topics.map((t, i) => (
           <span
