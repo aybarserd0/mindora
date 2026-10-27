@@ -3,6 +3,7 @@ import Header from '@/components/Header'
 import Reveal from '@/components/marketing/Reveal'
 import StepsShowcase from '@/components/marketing/StepsShowcase'
 import Comparison from '@/components/marketing/Comparison'
+import Photo, { PHOTOS } from '@/components/marketing/Photo'
 import {
   CalendarMock,
   CaseRedactionMock,
@@ -168,25 +169,23 @@ export default async function Home() {
           </div>
 
           {/* Ürün kompozisyonu */}
-          <div className="relative mx-auto flex min-h-[520px] w-full max-w-xl items-center justify-center">
-            <ThreadLine
-              className="absolute inset-0 h-full w-full"
-              d="M20 470 C 120 300, 210 520, 300 330 S 470 80, 560 120"
-              length={900}
+          <div className="relative mx-auto w-full max-w-xl pb-28 sm:pb-20">
+            <Photo
+              photo={PHOTOS.tea}
+              priority
+              position="50% 30%"
+              className="ml-auto aspect-[4/5] w-[88%] rounded-[2.5rem] shadow-2xl sm:w-[82%]"
             />
-            <div className="animate-drift relative z-10" style={{ ['--tilt' as string]: '-1.5deg' }}>
+            <div className="animate-drift absolute bottom-0 left-0 z-10 w-[86%] sm:w-[74%]" style={{ ['--tilt' as string]: '-1.5deg' }}>
               <MatchCardMock />
             </div>
-            <FloatingNote className="-left-2 top-6 z-20 sm:left-0" tilt="-3deg" delay="1.5s" icon={<IconBadge>{Icons.noRecord}</IconBadge>}>
+            <FloatingNote className="-left-2 top-8 z-20 sm:left-0" tilt="-3deg" delay="1.5s" icon={<IconBadge>{Icons.noRecord}</IconBadge>}>
               Görüşmeler kaydedilmez
             </FloatingNote>
-            <FloatingNote className="-right-2 top-28 z-20 hidden sm:flex" tilt="2deg" delay="0.6s" icon={<IconBadge>{Icons.shield}</IconBadge>}>
+            <FloatingNote className="-right-2 top-1/3 z-20 hidden sm:flex" tilt="2deg" delay="0.6s" icon={<IconBadge>{Icons.shield}</IconBadge>}>
               Diploma ve unvan kontrol edildi
             </FloatingNote>
-            <FloatingNote className="bottom-6 left-0 z-20 sm:-left-6" tilt="2deg" delay="2.4s" icon={<IconBadge tone="lilac">{Icons.people}</IconBadge>}>
-              Uzmanın süpervizyonla destekleniyor
-            </FloatingNote>
-            <SampleCaption className="absolute -bottom-2 right-2" />
+            <SampleCaption className="absolute -bottom-6 right-2" />
           </div>
         </div>
 
@@ -247,6 +246,9 @@ export default async function Home() {
 
           <div className="mt-14 grid gap-5 lg:grid-cols-6">
             <Reveal className="relative overflow-hidden rounded-[2rem] bg-pine-900 p-8 text-white lg:col-span-4 lg:row-span-2 lg:p-10">
+              <Photo photo={PHOTOS.walk} tone="none" sizes="(min-width: 1024px) 60vw, 100vw" cover position="50% 60%" />
+              <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-pine-950/90 via-pine-900/70 to-pine-900/20" />
+              <div className="relative">
               <h3 className="max-w-md text-2xl font-semibold sm:text-3xl">Doğru kişiyi aramak sende değil, bizde.</h3>
               <p className="mt-4 max-w-md leading-7 text-pine-100">
                 Yüzlerce profil arasında kaybolmazsın. Anlattıklarına göre alanı, yaklaşımı ve
@@ -254,6 +256,7 @@ export default async function Home() {
               </p>
               <div className="mt-10 flex justify-end">
                 <MatchCardMock className="translate-y-6 rotate-[-2deg] sm:mr-4" />
+              </div>
               </div>
             </Reveal>
 
@@ -378,8 +381,15 @@ export default async function Home() {
       {/* PSİKOLOGLAR İÇİN */}
       <section className="bg-lilac-50">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-2 lg:items-center lg:py-24">
-          <Reveal className="order-2 flex justify-center lg:order-1">
-            <LogbookMock />
+          <Reveal className="relative order-2 pb-16 lg:order-1">
+            <Photo
+              photo={PHOTOS.desk}
+              tone="lilac"
+              className="aspect-[5/4] w-[90%] rounded-[2.5rem] shadow-xl"
+            />
+            <div className="absolute bottom-0 right-0 w-[78%] max-w-sm">
+              <LogbookMock />
+            </div>
           </Reveal>
           <Reveal className="order-1 lg:order-2">
             <h2 className="text-3xl font-semibold leading-tight sm:text-5xl">Psikolog musun? Danışanını da süpervizörünü de burada bul.</h2>
@@ -423,6 +433,8 @@ export default async function Home() {
       {/* KAPANIŞ */}
       <section className="px-5 pb-24">
         <Reveal className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-pine-800 px-6 py-16 text-center text-white sm:px-12 lg:py-24">
+          <Photo photo={PHOTOS.trail} tone="none" sizes="100vw" cover position="50% 55%" />
+          <div aria-hidden="true" className="absolute inset-0 bg-pine-900/75" />
           <ThreadLine className="absolute inset-0 h-full w-full opacity-60" d="M-20 300 C 200 80, 420 360, 640 160 S 1000 40, 1300 220" length={1500} />
           <div className="relative">
             <h2 className="mx-auto max-w-2xl text-3xl font-semibold leading-tight sm:text-6xl">İlk adım üç dakika.</h2>
