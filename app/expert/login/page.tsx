@@ -58,7 +58,7 @@ function ExpertLoginContent() {
           ]}
         />
 
-        <div className="flex flex-col justify-center rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-200/80 sm:p-10">
+        <div className="order-1 flex flex-col justify-center rounded-[2rem] bg-white p-8 shadow-xl ring-1 ring-slate-200/80 sm:p-10 lg:order-2">
           <h1 className="text-3xl font-semibold text-slate-900">Uzman girişi</h1>
 
           <p className="mt-3 leading-7 text-slate-600">

@@ -11,7 +11,7 @@ export default function ServicesAside({ heading, lead, items, tone = 'pine' }: {
   ]
   const bg = tone === 'lilac' ? 'bg-lilac-950' : 'bg-pine-900'
   return (
-    <aside className={`relative overflow-hidden rounded-[2rem] ${bg} p-8 text-white sm:p-10`}>
+    <aside className={`relative order-2 overflow-hidden rounded-[2rem] ${bg} p-8 text-white sm:p-10 lg:order-1`}>
       <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(60%_60%_at_90%_0%,rgb(182_166_221/0.35),transparent_70%),radial-gradient(50%_50%_at_0%_100%,rgb(143_212_189/0.25),transparent_70%)]" />
       <div className="relative">
         <div className="flex flex-wrap gap-2">
