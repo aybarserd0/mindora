@@ -37,6 +37,8 @@ type ProfessionConfig = {
     preferenceLabel: string
     preferences: string[]
     notePlaceholder: string
+    /** Mesleğe özel ek seçim sorusu (ör. antrenmanın nerede yapılacağı) */
+    settingQuestion?: { label: string; options: string[] }
     /** Sağlık ön sorusu (yalnızca evet/hayır; ayrıntı formda istenmez) */
     healthQuestion?: { label: string; hint: string }
     safetyNote: string
@@ -162,13 +164,14 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
     supervision: false,
     client: {
       heading: 'Sana uygun antrenörü birlikte bulalım.',
-      lead: 'Hedefini, seviyeni ve ne zaman çalışabileceğini anlat; belgeleri kontrol edilmiş antrenörler arasından sana uygun olanı biz önerelim. Antrenmanlar online, evinden.',
+      lead: 'Hedefini, seviyeni ve ne zaman çalışabileceğini anlat; belgeleri kontrol edilmiş antrenörler arasından sana uygun olanı biz önerelim. İster evde ister salonda çalış; programın ve takibin online.',
       topicLabel: 'Hedefin nedir?',
       topics: [
         'Kilo vermek / yağ yakmak',
         'Kas kazanmak / güçlenmek',
         'Genel form ve kondisyon',
         'Esneklik ve duruş',
+        'Salon programı',
         'Evde antrenman düzeni',
         'Spora yeni başlıyorum',
         'Diğer',
@@ -178,7 +181,8 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
       previousLabel: 'Daha önce bir antrenörle çalıştın mı?',
       preferenceLabel: 'Antrenör tercihin var mı?',
       preferences: ['Kadın antrenör', 'Erkek antrenör', 'Fark etmez'],
-      notePlaceholder: 'İstersen elindeki ekipmanı (dambıl, bant, mat) ya da daha önce yaşadığın bir sakatlığı yazabilirsin.',
+      notePlaceholder: 'İstersen gittiğin salonu ya da evdeki ekipmanını (dambıl, bant, mat), varsa geçmiş bir sakatlığını yazabilirsin.',
+      settingQuestion: { label: 'Antrenmanlarını nerede yapacaksın?', options: ['Salonda', 'Evde', 'İkisi de'] },
       healthQuestion: {
         label: 'Doktorunun egzersizini kısıtladığı ya da dikkat etmen gereken bir sağlık durumun var mı?',
         hint: `${HEALTH_HINT} Emin değilsen başlamadan önce doktoruna danışmanı öneririz.`,
@@ -188,16 +192,16 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
       trustItems: [
         { title: 'Tamamen ücretsiz', text: 'Formu doldurmak antrenman satın alma zorunluluğu getirmez.' },
         { title: 'Belgesi kontrol edilmiş', text: 'Antrenörlerimizin diploması veya antrenörlük belgesi incelendi.' },
-        { title: 'Evinden antrenman', text: 'Görüntülü görüşmeyle; salon ya da ulaşım derdi yok.' },
+        { title: 'Evde ya da salonda', text: 'Canlı görüntülü antrenman ya da salonda uygulayacağın program.' },
         { title: 'Ücret baştan belli', text: 'Abonelik yok; ödemeden önce ne ödeyeceğini görürsün.' },
       ],
     },
     expert: {
       heroTitle: 'Antrenmana odaklan. Danışan ve ödeme bizde.',
       heroLead:
-        "Mindora'da hedefine uygun danışanlar gelir; randevu, ödeme, mesajlaşma ve görüntülü antrenman tek panelde işler. Programlarını dosya olarak paylaşabilirsin.",
+        "Mindora'da hedefine uygun danışanlar gelir; randevu, ödeme, mesajlaşma ve görüntülü görüşme tek panelde işler. Evde canlı antrenman yaptırabilir ya da salon programı hazırlayıp takip edebilirsin.",
       titlePlaceholder: 'Örn: Kişisel Antrenör, Spor Bilimci',
-      areas: ['Yağ yakımı', 'Kas kazanımı / güç', 'Kondisyon', 'Esneklik / mobilite', 'Evde antrenman', 'Yeni başlayanlar', 'Kadınlara özel antrenman', 'Diğer'],
+      areas: ['Yağ yakımı', 'Kas kazanımı / güç', 'Kondisyon', 'Esneklik / mobilite', 'Salon programı', 'Evde antrenman', 'Yeni başlayanlar', 'Kadınlara özel antrenman', 'Diğer'],
       credentials: [
         'Spor bilimleri / antrenörlük eğitimi lisans diploması, federasyon antrenör belgesi ya da MYK belgesi',
         'Yalnızca online alınmış sertifikalar tek başına yeterli değildir',

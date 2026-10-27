@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     const healthScreen = config.client.healthQuestion && ['Hayır', 'Evet', 'Emin değilim'].includes(toText(data.healthScreen))
       ? toText(data.healthScreen)
       : null
+    const setting = config.client.settingQuestion?.options.includes(toText(data.setting)) ? toText(data.setting) : null
 
     if (!name) {
       return NextResponse.json(
@@ -72,6 +73,7 @@ export async function POST(req: NextRequest) {
       note,
       profession,
       health_screen: healthScreen,
+      setting,
     })
 
     if (dbError) {
@@ -106,6 +108,7 @@ Süre: ${duration}
 Başlama: ${startTime}
 Tercih: ${preference}
 Müsaitlik: ${availability}
+Antrenman yeri: ${setting ?? '-'}
 Sağlık ön sorusu: ${healthScreen ?? '-'}
 Not: ${note}
 `

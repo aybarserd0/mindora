@@ -445,7 +445,7 @@ export default function UzmanlarList({ profession }: { profession: Profession })
                   ]
                 : profession === "trainer"
                   ? [
-                      { i: "MA", n: "Mert A.", t: "Evde antrenman · Kuvvet", b: false },
+                      { i: "MA", n: "Mert A.", t: "Salon programı · Kuvvet", b: false },
                       { i: "DS", n: "Deniz S.", t: "Mobilite · Yeni başlayanlar", b: false },
                       { i: "CK", n: "Can K.", t: "Kondisyon · Yağ yakımı", b: false },
                     ]

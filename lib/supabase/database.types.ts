@@ -33,6 +33,7 @@ export type Database = {
           topic: string | null
           profession: string
           health_screen: string | null
+          setting: string | null
         }
         Insert: {
           age?: string | null
@@ -52,6 +53,7 @@ export type Database = {
           topic?: string | null
           profession?: string
           health_screen?: string | null
+          setting?: string | null
         }
         Update: {
           age?: string | null
@@ -71,6 +73,7 @@ export type Database = {
           topic?: string | null
           profession?: string
           health_screen?: string | null
+          setting?: string | null
         }
         Relationships: [
           {

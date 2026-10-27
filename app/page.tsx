@@ -72,7 +72,7 @@ const services = [
   },
   {
     title: 'Kişisel antrenör',
-    text: 'Salona gitmeden, seviyene ve zamanına göre bir antrenman düzeni. Görüntülü görüşmeyle, evinden.',
+    text: 'Evde canlı antrenman ya da salonda uygulayacağın bir program. Seviyene ve zamanına göre, takibi online.',
     cta: 'Antrenörleri incele',
     href: '/kisisel-antrenor',
     photo: PHOTOS.homeWorkout,

@@ -112,7 +112,7 @@ const MATCH_SAMPLES = {
   trainer: {
     initials: 'MA',
     name: 'Mert A., Kişisel Antrenör',
-    sub: 'Evde antrenman ve kuvvet, 7 yıl',
+    sub: 'Salon programı ve kuvvet, 7 yıl',
     supervised: false,
     bullets: ['Yeni başlayanlarla çalışıyor', 'Sabah ve akşam saatleri müsait', 'Seans ücreti 800 ₺, ek ücret yok'],
   },

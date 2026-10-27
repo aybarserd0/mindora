@@ -27,5 +27,9 @@ alter table public.client_applications
 alter table public.client_applications
   add column if not exists health_screen text;
 
+-- Antrenör başvurularında antrenmanın nerede yapılacağı: Salonda / Evde / İkisi de
+alter table public.client_applications
+  add column if not exists setting text;
+
 create index if not exists client_applications_profession_idx
   on public.client_applications (profession, created_at desc);

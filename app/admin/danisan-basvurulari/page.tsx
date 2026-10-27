@@ -55,6 +55,7 @@ type Client = {
   note: string | null;
   profession?: string | null;
   health_screen?: string | null;
+  setting?: string | null;
   status: ClientStatus;
   matched_expert_id: string | null;
   created_at: string;
@@ -709,6 +710,7 @@ export default function DanisanBasvurulariPage() {
                     <InfoRow label="Daha Önce Destek" value={safeText(client.previous_support)} />
                     <InfoRow label="Başlama Zamanı" value={safeText(client.start_time)} />
                     <InfoRow label="Uzman Tercihi" value={safeText(client.preference)} />
+                    {client.setting ? <InfoRow label="Antrenman Yeri" value={safeText(client.setting)} /> : null}
                     {client.health_screen ? <InfoRow label="Sağlık Ön Sorusu" value={safeText(client.health_screen)} /> : null}
                     <InfoRow label="Müsaitlik" value={safeText(client.availability)} />
                     <InfoRow

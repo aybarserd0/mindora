@@ -103,6 +103,7 @@ export default function EslesmeForm({ profession }: { profession: Profession }) 
       availability,
       note: getFormValue(form, 'note'),
       healthScreen: getFormValue(form, 'healthScreen'),
+      setting: getFormValue(form, 'setting'),
       profession,
     }
 
@@ -404,6 +405,23 @@ export default function EslesmeForm({ profession }: { profession: Profession }) 
                 </select>
               </label>
             </div>
+
+            {copy.settingQuestion ? (
+              <fieldset>
+                <legend className="mb-3 block text-sm font-semibold text-slate-700">{copy.settingQuestion.label}</legend>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {copy.settingQuestion.options.map((item) => (
+                    <label
+                      key={item}
+                      className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:border-slate-300 hover:bg-white"
+                    >
+                      <input name="setting" type="radio" required value={item} className="h-4 w-4 accent-pine-700" />
+                      {item}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ) : null}
 
             {copy.healthQuestion ? (
               <fieldset>
