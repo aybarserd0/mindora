@@ -1,5 +1,6 @@
 'use client'
 
+import { PROFESSION_CONFIG, toProfession, type Profession } from '@/lib/professions'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -8,6 +9,7 @@ type ProfileStatus = 'approved' | 'pending' | 'review' | 'passive'
 type AccountStatus = 'active' | 'passive'
 
 type ExpertProfile = {
+  profession?: string | null
   id: string
   name: string
   title: string
@@ -636,6 +638,7 @@ export default function ExpertProfilePage() {
         {editing ? (
           <section className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
             <ProfileEditForm
+              profession={toProfession(profile.profession)}
               form={form}
               saving={saving}
               onChange={updateForm}
@@ -779,12 +782,14 @@ function ProfilePreview({
 }
 
 function ProfileEditForm({
+  profession,
   form,
   saving,
   onChange,
   onCancel,
   onSave,
 }: {
+  profession: Profession
   form: ProfileFormState
   saving: boolean
   onChange: <K extends keyof ProfileFormState>(key: K, value: ProfileFormState[K]) => void
@@ -831,13 +836,13 @@ function ProfileEditForm({
         />
         <TextArea
           label="Uzmanlık Alanları"
-          hint="Virgülle ayırın. Örn: Kaygı, Depresyon, İlişki Problemleri"
+          hint={`Virgülle ayır. Örn: ${PROFESSION_CONFIG[profession].expert.areas.slice(0, 3).join(", ")}`}
           value={form.specialties}
           onChange={(value) => onChange('specialties', value)}
         />
         <TextArea
           label="Çalıştığı Konular"
-          hint="Virgülle ayırın. Örn: Overthinking, Panik, Stres Yönetimi"
+          hint={`Virgülle ayır. Örn: ${PROFESSION_CONFIG[profession].client.topics.slice(0, 3).join(", ")}`}
           value={form.focusAreas}
           onChange={(value) => onChange('focusAreas', value)}
         />
@@ -850,7 +855,7 @@ function ProfileEditForm({
         />
         <TextArea
           label="Çalışma Yaklaşımı"
-          hint="Terapi yaklaşımınız, seans tarzınız ve çalışma biçiminiz."
+          hint={PROFESSION_CONFIG[profession].approachHint}
           value={form.approach}
           rows={6}
           onChange={(value) => onChange('approach', value)}

@@ -9,6 +9,11 @@ export type Profession = (typeof PROFESSIONS)[number]
 
 export const DEFAULT_PROFESSION: Profession = 'psychologist'
 
+export const DOCUMENT_KEYS = ['diploma', 'license', 'certificate', 'identity'] as const
+export type DocumentKey = (typeof DOCUMENT_KEYS)[number]
+
+const IDENTITY_DOC = { title: 'Kimlik doğrulama', description: 'Gerekli görülürse kimlik belgeni yükleyebilirsin.', required: false }
+
 type ProfessionConfig = {
   code: Profession
   /** URL'deki ?meslek= değeri */
@@ -44,6 +49,10 @@ type ProfessionConfig = {
     safetyNote: string
     trustItems: { title: string; text: string }[]
   }
+  /** Uzmanın doğrulama için yükleyeceği belgeler (anahtarlar veritabanında aynı kalır) */
+  documents: Record<DocumentKey, { title: string; description: string; required: boolean }>
+  /** Uzman profilinde "çalışma yaklaşımı" alanının ipucu */
+  approachHint: string
   expert: {
     heroTitle: string
     heroLead: string
@@ -68,6 +77,13 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
     landingHref: '/',
     serviceName: 'Psikolojik Destek Seansı',
     supervision: true,
+    approachHint: 'Terapi yaklaşımın (BDT, şema, psikodinamik gibi), seans tarzın ve çalışma biçimin.',
+    documents: {
+      diploma: { title: 'Psikoloji diploması', description: 'Psikoloji lisans diplomanı ya da e-Devlet barkodlu mezun belgeni yükle.', required: true },
+      license: { title: 'Unvan belgesi', description: 'Klinik psikolog unvanın varsa klinik psikoloji yüksek lisans diploması; yoksa lisans mezun belgen.', required: true },
+      certificate: { title: 'Terapi eğitim sertifikaları', description: 'BDT, şema, EMDR gibi eğitim sertifikaların. İsteğe bağlı.', required: false },
+      identity: IDENTITY_DOC,
+    },
     client: {
       heading: 'Doğru psikoloğu aramak senin işin olmasın.',
       lead: 'Yüzlerce profil arasında kaybolma. Ne yaşadığını birkaç cümleyle anlat; belgeleri kontrol edilmiş psikologlar arasından sana uygun olanları biz önerelim.',
@@ -109,6 +125,13 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
     landingHref: '/diyetisyen',
     serviceName: 'Diyetisyen Görüşmesi',
     supervision: false,
+    approachHint: 'Beslenme yaklaşımın, kontrol görüşmelerini nasıl planladığın ve planları nasıl hazırladığın.',
+    documents: {
+      diploma: { title: 'Beslenme ve Diyetetik diploması', description: 'Beslenme ve Diyetetik lisans diplomanı yükle.', required: true },
+      license: { title: 'e-Devlet mezun belgesi', description: "e-Devlet'ten aldığın barkodlu mezun belgesi; barkoddan doğrulanır.", required: true },
+      certificate: { title: 'Ek eğitim sertifikaları', description: 'Sporcu beslenmesi, klinik beslenme gibi sertifikaların. İsteğe bağlı.', required: false },
+      identity: IDENTITY_DOC,
+    },
     client: {
       heading: 'Sana uygun diyetisyeni birlikte bulalım.',
       lead: 'Hedefini ve günlük düzenini anlat; belgeleri kontrol edilmiş diyetisyenler arasından sana uygun olanı biz önerelim. Görüşmeler online, ücret baştan belli.',
@@ -162,6 +185,13 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
     landingHref: '/kisisel-antrenor',
     serviceName: 'Kişisel Antrenörlük Seansı',
     supervision: false,
+    approachHint: 'Antrenman yaklaşımın; salon ve ev programlarını nasıl hazırladığın, takibi nasıl yaptığın.',
+    documents: {
+      diploma: { title: 'Diploma ya da antrenörlük belgesi', description: 'Spor bilimleri / antrenörlük eğitimi diploması ya da federasyon antrenör belgeni yükle.', required: true },
+      license: { title: 'MYK / federasyon belgesi', description: 'Varsa MYK mesleki yeterlilik belgen ya da ikinci bir antrenörlük belgen. Diploman varsa isteğe bağlı.', required: false },
+      certificate: { title: 'Ek sertifikalar', description: 'Fonksiyonel antrenman, pilates, ilk yardım gibi sertifikaların. İsteğe bağlı.', required: false },
+      identity: IDENTITY_DOC,
+    },
     client: {
       heading: 'Sana uygun antrenörü birlikte bulalım.',
       lead: 'Hedefini, seviyeni ve ne zaman çalışabileceğini anlat; belgeleri kontrol edilmiş antrenörler arasından sana uygun olanı biz önerelim. İster evde ister salonda çalış; programın ve takibin online.',
@@ -242,4 +272,9 @@ export function matchHref(profession: Profession, extra?: Record<string, string>
 
 export function expertApplyHref(profession: Profession) {
   return profession === DEFAULT_PROFESSION ? '/uzman-basvuru' : `/uzman-basvuru?meslek=${PROFESSION_CONFIG[profession].slug}`
+}
+
+export function documentInfo(profession: unknown, key: string) {
+  const docs = PROFESSION_CONFIG[toProfession(profession)].documents
+  return (docs as Record<string, { title: string; description: string; required: boolean }>)[key] ?? null
 }

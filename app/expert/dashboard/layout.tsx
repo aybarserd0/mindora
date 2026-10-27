@@ -1,5 +1,6 @@
 "use client";
 
+import { professionLabel } from "@/lib/professions";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -160,7 +161,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
               <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
               <span className="leading-tight">
                 <span className="block font-display text-lg font-semibold text-slate-900">mindora</span>
-                <span className="block text-xs text-slate-500">Çalışma alanın</span>
+                <span className="block text-xs text-slate-500">{professionLabel(profession)} · çalışma alanın</span>
               </span>
             </Link>
           </div>
@@ -228,6 +229,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
               </Link>
               <p className="hidden text-sm text-slate-500 lg:block">
                 {expertName ? `Hoş geldin, ${expertName.split(" ")[0]}` : "Hoş geldin"}
+                <span className="ml-2 rounded-full bg-lilac-50 px-2.5 py-0.5 text-xs font-semibold text-lilac-800">{professionLabel(profession)}</span>
               </p>
               <NotificationBell role="expert" />
             </div>
