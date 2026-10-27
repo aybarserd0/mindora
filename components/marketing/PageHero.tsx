@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import Photo, { type PhotoSource } from './Photo'
 
 type Props = {
   title: ReactNode
@@ -6,10 +7,12 @@ type Props = {
   children?: ReactNode
   visual?: ReactNode
   tone?: 'pine' | 'lilac'
+  /** Verilirse sağda temsili fotoğraf durur, ürün kurgusu fotoğrafın sol altına biner. */
+  photo?: PhotoSource
 }
 
 /** Herkese açık sayfaların ortak giriş alanı: solda mesaj, sağda ürün kurgusu. */
-export default function PageHero({ title, lead, children, visual, tone = 'pine' }: Props) {
+export default function PageHero({ title, lead, children, visual, tone = 'pine', photo }: Props) {
   const glow =
     tone === 'lilac'
       ? 'bg-[radial-gradient(60%_70%_at_80%_10%,var(--color-lilac-200),transparent_70%),radial-gradient(50%_60%_at_10%_100%,var(--color-pine-100),transparent_70%)]'
@@ -24,7 +27,15 @@ export default function PageHero({ title, lead, children, visual, tone = 'pine' 
           {lead ? <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">{lead}</p> : null}
           {children ? <div className="mt-8">{children}</div> : null}
         </div>
-        {visual ? <div className="relative mx-auto flex min-h-[380px] w-full max-w-xl items-center justify-center">{visual}</div> : null}
+        {visual && photo ? (
+          <div className="relative mx-auto w-full max-w-xl pb-28">
+            <Photo photo={photo} tone={tone} priority className="ml-auto aspect-[4/5] w-[86%] rounded-[2.5rem] shadow-2xl sm:aspect-square" />
+            {/* Doğrudan çocuk svg ThreadLine'dır; fotoğrafın üstünde gizlenir */}
+            <div className="absolute inset-0 z-10 flex items-end justify-start [&>svg]:hidden">{visual}</div>
+          </div>
+        ) : visual ? (
+          <div className="relative mx-auto flex min-h-[380px] w-full max-w-xl items-center justify-center">{visual}</div>
+        ) : null}
       </div>
     </section>
   )
