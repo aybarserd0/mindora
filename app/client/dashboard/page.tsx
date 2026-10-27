@@ -1,5 +1,6 @@
 'use client'
 
+import { professionLabel } from '@/lib/professions'
 import Link from 'next/link'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -57,6 +58,7 @@ type ClientDashboard = {
     id?: string | null
     name: string
     email?: string | null
+    profession?: string | null
   }
   conversation: {
     id: string
@@ -437,7 +439,7 @@ function ClientDashboardContent() {
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <Pill tone="green">Sana özel</Pill>
-                <Pill tone="purple">Uzman: {safeText(dashboard.expert.name, 'Uzman')}</Pill>
+                <Pill tone="purple">{professionLabel(dashboard.expert.profession)}: {safeText(dashboard.expert.name, 'Uzman')}</Pill>
                 <Pill tone="blue">
                   Chat: {normalizeConversationStatus(dashboard.conversation.status)}
                 </Pill>
@@ -498,7 +500,7 @@ function ClientDashboardContent() {
               Son adım
             </p>
             <h2 className="mt-2 text-2xl font-semibold text-amber-950 sm:text-3xl">
-              Eşleşmeniz hazır! Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
+              Eşleşmen hazır! Uzmanınla görüşmeye başlamak için ödemeni tamamla.
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm font-semibold leading-6 text-amber-800">
               Ödemeniz onaylandığı an sohbet ve görüşme alanınız otomatik olarak açılır, size

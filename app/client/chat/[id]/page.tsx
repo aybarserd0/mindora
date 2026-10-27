@@ -1318,7 +1318,7 @@ export default function ClientChatPage({
           <h1 className="text-2xl font-semibold text-slate-900">Görüşme alanı kilitli</h1>
 
           <p className="mt-3 text-sm font-medium leading-6 text-slate-500">
-            Eşleşmeniz hazır! Terapistinizle görüşmeye başlamak için ödemenizi tamamlayın.
+            Eşleşmen hazır! Uzmanınla görüşmeye başlamak için ödemeni tamamla.
             Ödemeniz onaylandığı an bu alan otomatik olarak açılacaktır.
           </p>
 
