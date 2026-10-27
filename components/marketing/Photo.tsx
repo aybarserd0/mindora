@@ -22,6 +22,7 @@ export const PHOTOS = {
   forestLight: { label: 'Ormana süzülen gün ışığı', src: 'https://images.unsplash.com/photo-1762539683985-de22c1e2358f', alt: 'Ormandaki patikaya süzülen gün ışığı' },
   forestTrees: { label: 'Ağaçların arasından gün ışığı', src: 'https://images.unsplash.com/photo-1760645612099-569f42cacd74', alt: 'Yeşil bir ormanda ağaçların arasından süzülen ışık' },
   trail: { label: 'Orman yolu', src: 'https://images.unsplash.com/photo-1464880963754-5cb06fbff95f', alt: 'Orman yolunda yürüyen biri' },
+  leaves: { label: 'Yapraklardan süzülen gün ışığı', src: 'https://images.unsplash.com/photo-1761488877637-be39d4c58968', alt: 'Yeşil yaprakların arasından süzülen gün ışığı' },
   journal: { label: 'Kahve eşliğinde not almak', src: 'https://images.unsplash.com/photo-1642543492457-39a2ce63bb59', alt: 'Bir fincan kahvenin yanında kâğıda not alan biri' },
   desk: { label: 'Bitkili çalışma masası', src: 'https://images.unsplash.com/photo-1768471125958-78556538fadc', alt: 'Bitkilerle dolu, gün ışığı alan bir çalışma masasında çalışan kadın' },
   onlineMeeting: SESSION_PHOTOS[4],

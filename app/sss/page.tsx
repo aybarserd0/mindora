@@ -221,7 +221,7 @@ export default function SSS() {
       <JsonLd />
 
       <PageHero
-        photo={PHOTOS.trail}
+        photo={PHOTOS.leaves}
         title="Başlamadan önce aklına takılanlar."
         lead="Ön eşleşme, görüşmeler, ücretler, gizlilik ve uzmanlarımız hakkında en çok sorulan soruları topladık. Cevabını bulamazsan bize yazabilirsin."
         visual={

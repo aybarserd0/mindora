@@ -118,8 +118,8 @@ export default async function Home({
 }) {
   // Taslak: ?foto=N ve ?adim=N ile fotoğraf adayları denenir (bkz. /foto-secenekler)
   const params = await searchParams
-  const heroPhoto = pickPhoto(params.foto, 1).photo
-  const stepPhoto = pickPhoto(params.adim, 3).photo
+  const heroPhoto = pickPhoto(params.foto, 3).photo
+  const stepPhoto = pickPhoto(params.adim, 4).photo
   const approvedExpertCount = await getApprovedExpertCount()
   const showExpertCount =
     approvedExpertCount !== null && approvedExpertCount >= MIN_EXPERT_COUNT_TO_DISPLAY
