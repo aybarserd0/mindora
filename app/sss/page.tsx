@@ -4,6 +4,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import FaqAccordion from './FaqAccordion'
 import PageHero from '@/components/marketing/PageHero'
+import { PHOTOS } from '@/components/marketing/Photo'
 import CtaBand from '@/components/marketing/CtaBand'
 import { ThreadLine } from '@/components/marketing/Mocks'
 
@@ -220,6 +221,7 @@ export default function SSS() {
       <JsonLd />
 
       <PageHero
+        photo={PHOTOS.trail}
         title="Başlamadan önce aklına takılanlar."
         lead="Ön eşleşme, görüşmeler, ücretler, gizlilik ve uzmanlarımız hakkında en çok sorulan soruları topladık. Cevabını bulamazsan bize yazabilirsin."
         visual={

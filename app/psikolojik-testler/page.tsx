@@ -3,6 +3,7 @@
 import Header from '@/components/Header'
 import { useMemo, useState } from 'react'
 import PageHero from '@/components/marketing/PageHero'
+import { PHOTOS } from '@/components/marketing/Photo'
 import CtaBand from '@/components/marketing/CtaBand'
 import Reveal from '@/components/marketing/Reveal'
 import { FloatingNote, IconBadge, Icons, ThreadLine } from '@/components/marketing/Mocks'
@@ -190,6 +191,7 @@ export default function PsikolojikTestler() {
       <Header />
 
       <PageHero
+        photo={PHOTOS.journal}
         title="Bugün nasıl hissettiğine iki dakika ayır."
         lead="Kaygı, stres, duygu durumu ve özgüven üzerine kısa farkındalık testleri. Yanıtların bu cihazdan çıkmaz, hiçbir yere kaydedilmez. Sonuçlar tanı koymaz; ne hissettiğini adlandırmana yardım eder."
         visual={

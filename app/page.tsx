@@ -3,7 +3,7 @@ import Header from '@/components/Header'
 import Reveal from '@/components/marketing/Reveal'
 import StepsShowcase from '@/components/marketing/StepsShowcase'
 import Comparison from '@/components/marketing/Comparison'
-import Photo, { pickPhoto } from '@/components/marketing/Photo'
+import Photo, { PHOTOS, pickPhoto } from '@/components/marketing/Photo'
 import ExpertStrip from '@/components/marketing/ExpertStrip'
 import {
   CalendarMock,
@@ -262,12 +262,14 @@ export default async function Home({
 
           <div className="mt-14 grid gap-5 lg:grid-cols-6">
             <Reveal className="relative overflow-hidden rounded-[2rem] bg-pine-900 p-8 text-white lg:col-span-4 lg:row-span-2 lg:p-10">
-              <h3 className="max-w-md text-2xl font-semibold sm:text-3xl">Doğru kişiyi aramak sende değil, bizde.</h3>
-              <p className="mt-4 max-w-md leading-7 text-pine-100">
+              <Photo photo={PHOTOS.forestWalk} tone="none" sizes="(min-width: 1024px) 60vw, 100vw" position="50% 60%" cover />
+              <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-pine-950/90 via-pine-900/70 to-pine-900/20" />
+              <h3 className="relative max-w-md text-2xl font-semibold sm:text-3xl">Doğru kişiyi aramak sende değil, bizde.</h3>
+              <p className="relative mt-4 max-w-md leading-7 text-pine-100">
                 Yüzlerce profil arasında kaybolmazsın. Anlattıklarına göre alanı, yaklaşımı ve
                 saatleri sana uyan uzmanı öneririz; uymazsa yenisini.
               </p>
-              <div className="mt-10 flex justify-end">
+              <div className="relative mt-10 flex justify-end">
                 <MatchCardMock className="translate-y-6 rotate-[-2deg] sm:mr-4" />
               </div>
             </Reveal>
@@ -438,6 +440,8 @@ export default async function Home({
       {/* KAPANIŞ */}
       <section className="px-5 pb-24">
         <Reveal className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-pine-800 px-6 py-16 text-center text-white sm:px-12 lg:py-24">
+          <Photo photo={PHOTOS.forestLight} tone="none" sizes="100vw" cover />
+          <div aria-hidden="true" className="absolute inset-0 bg-pine-900/75" />
           <ThreadLine className="absolute inset-0 h-full w-full opacity-60" d="M-20 300 C 200 80, 420 360, 640 160 S 1000 40, 1300 220" length={1500} />
           <div className="relative">
             <h2 className="mx-auto max-w-2xl text-3xl font-semibold leading-tight sm:text-6xl">İlk adım üç dakika.</h2>

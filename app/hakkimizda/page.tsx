@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Header from '@/components/Header'
 import Reveal from '@/components/marketing/Reveal'
 import PageHero from '@/components/marketing/PageHero'
+import { PHOTOS } from '@/components/marketing/Photo'
 import CtaBand from '@/components/marketing/CtaBand'
 import {
   CaseRedactionMock,
@@ -56,6 +57,7 @@ export default function Hakkimizda() {
       <Header />
 
       <PageHero
+        photo={PHOTOS.forestTrees}
         title="Destek aramayı kolaylaştırmak için buradayız."
         lead="Mindora, psikolojik destek almak isteyenleri belgeleri doğrulanmış psikologlarla online olarak buluşturan bir platform. Ama asıl derdimiz eşleştirmenin ötesinde: ilk adımın kolay, sürecin güvenli, terapinin kaliteli olması."
         visual={

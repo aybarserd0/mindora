@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import PageHero from '@/components/marketing/PageHero'
+import { PHOTOS } from '@/components/marketing/Photo'
 import CtaBand from '@/components/marketing/CtaBand'
 import Reveal from '@/components/marketing/Reveal'
 import StepsShowcase from '@/components/marketing/StepsShowcase'
@@ -84,6 +85,7 @@ export default function SupervisionLandingPage() {
       <Header />
 
       <PageHero
+        photo={PHOTOS.onlineMeeting}
         tone="lilac"
         title="İyi terapist de birine danışır."
         lead="Mindora'da kıdemli klinik psikologlardan online süpervizyon al, vakalarını danışanının kimliği hiç paylaşılmadan konuş ve saatlerini doğrulanabilir bir defterde biriktir."

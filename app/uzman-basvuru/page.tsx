@@ -3,6 +3,7 @@
 import Header from '@/components/Header'
 import { FormEvent, useMemo, useState } from 'react'
 import PageHero from '@/components/marketing/PageHero'
+import { PHOTOS } from '@/components/marketing/Photo'
 import Reveal from '@/components/marketing/Reveal'
 import { FloatingNote, IconBadge, Icons, LogbookMock, SampleCaption, ThreadLine } from '@/components/marketing/Mocks'
 
@@ -194,6 +195,7 @@ export default function UzmanBasvuruPage() {
       <Header />
 
       <PageHero
+        photo={PHOTOS.desk}
         tone="lilac"
         title="Danışanını düşün. Gerisini platform düşünsün."
         lead="Mindora'da sana uygun danışanlar gelir, takvim ve ödeme kendiliğinden işler. Zor bir vakada da yalnız kalmazsın: kıdemli bir meslektaşa danışmak birkaç tık uzağında."
