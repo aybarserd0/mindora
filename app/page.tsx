@@ -3,7 +3,7 @@ import Header from '@/components/Header'
 import Reveal from '@/components/marketing/Reveal'
 import StepsShowcase from '@/components/marketing/StepsShowcase'
 import Comparison from '@/components/marketing/Comparison'
-import Photo, { PHOTOS, pickPhoto } from '@/components/marketing/Photo'
+import Photo, { PHOTOS } from '@/components/marketing/Photo'
 import ExpertStrip from '@/components/marketing/ExpertStrip'
 import {
   CalendarMock,
@@ -111,15 +111,7 @@ const faqs = [
   },
 ]
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}) {
-  // Taslak: ?foto=N ve ?adim=N ile fotoğraf adayları denenir (bkz. /foto-secenekler)
-  const params = await searchParams
-  const heroPhoto = pickPhoto(params.foto, 3).photo
-  const stepPhoto = pickPhoto(params.adim, 4).photo
+export default async function Home() {
   const approvedExpertCount = await getApprovedExpertCount()
   const showExpertCount =
     approvedExpertCount !== null && approvedExpertCount >= MIN_EXPERT_COUNT_TO_DISPLAY
@@ -178,7 +170,7 @@ export default async function Home({
           {/* Ürün kompozisyonu */}
           <div className="relative mx-auto w-full max-w-xl pb-32 sm:pb-24">
             <Photo
-              photo={heroPhoto}
+              photo={PHOTOS.laptopCall}
               priority
               className="ml-auto aspect-[4/5] w-[90%] rounded-[2.5rem] shadow-2xl sm:w-[84%]"
             />
@@ -236,7 +228,7 @@ export default async function Home({
                 text: 'Seans saatinde tarayıcından görüntülü görüşmeye katıl. Görüşme kaydedilmez; mesajlaşma ve dosya paylaşımı da Mindora içinde kalır.',
                 visual: (
                   <div className="relative w-full max-w-md">
-                    <Photo photo={stepPhoto} className="aspect-[4/3] w-full rounded-3xl shadow-xl" sizes="(min-width: 1024px) 40vw, 100vw" />
+                    <Photo photo={PHOTOS.tableCall} className="aspect-[4/3] w-full rounded-3xl shadow-xl" sizes="(min-width: 1024px) 40vw, 100vw" />
                     <div className="absolute -bottom-4 left-4 flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-lg">
                       <IconBadge>{Icons.noRecord}</IconBadge>
                       Görüşme kaydedilmez
