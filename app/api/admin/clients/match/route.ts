@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { createNotification } from '@/lib/notifications'
 import { getSiteUrl } from '@/lib/site-url'
 import { createConversationAccessToken } from '@/lib/chat-access-tokens'
+import { PROFESSION_CONFIG, toProfession, type Profession } from '@/lib/professions'
 
 export const runtime = 'nodejs'
 
@@ -88,11 +89,14 @@ function clientPaymentEmailHtml({
   clientName,
   expertName,
   paymentUrl,
+  profession,
 }: {
   clientName: string
   expertName: string
   paymentUrl: string
+  profession: Profession
 }) {
+  const p = PROFESSION_CONFIG[profession]
   const safeClient = escapeHtml(clientName)
   const safeExpert = escapeHtml(expertName)
   return `
@@ -100,13 +104,13 @@ function clientPaymentEmailHtml({
   <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
     <div style="background:#254a3f;color:#ffffff;padding:24px 28px;">
       <div style="font-size:20px;font-weight:700;">Mindora</div>
-      <div style="margin-top:4px;font-size:13px;color:rgba(255,255,255,0.75);">Online psikolojik destek platformu</div>
+      <div style="margin-top:4px;font-size:13px;color:rgba(255,255,255,0.75);">Psikolog, diyetisyen ve antrenörlerle online görüşme</div>
     </div>
     <div style="padding:32px 28px;text-align:center;">
-      <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1f2a26;">Psikoloğunla eşleştin</h1>
+      <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1f2a26;">${p.yourWith} eşleştin</h1>
       <p style="margin:0 0 24px;font-size:15px;color:#3b4a44;">
         Merhaba ${safeClient}, seni <strong>${safeExpert}</strong> ile eşleştirdik.
-        Psikoloğunun boş saatlerinden sana uyanı seç, ödemeyi tamamla; randevun hemen onaylansın.
+        ${p.yourOf} boş saatlerinden sana uyanı seç, ödemeyi tamamla; randevun hemen onaylansın.
       </p>
       <a href="${paymentUrl}" style="display:inline-block;background:#254a3f;color:#ffffff;text-decoration:none;padding:16px 30px;border-radius:999px;font-weight:700;font-size:16px;">
         İlk seans saatini seç
@@ -154,7 +158,8 @@ export async function POST(req: NextRequest) {
         start_time,
         preference,
         availability,
-        note
+        note,
+        profession
       `
       )
       .eq('id', clientId)
@@ -182,7 +187,8 @@ export async function POST(req: NextRequest) {
         experience,
         online,
         availability,
-        status
+        status,
+        profession
       `
       )
       .eq('id', expertId)
@@ -196,6 +202,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { ok: false, error: 'Onaylı uzman bulunamadı.' },
         { status: 404 }
+      )
+    }
+
+    // Danışan hangi hizmet için başvurduysa o meslekten bir uzmanla eşleşir
+    const profession = toProfession(client.profession)
+    if (toProfession(expert.profession) !== profession) {
+      return NextResponse.json(
+        { ok: false, error: `Bu danışan ${PROFESSION_CONFIG[profession].label.toLocaleLowerCase('tr-TR')} için başvurdu; aynı meslekten bir uzman seç.` },
+        { status: 400 }
       )
     }
 
@@ -386,7 +401,7 @@ Merhaba ${toText(client.name)},
 
 Seni ${toText(expert.name)} ile eşleştirdik.
 
-Psikoloğunun boş saatlerinden sana uyanı seç ve ödemeyi tamamla; randevun hemen onaylanır:
+${PROFESSION_CONFIG[profession].yourOf} boş saatlerinden sana uyanı seç ve ödemeyi tamamla; randevun hemen onaylanır:
 ${clientDashboardLink}
 
 Seansa 24 saatten fazla varken iptal edersen ücretin tamamı iade edilir.
@@ -416,12 +431,13 @@ Mindora
     const clientMail = await safeSendMail({
       transporter,
       to: client.email,
-      subject: 'Psikoloğunla eşleştin — ilk seans saatini seç',
+      subject: `${PROFESSION_CONFIG[profession].yourWith} eşleştin — ilk seans saatini seç`,
       text: clientText,
       html: clientPaymentEmailHtml({
         clientName: toText(client.name) || 'Danışan',
         expertName: toText(expert.name) || 'Mindora Uzmanı',
         paymentUrl: clientDashboardLink,
+        profession,
       }),
       logName: 'CLIENT MATCH',
     })

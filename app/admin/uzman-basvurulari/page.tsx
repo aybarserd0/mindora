@@ -1,5 +1,6 @@
 "use client";
 
+import { professionLabel } from "@/lib/professions";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminHeader from "@/components/AdminHeader";
@@ -27,6 +28,7 @@ type Expert = {
   founding_until?: string | null;
   commission_rate?: number | string | null;
   account_type?: string | null;
+  profession?: string | null;
 };
 
 const statusOptions: Array<{ value: StatusFilter; label: string }> = [
@@ -313,6 +315,9 @@ export default function UzmanBasvurulariPage() {
                         )}`}
                       >
                         {getStatusLabel(expert.status)}
+                      </span>
+                      <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
+                        {professionLabel(expert.profession)}
                       </span>
                       {expert.account_type === "supervision_only" ? (
                         <span className="rounded-full border border-lilac-200 bg-lilac-50 px-3 py-1 text-xs font-semibold text-lilac-800">

@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const navItems = [
-  { label: 'Uzmanlar', href: '/uzmanlar' },
+  { label: 'Psikologlar', href: '/uzmanlar' },
+  { label: 'Diyetisyenler', href: '/diyetisyen' },
+  { label: 'Antrenörler', href: '/kisisel-antrenor' },
   { label: 'Testler', href: '/psikolojik-testler' },
-  { label: 'Hakkımızda', href: '/hakkimizda' },
   { label: 'SSS', href: '/sss' },
-  { label: 'Psikologlar için', href: '/supervizyon' },
+  { label: 'Uzmanlar için', href: '/uzman-basvuru' },
 ]
 
 function isActive(pathname: string, href: string) {

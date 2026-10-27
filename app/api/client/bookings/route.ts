@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   const expert = await getBookableExpert(access.expertId)
   const amount = Number(expert?.session_price)
   if (!expert || expert.status !== 'approved' || !Number.isFinite(amount) || amount <= 0) {
-    return jsonError('Psikoloğun şu anda yeni randevu kabul etmiyor.', 409)
+    return jsonError('Uzmanın şu anda yeni randevu kabul etmiyor.', 409)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,6 +138,7 @@ export async function POST(req: NextRequest) {
     amount,
     client,
     expertName: expert.name,
+    profession: expert.profession,
     ip,
   })
 

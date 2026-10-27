@@ -27,6 +27,16 @@ const staticRoutes = [
     changeFrequency: 'daily' as const,
   },
   {
+    path: '/diyetisyen',
+    priority: 0.9,
+    changeFrequency: 'weekly' as const,
+  },
+  {
+    path: '/kisisel-antrenor',
+    priority: 0.9,
+    changeFrequency: 'weekly' as const,
+  },
+  {
     path: '/eslesme',
     priority: 0.9,
     changeFrequency: 'weekly' as const,

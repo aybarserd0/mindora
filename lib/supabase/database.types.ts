@@ -31,6 +31,8 @@ export type Database = {
           start_time: string | null
           status: string
           topic: string | null
+          profession: string
+          health_screen: string | null
         }
         Insert: {
           age?: string | null
@@ -48,6 +50,8 @@ export type Database = {
           start_time?: string | null
           status?: string
           topic?: string | null
+          profession?: string
+          health_screen?: string | null
         }
         Update: {
           age?: string | null
@@ -65,6 +69,8 @@ export type Database = {
           start_time?: string | null
           status?: string
           topic?: string | null
+          profession?: string
+          health_screen?: string | null
         }
         Relationships: [
           {
@@ -442,6 +448,7 @@ export type Database = {
       experts: {
         Row: {
           account_type: string
+          profession: string
           founding_member: boolean
           founding_until: string | null
           commission_rate: number | null
@@ -483,6 +490,7 @@ export type Database = {
         }
         Insert: {
           account_type?: string
+          profession?: string
           founding_member?: boolean
           founding_until?: string | null
           commission_rate?: number | null
@@ -524,6 +532,7 @@ export type Database = {
         }
         Update: {
           account_type?: string
+          profession?: string
           founding_member?: boolean
           founding_until?: string | null
           commission_rate?: number | null

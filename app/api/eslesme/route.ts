@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { PROFESSION_CONFIG, toProfession } from '@/lib/professions'
 
 function toText(value: unknown) {
   if (Array.isArray(value)) return value.join(', ')
@@ -27,6 +28,12 @@ export async function POST(req: NextRequest) {
     const preference = toText(data.preference)
     const availability = toText(data.availability)
     const note = toText(data.note) || '-'
+    const profession = toProfession(data.profession)
+    const config = PROFESSION_CONFIG[profession]
+    // Sağlık ön sorusu yalnızca diyetisyen / antrenör için ve yalnızca bu üç yanıttan biri
+    const healthScreen = config.client.healthQuestion && ['Hayır', 'Evet', 'Emin değilim'].includes(toText(data.healthScreen))
+      ? toText(data.healthScreen)
+      : null
 
     if (!name) {
       return NextResponse.json(
@@ -63,6 +70,8 @@ export async function POST(req: NextRequest) {
       preference,
       availability,
       note,
+      profession,
+      health_screen: healthScreen,
     })
 
     if (dbError) {
@@ -85,7 +94,7 @@ export async function POST(req: NextRequest) {
     })
 
     const adminText = `
-Mindora Danışan Başvurusu
+Mindora Danışan Başvurusu (${config.label})
 
 Ad Soyad: ${name}
 Telefon: ${phone}
@@ -97,6 +106,7 @@ Süre: ${duration}
 Başlama: ${startTime}
 Tercih: ${preference}
 Müsaitlik: ${availability}
+Sağlık ön sorusu: ${healthScreen ?? '-'}
 Not: ${note}
 `
 
@@ -105,7 +115,7 @@ Merhaba ${name},
 
 Mindora başvurun bize ulaştı.
 
-Başvurunu inceleyip sana uygun psikolog eşleşmesi için en kısa sürede seninle iletişime geçeceğiz.
+Başvurunu inceleyip sana uygun ${config.label.toLocaleLowerCase('tr-TR')} eşleşmesi için en kısa sürede seninle iletişime geçeceğiz.
 
 Başvuru Özeti:
 Konu: ${topic || '-'}
@@ -118,7 +128,7 @@ Mindora
     await transporter.sendMail({
       from: `"Mindora Danışan" <${process.env.SMTP_USER}>`,
       to: process.env.CONTACT_TO,
-      subject: 'Mindora Danışan Başvurusu',
+      subject: `Mindora Danışan Başvurusu: ${config.label}`,
       text: adminText,
     })
 
