@@ -5,16 +5,20 @@ const columns = [
     title: 'Danışanlar için',
     links: [
       { label: 'Ücretsiz ön eşleşme', href: '/eslesme' },
-      { label: 'Uzmanlar', href: '/uzmanlar' },
+      { label: 'Psikologlar', href: '/uzmanlar' },
+      { label: 'Diyetisyenler', href: '/diyetisyen' },
+      { label: 'Kişisel antrenörler', href: '/kisisel-antrenor' },
       { label: 'Psikolojik testler', href: '/psikolojik-testler' },
       { label: 'Sık sorulan sorular', href: '/sss' },
       { label: 'Danışan girişi', href: '/danisan-girisi' },
     ],
   },
   {
-    title: 'Psikologlar için',
+    title: 'Uzmanlar için',
     links: [
-      { label: 'Uzman başvurusu', href: '/uzman-basvuru' },
+      { label: 'Psikolog başvurusu', href: '/uzman-basvuru' },
+      { label: 'Diyetisyen başvurusu', href: '/uzman-basvuru?meslek=diyetisyen' },
+      { label: 'Antrenör başvurusu', href: '/uzman-basvuru?meslek=antrenor' },
       { label: 'Süpervizyon', href: '/supervizyon' },
       { label: 'Uzman girişi', href: '/expert/login' },
     ],
@@ -42,8 +46,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="mt-5 text-[0.95rem] leading-7 text-pine-200">
-              Psikolojik desteğe başlamak isteyenleri, belgeleri doğrulanmış
-              psikologlarla online olarak buluşturuyoruz.
+              Psikolog, diyetisyen ve kişisel antrenör desteği arayanları belgeleri doğrulanmış uzmanlarla online olarak buluşturuyoruz.
             </p>
           </div>
 

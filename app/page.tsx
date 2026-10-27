@@ -53,6 +53,33 @@ const topics = [
   { label: 'Henüz adını koyamadım', value: 'Diğer' },
 ]
 
+const services = [
+  {
+    title: 'Psikolog',
+    text: 'Kaygı, ilişkiler, tükenmişlik ya da adını koyamadığın bir his. Süpervizyonla desteklenen psikologlarla konuş.',
+    cta: 'Psikolog eşleşmesi',
+    href: '/eslesme',
+    photo: PHOTOS.laptopCall,
+    tone: 'pine' as const,
+  },
+  {
+    title: 'Diyetisyen',
+    text: 'Yasak listesi değil, hayatına uyan bir beslenme düzeni. Diploması kontrol edilmiş diyetisyenlerle çalış.',
+    cta: 'Diyetisyenleri incele',
+    href: '/diyetisyen',
+    photo: PHOTOS.healthyBowl,
+    tone: 'none' as const,
+  },
+  {
+    title: 'Kişisel antrenör',
+    text: 'Salona gitmeden, seviyene ve zamanına göre bir antrenman düzeni. Görüntülü görüşmeyle, evinden.',
+    cta: 'Antrenörleri incele',
+    href: '/kisisel-antrenor',
+    photo: PHOTOS.homeWorkout,
+    tone: 'none' as const,
+  },
+]
+
 const promises = [
   { icon: Icons.spark, text: 'Ücretsiz ön eşleşme' },
   { icon: Icons.shield, text: 'Belgeleri tek tek doğrulanmış uzmanlar' },
@@ -196,6 +223,36 @@ export default async function Home() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* HİZMETLER */}
+      <section className="mx-auto max-w-7xl px-5 pt-20 lg:pt-28">
+        <Reveal>
+          <h2 className="max-w-2xl text-3xl font-semibold leading-tight sm:text-5xl">Neye ihtiyacın var?</h2>
+          <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">
+            Zihnin, beslenmen ya da bedenin için; belgesi kontrol edilmiş uzmanlarla online görüş.
+          </p>
+        </Reveal>
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {services.map((service, i) => (
+            <Reveal key={service.title} delay={i * 80}>
+              <Link
+                href={service.href}
+                className="group flex h-full flex-col overflow-hidden rounded-[2rem] bg-white ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-xl"
+              >
+                <Photo photo={service.photo} tone={service.tone} sizes="(min-width: 768px) 33vw, 100vw" className="aspect-[16/10] w-full" />
+                <div className="flex flex-1 flex-col p-6">
+                  <h3 className="font-display text-2xl font-semibold text-slate-900">{service.title}</h3>
+                  <p className="mt-2 flex-1 leading-7 text-slate-600">{service.text}</p>
+                  <span className="mt-5 inline-flex items-center gap-1 font-semibold text-pine-800">
+                    {service.cta}
+                    <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
+                  </span>
+                </div>
+              </Link>
+            </Reveal>
+          ))}
         </div>
       </section>
 

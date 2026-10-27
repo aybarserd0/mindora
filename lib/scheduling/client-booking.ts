@@ -15,6 +15,7 @@ export type BookableExpert = {
   commission_rate: number | string | null
   founding_member: boolean | null
   founding_until: string | null
+  profession: string | null
 }
 
 export async function getBookableExpert(expertId: string) {
@@ -22,7 +23,7 @@ export async function getBookableExpert(expertId: string) {
   const supabase = getSupabaseAdmin() as any
   const { data } = await supabase
     .from('experts')
-    .select('id, name, title, session_price, status, commission_rate, founding_member, founding_until')
+    .select('id, name, title, session_price, status, commission_rate, founding_member, founding_until, profession')
     .eq('id', expertId)
     .maybeSingle()
   return (data as BookableExpert | null) || null

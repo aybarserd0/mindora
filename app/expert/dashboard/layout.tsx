@@ -88,6 +88,7 @@ function useExpertSession() {
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
   const [expertName, setExpertName] = useState("");
+  const [profession, setProfession] = useState("psychologist");
 
   useEffect(() => {
     let cancelled = false;
@@ -106,6 +107,7 @@ function useExpertSession() {
         }
 
         setExpertName(data.name || "");
+        setProfession(data.profession || "psychologist");
         setStatus("ready");
       } catch {
         if (!cancelled) {
@@ -122,12 +124,16 @@ function useExpertSession() {
     };
   }, [router]);
 
-  return { status, expertName };
+  return { status, expertName, profession };
 }
 
 export default function ExpertDashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/expert/dashboard";
-  const { status, expertName } = useExpertSession();
+  const { status, expertName, profession } = useExpertSession();
+  // Süpervizyon menüleri yalnızca psikologlar için
+  const navItems = profession === "psychologist"
+    ? navigationItems
+    : navigationItems.filter((item) => !item.href.startsWith("/expert/dashboard/supervizyon") && !item.href.startsWith("/expert/dashboard/supervizor"));
 
   if (status === "loading") {
     return (
@@ -161,7 +167,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
 
           <nav aria-label="Uzman menüsü" className="flex-1 overflow-y-auto px-3 pb-6 pt-2">
             <div className="space-y-0.5">
-              {navigationItems.map((item) => {
+              {navItems.map((item) => {
                 const active = isActive(pathname, item.href);
 
                 return (
@@ -227,7 +233,7 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
             </div>
 
             <nav aria-label="Uzman menüsü" className="flex gap-2 overflow-x-auto px-4 pb-3 sm:px-6 lg:hidden">
-              {navigationItems.map((item) => {
+              {navItems.map((item) => {
                 const active = isActive(pathname, item.href);
 
                 return (

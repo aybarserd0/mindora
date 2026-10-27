@@ -1,3 +1,4 @@
+import { PROFESSION_CONFIG, toProfession } from '@/lib/professions'
 import { cleanPhone, iyzicoPost, money, readIyzicoEnv, splitName } from './iyzico'
 
 type CheckoutInitResponse = {
@@ -17,6 +18,7 @@ export async function initSessionCheckout({
   amount,
   client,
   expertName,
+  profession,
   ip,
 }: {
   paymentId: string
@@ -24,6 +26,7 @@ export async function initSessionCheckout({
   amount: number
   client: { id: string; name: string | null; email: string | null; phone: string | null }
   expertName: string | null
+  profession?: string | null
   ip: string
 }): Promise<{ ok: true; token: string; paymentPageUrl: string; conversationId: string } | { ok: false; error: string }> {
   const env = readIyzicoEnv()
@@ -63,8 +66,8 @@ export async function initSessionCheckout({
     basketItems: [
       {
         id: `session_${paymentId}`,
-        name: `Mindora Psikolojik Danışmanlık Seansı - ${expertName || 'Uzman'}`.slice(0, 120),
-        category1: 'Psikolojik Danışmanlık',
+        name: `Mindora ${PROFESSION_CONFIG[toProfession(profession)].serviceName} - ${expertName || 'Uzman'}`.slice(0, 120),
+        category1: PROFESSION_CONFIG[toProfession(profession)].serviceName,
         itemType: 'VIRTUAL',
         price: money(amount),
       },

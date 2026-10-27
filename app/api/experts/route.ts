@@ -18,6 +18,7 @@ export async function GET() {
         online,
         availability,
         photo_url,
+        profession,
         created_at
       `
       )

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { Avatar } from '@/components/marketing/Mocks'
 import Reveal from '@/components/marketing/Reveal'
+import { PROFESSION_CONFIG, type Profession } from '@/lib/professions'
 
 const MIN_EXPERTS_WITH_PHOTO = 3
 const MAX_EXPERTS = 6
@@ -31,12 +32,13 @@ function firstArea(areas: string | null) {
   return areas?.split(',').map((a) => a.trim()).filter(Boolean)[0] ?? null
 }
 
-async function getStripExperts(): Promise<StripExpert[]> {
+async function getStripExperts(profession: Profession): Promise<StripExpert[]> {
   try {
     const { data, error } = await getSupabaseAdmin()
       .from('experts')
       .select('id, name, title, areas, photo_url')
       .eq('status', 'approved')
+      .eq('profession', profession)
       .neq('account_type', 'supervision_only')
       .not('photo_url', 'is', null)
       .order('created_at', { ascending: true })
@@ -57,32 +59,34 @@ const SAMPLE_EXPERTS: StripExpert[] = [
   { id: 's4', name: 'Örnek Uzman', title: 'Klinik Psikolog', areas: 'Tükenmişlik', photo_url: null },
 ]
 
-export default async function ExpertStrip() {
-  const experts = await getStripExperts()
+export default async function ExpertStrip({ profession = 'psychologist' }: { profession?: Profession }) {
+  const config = PROFESSION_CONFIG[profession]
+  const experts = await getStripExperts(profession)
   const isPreview = process.env.VERCEL_ENV === 'preview'
   const enoughReal = experts.length >= MIN_EXPERTS_WITH_PHOTO
   if (!enoughReal && !isPreview) return null
-  const list = enoughReal ? experts : SAMPLE_EXPERTS
+  const list = enoughReal ? experts : SAMPLE_EXPERTS.map((e) => ({ ...e, title: config.label, areas: config.expert.areas[Number(e.id.slice(1)) - 1] }))
+  const listHref = profession === 'psychologist' ? '/uzmanlar' : `/uzmanlar?meslek=${config.slug}`
 
   return (
     <section className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-7xl px-5 py-16 lg:py-20">
         <Reveal className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Uzmanlarımızdan bazıları</h2>
+            <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">{profession === 'psychologist' ? 'Uzmanlarımızdan bazıları' : `${config.plural}imizden bazıları`}</h2>
             <p className="mt-3 max-w-xl text-lg leading-8 text-slate-600">
               Hepsinin diploması ve unvanı tek tek kontrol edildi.
             </p>
           </div>
-          <Link href="/uzmanlar" className="font-semibold text-pine-800 underline decoration-pine-300 underline-offset-4 hover:decoration-pine-700">
-            Tüm uzmanları gör
+          <Link href={listHref} className="font-semibold text-pine-800 underline decoration-pine-300 underline-offset-4 hover:decoration-pine-700">
+            Tümünü gör
           </Link>
         </Reveal>
 
         <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {list.map((expert) => (
             <li key={expert.id}>
-              <Link href="/uzmanlar" className="group block rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg">
+              <Link href={listHref} className="group block rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg">
                 <div className="relative aspect-square overflow-hidden rounded-2xl bg-pine-100">
                   {expert.photo_url ? (
                     // Uzman fotoğrafları farklı alan adlarından gelebilir; optimizasyon dışı bırakıldı
@@ -95,7 +99,7 @@ export default async function ExpertStrip() {
                   )}
                 </div>
                 <p className="mt-3 truncate font-display font-semibold text-slate-900">{expert.name}</p>
-                <p className="truncate text-sm text-slate-500">{expert.title || 'Psikolog'}</p>
+                <p className="truncate text-sm text-slate-500">{expert.title || config.label}</p>
                 {firstArea(expert.areas) ? (
                   <p className="mt-2 inline-block max-w-full truncate rounded-full bg-pine-50 px-2.5 py-1 text-xs font-medium text-pine-800">
                     {firstArea(expert.areas)}
