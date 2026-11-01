@@ -427,7 +427,7 @@ export default function PsikolojikTestler() {
         title="Test bir başlangıç. Asıl adım bir konuşma."
         text="Ücretsiz ön eşleşmeyle sana uygun psikoloğu birlikte bulalım."
         primary={{ label: 'Ücretsiz eşleşmeyi başlat', href: '/eslesme' }}
-        secondary={{ label: 'Uzmanları incele', href: '/uzmanlar' }}
+        secondary={{ label: 'Psikologlarımızı tanı', href: '/psikolog' }}
       />
     </main>
   )

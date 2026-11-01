@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import ServiceLanding, { type ServiceLandingContent } from '@/components/marketing/ServiceLanding'
 import { PHOTOS } from '@/components/marketing/Photo'
+import { CalendarMock, MatchCardMock, TopicPickerMock } from '@/components/marketing/Mocks'
+import { CheckInMock, MealPlanMock } from '@/components/marketing/ServiceMocks'
 
 const description =
   'Belgeleri kontrol edilmiş diyetisyenlerle online görüş. Hedefini anlat, sana uygun diyetisyeni ücretsiz önerelim; ücret baştan belli, abonelik yok.'
@@ -22,12 +24,13 @@ const content: ServiceLandingContent = {
   heroPhoto: PHOTOS.healthyBowl,
   heroNote: 'Diploması kontrol edildi',
   steps: [
-    { title: 'Kısa formu doldur', text: 'Hedefini, günlük düzenini ve ne zaman görüşebileceğini anlat.' },
-    { title: 'Sana uygun diyetisyeni önerelim', text: 'Alanına ve saatlerine uyan, diploması kontrol edilmiş bir diyetisyen öneririz. Kabul etmek zorunda değilsin.' },
-    { title: 'İlk görüşmeni planla', text: 'Uygun saati seç, ödeme adımından önce toplam ücreti açıkça gör.' },
-    { title: 'Kontrollerle ilerle', text: 'Beslenme planın Mindora içinde paylaşılır; kontrol görüşmeleriyle birlikte güncellenir.' },
+    { title: 'Kısa formu doldur', text: 'Hedefini, günlük düzenini ve ne zaman görüşebileceğini anlat.', visual: <TopicPickerMock variant="dietitian" /> },
+    { title: 'Sana uygun diyetisyeni önerelim', text: 'Alanına ve saatlerine uyan, diploması kontrol edilmiş bir diyetisyen öneririz. Kabul etmek zorunda değilsin.', visual: <MatchCardMock variant="dietitian" /> },
+    { title: 'İlk görüşmeni planla', text: 'Uygun saati seç, ödeme adımından önce toplam ücreti açıkça gör.', visual: <CalendarMock /> },
+    { title: 'Kontrollerle ilerle', text: 'Beslenme planın Mindora içinde paylaşılır; kontrol görüşmeleriyle birlikte güncellenir.', visual: <MealPlanMock /> },
   ],
   sidePhoto: PHOTOS.breakfastPlate,
+  sideMock: <CheckInMock />,
   sideTitle: 'Yasaklar listesi değil, sürdürebileceğin bir düzen.',
   sideText:
     'İyi bir beslenme planı işine, sevdiğin yemeklere ve günlük tempona göre şekillenir. Diyetisyenin seni tanıyarak başlar, kontrollerle birlikte planı güncellersiniz.',

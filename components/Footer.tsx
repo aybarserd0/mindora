@@ -5,9 +5,10 @@ const columns = [
     title: 'Danışanlar için',
     links: [
       { label: 'Ücretsiz ön eşleşme', href: '/eslesme' },
-      { label: 'Psikologlar', href: '/uzmanlar' },
+      { label: 'Psikologlar', href: '/psikolog' },
       { label: 'Diyetisyenler', href: '/diyetisyen' },
       { label: 'Kişisel antrenörler', href: '/kisisel-antrenor' },
+      { label: 'Onaylı uzmanlar', href: '/uzmanlar' },
       { label: 'Psikolojik testler', href: '/psikolojik-testler' },
       { label: 'Sık sorulan sorular', href: '/sss' },
       { label: 'Danışan girişi', href: '/danisan-girisi' },

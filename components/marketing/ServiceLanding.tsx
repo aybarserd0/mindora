@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import Header from '@/components/Header'
 import PageHero from '@/components/marketing/PageHero'
 import Reveal from '@/components/marketing/Reveal'
+import StepsShowcase from '@/components/marketing/StepsShowcase'
 import CtaBand from '@/components/marketing/CtaBand'
 import ExpertStrip from '@/components/marketing/ExpertStrip'
 import Photo, { type PhotoSource } from '@/components/marketing/Photo'
@@ -16,9 +18,11 @@ export type ServiceLandingContent = {
   lead: string
   heroPhoto: PhotoSource
   heroNote: string
-  steps: Item[]
+  steps: (Item & { visual: ReactNode })[]
   features: (Item & { icon: keyof typeof Icons })[]
   sidePhoto: PhotoSource
+  /** Fotoğrafın üstüne binen canlı örnek ekran */
+  sideMock: ReactNode
   sideTitle: string
   sideText: string
   sideBullets: string[]
@@ -69,23 +73,21 @@ export default function ServiceLanding({ content }: { content: ServiceLandingCon
       <section className="mx-auto max-w-7xl px-5 py-20 lg:py-24">
         <Reveal>
           <h2 className="max-w-2xl text-3xl font-semibold leading-tight sm:text-5xl">Dört adımda başla</h2>
+          <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Kimseyi aramadan, sıra beklemeden, bulunduğun yerden.</p>
         </Reveal>
-        <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {content.steps.map((step, i) => (
-            <Reveal key={step.title} delay={i * 70} className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-pine-100 font-display text-sm font-semibold text-pine-900">{i + 1}</span>
-              <h3 className="mt-5 font-display text-lg font-semibold">{step.title}</h3>
-              <p className="mt-2 leading-7 text-slate-600">{step.text}</p>
-            </Reveal>
-          ))}
-        </ol>
+        <div className="mt-6">
+          <StepsShowcase steps={content.steps} />
+        </div>
       </section>
 
       {/* NELER BEKLEYEBİLİRSİN */}
       <section className="border-y border-slate-200 bg-white">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-2 lg:items-center lg:py-24">
-          <Reveal className="relative pb-10">
+          <Reveal className="relative pb-24 sm:pb-16">
             <Photo photo={content.sidePhoto} className="aspect-[5/4] w-full rounded-[2.5rem] shadow-xl" />
+            <div className="animate-drift absolute -bottom-2 right-0 w-[88%] max-w-sm sm:-right-4" style={{ ['--tilt' as string]: '1.5deg' }}>
+              {content.sideMock}
+            </div>
           </Reveal>
           <Reveal>
             <h2 className="text-3xl font-semibold leading-tight sm:text-5xl">{content.sideTitle}</h2>

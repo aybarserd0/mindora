@@ -42,6 +42,7 @@ const text = () => page.evaluate(() => document.body.innerText)
 // 1) Sayfalar açılıyor mu, beklenen başlıklar var mı
 const pages = [
   ['/', 'Zihnin, beslenmen ve bedenin için doğru uzman.'],
+  ['/psikolog', 'Kiminle konuşacağını bilmeden de başlayabilirsin.'],
   ['/diyetisyen', 'Beslenmeni hayatına uyan'],
   ['/kisisel-antrenor', 'antrenman'],
   ['/eslesme', 'Doğru psikoloğu aramak senin işin olmasın.'],
@@ -188,13 +189,30 @@ check('eşleşme formunda sekmeyle meslek değişiyor', (await text()).includes(
 // 7) Ana sayfadaki hizmet kartları doğru yere gidiyor
 await visit('/')
 const hrefs = await page.locator('a').evaluateAll((els) => els.map((e) => e.getAttribute('href')))
-for (const h of ['/eslesme?meslek=diyetisyen', '/eslesme?meslek=antrenor', '/diyetisyen', '/kisisel-antrenor', '/uzman-basvuru?meslek=antrenor']) {
+for (const h of ['/psikolog', '/eslesme?meslek=diyetisyen', '/eslesme?meslek=antrenor', '/diyetisyen', '/kisisel-antrenor', '/uzman-basvuru?meslek=antrenor', '/psikolog#supervizyon']) {
   check(`ana sayfada ${h} bağlantısı var`, hrefs.includes(h))
 }
+check('ana sayfada psikoloğa özel konu çipleri yok', !(await text()).includes('Henüz adını koyamadım'))
+
+// 7b) Psikolog sayfası: süpervizyon anlatımı ve diğer hizmetlere yönlendirme
+await visit('/psikolog')
+const psyText = await text()
+check('psikolog sayfasında süpervizyon bölümü var', (await page.locator('#supervizyon').count()) === 1)
+const psyHrefs = await page.locator('a').evaluateAll((els) => els.map((e) => e.getAttribute('href')))
+for (const h of ['/eslesme', '/uzmanlar', '/diyetisyen', '/kisisel-antrenor', '/supervizyon']) {
+  check(`psikolog sayfasında ${h} bağlantısı var`, psyHrefs.includes(h))
+}
+check('psikolog sayfası menüde etkin', psyText.includes('Psikologlar'))
+
+// 7c) Diyetisyen / antrenör sayfalarında adım görselleri
+await visit('/diyetisyen')
+check('diyetisyen sayfasında haftalık plan görseli var', (await text()).includes('Beslenmende neyi değiştirmek istiyorsun?'))
+await visit('/kisisel-antrenor')
+check('antrenör sayfasında hedef seçimi görseli var', (await text()).includes('Antrenmanla neye ulaşmak istiyorsun?'))
 
 // 8) Telefon görünümü: yatay kaydırma yok
 await page.setViewportSize({ width: 390, height: 844 })
-for (const url of ['/', '/diyetisyen', '/kisisel-antrenor', '/eslesme?meslek=antrenor', '/danisan-girisi', '/expert/login', '/uzman-basvuru?meslek=diyetisyen']) {
+for (const url of ['/', '/psikolog', '/diyetisyen', '/kisisel-antrenor', '/eslesme?meslek=antrenor', '/danisan-girisi', '/expert/login', '/uzman-basvuru?meslek=diyetisyen']) {
   await visit(url)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   check(`${url} telefonda taşma yok`, overflow <= 1, `${overflow}px`)

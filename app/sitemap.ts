@@ -22,6 +22,11 @@ const staticRoutes = [
     changeFrequency: 'daily' as const,
   },
   {
+    path: '/psikolog',
+    priority: 0.95,
+    changeFrequency: 'weekly' as const,
+  },
+  {
     path: '/uzmanlar',
     priority: 0.95,
     changeFrequency: 'daily' as const,

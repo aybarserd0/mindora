@@ -74,7 +74,7 @@ export const PROFESSION_CONFIG: Record<Profession, ProfessionConfig> = {
     accusative: 'psikoloğu',
     yourWith: 'Psikoloğunla',
     yourOf: 'Psikoloğunun',
-    landingHref: '/',
+    landingHref: '/psikolog',
     serviceName: 'Psikolojik Destek Seansı',
     supervision: true,
     approachHint: 'Terapi yaklaşımın (BDT, şema, psikodinamik gibi), seans tarzın ve çalışma biçimin.',

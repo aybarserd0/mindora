@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import ServiceLanding, { type ServiceLandingContent } from '@/components/marketing/ServiceLanding'
 import { PHOTOS } from '@/components/marketing/Photo'
+import { CalendarMock, MatchCardMock, TopicPickerMock } from '@/components/marketing/Mocks'
+import { FormCheckMock, WorkoutMock } from '@/components/marketing/ServiceMocks'
 
 const description =
   'Belgesi kontrol edilmiş kişisel antrenörlerle online çalış: evde canlı antrenman ya da salon programı. Hedefini anlat, sana uygun antrenörü ücretsiz önerelim.'
@@ -22,12 +24,13 @@ const content: ServiceLandingContent = {
   heroPhoto: PHOTOS.homeWorkout,
   heroNote: 'Antrenörlük belgesi kontrol edildi',
   steps: [
-    { title: 'Kısa formu doldur', text: 'Hedefini, hareket düzeyini, evde mi salonda mı çalışacağını anlat.' },
-    { title: 'Sana uygun antrenörü önerelim', text: 'Hedefine ve saatlerine uyan, belgesi kontrol edilmiş bir antrenör öneririz. Kabul etmek zorunda değilsin.' },
-    { title: 'İlk antrenmanını planla', text: 'Uygun saati seç, ödeme adımından önce toplam ücreti açıkça gör.' },
-    { title: 'Evde ya da salonda başla', text: 'Evdeysen antrenörün görüntülü görüşmede seni izler. Salondaysan programın Mindora içinde paylaşılır, kontrol görüşmelerinde birlikte güncellenir.' },
+    { title: 'Kısa formu doldur', text: 'Hedefini, hareket düzeyini, evde mi salonda mı çalışacağını anlat.', visual: <TopicPickerMock variant="trainer" /> },
+    { title: 'Sana uygun antrenörü önerelim', text: 'Hedefine ve saatlerine uyan, belgesi kontrol edilmiş bir antrenör öneririz. Kabul etmek zorunda değilsin.', visual: <MatchCardMock variant="trainer" /> },
+    { title: 'İlk antrenmanını planla', text: 'Uygun saati seç, ödeme adımından önce toplam ücreti açıkça gör.', visual: <CalendarMock /> },
+    { title: 'Evde ya da salonda başla', text: 'Evdeysen antrenörün görüntülü görüşmede seni izler. Salondaysan programın Mindora içinde paylaşılır, kontrol görüşmelerinde birlikte güncellenir.', visual: <FormCheckMock /> },
   ],
   sidePhoto: PHOTOS.dumbbells,
+  sideMock: <WorkoutMock place="salon" />,
   sideTitle: 'Salonda da evde de yanında bir antrenör.',
   sideText:
     'Antrenörün gittiğin salona ya da evdeki ekipmana, seviyene ve zamanına göre bir program hazırlar. Evde görüntülü antrenmanda hareketlerini izler; salonda çektiğin kısa videolar üzerinden tekniğini düzeltir.',

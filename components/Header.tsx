@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const navItems = [
-  { label: 'Psikologlar', href: '/uzmanlar' },
+  { label: 'Psikologlar', href: '/psikolog' },
   { label: 'Diyetisyenler', href: '/diyetisyen' },
   { label: 'Antrenörler', href: '/kisisel-antrenor' },
   { label: 'Testler', href: '/psikolojik-testler' },
