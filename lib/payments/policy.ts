@@ -1,12 +1,15 @@
 // Danışan seansları için ücret politikası: komisyon oranları ve iptal kuralı.
 // Tek kaynak burasıdır; ödeme, iptal ve panel ekranları buradan okur.
 
-export const STANDARD_COMMISSION_RATE = 0.25
+export const STANDARD_COMMISSION_RATE = 0.2
 export const FOUNDING_COMMISSION_RATE = 0.15
 export const FOUNDING_PERIOD_MONTHS = 12
 
 /** Açık olduğu sürece yeni onaylanan uzmanlar kurucu uzman olarak işaretlenir. */
 export const FOUNDING_PROGRAM_OPEN = true
+
+/** Kurucu uzman kontenjanı: ilk 50 uzman (yalnızca süpervizyon hesapları sayılmaz). */
+export const FOUNDING_MEMBER_LIMIT = 50
 
 /** Danışan bu kadar saat öncesine kadar iptal ederse tam iade alır. */
 export const FREE_CANCELLATION_HOURS = 24

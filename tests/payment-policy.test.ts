@@ -4,10 +4,10 @@ import { evaluateCancellation, getPayoutEligibility, resolveCommission, splitAmo
 describe('ödeme kuralları (üç meslekte aynı)', () => {
   const now = new Date('2026-10-27T12:00:00Z')
 
-  it('standart %25, kurucu %15, özel oran öncelikli', () => {
-    expect(resolveCommission({ founding_member: false }, now)).toEqual({ rate: 0.25, source: 'standard' })
+  it('standart %20, kurucu %15, özel oran öncelikli', () => {
+    expect(resolveCommission({ founding_member: false }, now)).toEqual({ rate: 0.2, source: 'standard' })
     expect(resolveCommission({ founding_member: true, founding_until: '2027-10-01T00:00:00Z' }, now)).toEqual({ rate: 0.15, source: 'founding' })
-    expect(resolveCommission({ founding_member: true, founding_until: '2026-01-01T00:00:00Z' }, now).rate).toBe(0.25)
+    expect(resolveCommission({ founding_member: true, founding_until: '2026-01-01T00:00:00Z' }, now).rate).toBe(0.2)
     expect(resolveCommission({ commission_rate: 0.1, founding_member: true }, now)).toEqual({ rate: 0.1, source: 'custom' })
   })
 

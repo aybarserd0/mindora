@@ -364,7 +364,7 @@ export default function ExpertEarningsPage() {
               </p>
               <p className="mt-1 text-sm text-slate-600">
                 {commission.source === 'founding' && commission.foundingUntil
-                  ? `Kurucu uzman indirimin ${new Date(commission.foundingUntil).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihine kadar geçerli. Sonrasında standart oran %25 uygulanır.`
+                  ? `Kurucu uzman indirimin ${new Date(commission.foundingUntil).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihine kadar geçerli. Sonrasında standart oran %20 uygulanır.`
                   : 'Oran, her ödeme oluştuğu anda sabitlenir; sonradan yapılan değişiklikler geçmiş ödemeleri etkilemez.'}
               </p>
             </div>
