@@ -1,5 +1,8 @@
 -- Mindora üç hizmet veriyor: psikolog, diyetisyen, kişisel antrenör.
--- Mevcut tüm kayıtlar psikolog olarak kalır.
+-- Mevcut tüm kayıtlar psikolog olarak kalır. Tekrar çalıştırılabilir.
+-- Tek işlem: bir adım hata verirse hiçbiri uygulanmaz.
+
+begin;
 
 alter table public.experts
   add column if not exists profession text not null default 'psychologist';
@@ -27,9 +30,23 @@ alter table public.client_applications
 alter table public.client_applications
   add column if not exists health_screen text;
 
+alter table public.client_applications
+  drop constraint if exists client_applications_health_screen_check;
+alter table public.client_applications
+  add constraint client_applications_health_screen_check
+  check (health_screen is null or health_screen in ('Evet', 'Hayır', 'Emin değilim'));
+
 -- Antrenör başvurularında antrenmanın nerede yapılacağı: Salonda / Evde / İkisi de
 alter table public.client_applications
   add column if not exists setting text;
 
+alter table public.client_applications
+  drop constraint if exists client_applications_setting_check;
+alter table public.client_applications
+  add constraint client_applications_setting_check
+  check (setting is null or setting in ('Salonda', 'Evde', 'İkisi de'));
+
 create index if not exists client_applications_profession_idx
   on public.client_applications (profession, created_at desc);
+
+commit;
