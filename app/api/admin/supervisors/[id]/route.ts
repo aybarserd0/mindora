@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       message:
         update.status === 'approved'
           ? 'Artık süpervizör dizininde görünüyorsun ve talep alabilirsin.'
-          : 'Başvurun şu an için onaylanmadı. Ayrıntılar için Süpervizör panelini kontrol et.',
+          : 'Başvurun şu an için onaylanmadı. Ayrıntılar için Süpervizör alanına göz at.',
       type: 'system',
       link: '/expert/dashboard/supervizor',
     })

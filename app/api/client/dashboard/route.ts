@@ -21,6 +21,7 @@ type ClientApplicationRow = {
 }
 
 type ExpertRow = {
+  profession?: string | null
   id: string
   name: string | null
   email: string | null
@@ -392,7 +393,7 @@ async function getExpert(expertId?: string | null) {
 
   const { data, error } = await supabase
     .from('experts')
-    .select('id, name, email')
+    .select('id, name, email, profession')
     .eq('id', expertId)
     .maybeSingle()
 
@@ -555,6 +556,7 @@ export async function GET(req: NextRequest) {
           id: expert?.id || conversation.expert_id,
           name: expert?.name || 'Uzman',
           email: expert?.email || null,
+          profession: expert?.profession || 'psychologist',
         },
         conversation: {
           id: conversation.id,

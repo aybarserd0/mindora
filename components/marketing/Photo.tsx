@@ -15,6 +15,10 @@ export const PHOTOS = {
   laptopCall: { label: 'Bitkinin yanında görüntülü görüşme açık laptop', src: 'https://images.unsplash.com/photo-1616531770192-6eaea74c2456', alt: 'Bitkilerin yanında, ekranında görüntülü görüşme açık bir laptop' },
   tableCall: { label: 'Masada laptopla görüşen kadın', src: 'https://images.unsplash.com/photo-1648737966786-ceba53e643b1', alt: 'Masada laptopla görüşme yapan bir kadın' },
   onlineMeeting: { label: 'Laptopta görüntülü görüşmedeki kadın', src: 'https://images.unsplash.com/photo-1616587226157-48e49175ee20', alt: 'Laptopla görüntülü görüşme yapan bir kadın' },
+  healthyBowl: { label: 'Sebzeli salata kâsesi', src: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd', alt: 'Taze sebzelerle hazırlanmış renkli bir salata kâsesi' },
+  breakfastPlate: { label: 'Sebzeli kahvaltı tabağı', src: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061', alt: 'Yumurta ve sebzelerle hazırlanmış bir kahvaltı tabağı' },
+  homeWorkout: { label: 'Evde egzersiz', src: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b', alt: 'Evde egzersiz yapan bir kadın' },
+  dumbbells: { label: 'Dambıl ve direnç bandı', src: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2', alt: 'Ahşap zemin üzerinde iki dambıl ve bir direnç bandı' },
 } satisfies Record<string, PhotoSource>
 
 const toneOverlay: Record<Tone, string> = {

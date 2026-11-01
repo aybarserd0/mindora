@@ -1,5 +1,7 @@
 "use client";
 
+import ProfessionFilter, { type ProfessionFilterValue } from "@/components/admin/ProfessionFilter";
+import { professionLabel, toProfession } from "@/lib/professions";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminHeader from "@/components/AdminHeader";
@@ -27,6 +29,7 @@ type Expert = {
   founding_until?: string | null;
   commission_rate?: number | string | null;
   account_type?: string | null;
+  profession?: string | null;
 };
 
 const statusOptions: Array<{ value: StatusFilter; label: string }> = [
@@ -86,6 +89,7 @@ export default function UzmanBasvurulariPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [professionFilter, setProfessionFilter] = useState<ProfessionFilterValue>("all");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
@@ -125,9 +129,11 @@ export default function UzmanBasvurulariPage() {
 
       const matchesSearch = !keyword || searchableText.includes(keyword);
 
-      return matchesStatus && matchesSearch;
+      const matchesProfession = professionFilter === "all" || toProfession(expert.profession) === professionFilter;
+
+      return matchesStatus && matchesSearch && matchesProfession;
     });
-  }, [experts, filter, search]);
+  }, [experts, filter, search, professionFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredExperts.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -253,6 +259,20 @@ export default function UzmanBasvurulariPage() {
           </div>
         </section>
 
+        <ProfessionFilter
+          value={professionFilter}
+          onChange={(value) => {
+            setProfessionFilter(value);
+            setPage(1);
+          }}
+          counts={{
+            all: experts.length,
+            psychologist: experts.filter((e) => toProfession(e.profession) === "psychologist").length,
+            dietitian: experts.filter((e) => toProfession(e.profession) === "dietitian").length,
+            trainer: experts.filter((e) => toProfession(e.profession) === "trainer").length,
+          }}
+        />
+
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {statusOptions.map((option) => (
             <button
@@ -313,6 +333,9 @@ export default function UzmanBasvurulariPage() {
                         )}`}
                       >
                         {getStatusLabel(expert.status)}
+                      </span>
+                      <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
+                        {professionLabel(expert.profession)}
                       </span>
                       {expert.account_type === "supervision_only" ? (
                         <span className="rounded-full border border-lilac-200 bg-lilac-50 px-3 py-1 text-xs font-semibold text-lilac-800">

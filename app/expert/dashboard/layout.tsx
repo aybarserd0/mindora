@@ -1,5 +1,6 @@
 "use client";
 
+import { professionLabel } from "@/lib/professions";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -59,7 +60,7 @@ const navigationItems: NavItem[] = [
     badge: "Yeni",
   },
   {
-    label: "Süpervizör paneli",
+    label: "Süpervizör alanı",
     href: "/expert/dashboard/supervizor",
     description: "Süpervizyon verdiğin psikologlar",
     icon: "◆",
@@ -88,6 +89,7 @@ function useExpertSession() {
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "ready" | "unauthorized">("loading");
   const [expertName, setExpertName] = useState("");
+  const [profession, setProfession] = useState("psychologist");
 
   useEffect(() => {
     let cancelled = false;
@@ -106,6 +108,7 @@ function useExpertSession() {
         }
 
         setExpertName(data.name || "");
+        setProfession(data.profession || "psychologist");
         setStatus("ready");
       } catch {
         if (!cancelled) {
@@ -122,12 +125,16 @@ function useExpertSession() {
     };
   }, [router]);
 
-  return { status, expertName };
+  return { status, expertName, profession };
 }
 
 export default function ExpertDashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/expert/dashboard";
-  const { status, expertName } = useExpertSession();
+  const { status, expertName, profession } = useExpertSession();
+  // Süpervizyon menüleri yalnızca psikologlar için
+  const navItems = profession === "psychologist"
+    ? navigationItems
+    : navigationItems.filter((item) => !item.href.startsWith("/expert/dashboard/supervizyon") && !item.href.startsWith("/expert/dashboard/supervizor"));
 
   if (status === "loading") {
     return (
@@ -154,14 +161,14 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
               <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
               <span className="leading-tight">
                 <span className="block font-display text-lg font-semibold text-slate-900">mindora</span>
-                <span className="block text-xs text-slate-500">Uzman paneli</span>
+                <span className="block text-xs text-slate-500">{professionLabel(profession)} · çalışma alanın</span>
               </span>
             </Link>
           </div>
 
           <nav aria-label="Uzman menüsü" className="flex-1 overflow-y-auto px-3 pb-6 pt-2">
             <div className="space-y-0.5">
-              {navigationItems.map((item) => {
+              {navItems.map((item) => {
                 const active = isActive(pathname, item.href);
 
                 return (
@@ -218,16 +225,17 @@ export default function ExpertDashboardLayout({ children }: { children: ReactNod
             <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
               <Link href="/expert/dashboard" className="flex items-center gap-2 no-underline lg:hidden">
                 <img src="/logo.png" alt="" className="h-8 w-8 rounded-md object-cover" />
-                <span className="font-display text-lg font-semibold text-slate-900">Uzman paneli</span>
+                <span className="font-display text-lg font-semibold text-slate-900">Çalışma alanın</span>
               </Link>
               <p className="hidden text-sm text-slate-500 lg:block">
                 {expertName ? `Hoş geldin, ${expertName.split(" ")[0]}` : "Hoş geldin"}
+                <span className="ml-2 rounded-full bg-lilac-50 px-2.5 py-0.5 text-xs font-semibold text-lilac-800">{professionLabel(profession)}</span>
               </p>
               <NotificationBell role="expert" />
             </div>
 
             <nav aria-label="Uzman menüsü" className="flex gap-2 overflow-x-auto px-4 pb-3 sm:px-6 lg:hidden">
-              {navigationItems.map((item) => {
+              {navItems.map((item) => {
                 const active = isActive(pathname, item.href);
 
                 return (

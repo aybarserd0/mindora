@@ -1,5 +1,7 @@
 "use client";
 
+import ProfessionFilter, { type ProfessionFilterValue } from "@/components/admin/ProfessionFilter";
+import { professionLabel, toProfession } from "@/lib/professions";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminHeader from "@/components/AdminHeader";
@@ -52,6 +54,9 @@ type Client = {
   preference: string | null;
   availability: string | null;
   note: string | null;
+  profession?: string | null;
+  health_screen?: string | null;
+  setting?: string | null;
   status: ClientStatus;
   matched_expert_id: string | null;
   created_at: string;
@@ -68,6 +73,7 @@ type Expert = {
   availability: string | null;
   experience: string | null;
   status: "pending" | "approved" | "rejected" | "passive";
+  profession?: string | null;
 };
 
 const statusOptions: Array<{ value: StatusFilter; label: string }> = [
@@ -194,6 +200,7 @@ export default function DanisanBasvurulariPage() {
   const [paymentLoadingId, setPaymentLoadingId] = useState<string | null>(null);
   const [copiedClientId, setCopiedClientId] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [professionFilter, setProfessionFilter] = useState<ProfessionFilterValue>("all");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
@@ -207,7 +214,10 @@ export default function DanisanBasvurulariPage() {
 
   const getRankedExperts = useCallback(
     (client: Client) => {
+      // Danışan hangi hizmete başvurduysa yalnızca o meslekten uzmanlar önerilir
+      const profession = toProfession(client.profession);
       return approvedExperts
+        .filter((expert) => toProfession(expert.profession) === profession)
         .map((expert) => ({
           expert,
           match: scoreExpertMatch(
@@ -307,9 +317,11 @@ export default function DanisanBasvurulariPage() {
 
       const searchMatch = !keyword || text.includes(keyword);
 
-      return statusMatch && searchMatch;
+      const professionMatch = professionFilter === "all" || toProfession(client.profession) === professionFilter;
+
+      return statusMatch && searchMatch && professionMatch;
     });
-  }, [clients, filter, search, experts]);
+  }, [clients, filter, search, experts, professionFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredClients.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -552,6 +564,20 @@ export default function DanisanBasvurulariPage() {
           <SummaryCard title="Sohbet Aktif" value={String(chatSummary.active)} description={`Kilitli: ${chatSummary.locked} • Toplam: ${chatSummary.total}`} />
         </section>
 
+        <ProfessionFilter
+          value={professionFilter}
+          onChange={(value) => {
+            setProfessionFilter(value);
+            setPage(1);
+          }}
+          counts={{
+            all: clients.length,
+            psychologist: clients.filter((c) => toProfession(c.profession) === "psychologist").length,
+            dietitian: clients.filter((c) => toProfession(c.profession) === "dietitian").length,
+            trainer: clients.filter((c) => toProfession(c.profession) === "trainer").length,
+          }}
+        />
+
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {statusOptions.map((option) => (
             <button
@@ -615,6 +641,10 @@ export default function DanisanBasvurulariPage() {
                         <h2 className="text-xl font-semibold text-slate-900">
                           {safeText(client.name)}
                         </h2>
+
+                        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
+                          {professionLabel(client.profession)}
+                        </span>
 
                         <span
                           className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusStyle(
@@ -697,7 +727,9 @@ export default function DanisanBasvurulariPage() {
                     <InfoRow label="Süre" value={safeText(client.duration)} />
                     <InfoRow label="Daha Önce Destek" value={safeText(client.previous_support)} />
                     <InfoRow label="Başlama Zamanı" value={safeText(client.start_time)} />
-                    <InfoRow label="Psikolog Tercihi" value={safeText(client.preference)} />
+                    <InfoRow label="Uzman Tercihi" value={safeText(client.preference)} />
+                    {client.setting ? <InfoRow label="Antrenman Yeri" value={safeText(client.setting)} /> : null}
+                    {client.health_screen ? <InfoRow label="Sağlık Ön Sorusu" value={safeText(client.health_screen)} /> : null}
                     <InfoRow label="Müsaitlik" value={safeText(client.availability)} />
                     <InfoRow
                       label="Eşleşen Uzman"
@@ -758,7 +790,7 @@ export default function DanisanBasvurulariPage() {
                           disabled={
                             updatingId === client.id ||
                             !selectedExperts[client.id] ||
-                            approvedExperts.length === 0
+                            getRankedExperts(client).length === 0
                           }
                           onClick={() => matchClient(client.id)}
                           className="rounded-lg bg-violet-700 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-50"
@@ -767,9 +799,9 @@ export default function DanisanBasvurulariPage() {
                         </button>
                       </div>
 
-                      {approvedExperts.length === 0 ? (
+                      {getRankedExperts(client).length === 0 ? (
                         <p className="mt-3 text-sm font-semibold text-rose-700">
-                          Onaylı uzman yok. Önce Uzman Başvuruları sayfasından bir uzmanı onayla.
+                          Bu meslekte ({professionLabel(client.profession)}) onaylı uzman yok. Önce Uzman Başvuruları sayfasından bir uzmanı onayla.
                         </p>
                       ) : null}
                     </section>

@@ -1,5 +1,7 @@
 "use client";
 
+import { professionLabel, toProfession } from "@/lib/professions";
+import ProfessionFilter, { type ProfessionFilterValue } from "@/components/admin/ProfessionFilter";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminHeader from "@/components/AdminHeader";
 
@@ -37,6 +39,7 @@ type Payment = {
     id: string;
     name: string | null;
     email: string | null;
+    profession?: string | null;
   } | null;
 };
 
@@ -129,6 +132,7 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<PaymentFilter>("all");
+  const [professionFilter, setProfessionFilter] = useState<ProfessionFilterValue>("all");
   const [search, setSearch] = useState("");
   const [payoutLoadingId, setPayoutLoadingId] = useState<string | null>(null);
   const [refundLoadingId, setRefundLoadingId] = useState<string | null>(null);
@@ -157,9 +161,11 @@ export default function PaymentsPage() {
         .join(" ")
         .toLowerCase();
 
-      return statusMatch && (!keyword || text.includes(keyword));
+      const professionMatch = professionFilter === "all" || toProfession(payment.experts?.profession) === professionFilter;
+
+      return statusMatch && professionMatch && (!keyword || text.includes(keyword));
     });
-  }, [payments, filter, search]);
+  }, [payments, filter, search, professionFilter]);
 
   const summary = useMemo(() => {
     const paidPayments = payments.filter((payment) => payment.status === "paid");
@@ -332,6 +338,8 @@ export default function PaymentsPage() {
           <SummaryCard title="Bekleyen Ödeme" value={formatMoney(summary.pendingAmount)} description={`Bekleyen işlem: ${summary.pendingCount}`} />
         </section>
 
+        <ProfessionFilter value={professionFilter} onChange={setProfessionFilter} />
+
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           {paymentFilters.map((item) => (
             <button
@@ -479,6 +487,7 @@ export default function PaymentsPage() {
                       <td className="px-5 py-4">
                         <p className="font-semibold text-slate-900">
                           {safeText(payment.experts?.name)}
+                          {payment.experts ? <span className="ml-2 rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800">{professionLabel(payment.experts.profession)}</span> : null}
                         </p>
                         <p className="mt-1 text-xs font-semibold text-slate-500">
                           {safeText(payment.experts?.email)}

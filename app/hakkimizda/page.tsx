@@ -17,7 +17,7 @@ import {
 export const metadata: Metadata = {
   title: 'Hakkımızda',
   description:
-    'Mindora; psikolojik destek arayanları belgeleri doğrulanmış, süpervizyonla desteklenen psikologlarla buluşturan online bir platformdur. Neden kurulduğunu ve neye önem verdiğimizi anlatıyoruz.',
+    'Mindora; psikolog, diyetisyen ve kişisel antrenör desteği arayanları belgeleri doğrulanmış uzmanlarla buluşturan online bir platformdur. Neden kurulduğunu ve neye önem verdiğimizi anlatıyoruz.',
   alternates: { canonical: '/hakkimizda' },
 }
 
@@ -29,8 +29,8 @@ const beliefs = [
   },
   {
     icon: Icons.people,
-    title: 'İyi terapist yalnız çalışmaz',
-    text: 'Zor vakalarda deneyimli bir meslektaşa danışmak işin doğası. Bunu platformun içine koyduk ve görünür hâle getirdik.',
+    title: 'İyi olmak tek bir alandan ibaret değil',
+    text: 'Zihnin, beslenmen ve bedenin birbirini etkiler. Bu yüzden psikolog, diyetisyen ve antrenörü aynı güven standardıyla tek çatı altında topladık.',
   },
   {
     icon: Icons.shield,
@@ -39,15 +39,15 @@ const beliefs = [
   },
   {
     icon: Icons.tag,
-    title: 'Psikolog da hakkını almalı',
+    title: 'Uzman da hakkını almalı',
     text: 'Uzmanlarına adil davranmayan bir platform, danışanına da iyi hizmet veremez. Mindora iki tarafı birlikte düşünür.',
   },
 ]
 
 const checks = [
-  ['Diploma ve unvan', 'Her başvuruda belgeler Mindora ekibi tarafından incelenir; incelenmeden profil yayınlanmaz.'],
+  ['Diploma ve belge', 'Psikoloji ve diyetetik diplomaları e-Devlet belgesiyle, antrenörlerin diploması ya da antrenörlük belgesi tek tek incelenir; incelenmeden profil yayınlanmaz.'],
   ['Alan ve deneyim', 'Uzmanlık alanları ve çalışma yaklaşımı başvuru sırasında değerlendirilir.'],
-  ['Danışan geri bildirimi', 'Yorumlar yalnızca tamamlanan seanslardan sonra alınır ve yayından önce incelenir.'],
+  ['Danışan geri bildirimi', 'Yorumlar yalnızca tamamlanan görüşmelerden sonra alınır ve yayından önce incelenir.'],
   ['Süpervizyon', 'Psikologlar kıdemli meslektaşlarından düzenli destek alabilir; bunu yapanlar profillerinde rozetle görünür.'],
 ]
 
@@ -59,7 +59,7 @@ export default function Hakkimizda() {
       <PageHero
         photo={PHOTOS.forestTrees}
         title="Destek aramayı kolaylaştırmak için buradayız."
-        lead="Mindora, psikolojik destek almak isteyenleri belgeleri doğrulanmış psikologlarla online olarak buluşturan bir platform. Ama asıl derdimiz eşleştirmenin ötesinde: ilk adımın kolay, sürecin güvenli, terapinin kaliteli olması."
+        lead="Mindora; psikolog, diyetisyen ve kişisel antrenör desteği arayanları belgeleri doğrulanmış uzmanlarla online olarak buluşturan bir platform. Asıl derdimiz eşleştirmenin ötesinde: ilk adımın kolay, sürecin güvenli, desteğin kaliteli olması."
         visual={
           <>
             <ThreadLine className="absolute inset-0 h-full w-full" d="M20 380 C 140 240, 260 420, 350 250 S 520 70, 560 110" length={850} />
@@ -67,7 +67,7 @@ export default function Hakkimizda() {
               <MatchCardMock />
             </div>
             <FloatingNote className="left-0 top-4 z-20" tilt="-2deg" delay="1s" icon={<IconBadge tone="lilac">{Icons.people}</IconBadge>}>
-              Süpervizyonla desteklenen uzmanlar
+              Psikolog · Diyetisyen · Antrenör
             </FloatingNote>
             <SampleCaption className="absolute -bottom-3 right-0" />
           </>
@@ -86,12 +86,12 @@ export default function Hakkimizda() {
             yaygın sebeplerinden biri.
           </p>
           <p>
-            Psikologların tarafında da başka bir boşluk var: zor vakalarda danışacakları deneyimli bir
-            meslektaşa ulaşmak çoğu zaman tanıdık çevresine bağlı, dağınık ve kayıtsız.
+            Üstelik ihtiyaçlar çoğu zaman tek bir alana sığmıyor. Stres beslenmeyi, beslenme enerjini, enerji de
+            hareket etme isteğini etkiliyor; ama her biri için ayrı ayrı güvenilir birini aramak gerekiyor.
           </p>
           <p className="font-medium text-slate-900">
-            Mindora bu iki boşluğu aynı yerde kapatmak için kuruldu: danışan için doğru başlangıç, psikolog
-            için arkasında duran bir meslek topluluğu.
+            Mindora bu yüzden kuruldu: psikolog, diyetisyen ve kişisel antrenörü aynı güven standardıyla tek
+            yerde bulman, uzmanların da danışanlarına odaklanabileceği bir çalışma ortamı için.
           </p>
         </Reveal>
       </section>
@@ -160,7 +160,7 @@ export default function Hakkimizda() {
 
       <CtaBand
         title="Hazır olduğunda buradayız."
-        text="Ücretsiz ön eşleşmeyle başla, sana uygun psikoloğu birlikte bulalım."
+        text="Psikolog, diyetisyen ya da antrenör; ücretsiz ön eşleşmeyle başla, sana uygun uzmanı birlikte bulalım."
         primary={{ label: 'Ücretsiz eşleşmeyi başlat', href: '/eslesme' }}
         secondary={{ label: 'Uzmanları incele', href: '/uzmanlar' }}
       />

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { getExpertIdFromRequest } from '@/lib/security/expert-session'
 import { applyRateLimit } from '@/lib/security/rate-limit'
+import { PROFESSION_CONFIG, toProfession } from '@/lib/professions'
 import { ROOM_CLOSE_AFTER_MINUTES, ROOM_OPEN_BEFORE_MINUTES } from './constants'
 
 // Bu dosyadaki tablolar database.types.ts'te henüz yok (migration uygulanınca
@@ -28,6 +29,12 @@ export async function requireExpert(
 
   const expertId = await getExpertIdFromRequest(req)
   if (!expertId) return { response: jsonError('Oturum bulunamadı. Lütfen tekrar giriş yap.', 401) }
+
+  // Süpervizyon modülü yalnızca psikologlara açık
+  const { data: expert } = await getSupabaseAdmin().from('experts').select('profession').eq('id', expertId).maybeSingle()
+  if (expert && !PROFESSION_CONFIG[toProfession(expert.profession)].supervision) {
+    return { response: jsonError('Süpervizyon yalnızca psikologlar için açık.', 403) }
+  }
 
   return { expertId }
 }

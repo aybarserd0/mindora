@@ -319,7 +319,7 @@ export default function ExpertEarningsPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-400">
-                Mindora Uzman Paneli
+                Mindora çalışma alanın
               </p>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Kazançlar
@@ -364,7 +364,7 @@ export default function ExpertEarningsPage() {
               </p>
               <p className="mt-1 text-sm text-slate-600">
                 {commission.source === 'founding' && commission.foundingUntil
-                  ? `Kurucu uzman indirimin ${new Date(commission.foundingUntil).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihine kadar geçerli. Sonrasında standart oran %25 uygulanır.`
+                  ? `Kurucu uzman indirimin ${new Date(commission.foundingUntil).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihine kadar geçerli. Sonrasında standart oran %20 uygulanır.`
                   : 'Oran, her ödeme oluştuğu anda sabitlenir; sonradan yapılan değişiklikler geçmiş ödemeleri etkilemez.'}
               </p>
             </div>

@@ -271,7 +271,7 @@ function ClientFilesContent() {
   const fetchFiles = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (!token) {
-        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Size iletilen danışan paneli bağlantısını kullanabilirsiniz.')
+        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Sana e-postayla gelen giriş bağlantısını kullanabilirsin.')
         setFiles([])
         setSummary(EMPTY_SUMMARY)
         setLoading(false)
@@ -361,7 +361,7 @@ function ClientFilesContent() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-semibold text-indigo-600">
-                Mindora Danışan Paneli
+                Mindora alanın
               </p>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Dosyalarım

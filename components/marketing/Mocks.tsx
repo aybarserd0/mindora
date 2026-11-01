@@ -94,7 +94,32 @@ export const Icons = {
 }
 
 /** Eşleşme önerisi kartı */
-export function MatchCardMock({ className = '' }: { className?: string }) {
+const MATCH_SAMPLES = {
+  psychologist: {
+    initials: 'DA',
+    name: 'Uzm. Klinik Psk. Deniz A.',
+    sub: 'Bilişsel Davranışçı Terapi, 8 yıl',
+    supervised: true,
+    bullets: ['Kaygı ve stres alanında çalışıyor', 'Hafta içi akşamları müsait', 'Seans ücreti 1.500 ₺, ek ücret yok'],
+  },
+  dietitian: {
+    initials: 'EK',
+    name: 'Dyt. Elif K.',
+    sub: 'Kilo yönetimi ve sporcu beslenmesi, 6 yıl',
+    supervised: false,
+    bullets: ['Düzenli beslenme alışkanlığı üzerine çalışıyor', 'Hafta içi akşamları müsait', 'Görüşme ücreti 1.000 ₺, ek ücret yok'],
+  },
+  trainer: {
+    initials: 'MA',
+    name: 'Mert A., Kişisel Antrenör',
+    sub: 'Salon programı ve kuvvet, 7 yıl',
+    supervised: false,
+    bullets: ['Yeni başlayanlarla çalışıyor', 'Sabah ve akşam saatleri müsait', 'Seans ücreti 800 ₺, ek ücret yok'],
+  },
+} as const
+
+export function MatchCardMock({ className = '', variant = 'psychologist' }: { className?: string; variant?: keyof typeof MATCH_SAMPLES }) {
+  const sample = MATCH_SAMPLES[variant]
   return (
     <div className={`w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl ring-1 ring-slate-200/80 ${className}`}>
       <div className="flex items-center justify-between">
@@ -102,20 +127,20 @@ export function MatchCardMock({ className = '' }: { className?: string }) {
         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">Örnek öneri</span>
       </div>
       <div className="mt-4 flex items-center gap-3">
-        <Avatar initials="DA" />
+        <Avatar initials={sample.initials} />
         <div className="min-w-0">
-          <p className="truncate font-display text-base font-semibold text-slate-900">Uzm. Klinik Psk. Deniz A.</p>
-          <p className="text-xs text-slate-500">Bilişsel Davranışçı Terapi, 8 yıl</p>
+          <p className="truncate font-display text-base font-semibold text-slate-900">{sample.name}</p>
+          <p className="text-xs text-slate-500">{sample.sub}</p>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-1.5">
         <Chip icon={Icons.shield}>Belgeleri doğrulandı</Chip>
-        <Chip tone="lilac" icon={Icons.people}>Süpervizyonlu</Chip>
+        {sample.supervised ? <Chip tone="lilac" icon={Icons.people}>Süpervizyonlu</Chip> : null}
       </div>
       <ul className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-700">
-        <li className="flex items-center gap-2"><Check className="text-pine-600" />Kaygı ve stres alanında çalışıyor</li>
-        <li className="flex items-center gap-2"><Check className="text-pine-600" />Hafta içi akşamları müsait</li>
-        <li className="flex items-center gap-2"><Check className="text-pine-600" />Seans ücreti 1.500 ₺, ek ücret yok</li>
+        {sample.bullets.map((b) => (
+          <li key={b} className="flex items-center gap-2"><Check className="text-pine-600" />{b}</li>
+        ))}
       </ul>
       <div className="mt-5 rounded-full bg-pine-800 px-4 py-2.5 text-center text-sm font-semibold text-white">Tanışmak istiyorum</div>
     </div>
@@ -193,7 +218,7 @@ export function CalendarMock({ className = '' }: { className?: string }) {
       <div className="flex items-center gap-3">
         <Avatar initials="DA" size="sm" />
         <div>
-          <p className="text-sm font-semibold text-slate-900">İlk seansını planla</p>
+          <p className="text-sm font-semibold text-slate-900">İlk görüşmeni planla</p>
           <p className="text-xs text-slate-500">Online görüşme, 50 dakika</p>
         </div>
       </div>
@@ -253,11 +278,22 @@ export function ChatMock({ className = '' }: { className?: string }) {
 }
 
 /** Konu seçici kartının küçük versiyonu (adım vitrini için) */
-export function TopicPickerMock({ className = '' }: { className?: string }) {
-  const topics = ['Kaygı ve stres', 'İlişki ve aile', 'Özgüven', 'Tükenmişlik', 'Henüz adını koyamadım']
+const TOPIC_SAMPLES = {
+  psychologist: { tab: 0, question: 'Şu sıralar seni en çok ne yoruyor?', topics: ['Kaygı ve stres', 'İlişki ve aile', 'Özgüven', 'Tükenmişlik', 'Henüz adını koyamadım'] },
+  dietitian: { tab: 1, question: 'Beslenmende neyi değiştirmek istiyorsun?', topics: ['Kilo vermek', 'Sağlıklı ve düzenli beslenmek', 'Sporcu beslenmesi', 'Kilo almak', 'Diğer'] },
+  trainer: { tab: 2, question: 'Antrenmanla neye ulaşmak istiyorsun?', topics: ['Kas kazanmak / güçlenmek', 'Salon programı', 'Genel form ve kondisyon', 'Evde antrenman düzeni', 'Spora yeni başlıyorum'] },
+}
+
+export function TopicPickerMock({ className = '', variant = 'psychologist' }: { className?: string; variant?: keyof typeof TOPIC_SAMPLES }) {
+  const { tab, question, topics } = TOPIC_SAMPLES[variant]
   return (
     <div className={`w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl ring-1 ring-slate-200/80 ${className}`}>
-      <p className="font-display text-lg font-semibold text-slate-900">Şu sıralar seni en çok ne yoruyor?</p>
+      <div className="grid grid-cols-3 gap-1 rounded-full bg-slate-100 p-1 text-center text-xs font-semibold">
+        {['Psikolog', 'Diyetisyen', 'Antrenör'].map((s, i) => (
+          <span key={s} className={`rounded-full py-1.5 ${i === tab ? 'bg-white text-pine-900 shadow-sm' : 'text-slate-500'}`}>{s}</span>
+        ))}
+      </div>
+      <p className="mt-4 font-display text-lg font-semibold text-slate-900">{question}</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {topics.map((t, i) => (
           <span

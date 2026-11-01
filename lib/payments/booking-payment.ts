@@ -191,7 +191,7 @@ async function notifyBookingConfirmed({
 
 Ödemen alındı ve seansın onaylandı.
 
-Psikolog: ${expert?.name || 'Psikoloğun'}
+Uzman: ${expert?.name || 'Uzmanın'}
 Tarih: ${when}
 Süre: yaklaşık 50 dakika, online
 

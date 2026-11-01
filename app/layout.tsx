@@ -9,9 +9,9 @@ import { getSiteUrl } from '@/lib/site-url'
 
 const siteUrl = getSiteUrl()
 const siteName = 'Mindora'
-const defaultTitle = 'Mindora | Online Psikolojik Destek Platformu'
+const defaultTitle = 'Mindora | Online Psikolog, Diyetisyen ve Kişisel Antrenör'
 const defaultDescription =
-  'Mindora; psikolojik destek almak isteyen kişileri uygun uzmanlarla buluşturan, güvenli online görüşme ve ön eşleşme platformudur.'
+  'Mindora; psikolog, diyetisyen ve kişisel antrenör desteği arayanları belgeleri kontrol edilmiş uzmanlarla buluşturan güvenli online görüşme ve ön eşleşme platformudur.'
 
 const googleAnalyticsId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || ''
@@ -29,10 +29,13 @@ export const metadata: Metadata = {
     'online psikolog',
     'online terapi',
     'online psikolojik destek',
-    'psikolojik destek',
+    'online diyetisyen',
+    'diyetisyen',
+    'online kişisel antrenör',
+    'kişisel antrenör',
+    'online pt',
     'psikolog eşleşme',
     'uzman psikolog',
-    'terapi platformu',
     'kaygı testi',
     'depresyon testi',
     'stres testi',
@@ -52,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: defaultTitle,
     description:
-      'Mindora ile psikolojik destek sürecine güvenli, sade ve online şekilde başlayın. Uygun uzmanlarla eşleşin, online görüşme sürecinizi yönetin.',
+      'Psikolog, diyetisyen ya da kişisel antrenör: Mindora sana uygun uzmanı ücretsiz önerir, görüşmeni online ve güvenle yaparsın.',
     url: '/',
     siteName,
     locale: 'tr_TR',
@@ -62,7 +65,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Mindora Online Psikolojik Destek Platformu',
+        alt: 'Mindora: online psikolog, diyetisyen ve kişisel antrenör',
       },
     ],
   },
@@ -70,7 +73,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: defaultTitle,
     description:
-      'Psikolojik destek almak isteyen kişiler için güvenli online ön eşleşme ve görüşme platformu.',
+      'Psikolog, diyetisyen ve kişisel antrenörlerle güvenli online ön eşleşme ve görüşme platformu.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -135,7 +138,7 @@ function JsonLd() {
     '@context': 'https://schema.org',
     '@type': 'Service',
     '@id': `${siteUrl}#service`,
-    name: 'Online Psikolojik Destek Ön Eşleşme Hizmeti',
+    name: 'Online Psikolog, Diyetisyen ve Kişisel Antrenör Eşleşme Hizmeti',
     provider: {
       '@id': `${siteUrl}#organization`,
     },
@@ -143,7 +146,7 @@ function JsonLd() {
       '@type': 'Country',
       name: 'Türkiye',
     },
-    serviceType: 'Online psikolojik destek ve uzman eşleştirme',
+    serviceType: 'Online psikolojik destek, diyetisyenlik ve kişisel antrenörlük için uzman eşleştirme',
     description: defaultDescription,
     url: siteUrl,
   }

@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   const { data: expert, error } = await supabase
     .from('experts')
-    .select('id, name, email, status')
+    .select('id, name, email, status, profession')
     .eq('id', expertId)
     .maybeSingle()
 
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Oturum geçersiz.' }, { status: 401 })
   }
 
-  return NextResponse.json({ ok: true, expertId: expert.id, name: expert.name })
+  return NextResponse.json({ ok: true, expertId: expert.id, name: expert.name, profession: expert.profession ?? 'psychologist' })
 }
 
 export async function DELETE() {

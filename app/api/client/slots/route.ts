@@ -7,7 +7,7 @@ import { getBookableExpert, getClientBookableSlots } from '@/lib/scheduling/clie
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** Danışanın eşleştiği psikoloğun açık saatleri ve seans ücreti. */
+/** Danışanın eşleştiği uzmanın açık saatleri ve seans ücreti. */
 export async function GET(req: NextRequest) {
   const limited = applyRateLimit(req, { scope: 'client-slots', limit: 60, windowMs: 60_000 })
   if (limited) return limited
@@ -19,12 +19,12 @@ export async function GET(req: NextRequest) {
 
   const expert = await getBookableExpert(access.expertId)
   if (!expert || expert.status !== 'approved') {
-    return NextResponse.json({ ok: false, error: 'Psikoloğun şu anda yeni randevu kabul etmiyor.' }, { status: 409 })
+    return NextResponse.json({ ok: false, error: 'Uzmanın şu anda yeni randevu kabul etmiyor.' }, { status: 409 })
   }
 
   const price = Number(expert.session_price)
   if (!Number.isFinite(price) || price <= 0) {
-    return NextResponse.json({ ok: false, error: 'Psikoloğunun seans ücreti henüz tanımlanmamış. Mindora ekibine yazabilirsin.' }, { status: 409 })
+    return NextResponse.json({ ok: false, error: 'Uzmanının seans ücreti henüz tanımlanmamış. Mindora ekibine yazabilirsin.' }, { status: 409 })
   }
 
   try {

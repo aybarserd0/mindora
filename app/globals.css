@@ -286,6 +286,48 @@ h1 {
   animation-delay: var(--bubble-delay, 0s);
 }
 
+/* İlerleme çubukları dolar (haftalık kontrol kartları) */
+@keyframes fill-bar {
+  0%,
+  10% {
+    transform: scaleX(0);
+  }
+  35%,
+  90% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.6;
+  }
+}
+.fill-bar {
+  transform-origin: left center;
+  animation: fill-bar 9s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+  animation-delay: var(--fill-delay, 0s);
+}
+
+/* Tamamlanan set / öğün işaretleri sırayla belirir */
+@keyframes tick-in {
+  0%,
+  12% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  20%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.tick-in {
+  animation: tick-in 9s ease-out infinite;
+  animation-delay: var(--tick-delay, 0s);
+}
+
 /* Seçili zaman dilimi ve canlı göstergeler için hafif nabız */
 @keyframes soft-pulse {
   0%,
@@ -327,6 +369,8 @@ html[data-motion="off"] .thread-line {
   stroke-dashoffset: 0 !important;
 }
 html[data-motion="off"] .redact,
+html[data-motion="off"] .fill-bar,
+html[data-motion="off"] .tick-in,
 html[data-motion="off"] .bubble {
   animation: none !important;
   opacity: 1;
@@ -341,6 +385,8 @@ html[data-motion="off"] .bubble {
   .animate-drift,
   .animate-soft-pulse,
   .redact,
+  .fill-bar,
+  .tick-in,
   .bubble,
   .thread-line {
     animation: none !important;

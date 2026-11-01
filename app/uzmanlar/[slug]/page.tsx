@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import { matchHref as buildMatchHref, toProfession, type Profession } from "@/lib/professions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -19,6 +20,7 @@ type PageProps = {
 };
 
 type ExpertRow = {
+  profession?: string | null;
   id?: string | null;
   slug?: string | null;
   name?: string | null;
@@ -70,6 +72,7 @@ type PublicReview = {
 };
 
 type PublicExpertProfile = {
+  profession: Profession;
   id: string;
   slug: string;
   name: string;
@@ -125,7 +128,7 @@ const PROCESS_STEPS = [
 
 const FAQ_ITEMS = [
   {
-    question: "Online psikolojik danışmanlık seansı nasıl ilerler?",
+    question: "Online görüşme nasıl ilerler?",
     answer:
       "Ön eşleşme formu sonrasında uygun uzman, randevu zamanı ve görüşme süreci netleştirilir. Görüşme Mindora içindeki güvenli online görüşme akışıyla gerçekleştirilir.",
   },
@@ -353,6 +356,7 @@ function normalizeExpert(row: ExpertRow): PublicExpertProfile {
   const reviewCount = Math.max(0, Math.round(toNumber(row.review_count, 0)));
 
   return {
+    profession: toProfession(row.profession),
     id: toText(row.id),
     slug: toText(row.slug),
     name,
@@ -645,7 +649,7 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
 
   const [reviews, supervisedIds] = await Promise.all([getPublicReviews(expert.id), getSupervisedExpertIds()]);
   const isSupervised = supervisedIds.has(expert.id);
-  const matchingHref = `/eslesme?expert=${encodeURIComponent(expert.slug)}`;
+  const matchingHref = buildMatchHref(expert.profession, { expert: expert.slug });
   const jsonLd = buildJsonLd(expert, reviews);
 
   return (
@@ -913,7 +917,9 @@ export default async function PublicExpertDetailPage({ params }: PageProps) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Icons.shield, tone: "pine" as const, title: "Belgeleri kontrol edildi", text: "Diploma ve unvan, profil yayınlanmadan önce Mindora ekibi tarafından incelendi." },
-            isSupervised
+            expert.profession !== "psychologist"
+              ? { icon: Icons.calendar, tone: "lilac" as const, title: "Bulunduğun yerden", text: "Görüşmeler görüntülü yapılır; ulaşım ya da bekleme derdi yok." }
+              : isSupervised
               ? { icon: Icons.people, tone: "lilac" as const, title: "Düzenli süpervizyon alıyor", text: "Son üç ayda kıdemli bir meslektaşıyla süpervizyon görüşmeleri yaptı." }
               : { icon: Icons.people, tone: "lilac" as const, title: "Süpervizyon ağına açık", text: "Mindora psikologları zor vakalarda kıdemli meslektaşlarına danışabilir." },
             { icon: Icons.tag, tone: "pine" as const, title: "Ücret baştan belli", text: "Ödeme adımında burada yazandan farklı bir tutar görmezsin." },

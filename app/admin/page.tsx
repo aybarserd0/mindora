@@ -1,5 +1,6 @@
 "use client";
 
+import ProfessionBreakdown from "@/components/admin/ProfessionBreakdown";
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -435,6 +436,8 @@ function AdminHomeContent() {
             ))
           )}
         </section>
+
+        <ProfessionBreakdown />
 
         <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
           <article className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6">

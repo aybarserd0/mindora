@@ -157,7 +157,7 @@ async function sendPaymentEmails({
     client?.fullName ||
     'Danışan'
 
-  const expertName = expert?.name || 'Uzman Psikolog'
+  const expertName = expert?.name || 'Uzmanın'
   const amount = formatMoney(payment?.amount)
   const commissionAmount = formatMoney(payment?.commission_amount)
   const expertAmount = formatMoney(payment?.expert_amount)
@@ -241,7 +241,7 @@ async function sendPaymentEmails({
           <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
             <h2>Yeni ödeme alındı</h2>
             <p><strong>Danışan:</strong> ${clientName}</p>
-            <p><strong>Psikolog:</strong> ${expertName}</p>
+            <p><strong>Uzman:</strong> ${expertName}</p>
             <p><strong>Toplam ödeme:</strong> ${amount}</p>
             <p><strong>Mindora komisyonu:</strong> ${commissionAmount}</p>
             <p><strong>Uzman payı:</strong> ${expertAmount}</p>

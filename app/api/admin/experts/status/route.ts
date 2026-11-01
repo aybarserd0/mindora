@@ -7,7 +7,7 @@ import {
 } from '@/lib/mail/templates'
 import { createExpertAccessToken } from '@/lib/expert-access-tokens'
 import { createNotification } from '@/lib/notifications'
-import { FOUNDING_PROGRAM_OPEN, foundingUntilFrom } from '@/lib/payments/policy'
+import { FOUNDING_MEMBER_LIMIT, FOUNDING_PROGRAM_OPEN, foundingUntilFrom } from '@/lib/payments/policy'
 
 function cleanUrl(url?: string | null) {
   return (url || '').replace(/\/+$/, '')
@@ -97,7 +97,15 @@ export async function POST(req: NextRequest) {
     if (status === 'approved' || status === 'rejected') {
       let loginUrl: string | undefined
 
-      if (status === 'approved' && FOUNDING_PROGRAM_OPEN) {
+      // Kurucu kontenjanı (ilk 50 uzman) doluysa yeni uzman standart orana girer
+      const { count: foundingCount } = await supabaseAdmin
+        .from('experts')
+        .select('id', { count: 'exact', head: true })
+        .eq('founding_member', true)
+        .neq('account_type', 'supervision_only')
+      const foundingSeatsLeft = (foundingCount ?? 0) < FOUNDING_MEMBER_LIMIT
+
+      if (status === 'approved' && FOUNDING_PROGRAM_OPEN && foundingSeatsLeft) {
         // Kurucu uzman programı açıkken ilk kez onaylanan uzman 12 ay indirimli komisyon alır
         const { error: foundingError } = await supabaseAdmin
           .from('experts')
@@ -125,7 +133,7 @@ export async function POST(req: NextRequest) {
         title: status === 'approved' ? 'Başvurunuz onaylandı' : 'Başvurunuz hakkında',
         message:
           status === 'approved'
-            ? 'Mindora uzman başvurunuz onaylandı. Panelinize giriş yapabilirsiniz.'
+            ? 'Mindora uzman başvurun onaylandı. Artık giriş yapıp danışanlarınla çalışmaya başlayabilirsin.'
             : 'Mindora uzman başvurunuz bu aşamada onaylanamadı.',
         type: 'system',
       })

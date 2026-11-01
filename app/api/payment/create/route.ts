@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { PROFESSION_CONFIG, toProfession } from '@/lib/professions'
 import { applyRateLimit } from '@/lib/security/rate-limit'
 import { resolveCommission, splitAmount } from '@/lib/payments/policy'
 
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     if (!client.matched_expert_id) {
       return NextResponse.json(
-        { ok: false, error: 'Bu danışan henüz bir psikologla eşleştirilmemiş.' },
+        { ok: false, error: 'Bu danışan henüz bir uzmanla eşleştirilmemiş.' },
         { status: 400 }
       )
     }
@@ -160,7 +161,7 @@ export async function POST(req: NextRequest) {
 
     const { data: expert, error: expertError } = await supabase
       .from('experts')
-      .select('id, name, email, session_price, status, account_type, commission_rate, founding_member, founding_until')
+      .select('id, name, email, session_price, status, account_type, commission_rate, founding_member, founding_until, profession')
       .eq('id', client.matched_expert_id)
       .maybeSingle()
 
@@ -168,7 +169,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'Eşleşen psikolog bulunamadı.',
+          error: 'Eşleşen uzman bulunamadı.',
           detail: expertError?.message || null,
         },
         { status: 404 }
@@ -177,7 +178,7 @@ export async function POST(req: NextRequest) {
 
     if (expert.status !== 'approved' || expert.account_type === 'supervision_only') {
       return NextResponse.json(
-        { ok: false, error: 'Eşleşen psikolog aktif/onaylı değil.' },
+        { ok: false, error: 'Eşleşen uzman aktif/onaylı değil.' },
         { status: 400 }
       )
     }
@@ -186,7 +187,7 @@ export async function POST(req: NextRequest) {
 
     if (!amount) {
       return NextResponse.json(
-        { ok: false, error: 'Psikolog seans ücreti bulunamadı veya geçersiz.' },
+        { ok: false, error: 'Uzmanın seans ücreti bulunamadı veya geçersiz.' },
         { status: 400 }
       )
     }
@@ -273,8 +274,8 @@ export async function POST(req: NextRequest) {
       basketItems: [
         {
           id: `session_${expert.id}`,
-          name: `Mindora Psikolojik Danışmanlık - ${expert.name || 'Uzman'}`,
-          category1: 'Psikolojik Danışmanlık',
+          name: `Mindora ${PROFESSION_CONFIG[toProfession(expert.profession)].serviceName} - ${expert.name || 'Uzman'}`,
+          category1: PROFESSION_CONFIG[toProfession(expert.profession)].serviceName,
           itemType: 'VIRTUAL',
           price: money(amount),
         },

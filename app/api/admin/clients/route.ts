@@ -17,6 +17,9 @@ type ConversationPaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 
 type ClientApplicationRecord = {
   id: string
+  profession?: string | null
+  health_screen?: string | null
+  setting?: string | null
   name: string | null
   phone: string | null
   email: string | null
@@ -135,6 +138,9 @@ function normalizeClient({
     preference: client.preference ?? null,
     availability: client.availability ?? null,
     note: client.note ?? null,
+    profession: client.profession ?? 'psychologist',
+    health_screen: client.health_screen ?? null,
+    setting: client.setting ?? null,
     status: client.status,
     matched_expert_id: client.matched_expert_id ?? null,
     created_at: client.created_at,
@@ -163,6 +169,9 @@ export async function GET() {
         preference,
         availability,
         note,
+        profession,
+        health_screen,
+        setting,
         status,
         matched_expert_id,
         created_at

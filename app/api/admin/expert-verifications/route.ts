@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { documentInfo, toProfession } from "@/lib/professions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -22,6 +23,7 @@ type ExpertRow = {
   name?: string | null;
   full_name?: string | null;
   title?: string | null;
+  profession?: string | null;
 };
 
 const documentLabels: Record<string, string> = {
@@ -62,7 +64,7 @@ async function fetchExpertsMap(expertIds: string[]) {
 
   const { data, error } = await supabase
     .from("experts")
-    .select("id, name, full_name, title")
+    .select("id, name, full_name, title, profession")
     .in("id", ids);
 
   if (error) {
@@ -114,8 +116,10 @@ export async function GET() {
           normalize(expert?.full_name) ||
           "İsimsiz Uzman",
         expertTitle: normalize(expert?.title) || null,
+        expertProfession: toProfession(expert?.profession),
         documentType: row.document_type,
-        documentLabel: formatDocumentType(row.document_type),
+        // Belge adı uzmanın mesleğine göre (ör. antrenörde "Diploma ya da antrenörlük belgesi")
+        documentLabel: documentInfo(expert?.profession, row.document_type || "")?.title || formatDocumentType(row.document_type),
         fileName: row.file_name,
         filePath: row.file_path,
         fileSize: row.file_size || 0,

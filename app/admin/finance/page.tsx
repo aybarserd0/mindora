@@ -1,5 +1,6 @@
 "use client";
 
+import ProfessionBreakdown from "@/components/admin/ProfessionBreakdown";
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -269,6 +270,8 @@ function AdminFinanceContent() {
           <SummaryCard title="Bu Ay Uzman Payı" value={formatMoney(stats.thisMonthExpertShare)} description="Bu ay tahmini hak ediş" />
           <SummaryCard title="İade / İptal" value={formatMoney(stats.refundedAmount + stats.cancelledAmount)} description={`${stats.refundedPayments + stats.cancelledPayments} işlem`} />
         </section>
+
+        <ProfessionBreakdown variant="finance" />
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <article className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm">

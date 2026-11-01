@@ -13,7 +13,7 @@ const SITE_URL = getSiteUrl()
 export const metadata: Metadata = {
   title: 'Sık Sorulan Sorular | Mindora',
   description:
-    'Mindora hakkında sık sorulan sorular: ücretsiz ön eşleşme, online psikolojik destek süreci, gizlilik, ücretlendirme, testler ve uzman başvurusu.',
+    'Mindora hakkında sık sorulan sorular: ücretsiz ön eşleşme, online psikolog, diyetisyen ve kişisel antrenör görüşmeleri, gizlilik, ücretlendirme ve uzman başvurusu.',
   alternates: {
     canonical: '/sss',
     languages: {
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Sık Sorulan Sorular | Mindora',
     description:
-      'Mindora’da online psikolojik destek sürecine başlamadan önce bilmeniz gerekenler.',
+      'Mindora’da psikolog, diyetisyen ya da kişisel antrenörle başlamadan önce bilmen gerekenler.',
   },
   robots: {
     index: true,
@@ -47,12 +47,16 @@ const FAQ_GROUPS = [
     description: 'Mindora’ya ilk kez gelen danışanların en çok merak ettiği konular.',
     items: [
       {
+        q: 'Mindora’da hangi uzmanlar var?',
+        a: 'Psikolog, diyetisyen ve kişisel antrenör. Hepsi belgeleri kontrol edildikten sonra danışan kabul eder. İstersen birden fazla alan için ayrı ayrı başvurabilirsin.',
+      },
+      {
         q: 'Ön eşleşme ücretli mi?',
-        a: 'Hayır. Mindora’da ön eşleşme süreci ücretsizdir. Formu doldurmak seans satın alma zorunluluğu oluşturmaz.',
+        a: 'Hayır. Ön eşleşme her üç alanda da ücretsizdir. Formu doldurmak görüşme satın alma zorunluluğu oluşturmaz.',
       },
       {
         q: 'Formu doldurduktan sonra ne olacak?',
-        a: 'Bilgilerin değerlendirilir. Destek konusu, tercihlerin ve uygun zamanına göre sana uygun başlangıç için dönüş yapılır.',
+        a: 'Bilgilerin değerlendirilir. Seçtiğin alana, hedefine, tercihlerine ve uygun zamanına göre sana uygun uzmanı önerip dönüş yaparız.',
       },
       {
         q: 'Ne kadar sürede dönüş alırım?',
@@ -62,33 +66,59 @@ const FAQ_GROUPS = [
   },
   {
     category: 'Görüşme süreci',
-    description: 'Online görüşme, uzman seçimi ve seans planlaması hakkında bilgiler.',
+    description: 'Online görüşme, uzman seçimi ve planlama hakkında bilgiler.',
     items: [
       {
         q: 'Görüşmeler online mı?',
-        a: 'Evet. Mindora başlangıçta online psikolojik destek sürecine odaklanır. Görüşme süreci uygun uzman ve planlama netleştikten sonra ilerler.',
+        a: 'Evet. Psikolog, diyetisyen ve antrenör görüşmeleri Mindora içindeki görüntülü görüşme odasında yapılır; ayrı bir uygulama gerekmez.',
       },
       {
         q: 'Hangi uzmanla görüşeceğime nasıl karar veriliyor?',
-        a: 'Formdaki yanıtların; destek almak istediğin konu, uzman tercihin, uygun zamanın ve beklentin dikkate alınarak değerlendirilir.',
+        a: 'Formdaki yanıtların; seçtiğin alan, hedefin ya da destek konusu, uzman tercihin ve uygun zamanın dikkate alınarak değerlendirilir. Öneriyi kabul etmek zorunda değilsin.',
+      },
+      {
+        q: 'Planlar ve programlar nasıl paylaşılıyor?',
+        a: 'Beslenme planları, antrenman programları ya da uzmanının paylaşmak istediği her şey Mindora mesajlaşması içinde dosya olarak paylaşılır.',
+      },
+    ],
+  },
+  {
+    category: 'Diyetisyen ve kişisel antrenör',
+    description: 'Beslenme ve antrenman desteği almak isteyenler için.',
+    items: [
+      {
+        q: 'Diyetisyen görüşmesi nasıl ilerler?',
+        a: 'İlk görüşmede diyetisyenin alışkanlıklarını, hedefini ve günlük düzenini dinler. Beslenme planın Mindora içinde paylaşılır; kontrol görüşmeleriyle birlikte güncellenir.',
+      },
+      {
+        q: 'Antrenörle salonda da çalışabilir miyim?',
+        a: 'Evet. Antrenörün evde görüntülü görüşmeyle canlı antrenman yaptırabilir ya da salonda uygulayacağın bir program hazırlayıp takibini online yapabilir.',
+      },
+      {
+        q: 'Bir sağlık durumum ya da sakatlığım var.',
+        a: 'Formda bunu belirtmen yeterli; ayrıntıları ilk görüşmede uzmanınla konuşursun. Diyetisyen ve antrenör görüşmeleri hekim muayenesinin yerine geçmez; emin değilsen başlamadan önce doktoruna danış.',
+      },
+      {
+        q: 'Antrenör diyet listesi verir mi?',
+        a: 'Hayır. Beslenme planı diyetisyenlerin alanıdır. Antrenmanını beslenmeyle desteklemek istersen bir diyetisyenle de eşleşebilirsin.',
       },
     ],
   },
   {
     category: 'Ücretlendirme',
-    description: 'Seans ücreti, ödeme zamanı ve gizli ücret olup olmadığı hakkında.',
+    description: 'Görüşme ücreti, ödeme zamanı ve iade hakkında.',
     items: [
       {
-        q: 'Seans ücreti ne kadar?',
-        a: 'Seans ücreti eşleştiğin uzmana göre değişir ve ödeme adımına geçmeden önce açıkça gösterilir. Ön eşleşme aşaması ücretsizdir.',
+        q: 'Görüşme ücreti ne kadar?',
+        a: 'Ücret eşleştiğin uzmana göre değişir ve ödeme adımına geçmeden önce açıkça gösterilir. Ön eşleşme aşaması ücretsizdir.',
       },
       {
         q: 'Ödeme dışında ek/gizli bir ücret var mı?',
-        a: 'Hayır. Gösterilen seans ücreti dışında ek bir ücret talep edilmez. Ödeme yalnızca sen onayladıktan sonra, açıkça gösterilen tutar üzerinden alınır.',
+        a: 'Hayır. Gösterilen ücret dışında ek bir ücret talep edilmez. Abonelik yoktur; ödeme yalnızca sen onayladıktan sonra, açıkça gösterilen tutar üzerinden alınır.',
       },
       {
-        q: 'Randevumu değiştirebilir miyim?',
-        a: 'Randevu saatini uzmanın uygunluğu dahilinde ihtiyacına göre planlayabilirsin. Değişiklik talepleri için Mindora ekibiyle iletişime geçebilirsin.',
+        q: 'Randevumu iptal edersem ücretim iade edilir mi?',
+        a: 'Görüşmeye 24 saatten fazla varken iptal edersen ücretin tamamı iade edilir. Randevu saatini uzmanının uygunluğuna göre yeniden planlayabilirsin.',
       },
     ],
   },
@@ -98,19 +128,19 @@ const FAQ_GROUPS = [
     items: [
       {
         q: 'Bilgilerim gizli mi?',
-        a: 'Paylaştığın bilgiler yalnızca ön eşleşme ve yönlendirme süreci için kullanılır. Amaç, sana uygun destek sürecini daha doğru planlamaktır.',
+        a: 'Paylaştığın bilgiler yalnızca ön eşleşme ve görüşme süreci için kullanılır. Bir uzmana anlattıkların, senin onayın olmadan başka bir uzmanla paylaşılmaz.',
       },
       {
-        q: 'Seans içi mesajlarımı kim görebilir?',
+        q: 'Mesajlarımı kim görebilir?',
         a: 'Bir görüşmeye yalnızca ilgili danışan ve uzman; destek/güvenlik amacıyla yetkili Mindora ekibi erişebilir. Tüm veri trafiği şifreli bağlantı (HTTPS/TLS) üzerinden iletilir.',
       },
       {
         q: 'Verilerim KVKK kapsamında nasıl işleniyor?',
-        a: 'Bilgilerin, toplama amacıyla sınırlı şekilde ve yalnızca eşleşme/yönlendirme süreci için işlenir; üçüncü taraflarla pazarlama amacıyla paylaşılmaz.',
+        a: 'Bilgilerin, toplama amacıyla sınırlı şekilde ve yalnızca eşleşme/görüşme süreci için işlenir; üçüncü taraflarla pazarlama amacıyla paylaşılmaz.',
       },
       {
         q: 'Mindora acil destek hattı mı?',
-        a: 'Hayır. Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski varsa 112 ile iletişime geçmeli ya da en yakın sağlık kuruluşuna başvurmalısın.',
+        a: 'Hayır. Mindora acil kriz hattı değildir. Kendine veya bir başkasına zarar verme riski ya da acil bir sağlık sorunu varsa 112 ile iletişime geçmeli veya en yakın sağlık kuruluşuna başvurmalısın.',
       },
       {
         q: 'Test sonuçları tanı koyar mı?',
@@ -120,15 +150,15 @@ const FAQ_GROUPS = [
   },
   {
     category: 'Uzmanlar ve süpervizyon',
-    description: 'Mindora’daki psikologların nasıl seçildiği ve nasıl desteklendiği.',
+    description: 'Mindora’daki uzmanların nasıl seçildiği ve nasıl desteklendiği.',
     items: [
       {
         q: 'Uzmanlar nasıl kontrol ediliyor?',
-        a: 'Her psikoloğun diploması ve unvanı, danışan kabul etmeden önce Mindora ekibi tarafından tek tek kontrol edilir.',
+        a: 'Psikologların ve diyetisyenlerin diploması e-Devlet barkodlu belgeyle; antrenörlerin spor bilimleri diploması, federasyon antrenör belgesi ya da MYK belgesi danışan kabul etmeden önce tek tek kontrol edilir.',
       },
       {
         q: '"Süpervizyonlu Uzman" rozeti ne anlama geliyor?',
-        a: 'Son üç ayda kıdemli bir meslektaşıyla düzenli süpervizyon görüşmesi yapmış psikologların profilinde görünür. Süpervizyon, terapistin zor vakalarda deneyimli birinden destek almasıdır.',
+        a: 'Son üç ayda kıdemli bir meslektaşıyla düzenli süpervizyon görüşmesi yapmış psikologların profilinde görünür. Süpervizyon, psikoloğun zor vakalarda deneyimli birinden destek almasıdır.',
       },
       {
         q: 'Süpervizyonda benim bilgilerim paylaşılıyor mu?',
@@ -138,15 +168,15 @@ const FAQ_GROUPS = [
   },
   {
     category: 'Uzman başvurusu',
-    description: 'Mindora uzman ağına katılmak isteyen psikologlar için bilgiler.',
+    description: 'Mindora’ya katılmak isteyen psikolog, diyetisyen ve antrenörler için.',
     items: [
       {
-        q: 'Psikologlar Mindora’ya nasıl katılabilir?',
-        a: 'Psikologlar, uzman başvuru formunu doldurarak Mindora uzman ağına katılmak için ilk adımı atabilir.',
+        q: 'Mindora’ya kimler uzman olarak katılabilir?',
+        a: 'Psikologlar, diyetisyenler ve kişisel antrenörler. Uzman başvuru formunda mesleğini seçip bilgilerini paylaşarak ilk adımı atabilirsin.',
       },
       {
         q: 'Uzman başvurusu ücretli mi?',
-        a: 'Hayır. Mindora uzman ağına başvuru yapmak ücretsizdir. Başvurular değerlendirme sürecinden sonra sonuçlandırılır.',
+        a: 'Hayır. Mindora uzman ağına başvuru yapmak ücretsizdir. Başvurular belge kontrolünden sonra sonuçlandırılır.',
       },
     ],
   },
@@ -154,7 +184,7 @@ const FAQ_GROUPS = [
 
 const TRUST_ITEMS = [
   'Ücretsiz ön eşleşme',
-  'Seans zorunluluğu yok',
+  'Görüşme zorunluluğu yok',
   'Gizlilik odaklı süreç',
   'Online destek akışı',
 ]
@@ -223,19 +253,19 @@ export default function SSS() {
       <PageHero
         photo={PHOTOS.leaves}
         title="Başlamadan önce aklına takılanlar."
-        lead="Ön eşleşme, görüşmeler, ücretler, gizlilik ve uzmanlarımız hakkında en çok sorulan soruları topladık. Cevabını bulamazsan bize yazabilirsin."
+        lead="Psikolog, diyetisyen ve kişisel antrenör görüşmeleri; ön eşleşme, ücretler ve gizlilik hakkında en çok sorulan soruları topladık. Cevabını bulamazsan bize yazabilirsin."
         visual={
           <>
             <ThreadLine className="absolute inset-0 h-full w-full" d="M30 340 C 140 200, 260 380, 360 220 S 520 60, 560 90" length={800} />
             <div className="relative z-10 w-full max-w-sm space-y-3">
-              {['Ön eşleşme ücretli mi?', 'Görüşmeler kaydediliyor mu?', 'Uzmanlar nasıl kontrol ediliyor?'].map((q, i) => (
+              {['Hangi uzmanlar var?', 'Görüşmeler kaydediliyor mu?', 'Uzmanlar nasıl kontrol ediliyor?'].map((q, i) => (
                 <div
                   key={q}
                   className="animate-drift rounded-2xl bg-white px-5 py-4 shadow-lg ring-1 ring-slate-200/70"
                   style={{ ['--drift-delay' as string]: `${i * 0.8}s`, ['--tilt' as string]: `${i % 2 ? 1.5 : -1.5}deg`, marginLeft: `${i * 24}px` }}
                 >
                   <p className="font-display text-base font-semibold text-slate-900">{q}</p>
-                  <p className="mt-1 text-sm text-slate-500">{['Hayır, her zaman ücretsiz.', 'Hayır, görüntülü seanslar kaydedilmez.', 'Diploma ve unvan tek tek kontrol edilir.'][i]}</p>
+                  <p className="mt-1 text-sm text-slate-500">{['Psikolog, diyetisyen ve kişisel antrenör.', 'Hayır, görüntülü görüşmeler kaydedilmez.', 'Diploma ve belgeler tek tek kontrol edilir.'][i]}</p>
                 </div>
               ))}
             </div>
@@ -258,7 +288,7 @@ export default function SSS() {
 
       <CtaBand
         title="Sorun netleştiyse, ilk adım üç dakika."
-        text="Kısa formu doldur, sana uygun psikoloğu önerelim."
+        text="Alanını seç, kısa formu doldur; sana uygun uzmanı önerelim."
         primary={{ label: 'Ücretsiz eşleşmeyi başlat', href: '/eslesme' }}
         secondary={{ label: 'Testleri incele', href: '/psikolojik-testler' }}
       />

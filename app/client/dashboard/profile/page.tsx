@@ -331,7 +331,7 @@ function ClientProfileContent() {
   const fetchProfile = useCallback(
     async (mode: 'initial' | 'refresh' = 'refresh') => {
       if (!token) {
-        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Size iletilen danışan paneli bağlantısını kullanabilirsiniz.')
+        setSoftNotice('Güvenli erişim bağlantısı bulunamadı. Sana e-postayla gelen giriş bağlantısını kullanabilirsin.')
         setLoading(false)
         setRefreshing(false)
         return
@@ -403,7 +403,7 @@ function ClientProfileContent() {
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-400">
-                  Mindora Danışan Paneli
+                  Mindora alanın
                 </p>
                 <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
                   Profilim
@@ -505,7 +505,7 @@ function ClientProfileContent() {
               </div>
             </Panel>
 
-            <Panel title="Hızlı İşlemler" description="Danışan panelindeki sık kullanılan adımlar.">
+            <Panel title="Hızlı İşlemler" description="Sık kullandığın adımlar.">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <QuickLink href={sessionsHref} title="Seanslarım" description="Randevular" />
                 <QuickLink href={paymentsHref} title="Ödemelerim" description="Ödeme geçmişi" />

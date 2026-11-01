@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { documentInfo, toProfession } from "@/lib/professions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getExpertIdFromRequest } from "@/lib/security/expert-session";
 
@@ -96,12 +97,18 @@ export async function GET(request: NextRequest) {
 
     const latestByType = getLatestByDocumentType(rows);
 
+    const { data: expertRow } = await supabase.from("experts").select("profession").eq("id", expertId).maybeSingle();
+    const profession = toProfession(expertRow?.profession);
+
     const documents = documentOrder.map((type) => {
       const row = latestByType.get(type);
+      const info = documentInfo(profession, type);
 
       return {
         documentType: type,
-        documentLabel: documentLabels[type] || type,
+        documentLabel: info?.title || documentLabels[type] || type,
+        documentDescription: info?.description || "",
+        required: Boolean(info?.required),
         status: row?.status || "missing",
         verificationId: row?.id || null,
         fileName: row?.file_name || null,
@@ -112,9 +119,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const requiredDocuments = documents.filter((item) =>
-      ["diploma", "license"].includes(item.documentType)
-    );
+    // Hangi belgelerin zorunlu olduğu mesleğe göre değişir (ör. antrenörde diploma yeterli)
+    const requiredDocuments = documents.filter((item) => item.required);
 
     const completedRequiredCount = requiredDocuments.filter((item) =>
       ["pending", "approved"].includes(item.status)
@@ -132,6 +138,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       expertId,
+      profession,
       documents,
       history: rows,
       summary: {

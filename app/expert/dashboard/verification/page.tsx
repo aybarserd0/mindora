@@ -31,6 +31,8 @@ type UploadState = {
 type VerificationApiDocument = {
   documentType: DocumentKey;
   documentLabel?: string;
+  documentDescription?: string;
+  required?: boolean;
   status: DocumentStatus;
   verificationId?: string | null;
   fileName?: string | null;
@@ -58,28 +60,28 @@ const initialDocuments: VerificationDocument[] = [
   {
     key: "diploma",
     title: "Diploma",
-    description: "Lisans, yüksek lisans veya ilgili mezuniyet belgenizi yükleyin.",
+    description: "Mezuniyet belgeni yükle.",
     status: "missing",
     required: true,
   },
   {
     key: "license",
     title: "Lisans / Yetkinlik Belgesi",
-    description: "Mesleki yetkinlik, ruhsat veya resmi çalışma belgenizi yükleyin.",
+    description: "Mesleki yeterlilik ya da unvan belgeni yükle.",
     status: "missing",
     required: true,
   },
   {
     key: "certificate",
-    title: "Uzmanlık Sertifikası",
-    description: "Terapi ekolü, eğitim veya uzmanlık sertifikalarınızı ekleyebilirsiniz.",
+    title: "Ek sertifikalar",
+    description: "Aldığın ek eğitimlerin sertifikaları. İsteğe bağlı.",
     status: "missing",
     required: false,
   },
   {
     key: "identity",
     title: "Kimlik Doğrulama",
-    description: "Gerekli görülürse kimlik doğrulama belgesi yükleyebilirsiniz.",
+    description: "Gerekli görülürse kimlik belgeni yükleyebilirsin.",
     status: "missing",
     required: false,
   },
@@ -202,6 +204,10 @@ function mergeDocuments(apiDocuments: VerificationApiDocument[]) {
 
     return {
       ...document,
+      // Başlık, açıklama ve zorunluluk uzmanın mesleğine göre sunucudan gelir
+      title: apiDocument.documentLabel || document.title,
+      description: apiDocument.documentDescription || document.description,
+      required: typeof apiDocument.required === "boolean" ? apiDocument.required : document.required,
       status: apiDocument.status || "missing",
       verificationId: apiDocument.verificationId || null,
       fileName: apiDocument.fileName || null,
@@ -446,7 +452,7 @@ export default function ExpertVerificationPage() {
             <div className="space-y-3">
               <TimelineItem
                 title="Belgeleri yükleyin"
-                description="Diploma ve lisans / yetkinlik belgesi zorunludur."
+                description="Mesleğine göre zorunlu belgeler aşağıda işaretli."
                 active
               />
               <TimelineItem

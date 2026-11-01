@@ -373,7 +373,7 @@ export default function ExpertAvailabilityPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-400">
-                Mindora Uzman Paneli
+                Mindora çalışma alanın
               </p>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Müsaitlik Takvimi
@@ -561,7 +561,7 @@ export default function ExpertAvailabilityPage() {
               <StepItem index={1} title="Gün ve saat ekle" />
               <StepItem index={2} title="Çakışmaları kontrol et" />
               <StepItem index={3} title="Danışan uygun saati seçsin" />
-              <StepItem index={4} title="Görüşme otomatik panele düşsün" />
+              <StepItem index={4} title="Görüşme otomatik takvimine düşsün" />
             </div>
           </section>
         </div>

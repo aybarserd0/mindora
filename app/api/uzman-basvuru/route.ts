@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { PROFESSION_CONFIG, toProfession } from '@/lib/professions'
 
 function toText(value: unknown) {
   if (Array.isArray(value)) return value.map(String).join(', ')
@@ -44,7 +45,10 @@ export async function POST(req: NextRequest) {
     const availability = toText(body.availability)
     const expectation = toText(body.expectation)
     const note = toText(body.note)
-    const accountType = body.account_type === 'supervision_only' ? 'supervision_only' : 'therapist'
+    const profession = toProfession(body.profession)
+    const professionLabel = PROFESSION_CONFIG[profession].label
+    // Yalnızca süpervizyon hesabı sadece psikologlar için
+    const accountType = profession === 'psychologist' && body.account_type === 'supervision_only' ? 'supervision_only' : 'therapist'
 
     if (!name || !phone || !email || !title) {
       return NextResponse.json(
@@ -84,6 +88,7 @@ export async function POST(req: NextRequest) {
         expectation,
         note,
         account_type: accountType,
+        profession,
         status: 'pending',
       },
     ])
@@ -110,10 +115,11 @@ export async function POST(req: NextRequest) {
     await transporter.sendMail({
       from: `"Mindora Uzman Başvurusu" <${process.env.SMTP_USER}>`,
       to: process.env.CONTACT_TO,
-      subject: accountType === 'supervision_only' ? 'Yeni Uzman Başvurusu (yalnızca süpervizyon)' : 'Yeni Uzman Başvurusu',
+      subject: accountType === 'supervision_only' ? 'Yeni Uzman Başvurusu (yalnızca süpervizyon)' : `Yeni Uzman Başvurusu: ${professionLabel}`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2>Yeni Uzman Başvurusu</h2>
+          <p><b>Meslek:</b> ${escapeHtml(professionLabel)}</p>
           <p><b>Başvuru türü:</b> ${accountType === 'supervision_only' ? 'Yalnızca süpervizyon' : 'Danışan görmek'}</p>
 
           <p><b>Ad Soyad:</b> ${escapeHtml(name)}</p>

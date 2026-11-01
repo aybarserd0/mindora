@@ -16,6 +16,7 @@ type ExpertStatus = "pending" | "approved" | "rejected" | "passive" | "review" |
 type UnknownRecord = Record<string, unknown>;
 
 type NormalizedExpert = {
+  profession: string;
   id: string;
   slug: string;
   name: string;
@@ -217,6 +218,7 @@ function normalizeExpert(row: UnknownRecord) {
   );
 
   const internalProfile: NormalizedExpert = {
+    profession: toText(pick(row, ["profession"])) || "psychologist",
     id: toText(pick(row, ["id"])),
     slug: toText(pick(row, ["slug", "public_slug"])),
     name,
