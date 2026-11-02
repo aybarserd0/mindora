@@ -1,0 +1,117 @@
+{
+  "week": "2026-W45",
+  "theme": "Zihnindeki yük: stres, kaygı ve gece düşünceleri (4 Kasım Stres Farkındalık Günü)",
+  "posts": [
+    {
+      "id": "1-reel-gece-3",
+      "format": "reel",
+      "theme": "lilac",
+      "seconds": 13,
+      "step": 1.8,
+      "publish": "Salı 20:00",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Tanıdık geldi mi?",
+          "lines": [
+            { "text": "Gece 3. Uyuyamıyorsun." },
+            { "text": "Aklında yine o konuşma." },
+            { "text": "“Keşke şöyle deseydim…”" },
+            { "text": "Cevabı şimdi buldun. Konuşma çoktan bitmiş." },
+            { "text": "Bunu yaşayan tek kişi sen değilsin.", "accent": true }
+          ]
+        }
+      ],
+      "caption": "Gece 3'te, günler önce bitmiş bir konuşmayı kafanda yeniden oynatıyorsan yalnız değilsin. 🌙\n\nAynı anı tekrar tekrar düşünmek çok insani. Zihin, yarım kalmış gibi hissettiği şeyleri tamamlamaya çalışır. Bazen bunu not almak, bazen de biriyle konuşmak hafifletir. Bu döngü uykunu ve günlerini sık sık zorluyorsa, bir psikologla konuşmak da iyi bir adım olabilir.\n\nBunu yaşayan bir arkadaşını yorumlarda etiketle. 👇\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#terapi", "#psikolog", "#ruhsağlığı", "#uykusuzluk", "#overthinking", "#onlineterapi", "#mindora"],
+      "alt": "Mor zemin üzerinde sırayla beliren yazılar: Gece 3. Uyuyamıyorsun. Aklında yine o konuşma. Keşke şöyle deseydim. Cevabı şimdi buldun, konuşma çoktan bitmiş. Bunu yaşayan tek kişi sen değilsin.",
+      "music": "Instagram'da sakin, gece hissi veren, sözsüz ve trend olan bir ses ekle (düşük ses)."
+    },
+    {
+      "id": "2-kaydirmali-stres-aliskanlik",
+      "format": "feed",
+      "theme": "cream",
+      "publish": "Çarşamba 20:00 (4 Kasım, Stres Farkındalık Günü)",
+      "slides": [
+        { "type": "cover", "kicker": "4 Kasım · Stres Farkındalık Günü", "title": "Stresi hafifletmeye yardımcı **6 küçük alışkanlık**", "subtitle": "Büyük değişiklikler değil; bugün deneyebileceğin küçük adımlar." },
+        { "type": "point", "number": "1", "heading": "Nefesini yavaşlat.", "text": "Birkaç dakika boyunca nefes verişini alışından biraz daha uzun tutmak, bedenini sakinleştirmeye yardımcı olabilir." },
+        { "type": "point", "number": "2", "heading": "Uyku saatini sabitle.", "text": "Her gün aynı saatte yatıp kalkmak, güne daha dinç başlamana yardımcı olabilir." },
+        { "type": "point", "number": "3", "heading": "Kısa da olsa hareket et.", "text": "10 dakikalık bir yürüyüş bile zihnini dağıtıp gerginliği azaltmaya yardımcı olabilir." },
+        { "type": "point", "number": "4", "heading": "Bildirimlere ara ver.", "text": "Gün içinde telefonsuz küçük molalar, sürekli “açık” olma hissini hafifletebilir." },
+        { "type": "point", "number": "5", "heading": "Yükünü paylaş.", "text": "Güvendiğin biriyle konuşmak, kafandakileri toparlamanı kolaylaştırır. İçinde tutmak zorunda değilsin." },
+        { "type": "point", "number": "6", "heading": "Gerektiğinde destek al.", "text": "Stres uzun süredir uykunu, işini ya da ilişkilerini zorluyorsa bir psikologla konuşmak **iyi bir adım**." },
+        { "type": "cta", "theme": "pine", "heading": "Bugün hangisini deneyeceksin?", "text": "Kaydet; zor bir günde yeniden bak.", "button": "Kaydet ve paylaş", "url": "@mindora.live" }
+      ],
+      "caption": "Bugün 4 Kasım, Stres Farkındalık Günü. Stresi tamamen yok etmek mümkün değil ama yükünü biraz hafifletmek mümkün. 🌿\n\nBüyük hayat değişiklikleri yerine bugün deneyebileceğin 6 küçük alışkanlığı derledik: nefes, uyku düzeni, kısa yürüyüşler, telefon molaları, paylaşmak ve gerektiğinde bir psikologdan destek almak.\n\nZor bir günde yeniden bakmak için bu gönderiyi kaydet. 🔖\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#stres", "#stresyönetimi", "#stresfarkındalıkgünü", "#ruhsağlığı", "#psikolog", "#terapi", "#mindora"],
+      "alt": "Sekiz sayfalık kaydırmalı gönderi: Stresi hafifletmeye yardımcı 6 küçük alışkanlık. Nefesini yavaşlat, uyku saatini sabitle, kısa da olsa hareket et, bildirimlere ara ver, yükünü paylaş, gerektiğinde destek al."
+    },
+    {
+      "id": "3-tekli-mit-yillarca",
+      "format": "feed",
+      "theme": "mint",
+      "publish": "Perşembe 13:00",
+      "slides": [
+        { "type": "mythfact", "myth": "Terapi yıllarca sürer.", "fact": "Süre; konuya, çalışma yaklaşımına ve hedeflerine göre değişir. Bazı süreçler birkaç ayda tamamlanır, bazıları daha uzun sürer. Bunu psikoloğunla birlikte planlarsın.", "footnote": "Bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez." }
+      ],
+      "caption": "“Terapiye başlarsam yıllarca bitmez.”\n\nBu düşünce yüzünden ilk adımı erteleyen çok kişi var. Oysa terapinin süresi herkes için aynı değil: neyle çalıştığına, psikoloğunun yaklaşımına ve senin hedeflerine göre değişir. Ne kadar süreceğini, ne sıklıkla görüşeceğinizi baştan konuşabilir, yol boyunca birlikte gözden geçirebilirsiniz. ⏳\n\nBunu duyması gereken birine bu gönderiyi gönder.\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#terapi", "#psikoloji", "#psikolog", "#ruhsağlığı", "#onlineterapi", "#mitvegerçek", "#mindora"],
+      "alt": "Mit ve gerçek kartı. Mit: Terapi yıllarca sürer (üstü çizili). Gerçek: Süre konuya, çalışma yaklaşımına ve hedeflerine göre değişir; bunu psikoloğunla birlikte planlarsın."
+    },
+    {
+      "id": "4-reel-kaygi-korku",
+      "format": "reel",
+      "theme": "pine",
+      "seconds": 13,
+      "step": 1.9,
+      "publish": "Cuma 20:00",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Bunu biliyor muydun?",
+          "lines": [
+            { "text": "Kaygı ile korku aynı şey değil." },
+            { "text": "Korku: şu anki bir tehlikeye tepki." },
+            { "text": "Kaygı: henüz olmamış bir şeyin beklentisi." },
+            { "text": "Biri “Dikkat!” der, diğeri “Ya olursa?”", "accent": true },
+            { "text": "Kaygı günlerini zorluyorsa, konuşmaya değer." }
+          ]
+        }
+      ],
+      "caption": "Kaygı ile korku arasındaki farkı biliyor musun? 🤔\n\nKorku, o anda karşında duran belirli bir tehlikeye verilen tepkidir. Kaygı ise daha çok geleceğe dönüktür: henüz olmamış, belki hiç olmayacak bir şeyin beklentisi. Biri “Dikkat!” der, diğeri “Ya olursa?” diye sorar.\n\nİkisi de insani duygular. Kaygı uzun süredir günlük hayatını, uykunu ya da ilişkilerini zorluyorsa bir psikologla konuşmak iyi gelebilir.\n\nBu farkı daha önce biliyor muydun? Yorumlara “evet” ya da “hayır” yaz. 👇\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#kaygı", "#anksiyete", "#psikoloji", "#psikolog", "#terapi", "#ruhsağlığı", "#mindora"],
+      "alt": "Koyu yeşil zemin üzerinde sırayla beliren yazılar: Kaygı ile korku aynı şey değil. Korku, şu anki bir tehlikeye tepki. Kaygı, henüz olmamış bir şeyin beklentisi. Biri Dikkat der, diğeri Ya olursa. Kaygı günlerini zorluyorsa, konuşmaya değer.",
+      "music": "Merak uyandıran, sakin ve sözsüz bir trend ses ekle."
+    },
+    {
+      "id": "5-kaydirmali-mindora-4-adim",
+      "format": "feed",
+      "theme": "pine",
+      "publish": "Pazar 11:00",
+      "slides": [
+        { "type": "cover", "kicker": "Kaydet, hazır olduğunda bak", "title": "İlk görüşmene **4 adım**", "subtitle": "Kimseyi aramadan, sıra beklemeden, bulunduğun yerden." },
+        { "type": "point", "theme": "cream", "number": "1", "heading": "Birkaç soruyu yanıtla.", "text": "Neyle uğraştığını ve ne zaman müsait olduğunu anlat. Adını koyamadığın bir his de olabilir. Ön eşleşme **ücretsiz**." },
+        { "type": "point", "theme": "cream", "number": "2", "heading": "Sana uygun psikoloğu önerelim.", "text": "Alanında çalışan, diploması ve unvanı kontrol edilmiş bir uzman. Kabul etmek zorunda değilsin." },
+        { "type": "point", "theme": "cream", "number": "3", "heading": "Saatini seç, ücretini gör.", "text": "Ödeme adımından önce toplam ücreti açıkça görürsün. Ek ya da gizli ücret yok." },
+        { "type": "point", "theme": "cream", "number": "4", "heading": "Bulunduğun yerden görüş.", "text": "Tarayıcından görüntülü görüşmeye katıl. Ayrı uygulama gerekmez ve görüşme **kaydedilmez**." },
+        { "type": "cta", "heading": "İlk adım üç dakika.", "text": "Kısa formu doldur, sana uygun psikoloğu önerelim.", "button": "Ücretsiz eşleşme", "url": "Bağlantı profilde" }
+      ],
+      "caption": "Psikolog aramak bazen başlı başına yorucu bir iş. Kimi arayacağını, ne soracağını, ne kadar ödeyeceğini bilmeden başlamak zor. 🌱\n\nMindora'da ilk görüşmene dört adımda ulaşıyorsun: birkaç soruyu yanıtlıyorsun, sana uygun ve belgeleri kontrol edilmiş bir psikolog öneriyoruz, saatini seçip toplam ücreti baştan görüyorsun, görüşmeye tarayıcından katılıyorsun. Online terapi görüşmeleri kaydedilmiyor ve ön eşleşme ücretsiz.\n\nHazır hissettiğinde başlamak için bağlantı profilde.",
+      "hashtags": ["#onlineterapi", "#psikolog", "#terapi", "#onlinepsikolog", "#ruhsağlığı", "#psikolojikdestek", "#mindora"],
+      "alt": "Altı sayfalık kaydırmalı gönderi: Mindora'da ilk görüşmene 4 adım. Birkaç soruyu yanıtla, sana uygun psikoloğu önerelim, saatini seç ve ücretini gör, bulunduğun yerden görüş. İlk adım üç dakika."
+    },
+    {
+      "id": "6-hikayeler",
+      "format": "story",
+      "theme": "cream",
+      "publish": "Her gün bir tane (Pazartesi–Cuma)",
+      "slides": [
+        { "type": "poll", "heading": "Bu hafta kendine ne kadar zaman ayırdın?", "text": "Dürüst ol, kimse bakmıyor. 🙂", "sticker": "Kaydırıcı çıkartması (“Hiç” ← → “Bolca”)" },
+        { "type": "poll", "theme": "mint", "heading": "Terapi için hangisi sana daha rahat gelir?", "sticker": "Anket: “Online” / “Yüz yüze”" },
+        { "type": "poll", "theme": "pine", "heading": "Bugün Stres Farkındalık Günü. Stresli bir günde sana en çok ne iyi geliyor?", "text": "En çok gelen cevapları hikâyede paylaşacağız.", "sticker": "Soru kutusu çıkartması" },
+        { "type": "poll", "theme": "lilac", "heading": "Kaygı ile korku aynı şey mi?", "text": "Cevap yarın akşam Reels'te.", "sticker": "Test çıkartması: “Evet” / “Hayır” (doğru cevap: Hayır)" },
+        { "type": "poll", "theme": "pine", "heading": "Bu haftayı kaçırdıysan", "text": "Gece 3 konuşmaları · Stresi hafifleten 6 alışkanlık · Terapi yıllarca mı sürer? · Kaygı mı, korku mu?", "sticker": "Bu akşamki Reels'i hikâyede paylaş (gönderi çıkartması)" }
+      ]
+    }
+  ]
+}
