@@ -14,15 +14,23 @@ Her hafta bir paket hazırlanır, Aybars onaylar, Meta Business Suite'te tarihle
 | Pazar 11:00 | Kaydırmalı | Kaydedilmek + Mindora'nın farkını göstermek |
 | Pzt–Cuma | Hikâye (her gün 1) | Etkileşim: anket, soru kutusu, test, bağlantı |
 
+## Üç alan, eşit dağılım
+
+Mindora artık üç hizmet sunuyor: **psikolog**, **diyetisyen** ve **kişisel antrenör**.
+Her hafta üç alanın her birinden en az bir gönderi olur; haftalar arasında dengeyi koru
+(bir hafta psikoloji ağırlıklıysa sonraki hafta beslenme ya da hareket öne çıksın).
+Mindora tanıtımı üç hizmeti birlikte anlatır ya da sırayla birini öne çıkarır.
+Psikoloji, beslenme ve hareketi birleştiren bütüncül konular (stres, uyku, enerji) iyi köprülerdir.
+
 ## İçerik sütunları (her hafta en az üçü)
 
-1. **Terapiyi normalleştirme**: “Yeterince kötü olmana gerek yok”, ilk adım korkusu.
-2. **Bilgilendirme**: İlk seans, terapi türleri, terapist seçimi, online terapi.
-3. **Mit / gerçek**: Yaygın yanlış inanışlar.
-4. **İlişkilendirilebilir anlar**: “Gece 3'te aklına gelen o konuşma” gibi tanıdık durumlar (paylaşılma potansiyeli yüksek).
-5. **Süpervizyon ve kalite**: Psikoloğun da destek alması, belgeler, şeffaf ücret, kayıt yok.
-6. **Psikologlara yönelik**: Süpervizyon, saat defteri, Mindora'da uzman olmak (uzman başvurusu çeker).
-7. **Mindora'yı tanıtma**: Nasıl çalışır, ücretsiz ön eşleşme. Haftada en fazla bir gönderi.
+1. **İlk adımı normalleştirme**: “Yeterince kötü olmana gerek yok”, “Spora başlamak için forma girmen gerekmiyor”.
+2. **Bilgilendirme**: İlk seans / ilk diyetisyen görüşmesi / ilk antrenman, uzman seçimi, online görüşme.
+3. **Mit / gerçek**: Terapi, beslenme ve egzersizle ilgili yaygın yanlış inanışlar.
+4. **İlişkilendirilebilir anlar**: “Gece 3'te aklına gelen o konuşma”, “Pazartesi başlarım” gibi tanıdık durumlar.
+5. **Kalite ve güven**: Belge kontrolü, şeffaf ücret, kayıt yok; psikologlar için süpervizyon.
+6. **Uzmanlara yönelik**: Psikolog, diyetisyen ve antrenörler için Mindora'da uzman olmak (uzman başvurusu çeker); süpervizyon yalnızca psikologlar için.
+7. **Mindora'yı tanıtma**: Nasıl çalışır, ücretsiz ön eşleşme, üç hizmet. Haftada en fazla bir gönderi.
 
 ## Kurallar
 
@@ -30,11 +38,13 @@ Her hafta bir paket hazırlanır, Aybars onaylar, Meta Business Suite'te tarihle
 - Tanı koyar gibi konuşma yok (“Bunlar varsa depresyondasın” gibi listeler yapılmaz).
 - İntihar, kendine zarar verme, yeme bozuklukları gibi konular ayrıntılı işlenmez. Ele alınacaksa yalnızca yardım almaya yönlendirici, ayrıntısız ve 112 bilgisiyle.
 - Klinik bilgiler ve istatistikler genel ve doğrulanabilir olmalı; rakam verilecekse kaynak açıklamada yazılır.
+- Beslenme: kilo vaadi, “X günde Y kilo”, öncesi/sonrası görseli, kalori sayısı ya da hazır diyet listesi yok. Besinleri “zararlı / yasak” diye etiketleme. Yeme bozukluklarına dokunan konular işlenmez; yemekle ilişkisi zorlayıcı olan biri için yönlendirme psikoloğa ve gerektiğinde 112'ye.
+- Hareket: beden utandırma, “yağ yakma garantisi” ya da zorlayıcı “acı yoksa kazanç yok” dili yok. Egzersiz içeriklerinin açıklamasında: “Bir sağlık durumun varsa ya da uzun süredir hareketsizsen başlamadan önce doktoruna danış.”
 - Sahte danışan yorumu ya da uydurma hikâye yok. Rakip platform adı anılmaz (“çoğu platformda” denir).
 - Bilgilendirici gönderilerin açıklamasında: “Bu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.” Gerektiğinde: “Acil bir durumda 112'yi ara.”
 - Her açıklama: güçlü ilk cümle (kanca) → kısa değer → tek bir çağrı (kaydet / gönder / yorum yaz / bağlantı profilde).
-- 5–8 etiket: genel (#terapi #psikolog #ruhsağlığı) + konu etiketi + #mindora.
-- Açıklamaya aranabilir anahtar kelimeler doğal biçimde yazılır (online terapi, psikolog, kaygı…).
+- 5–8 etiket: alanın genel etiketleri (psikoloji: #terapi #psikolog #ruhsağlığı · beslenme: #beslenme #diyetisyen #sağlıklıbeslenme · hareket: #spor #kişiselantrenör #evdeantrenman) + konu etiketi + #mindora.
+- Açıklamaya aranabilir anahtar kelimeler doğal biçimde yazılır (online terapi, psikolog, kaygı, online diyetisyen, evde antrenman…).
 
 ## Üretim
 
