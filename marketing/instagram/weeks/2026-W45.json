@@ -1,0 +1,289 @@
+{
+  "week": "2026-W45",
+  "theme": "Zihin ve beden: stresle baş etmek (4 Kasım Stres Farkındalık Günü)",
+  "posts": [
+    {
+      "id": "1-reel-gece-3",
+      "format": "reel",
+      "theme": "lilac",
+      "seconds": 13,
+      "step": 1.8,
+      "publish": "Salı 20:00",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Tanıdık geldi mi?",
+          "lines": [
+            {
+              "text": "Gece 3. Uyuyamıyorsun."
+            },
+            {
+              "text": "Aklında yine o konuşma."
+            },
+            {
+              "text": "“Keşke şöyle deseydim…”"
+            },
+            {
+              "text": "Cevabı şimdi buldun. Konuşma çoktan bitmiş."
+            },
+            {
+              "text": "Bunu yaşayan tek kişi sen değilsin.",
+              "accent": true
+            }
+          ]
+        }
+      ],
+      "caption": "Gece 3'te, günler önce bitmiş bir konuşmayı kafanda yeniden oynatıyorsan yalnız değilsin. 🌙\n\nAynı anı tekrar tekrar düşünmek çok insani. Zihin, yarım kalmış gibi hissettiği şeyleri tamamlamaya çalışır. Bazen bunu not almak, bazen de biriyle konuşmak hafifletir. Bu döngü uykunu ve günlerini sık sık zorluyorsa, bir psikologla konuşmak da iyi bir adım olabilir.\n\nBunu yaşayan bir arkadaşını yorumlarda etiketle. 👇\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": [
+        "#terapi",
+        "#psikolog",
+        "#ruhsağlığı",
+        "#uykusuzluk",
+        "#overthinking",
+        "#onlineterapi",
+        "#mindora"
+      ],
+      "alt": "Mor zemin üzerinde sırayla beliren yazılar: Gece 3. Uyuyamıyorsun. Aklında yine o konuşma. Keşke şöyle deseydim. Cevabı şimdi buldun, konuşma çoktan bitmiş. Bunu yaşayan tek kişi sen değilsin.",
+      "music": "Instagram'da sakin, gece hissi veren, sözsüz ve trend olan bir ses ekle (düşük ses)."
+    },
+    {
+      "id": "2-kaydirmali-stres-aliskanlik",
+      "format": "feed",
+      "theme": "cream",
+      "publish": "Çarşamba 20:00 (4 Kasım, Stres Farkındalık Günü)",
+      "slides": [
+        {
+          "type": "cover",
+          "kicker": "4 Kasım · Stres Farkındalık Günü",
+          "title": "Stresi hafifletmeye yardımcı **6 küçük alışkanlık**",
+          "subtitle": "Büyük değişiklikler değil; bugün deneyebileceğin küçük adımlar."
+        },
+        {
+          "type": "point",
+          "number": "1",
+          "heading": "Nefesini yavaşlat.",
+          "text": "Birkaç dakika boyunca nefes verişini alışından biraz daha uzun tutmak, bedenini sakinleştirmeye yardımcı olabilir."
+        },
+        {
+          "type": "point",
+          "number": "2",
+          "heading": "Uyku saatini sabitle.",
+          "text": "Her gün aynı saatte yatıp kalkmak, güne daha dinç başlamana yardımcı olabilir."
+        },
+        {
+          "type": "point",
+          "number": "3",
+          "heading": "Kısa da olsa hareket et.",
+          "text": "10 dakikalık bir yürüyüş bile zihnini dağıtıp gerginliği azaltmaya yardımcı olabilir."
+        },
+        {
+          "type": "point",
+          "number": "4",
+          "heading": "Bildirimlere ara ver.",
+          "text": "Gün içinde telefonsuz küçük molalar, sürekli “açık” olma hissini hafifletebilir."
+        },
+        {
+          "type": "point",
+          "number": "5",
+          "heading": "Yükünü paylaş.",
+          "text": "Güvendiğin biriyle konuşmak, kafandakileri toparlamanı kolaylaştırır. İçinde tutmak zorunda değilsin."
+        },
+        {
+          "type": "point",
+          "number": "6",
+          "heading": "Gerektiğinde destek al.",
+          "text": "Stres uzun süredir uykunu, işini ya da ilişkilerini zorluyorsa bir psikologla konuşmak **iyi bir adım**."
+        },
+        {
+          "type": "cta",
+          "theme": "pine",
+          "heading": "Bugün hangisini deneyeceksin?",
+          "text": "Kaydet; zor bir günde yeniden bak.",
+          "button": "Kaydet ve paylaş",
+          "url": "@mindora.live"
+        }
+      ],
+      "caption": "Bugün 4 Kasım, Stres Farkındalık Günü. Stresi tamamen yok etmek mümkün değil ama yükünü biraz hafifletmek mümkün. 🌿\n\nBüyük hayat değişiklikleri yerine bugün deneyebileceğin 6 küçük alışkanlığı derledik: nefes, uyku düzeni, kısa yürüyüşler, telefon molaları, paylaşmak ve gerektiğinde bir psikologdan destek almak.\n\nZor bir günde yeniden bakmak için bu gönderiyi kaydet. 🔖\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": [
+        "#stres",
+        "#stresyönetimi",
+        "#stresfarkındalıkgünü",
+        "#ruhsağlığı",
+        "#psikolog",
+        "#terapi",
+        "#mindora"
+      ],
+      "alt": "Sekiz sayfalık kaydırmalı gönderi: Stresi hafifletmeye yardımcı 6 küçük alışkanlık. Nefesini yavaşlat, uyku saatini sabitle, kısa da olsa hareket et, bildirimlere ara ver, yükünü paylaş, gerektiğinde destek al."
+    },
+    {
+      "id": "3-tekli-mit-yasak-besin",
+      "format": "feed",
+      "theme": "mint",
+      "publish": "Perşembe 13:00",
+      "slides": [
+        {
+          "type": "mythfact",
+          "myth": "Sağlıklı beslenmek için sevdiğin yiyecekleri tamamen bırakmalısın.",
+          "fact": "Sürdürülebilir bir düzen çoğu zaman yasak listesiyle değil, denge ve porsiyonla kurulur. Sağlık durumuna neyin uygun olduğunu diyetisyeninle birlikte belirlersin.",
+          "footnote": "Bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez."
+        }
+      ],
+      "caption": "“Sağlıklı beslenmeye başlarsam sevdiğim her şeyi bırakmam gerek.”\n\nBu düşünce, başlamayı en çok zorlaştıran şeylerden biri. Oysa uzun vadede sürdürebildiğin bir beslenme düzeni çoğu zaman yasak listesiyle değil; denge, porsiyon ve günlük temponla uyumlu küçük değişikliklerle kurulur. Bir sağlık durumun varsa neyin sana uygun olduğunu bir diyetisyenle birlikte planlamak en güvenlisi. 🥗\n\nBunu duyması gereken birine bu gönderiyi gönder.\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": [
+        "#beslenme",
+        "#sağlıklıbeslenme",
+        "#diyetisyen",
+        "#onlinediyetisyen",
+        "#mitvegerçek",
+        "#dengelibeslenme",
+        "#mindora"
+      ],
+      "alt": "Mit ve gerçek kartı. Mit: Sağlıklı beslenmek için sevdiğin yiyecekleri tamamen bırakmalısın (üstü çizili). Gerçek: Sürdürülebilir bir düzen çoğu zaman yasak listesiyle değil, denge ve porsiyonla kurulur."
+    },
+    {
+      "id": "4-reel-spora-baslamak",
+      "format": "reel",
+      "theme": "pine",
+      "seconds": 13,
+      "step": 1.9,
+      "publish": "Cuma 20:00",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Spora başlamadan önce",
+          "lines": [
+            {
+              "text": "Spora başlamak için önce forma girmen gerekmiyor."
+            },
+            {
+              "text": "Salon üyeliği şart değil."
+            },
+            {
+              "text": "Her gün bir saat ayırman da şart değil."
+            },
+            {
+              "text": "Evde 10 dakika da bir başlangıç.",
+              "accent": true
+            },
+            {
+              "text": "Gerisini adım adım kurarsın."
+            }
+          ]
+        }
+      ],
+      "caption": "“Biraz forma gireyim, sonra spora başlarım.” Tanıdık geldi mi? 🏃\n\nBaşlamak için hazır olmayı beklemek zorunda değilsin. Salon üyeliği, pahalı ekipman ya da her gün bir saat şart değil; evde birkaç dakikalık düzenli hareket de bir başlangıç. Seviyene ve zamanına uygun bir programla zamanla üstüne koyarsın.\n\nSpora başlamayı erteleyen bir arkadaşını yorumlarda etiketle. 👇\n\nBir sağlık durumun varsa ya da uzun süredir hareketsizsen başlamadan önce doktoruna danış. Bu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": [
+        "#spor",
+        "#evdeantrenman",
+        "#kişiselantrenör",
+        "#onlineantrenör",
+        "#hareket",
+        "#sağlıklıyaşam",
+        "#mindora"
+      ],
+      "alt": "Koyu yeşil zemin üzerinde sırayla beliren yazılar: Spora başlamak için önce forma girmen gerekmiyor. Salon üyeliği şart değil. Her gün bir saat ayırman da şart değil. Evde 10 dakika da bir başlangıç. Gerisini adım adım kurarsın.",
+      "music": "Enerjik ama yumuşak, sözsüz bir trend ses ekle."
+    },
+    {
+      "id": "5-kaydirmali-mindora-4-adim",
+      "format": "feed",
+      "theme": "pine",
+      "publish": "Pazar 11:00",
+      "slides": [
+        {
+          "type": "cover",
+          "kicker": "Psikolog · Diyetisyen · Antrenör",
+          "title": "Doğru uzmana **4 adımda** ulaş",
+          "subtitle": "Kimseyi aramadan, sıra beklemeden, bulunduğun yerden."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "1",
+          "heading": "Alanını seç, birkaç soruyu yanıtla.",
+          "text": "Psikolog, diyetisyen ya da kişisel antrenör. Neye ihtiyacın olduğunu ve ne zaman müsait olduğunu anlat. Ön eşleşme **ücretsiz**."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "2",
+          "heading": "Sana uygun uzmanı önerelim.",
+          "text": "Alanında çalışan, belgeleri tek tek kontrol edilmiş bir uzman. Kabul etmek zorunda değilsin."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "3",
+          "heading": "Saatini seç, ücretini gör.",
+          "text": "Ödeme adımından önce toplam ücreti açıkça görürsün. Abonelik yok."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "4",
+          "heading": "Görüş, planın seninle kalsın.",
+          "text": "Tarayıcından görüntülü görüşmeye katıl. Beslenme planın ya da antrenman programın Mindora'da; görüşmeler **kaydedilmez**."
+        },
+        {
+          "type": "cta",
+          "heading": "İlk adım üç dakika.",
+          "text": "Kısa formu doldur, sana uygun uzmanı önerelim.",
+          "button": "Ücretsiz eşleşme",
+          "url": "Bağlantı profilde"
+        }
+      ],
+      "caption": "Psikolog, diyetisyen ya da kişisel antrenör ararken çoğu zaman en zor kısım doğru kişiyi bulmak. 🌱\n\nMindora'da dört adımda başlıyorsun: alanını seçip birkaç soruyu yanıtlıyorsun, belgeleri kontrol edilmiş ve saatleri sana uyan bir uzman öneriyoruz, saatini seçip toplam ücreti baştan görüyorsun, görüşmene tarayıcından katılıyorsun. Ön eşleşme ücretsiz, abonelik yok, görüşmeler kaydedilmiyor.\n\nHazır hissettiğinde başlamak için bağlantı profilde.",
+      "hashtags": [
+        "#onlinepsikolog",
+        "#onlinediyetisyen",
+        "#onlineantrenör",
+        "#psikolog",
+        "#diyetisyen",
+        "#kişiselantrenör",
+        "#mindora"
+      ],
+      "alt": "Altı sayfalık kaydırmalı gönderi: Psikolog, diyetisyen ya da antrenör; doğru uzmana 4 adımda ulaş. Alanını seç ve birkaç soruyu yanıtla, sana uygun uzmanı önerelim, saatini seç ve ücretini gör, görüş ve planın seninle kalsın."
+    },
+    {
+      "id": "6-hikayeler",
+      "format": "story",
+      "theme": "cream",
+      "publish": "Her gün bir tane (Pazartesi–Cuma)",
+      "slides": [
+        {
+          "type": "poll",
+          "heading": "Bu hafta kendine ne kadar zaman ayırdın?",
+          "text": "Dürüst ol, kimse bakmıyor. 🙂",
+          "sticker": "Kaydırıcı çıkartması (“Hiç” ← → “Bolca”)"
+        },
+        {
+          "type": "poll",
+          "theme": "mint",
+          "heading": "Bir uzmanla görüşürken hangisi sana daha rahat gelir?",
+          "sticker": "Anket: “Online” / “Yüz yüze”"
+        },
+        {
+          "type": "poll",
+          "theme": "pine",
+          "heading": "Bugün Stres Farkındalık Günü. Stresli bir günde sana en çok ne iyi geliyor?",
+          "text": "En çok gelen cevapları hikâyede paylaşacağız.",
+          "sticker": "Soru kutusu çıkartması"
+        },
+        {
+          "type": "poll",
+          "theme": "lilac",
+          "heading": "Spora başlamak için önce forma girmek mi gerekir?",
+          "text": "Cevap yarın akşam Reels'te.",
+          "sticker": "Test çıkartması: “Evet” / “Hayır” (doğru cevap: Hayır)"
+        },
+        {
+          "type": "poll",
+          "theme": "pine",
+          "heading": "Bu haftayı kaçırdıysan",
+          "text": "Gece 3 konuşmaları · Stresi hafifleten 6 alışkanlık · Yasak listesiz beslenme · Spora 10 dakikayla başlamak",
+          "sticker": "Bu akşamki Reels'i hikâyede paylaş (gönderi çıkartması)"
+        }
+      ]
+    }
+  ]
+}
