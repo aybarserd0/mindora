@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidTrIban, normalizeIban } from "@/lib/payments/iban";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { applyRateLimit } from "@/lib/security/rate-limit";
 import { getExpertIdFromRequest } from "@/lib/security/expert-session";
@@ -17,6 +18,8 @@ type UnknownRecord = Record<string, unknown>;
 
 type NormalizedExpert = {
   profession: string;
+  gender: string | null;
+  iban: string | null;
   id: string;
   slug: string;
   name: string;
@@ -219,6 +222,8 @@ function normalizeExpert(row: UnknownRecord) {
 
   const internalProfile: NormalizedExpert = {
     profession: toText(pick(row, ["profession"])) || "psychologist",
+    iban: toNullableText(pick(row, ["iban"]), 40),
+    gender: ["kadin", "erkek"].includes(toText(pick(row, ["gender"]))) ? toText(pick(row, ["gender"])) : null,
     id: toText(pick(row, ["id"])),
     slug: toText(pick(row, ["slug", "public_slug"])),
     name,
@@ -310,6 +315,10 @@ function validatePatchPayload(body: UnknownRecord) {
   const city = cleanText(body.city, 80);
   if (city.length > 80) return "Şehir alanı en fazla 80 karakter olabilir.";
 
+  if (typeof body.iban === "string" && body.iban.trim() && !isValidTrIban(body.iban)) {
+    return "IBAN geçerli görünmüyor. TR ile başlayan 26 karakterlik IBAN'ını kontrol et.";
+  }
+
   const phone = cleanText(body.phone, 40);
   if (phone.length > 40) return "Telefon alanı en fazla 40 karakter olabilir.";
 
@@ -370,6 +379,10 @@ function buildExpertUpdate(body: UnknownRecord) {
     title: cleanText(body.title, 120),
     phone: toNullableText(body.phone, 40),
     city: cleanText(body.city, 80) || "Belirtilmedi",
+    // Cinsiyet yalnızca gönderildiyse değişir; boş değer "belirtmek istemiyorum" demek
+    // IBAN yalnızca gönderildiyse değişir; boş gönderilirse silinir
+    ...(typeof body.iban === "string" ? { iban: body.iban.trim() ? normalizeIban(body.iban) : null } : {}),
+    ...(body.gender !== undefined ? { gender: ["kadin", "erkek"].includes(cleanText(body.gender, 10)) ? cleanText(body.gender, 10) : null } : {}),
     specialties: uniqueCleanList(body.specialties, 30, 120),
     focus_areas: uniqueCleanList(body.focusAreas ?? body.focus_areas, 30, 120),
     experience_years: toNullableNumber(body.experienceYears ?? body.experience_years) ?? 0,

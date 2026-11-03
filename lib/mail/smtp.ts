@@ -83,7 +83,7 @@ function textToHtml(text: string) {
             <tr>
               <td style="background:#111111;color:#ffffff;padding:24px 28px;">
                 <div style="font-size:20px;font-weight:900;letter-spacing:-0.02em;">Mindora</div>
-                <div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.68);">Online psikolojik destek platformu</div>
+                <div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.68);">Psikolog, diyetisyen ve antrenörlerle online görüşme</div>
               </td>
             </tr>
             <tr>

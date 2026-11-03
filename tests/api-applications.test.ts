@@ -27,7 +27,16 @@ const baseClient = {
 
 describe('danışan başvurusu /api/eslesme', () => {
   beforeEach(() => {
-    state.mock = createSupabaseMock({ client_applications: { error: null } })
+    // Uygun uzman yok: başvuru kaydedilir, danışana "başvurun alındı" e-postası gider
+    state.mock = createSupabaseMock({
+      client_applications: (ctx) =>
+        ctx.op === 'insert'
+          ? { data: { id: 'a1' }, error: null }
+          : ctx.op === 'update'
+            ? { error: null }
+            : { data: { id: 'a1', status: 'new', matched_expert_id: null, profession: 'dietitian', topic: 'Kilo vermek' }, error: null },
+      experts: { data: [], error: null },
+    })
     state.mails = []
   })
 
@@ -43,7 +52,7 @@ describe('danışan başvurusu /api/eslesme', () => {
     // Antrenman yeri sorusu yalnızca antrenörde
     expect(row.setting).toBeNull()
     expect(state.mails.some((m) => m.subject.includes('Diyetisyen'))).toBe(true)
-    expect(state.mails.some((m) => (m.text || '').includes('diyetisyen eşleşmesi'))).toBe(true)
+    expect(state.mails.some((m) => (m.text || '').includes('Sana uygun diyetisyeni arıyoruz'))).toBe(true)
   })
 
   it('antrenör başvurusunda antrenman yeri kaydedilir', async () => {

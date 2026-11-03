@@ -65,7 +65,7 @@ export default function EslesmeForm({ profession }: { profession: Profession }) 
 
   const helperText = useMemo(() => {
     if (loading) return 'Başvurun güvenli şekilde gönderiliyor...'
-    if (isSuccess) return 'Başvurun alındı. Ekibimiz seni yönlendirme için değerlendirecek.'
+    if (isSuccess) return 'Başvurun alındı.'
     if (isError) return 'Gönderim sırasında sorun oluştu. Bilgilerini kontrol edip tekrar deneyebilirsin.'
 
     return `Bu bilgiler yalnızca sana uygun ${config.accusative} belirlemek için kullanılır.`
@@ -121,6 +121,7 @@ export default function EslesmeForm({ profession }: { profession: Profession }) 
 
       const result = (await res.json().catch(() => null)) as {
         ok?: boolean
+        matched?: boolean
         error?: string
       } | null
 
@@ -130,7 +131,9 @@ export default function EslesmeForm({ profession }: { profession: Profession }) 
 
       setSubmitState({
         type: 'success',
-        message: 'Başvurun alındı. En kısa sürede sana uygun yönlendirme için dönüş yapılacak.',
+        message: result.matched
+          ? `Sana uygun bir ${config.label.toLocaleLowerCase('tr-TR')} bulduk. Saat seçip başlayabileceğin bağlantıyı e-postana gönderdik; birkaç dakika içinde gelmezse spam klasörüne de bak.`
+          : `Başvurun alındı. Sana uygun ${config.accusative} arıyoruz; bulduğumuzda e-postayla haber vereceğiz.`,
       })
 
       formElement.reset()

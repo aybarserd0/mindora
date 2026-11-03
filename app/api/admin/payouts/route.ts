@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { STANDARD_COMMISSION_RATE } from '@/lib/payments/policy';
 import { createClient } from "@supabase/supabase-js";
 import { cleanMultilineText, cleanText, cleanUuid, toSafeNumber } from "@/lib/security/validation";
+import { formatIban } from "@/lib/payments/iban";
+import { notifyExpertPayoutPaid } from "@/lib/automation/notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +29,7 @@ type PayoutRow = {
 
 type ExpertRow = {
   id: string;
+  iban?: string | null;
   name?: string | null;
   full_name?: string | null;
   title?: string | null;
@@ -119,7 +122,7 @@ function getExpertTitle(experts: ExpertRow[], expertId?: string | null) {
 async function fetchExperts(supabase: NonNullable<ReturnType<typeof getSupabaseAdmin>>) {
   const { data, error } = await supabase
     .from("experts")
-    .select("id, name, full_name, title")
+    .select("id, name, full_name, title, iban")
     .order("name", { ascending: true });
 
   if (error) {
@@ -218,6 +221,8 @@ function serializePayout(payout: PayoutRow, experts: ExpertRow[]) {
     expertId: payout.expert_id,
     expertName: getExpertName(experts, payout.expert_id),
     expertTitle: getExpertTitle(experts, payout.expert_id),
+    // Havale/EFT için; yalnızca admin ekranında görünür
+    expertIban: formatIban(experts.find((item) => item.id === payout.expert_id)?.iban) || null,
     amount: toSafeNumber(payout.amount, 0),
     currency: payout.currency || "TRY",
     status: payout.status,
@@ -403,6 +408,20 @@ export async function PATCH(req: Request) {
 
     if (error) {
       return jsonError(error.message || "Uzman ödeme durumu güncellenemedi.", 500);
+    }
+
+    // Hakedişe bağlı seans ödemeleri de aynı duruma gelir
+    if (status === "paid") {
+      await supabase
+        .from("payments")
+        .update({ expert_payout_status: "paid", expert_payout_paid_at: patch.paid_at })
+        .eq("payout_id", payoutId);
+      await notifyExpertPayoutPaid(supabase, payoutId).catch((mailError) =>
+        console.error("PAYOUT_PAID_MAIL_ERROR", mailError)
+      );
+    } else if (status === "cancelled") {
+      // İptal edilen hakedişin seansları bir sonraki haftaya kalır
+      await supabase.from("payments").update({ payout_id: null }).eq("payout_id", payoutId).neq("expert_payout_status", "paid");
     }
 
     return NextResponse.json({

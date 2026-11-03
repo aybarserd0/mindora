@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { PROFESSION_CONFIG, toProfession } from '@/lib/professions'
+import { autoMatchApplication, type AutoMatchOutcome } from '@/lib/matching/auto-match'
+
+export const runtime = 'nodejs'
 
 function toText(value: unknown) {
   if (Array.isArray(value)) return value.join(', ')
@@ -59,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdmin()
 
-    const { error: dbError } = await supabase.from('client_applications').insert({
+    const { data: inserted, error: dbError } = await supabase.from('client_applications').insert({
       name,
       phone,
       email,
@@ -74,15 +77,24 @@ export async function POST(req: NextRequest) {
       profession,
       health_screen: healthScreen,
       setting,
-    })
+    }).select('id').single()
 
-    if (dbError) {
+    if (dbError || !inserted) {
       console.error('ESLESME DB ERROR:', dbError)
 
       return NextResponse.json(
         { ok: false, error: 'Danışan başvurusu kaydedilemedi.' },
         { status: 500 }
       )
+    }
+
+    // Uygun uzman varsa danışan hemen eşleşir ve saat seçme e-postası gider.
+    // Eşleşme başarısız olsa bile başvuru kayıtlıdır; günlük görev yeniden dener.
+    let outcome: AutoMatchOutcome = { matched: false, reason: 'match_failed' }
+    try {
+      outcome = await autoMatchApplication(supabase, inserted.id)
+    } catch (matchError) {
+      console.error('ESLESME AUTO MATCH ERROR:', matchError)
     }
 
     const transporter = nodemailer.createTransport({
@@ -111,6 +123,8 @@ Müsaitlik: ${availability}
 Antrenman yeri: ${setting ?? '-'}
 Sağlık ön sorusu: ${healthScreen ?? '-'}
 Not: ${note}
+
+Otomatik eşleşme: ${outcome.matched ? 'yapıldı, danışana saat seçme e-postası gönderildi' : `yapılamadı (${outcome.reason === 'no_candidate' ? 'uygun uzman yok: ücret, takvim, cinsiyet tercihi ya da kapasite' : outcome.reason}). Elle eşleştir: /admin/danisan-basvurulari`}
 `
 
     const clientText = `
@@ -118,7 +132,7 @@ Merhaba ${name},
 
 Mindora başvurun bize ulaştı.
 
-Başvurunu inceleyip sana uygun ${config.label.toLocaleLowerCase('tr-TR')} eşleşmesi için en kısa sürede seninle iletişime geçeceğiz.
+Sana uygun ${config.accusative} arıyoruz. Bulduğumuzda saat seçebileceğin bağlantıyı bu adrese e-postayla göndereceğiz.
 
 Başvuru Özeti:
 Konu: ${topic || '-'}
@@ -135,14 +149,17 @@ Mindora
       text: adminText,
     })
 
-    await transporter.sendMail({
-      from: `"Mindora" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: 'Mindora Başvurun Alındı',
-      text: clientText,
-    })
+    // Eşleştiyse danışan zaten "uzmanınla eşleştin" e-postasını aldı
+    if (!outcome.matched) {
+      await transporter.sendMail({
+        from: `"Mindora" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'Mindora Başvurun Alındı',
+        text: clientText,
+      })
+    }
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, matched: outcome.matched })
   } catch (err) {
     console.error('ESLESME ERROR:', err)
 

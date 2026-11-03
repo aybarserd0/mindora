@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { summarizeExpertDocuments } from "@/lib/automation/verification";
 import { documentInfo, toProfession } from "@/lib/professions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
@@ -105,8 +106,27 @@ export async function GET() {
       rows.map((row) => normalize(row.expert_id))
     );
 
+    // Uzman bazında belge durumu: tüm zorunlu belgeler yüklendiyse inceleme sırasında öne alınır
+    const rowsByExpert = new Map<string, typeof rows>();
+    for (const row of rows) {
+      if (!row.expert_id) continue;
+      const list = rowsByExpert.get(row.expert_id) ?? [];
+      list.push(row);
+      rowsByExpert.set(row.expert_id, list);
+    }
+    const summaryByExpert = new Map(
+      [...rowsByExpert.entries()].map(([expertId, list]) => [
+        expertId,
+        summarizeExpertDocuments(
+          expertsById.get(expertId)?.profession,
+          list.map((r) => ({ expert_id: expertId, document_type: r.document_type || "", status: r.status, created_at: r.created_at || "" }))
+        ),
+      ])
+    );
+
     const items = rows.map((row) => {
       const expert = row.expert_id ? expertsById.get(row.expert_id) : null;
+      const summary = row.expert_id ? summaryByExpert.get(row.expert_id) : null;
 
       return {
         id: row.id,
@@ -127,8 +147,15 @@ export async function GET() {
         adminNote: row.admin_note,
         reviewedAt: row.reviewed_at,
         createdAt: row.created_at,
+        expertReadyForReview: Boolean(summary?.readyForReview && !summary.verified),
+        expertMissingDocuments: summary?.missing.map((d) => d.title) ?? [],
       };
     });
+
+    // Sıra: belgeleri tamam olan uzmanların bekleyen belgeleri, sonra diğer bekleyenler, sonra geri kalanı
+    const rank = (item: (typeof items)[number]) =>
+      item.status === "pending" ? (item.expertReadyForReview ? 0 : 1) : 2;
+    items.sort((a, b) => rank(a) - rank(b) || String(b.createdAt).localeCompare(String(a.createdAt)));
 
     return NextResponse.json({
       ok: true,

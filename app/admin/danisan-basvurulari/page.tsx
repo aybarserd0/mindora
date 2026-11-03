@@ -59,6 +59,8 @@ type Client = {
   setting?: string | null;
   status: ClientStatus;
   matched_expert_id: string | null;
+  match_source?: string | null;
+  matched_at?: string | null;
   created_at: string;
   latest_payment: LatestPayment | null;
   latest_conversation?: LatestConversation | null;
@@ -733,7 +735,11 @@ export default function DanisanBasvurulariPage() {
                     <InfoRow label="Müsaitlik" value={safeText(client.availability)} />
                     <InfoRow
                       label="Eşleşen Uzman"
-                      value={getExpertName(client.matched_expert_id)}
+                      value={
+                        client.matched_expert_id
+                          ? `${getExpertName(client.matched_expert_id)} · ${client.match_source === 'auto' ? 'sistem otomatik eşleştirdi' : 'elle eşleştirildi'}`
+                          : 'Henüz yok (uygun uzman bulunamadı ya da bekliyor)'
+                      }
                       className="md:col-span-2"
                     />
                     <InfoRow label="Ek Not" value={safeText(client.note)} className="md:col-span-2" />
@@ -743,7 +749,7 @@ export default function DanisanBasvurulariPage() {
                     <section className="rounded-xl border border-violet-200 bg-violet-50 p-4">
                       <p className="text-sm font-semibold text-violet-900">Uzman Eşleştirme</p>
                       <p className="mt-1 text-xs font-semibold text-violet-800">
-                        Danışanı onaylı bir uzmanla eşleştir.
+                        Sistem uygun uzmanı otomatik seçer. Değiştirmek için burada başka bir uzman seç.
                       </p>
 
                       <div className="mt-4 flex flex-col gap-3">

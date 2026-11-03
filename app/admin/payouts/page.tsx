@@ -37,6 +37,7 @@ type Payout = {
   expertId: string;
   expertName: string;
   expertTitle: string;
+  expertIban?: string | null;
   amount: number;
   currency: string;
   status: string;
@@ -524,6 +525,11 @@ function PayoutCard({
 
           <h3 className="mt-4 text-base font-semibold text-slate-900">{payout.expertName}</h3>
           <p className="mt-1 text-sm font-semibold text-slate-500">{payout.expertTitle}</p>
+          {payout.status !== "paid" && payout.status !== "cancelled" ? (
+            <p className="mt-2 font-mono text-sm font-semibold tracking-wide text-slate-700">
+              {payout.expertIban || "IBAN yok: uzmandan profiline eklemesini iste"}
+            </p>
+          ) : null}
 
           <p className="mt-4 text-3xl font-bold text-slate-900">{formatMoney(payout.amount)}</p>
 
@@ -531,7 +537,7 @@ function PayoutCard({
             <p className="mt-3 text-sm leading-6 text-slate-600">{payout.note}</p>
           ) : null}
 
-          <p className="mt-3 text-xs font-semibold text-slate-400">Oluşturan: {payout.createdBy || "admin"}</p>
+          <p className="mt-3 text-xs font-semibold text-slate-400">Oluşturan: {payout.createdBy === "system" ? "otomatik (haftalık)" : payout.createdBy || "admin"}</p>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row xl:flex-col 2xl:flex-row">

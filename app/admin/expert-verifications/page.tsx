@@ -14,6 +14,8 @@ type VerificationItem = {
   expertId: string | null;
   expertName: string;
   expertProfession?: string;
+  expertReadyForReview?: boolean;
+  expertMissingDocuments?: string[];
   expertTitle: string | null;
   documentType: string | null;
   documentLabel: string;
@@ -269,6 +271,17 @@ export default function ExpertVerificationsAdminPage() {
                           </p>
                           {item.expertTitle ? (
                             <p className="mt-0.5 text-xs font-semibold text-slate-500">{item.expertTitle}</p>
+                          ) : null}
+                          {item.status === "pending" ? (
+                            item.expertReadyForReview ? (
+                              <p className="mt-1 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                                Tüm zorunlu belgeler yüklendi, incelemeye hazır
+                              </p>
+                            ) : item.expertMissingDocuments?.length ? (
+                              <p className="mt-1 text-xs font-semibold text-amber-700">
+                                Eksik: {item.expertMissingDocuments.join(", ")} (uzmana otomatik hatırlatılıyor)
+                              </p>
+                            ) : null
                           ) : null}
                           <p className="mt-0.5 text-xs font-semibold text-slate-400">
                             ID: {item.expertId || "-"}

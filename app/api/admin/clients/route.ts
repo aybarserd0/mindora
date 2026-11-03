@@ -33,6 +33,8 @@ type ClientApplicationRecord = {
   note: string | null
   status: ClientStatus
   matched_expert_id: string | null
+  match_source?: string | null
+  matched_at?: string | null
   created_at: string
 }
 
@@ -143,6 +145,8 @@ function normalizeClient({
     setting: client.setting ?? null,
     status: client.status,
     matched_expert_id: client.matched_expert_id ?? null,
+    match_source: client.match_source ?? null,
+    matched_at: client.matched_at ?? null,
     created_at: client.created_at,
     latest_payment: latestPayment,
     latest_conversation: latestConversation,
@@ -174,6 +178,8 @@ export async function GET() {
         setting,
         status,
         matched_expert_id,
+        match_source,
+        matched_at,
         created_at
       `
       )
