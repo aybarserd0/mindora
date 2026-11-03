@@ -16,6 +16,8 @@ type ExpertProfile = {
   email: string | null
   phone: string | null
   city: string | null
+  gender?: string | null
+  iban?: string | null
   specialties: string[]
   focusAreas: string[]
   experienceYears: number | null
@@ -37,6 +39,8 @@ type ProfileFormState = {
   title: string
   phone: string
   city: string
+  gender: string
+  iban: string
   specialties: string
   focusAreas: string
   experienceYears: string
@@ -211,6 +215,8 @@ function normalizeProfile(input: Partial<ExpertProfile> | null | undefined): Exp
     email: cleanNullableText(raw.email),
     phone: cleanNullableText(raw.phone),
     city: cleanNullableText(raw.city),
+    gender: cleanNullableText(raw.gender),
+    iban: cleanNullableText(raw.iban),
     slug: cleanNullableText(raw.slug),
     bio: cleanNullableText(raw.bio),
     publicBio: pickFirstText(raw.publicBio, raw.bio),
@@ -234,6 +240,8 @@ function profileToForm(profile: ExpertProfile): ProfileFormState {
     title: profile.title || '',
     phone: profile.phone || '',
     city: profile.city || '',
+    gender: profile.gender || '',
+    iban: profile.iban || '',
     specialties: serializeList(profile.specialties),
     focusAreas: serializeList(profile.focusAreas),
     experienceYears: profile.experienceYears === null ? '' : String(profile.experienceYears),
@@ -277,6 +285,8 @@ function buildSavePayload(form: ProfileFormState) {
     title: cleanText(form.title),
     phone: cleanNullableText(form.phone),
     city: cleanNullableText(form.city),
+    gender: form.gender,
+    iban: form.iban.replace(/\s+/g, '').toUpperCase(),
     specialties: listFromForm(form.specialties),
     focusAreas: listFromForm(form.focusAreas),
     experienceYears: nullableNumberFromForm(form.experienceYears),
@@ -816,6 +826,33 @@ function ProfileEditForm({
         <Field label="Unvan" value={form.title} onChange={(value) => onChange('title', value)} />
         <Field label="Telefon" value={form.phone} onChange={(value) => onChange('phone', value)} />
         <Field label="Şehir" value={form.city} onChange={(value) => onChange('city', value)} />
+        <label className="space-y-2">
+          <span className="text-sm font-semibold text-slate-700">Cinsiyet</span>
+          <select
+            value={form.gender}
+            onChange={(event) => onChange('gender', event.target.value)}
+            className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
+          >
+            <option value="">Belirtmek istemiyorum</option>
+            <option value="kadin">Kadın</option>
+            <option value="erkek">Erkek</option>
+          </select>
+          <span className="block text-xs leading-5 text-slate-500">Yalnızca kadın / erkek uzman tercihi yapan danışanlarla eşleşmede kullanılır, profilinde görünmez.</span>
+        </label>
+        <label className="space-y-2 sm:col-span-2">
+          <span className="text-sm font-semibold text-slate-700">Ödeme bilgileri: IBAN</span>
+          <input
+            value={form.iban}
+            onChange={(event) => onChange('iban', event.target.value)}
+            placeholder="TR00 0000 0000 0000 0000 0000 00"
+            autoComplete="off"
+            spellCheck={false}
+            className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 font-mono text-sm font-semibold tracking-wide text-slate-900 outline-none transition-all duration-200 ease-out placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
+          />
+          <span className="block text-xs leading-5 text-slate-500">
+            Haftalık hakedişin her pazartesi hesaplanır ve bu hesaba gönderilir. IBAN kendi adına kayıtlı olmalı; profilinde görünmez.
+          </span>
+        </label>
         <Field
           label="Deneyim Yılı"
           value={form.experienceYears}

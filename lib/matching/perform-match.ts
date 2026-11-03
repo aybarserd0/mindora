@@ -1,0 +1,475 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase istemcisi yeni sütunlarla birlikte gevşek tipli kullanılıyor (mevcut rotalardaki gibi) */
+import nodemailer from 'nodemailer'
+import { createNotification } from '@/lib/notifications'
+import { getSiteUrl } from '@/lib/site-url'
+import { createConversationAccessToken } from '@/lib/chat-access-tokens'
+import { PROFESSION_CONFIG, toProfession, type Profession } from '@/lib/professions'
+
+type Conversation = {
+  id: string
+  status: string
+  payment_status: string
+}
+
+type MailResult = {
+  ok: boolean
+  skipped: boolean
+}
+
+function toText(value: unknown) {
+  if (value === null || value === undefined) return ''
+  return String(value).trim()
+}
+
+function createTransporter() {
+  const host = process.env.SMTP_HOST
+  const port = Number(process.env.SMTP_PORT || 465)
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASS
+
+  if (!host || !user || !pass) return null
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  })
+}
+
+async function safeSendMail({
+  transporter,
+  to,
+  subject,
+  text,
+  html,
+  logName,
+}: {
+  transporter: nodemailer.Transporter | null
+  to: string | null | undefined
+  subject: string
+  text: string
+  html?: string
+  logName: string
+}): Promise<MailResult> {
+  const receiver = toText(to)
+
+  if (!transporter || !receiver) {
+    console.log(`${logName} EMAIL SKIPPED`)
+    return { ok: false, skipped: true }
+  }
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || `"Mindora" <${process.env.SMTP_USER}>`,
+      to: receiver,
+      subject,
+      text,
+      html,
+    })
+
+    return { ok: true, skipped: false }
+  } catch (err) {
+    console.error(`${logName} MAIL ERROR:`, err)
+    return { ok: false, skipped: false }
+  }
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
+function clientPaymentEmailHtml({
+  clientName,
+  expertName,
+  paymentUrl,
+  profession,
+}: {
+  clientName: string
+  expertName: string
+  paymentUrl: string
+  profession: Profession
+}) {
+  const p = PROFESSION_CONFIG[profession]
+  const safeClient = escapeHtml(clientName)
+  const safeExpert = escapeHtml(expertName)
+  return `
+<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2a26;background:#f4f6f4;padding:32px 16px;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
+    <div style="background:#254a3f;color:#ffffff;padding:24px 28px;">
+      <div style="font-size:20px;font-weight:700;">Mindora</div>
+      <div style="margin-top:4px;font-size:13px;color:rgba(255,255,255,0.75);">Psikolog, diyetisyen ve antrenörlerle online görüşme</div>
+    </div>
+    <div style="padding:32px 28px;text-align:center;">
+      <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1f2a26;">${p.yourWith} eşleştin</h1>
+      <p style="margin:0 0 24px;font-size:15px;color:#3b4a44;">
+        Merhaba ${safeClient}, seni <strong>${safeExpert}</strong> ile eşleştirdik.
+        ${p.yourOf} boş saatlerinden sana uyanı seç, ödemeyi tamamla; randevun hemen onaylansın.
+      </p>
+      <a href="${paymentUrl}" style="display:inline-block;background:#254a3f;color:#ffffff;text-decoration:none;padding:16px 30px;border-radius:999px;font-weight:700;font-size:16px;">
+        İlk seans saatini seç
+      </a>
+      <p style="margin:24px 0 0;font-size:12px;color:#6b7a74;">
+        Seansa 24 saatten fazla varken iptal edersen ücretin tamamı iade edilir. Bu bağlantı 30 gün geçerlidir; süresi dolarsa sitedeki “Danışan girişi” sayfasından yenisini isteyebilirsin.
+      </p>
+    </div>
+    <div style="padding:16px 28px;background:#fafafa;color:#6b7a74;font-size:12px;">
+      Güvenliğin için ödeme ve iletişim adımlarını yalnızca Mindora üzerinden yürüt. Mindora acil durum hizmeti değildir; acil bir durumda 112'yi ara.
+    </div>
+  </div>
+</div>
+`
+}
+
+export type MatchSource = 'auto' | 'admin'
+
+export type PerformMatchResult =
+  | {
+      ok: true
+      conversation: Conversation
+      links: { client: string; expert: string; admin: string }
+      mail: { admin: MailResult; expert: MailResult; client: MailResult }
+    }
+  | { ok: false; error: string; status: number }
+
+/**
+ * Danışanı bir uzmanla eşleştirir: başvuruyu günceller, konuşmayı açar ya da
+ * yeni uzmana devreder, danışana / uzmana / admine e-posta ve bildirim gönderir.
+ * Hem admin ekranı hem otomatik eşleşme bunu kullanır.
+ */
+export async function performMatch({
+  supabase,
+  clientId,
+  expertId,
+  source,
+}: {
+  supabase: any
+  clientId: string
+  expertId: string
+  source: MatchSource
+}): Promise<PerformMatchResult> {
+  const baseUrl = getSiteUrl()
+
+  const { data: client, error: clientError } = await supabase
+    .from('client_applications')
+    .select(
+      `
+      id,
+      name,
+      phone,
+      email,
+      age,
+      topic,
+      duration,
+      previous_support,
+      start_time,
+      preference,
+      availability,
+      note,
+      profession,
+      health_screen,
+      setting
+    `
+    )
+    .eq('id', clientId)
+    .single()
+
+  if (clientError || !client) {
+    console.error('MATCH CLIENT ERROR:', clientError)
+
+    return { ok: false, error: 'Danışan bulunamadı.', status: 404 }
+  }
+
+  const { data: expert, error: expertError } = await supabase
+    .from('experts')
+    .select(
+      `
+      id,
+      name,
+      email,
+      phone,
+      title,
+      areas,
+      experience,
+      online,
+      availability,
+      status,
+      profession
+    `
+    )
+    .eq('id', expertId)
+    .eq('status', 'approved')
+    .neq('account_type', 'supervision_only')
+    .single()
+
+  if (expertError || !expert) {
+    console.error('MATCH EXPERT ERROR:', expertError)
+
+    return { ok: false, error: 'Onaylı uzman bulunamadı.', status: 404 }
+  }
+
+  // Danışan hangi hizmet için başvurduysa o meslekten bir uzmanla eşleşir
+  const profession = toProfession(client.profession)
+  if (toProfession(expert.profession) !== profession) {
+    return { ok: false, error: `Bu danışan ${PROFESSION_CONFIG[profession].label.toLocaleLowerCase('tr-TR')} için başvurdu; aynı meslekten bir uzman seç.`, status: 400 }
+  }
+
+  const { error: updateError } = await supabase
+    .from('client_applications')
+    .update({
+      matched_expert_id: expertId,
+      status: 'matched',
+      matched_at: new Date().toISOString(),
+      match_source: source,
+    })
+    .eq('id', clientId)
+
+  if (updateError) {
+    console.error('MATCH UPDATE ERROR:', updateError)
+
+    return { ok: false, error: 'Eşleştirme kaydedilemedi.', status: 500 }
+  }
+
+  const { data: existingConversation, error: existingConversationError } =
+    await supabase
+      .from('conversations')
+      .select('id, status, payment_status')
+      .eq('client_application_id', clientId)
+      .maybeSingle()
+
+  if (existingConversationError) {
+    console.error(
+      'MATCH EXISTING CONVERSATION ERROR:',
+      existingConversationError
+    )
+
+    return { ok: false, error: 'Mevcut konuşma kontrol edilemedi.', status: 500 }
+  }
+
+  let conversation: Conversation | null = null
+
+  if (existingConversation) {
+    const currentPaymentStatus = toText(existingConversation.payment_status)
+    const nextConversationStatus =
+      currentPaymentStatus === 'paid' ? 'active' : 'locked'
+
+    const { data: updatedConversation, error: conversationUpdateError } =
+      await supabase
+        .from('conversations')
+        .update({
+          expert_id: expertId,
+          status: nextConversationStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingConversation.id)
+        .select('id, status, payment_status')
+        .single()
+
+    if (conversationUpdateError || !updatedConversation) {
+      console.error(
+        'MATCH CONVERSATION UPDATE ERROR:',
+        conversationUpdateError
+      )
+
+      return { ok: false, error: 'Konuşma güncellenemedi.', status: 500 }
+    }
+
+    conversation = updatedConversation as Conversation
+  } else {
+    const { data: createdConversation, error: conversationError } =
+      await supabase
+        .from('conversations')
+        .insert({
+          client_application_id: clientId,
+          expert_id: expertId,
+          status: 'locked',
+          payment_status: 'pending',
+        })
+        .select('id, status, payment_status')
+        .single()
+
+    if (conversationError || !createdConversation) {
+      console.error('MATCH CONVERSATION CREATE ERROR:', conversationError)
+
+      return { ok: false, error: 'Konuşma oluşturulamadı.', status: 500 }
+    }
+
+    conversation = createdConversation as Conversation
+  }
+
+  let clientDashboardLink = `${baseUrl}/client/dashboard`
+
+  try {
+    const clientAccess = await createConversationAccessToken({
+      conversationId: conversation.id,
+      role: 'client',
+      expiresInHours: 24 * 30,
+    })
+
+    clientDashboardLink = `${baseUrl}/client/dashboard/sessions?token=${clientAccess.token}&yeni=1`
+  } catch (tokenError) {
+    console.error('MATCH CLIENT ACCESS TOKEN ERROR:', tokenError)
+  }
+
+  const clientChatLink = `${baseUrl}/client/chat/${conversation.id}`
+  const expertChatLink = `${baseUrl}/expert/dashboard`
+  const adminConversationLink = `${baseUrl}/admin/conversations/${conversation.id}`
+
+  const transporter = createTransporter()
+
+  const adminText = `
+Mindora Eşleştirme Bildirimi (${source === 'auto' ? 'otomatik' : 'admin'})
+
+Uzmanı değiştirmek için: ${baseUrl}/admin/danisan-basvurulari
+
+Danışan:
+Ad Soyad: ${toText(client.name)}
+Telefon: ${toText(client.phone)}
+E-posta: ${toText(client.email)}
+Yaş: ${toText(client.age)}
+Konu: ${toText(client.topic)}
+Süre: ${toText(client.duration)}
+Daha Önce Destek: ${toText(client.previous_support)}
+Başlama: ${toText(client.start_time)}
+Tercih: ${toText(client.preference)}
+Müsaitlik: ${toText(client.availability)}
+Not: ${toText(client.note) || '-'}
+
+Eşleşen Uzman:
+Ad Soyad: ${toText(expert.name)}
+E-posta: ${toText(expert.email)}
+Telefon: ${toText(expert.phone)}
+Ünvan: ${toText(expert.title)}
+Alanlar: ${toText(expert.areas)}
+Deneyim: ${toText(expert.experience)}
+Online: ${toText(expert.online)}
+Müsaitlik: ${toText(expert.availability)}
+
+Konuşma:
+Conversation ID: ${toText(conversation.id)}
+Durum: ${toText(conversation.status)}
+Ödeme Durumu: ${toText(conversation.payment_status)}
+Admin Link: ${adminConversationLink}
+
+Not:
+Danışan ve uzman tarafına gönderilen mailler no-leak formatındadır.
+Tarafların telefon/e-posta bilgileri birbirleriyle paylaşılmamıştır.
+Konuşma ödeme tamamlanana kadar kilitli kalacaktır.
+`
+
+  const expertText = `
+Merhaba ${toText(expert.name)},
+
+Mindora üzerinden size yeni bir danışan eşleştirildi.
+
+Danışan:
+${toText(client.name)}
+
+Başvuru Özeti:
+Konu: ${toText(client.topic)}
+Süre: ${toText(client.duration)}
+Daha Önce Destek: ${toText(client.previous_support)}
+Başlama Tercihi: ${toText(client.start_time)}
+Görüşme Tercihi: ${toText(client.preference)}
+Müsaitlik: ${toText(client.availability)}${client.setting ? `\nAntrenman yeri: ${toText(client.setting)}` : ''}${client.health_screen ? `\nSağlık ön sorusu (doktor takibi / kısıtlama): ${toText(client.health_screen)}` : ''}
+Not: ${toText(client.note) || '-'}
+${client.health_screen && client.health_screen !== 'Hayır' ? '\nDanışan sağlık ön sorusuna "Hayır" dışında yanıt verdi. İlk görüşmede bunu konuşmanı ve gerekirse doktor onayı istemeni rica ederiz.\n' : ''}
+Güvenli Uzman Chat Linki:
+${expertChatLink}
+
+Gizlilik ve güvenlik politikamız gereği danışanın telefon ve e-posta bilgileri paylaşılmamaktadır.
+
+Danışanla iletişim yalnızca Mindora platformu üzerinden yürütülecektir.
+
+Ödeme tamamlandıktan sonra konuşma alanı aktif hale gelecektir.
+
+Platform dışı iletişim; ödeme, güvenlik ve takip süreçlerini etkileyebilir.
+
+Mindora Ekibi
+`
+
+  const clientText = `
+Merhaba ${toText(client.name)},
+
+Seni ${toText(expert.name)} ile eşleştirdik.
+
+${PROFESSION_CONFIG[profession].yourOf} boş saatlerinden sana uyanı seç ve ödemeyi tamamla; randevun hemen onaylanır:
+${clientDashboardLink}
+
+Seansa 24 saatten fazla varken iptal edersen ücretin tamamı iade edilir.
+Bu bağlantı 30 gün geçerlidir. Süresi dolarsa sitedeki "Danışan girişi" sayfasından yenisini isteyebilirsin.
+
+Güvenliğin için iletişim ve ödeme adımlarını yalnızca Mindora üzerinden yürüt.
+
+Mindora
+`
+
+  const adminMail = await safeSendMail({
+    transporter,
+    to: process.env.CONTACT_TO || process.env.ADMIN_NOTIFICATION_EMAIL,
+    subject: source === 'auto' ? 'Mindora Otomatik Eşleştirme' : 'Mindora Yeni Eşleştirme',
+    text: adminText,
+    logName: 'ADMIN MATCH',
+  })
+
+  const expertMail = await safeSendMail({
+    transporter,
+    to: expert.email,
+    subject: 'Mindora Yeni Danışan Eşleştirmesi',
+    text: expertText,
+    logName: 'EXPERT MATCH',
+  })
+
+  const clientMail = await safeSendMail({
+    transporter,
+    to: client.email,
+    subject: `${PROFESSION_CONFIG[profession].yourWith} eşleştin — ilk seans saatini seç`,
+    text: clientText,
+    html: clientPaymentEmailHtml({
+      clientName: toText(client.name) || 'Danışan',
+      expertName: toText(expert.name) || 'Mindora Uzmanı',
+      paymentUrl: clientDashboardLink,
+      profession,
+    }),
+    logName: 'CLIENT MATCH',
+  })
+
+  await Promise.all([
+    createNotification({
+      supabase,
+      userType: 'client',
+      userId: clientId,
+      title: 'Uzmanla eşleştiniz',
+      message: `${toText(expert.name)} ile eşleştin. Uygun bir saat seçip başlayabilirsin.`,
+      type: 'system',
+      link: `/client/chat/${conversation.id}`,
+    }),
+    createNotification({
+      supabase,
+      userType: 'expert',
+      userId: expertId,
+      title: 'Yeni danışan eşleştirmesi',
+      message: `${toText(client.name)} size eşleştirildi.`,
+      type: 'system',
+      link: `/expert/chat/${conversation.id}`,
+    }),
+  ])
+
+  return {
+    ok: true,
+    conversation,
+    links: {
+      client: clientChatLink,
+      expert: expertChatLink,
+      admin: adminConversationLink,
+    },
+    mail: {
+      admin: adminMail,
+      expert: expertMail,
+      client: clientMail,
+    },
+  }
+}

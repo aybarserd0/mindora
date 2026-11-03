@@ -167,6 +167,7 @@ export default function UzmanBasvuruForm({ profession }: { profession: Professio
       availability,
       expectation: getFormValue(form, 'expectation'),
       note: getFormValue(form, 'note'),
+      gender: getFormValue(form, 'gender'),
       account_type: isPsych ? accountType : 'therapist',
       profession,
     }
@@ -456,6 +457,23 @@ export default function UzmanBasvuruForm({ profession }: { profession: Professio
                 className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
               />
             </label>
+
+            {seesClients ? (
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-slate-700">Cinsiyetin</span>
+                <select
+                  name="gender"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-200 ease-out focus:border-slate-400 focus:bg-white"
+                >
+                  <option value="">Belirtmek istemiyorum</option>
+                  <option value="kadin">Kadın</option>
+                  <option value="erkek">Erkek</option>
+                </select>
+                <span className="mt-1.5 block text-xs leading-5 text-slate-500">
+                  Yalnızca &quot;kadın / erkek uzman&quot; tercihi yapan danışanlarla eşleşme için kullanılır, profilinde gösterilmez.
+                </span>
+              </label>
+            ) : null}
 
             {seesClients ? (
             <fieldset>

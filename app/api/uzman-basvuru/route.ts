@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     const availability = toText(body.availability)
     const expectation = toText(body.expectation)
     const note = toText(body.note)
+    const gender = ['kadin', 'erkek'].includes(toText(body.gender)) ? toText(body.gender) : null
     const profession = toProfession(body.profession)
     const professionLabel = PROFESSION_CONFIG[profession].label
     // Yalnızca süpervizyon hesabı sadece psikologlar için
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
         availability,
         expectation,
         note,
+        gender,
         account_type: accountType,
         profession,
         status: 'pending',

@@ -16,6 +16,11 @@ export type Database = {
     Tables: {
       client_applications: {
         Row: {
+          matched_at: string | null
+          match_source: string | null
+          auto_match_attempted_at: string | null
+          unpaid_reminder_sent_at: string | null
+          waiting_notice_sent_at: string | null
           age: string | null
           availability: string | null
           created_at: string
@@ -36,6 +41,11 @@ export type Database = {
           setting: string | null
         }
         Insert: {
+          matched_at?: string | null
+          match_source?: string | null
+          auto_match_attempted_at?: string | null
+          unpaid_reminder_sent_at?: string | null
+          waiting_notice_sent_at?: string | null
           age?: string | null
           availability?: string | null
           created_at?: string
@@ -56,6 +66,11 @@ export type Database = {
           setting?: string | null
         }
         Update: {
+          matched_at?: string | null
+          match_source?: string | null
+          auto_match_attempted_at?: string | null
+          unpaid_reminder_sent_at?: string | null
+          waiting_notice_sent_at?: string | null
           age?: string | null
           availability?: string | null
           created_at?: string
@@ -231,6 +246,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          reengage_sent_at: string | null
           client_application_id: string
           created_at: string
           expert_id: string
@@ -240,6 +256,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          reengage_sent_at?: string | null
           client_application_id: string
           created_at?: string
           expert_id: string
@@ -249,6 +266,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          reengage_sent_at?: string | null
           client_application_id?: string
           created_at?: string
           expert_id?: string
@@ -353,6 +371,7 @@ export type Database = {
       }
       expert_payouts: {
         Row: {
+          period_key: string | null
           amount: number
           created_at: string
           created_by: string | null
@@ -365,6 +384,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          period_key?: string | null
           amount: number
           created_at?: string
           created_by?: string | null
@@ -377,6 +397,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          period_key?: string | null
           amount?: number
           created_at?: string
           created_by?: string | null
@@ -450,6 +471,10 @@ export type Database = {
       }
       experts: {
         Row: {
+          gender: string | null
+          setup_reminder_sent_at: string | null
+          docs_reminder_sent_at: string | null
+          docs_reminder_count: number
           account_type: string
           profession: string
           founding_member: boolean
@@ -492,6 +517,10 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          gender?: string | null
+          setup_reminder_sent_at?: string | null
+          docs_reminder_sent_at?: string | null
+          docs_reminder_count?: number
           account_type?: string
           profession?: string
           founding_member?: boolean
@@ -534,6 +563,10 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          gender?: string | null
+          setup_reminder_sent_at?: string | null
+          docs_reminder_sent_at?: string | null
+          docs_reminder_count?: number
           account_type?: string
           profession?: string
           founding_member?: boolean
@@ -665,6 +698,7 @@ export type Database = {
       }
       payments: {
         Row: {
+          payout_id: string | null
           commission_rate: number | null
           booking_id: string | null
           refund_status: string
@@ -692,6 +726,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          payout_id?: string | null
           commission_rate?: number | null
           booking_id?: string | null
           refund_status?: string
@@ -719,6 +754,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          payout_id?: string | null
           commission_rate?: number | null
           booking_id?: string | null
           refund_status?: string
