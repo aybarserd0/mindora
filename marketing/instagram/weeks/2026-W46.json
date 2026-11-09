@@ -1,0 +1,229 @@
+{
+  "week": "2026-W46",
+  "theme": "Küçük adımlar, nazik sorular (13 Kasım Dünya Nezaket Günü haftası)",
+  "posts": [
+    {
+      "id": "1-reel-pazartesi-baslarim",
+      "format": "reel",
+      "theme": "pine",
+      "seconds": 13,
+      "step": 1.9,
+      "publish": "Salı 20:00 (10 Kasım)",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Tanıdık geldi mi?",
+          "lines": [
+            { "text": "Pazar: “Yarın her şey değişiyor.”" },
+            { "text": "Pazartesi: Kusursuz plan." },
+            { "text": "Çarşamba: Plan biraz sarktı." },
+            { "text": "Perşembe: “Pazartesi yeniden.”" },
+            { "text": "Kusursuz hafta yok. Küçük adımlar var.", "accent": true }
+          ]
+        }
+      ],
+      "caption": "“Pazartesi başlarım” dediğin kaçıncı hafta? 🗓️\n\nKusursuz bir hafta beklerken plan çoğu zaman çarşambaya varmadan sarkar, sonra da “madem bozuldu” diye her şey yine pazartesiye kalır. Oysa kalıcı olan genelde küçük adımlardır: tek bir öğünü düzene sokmak, yanında su taşımak, akşam yemeğini biraz erkene almak. Online bir diyetisyen, beslenme düzenini senin temponla uyumlu hâle getirmene yardımcı olabilir.\n\nHâlâ pazartesiyi bekleyen arkadaşını yorumlarda etiketle. 👇\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#beslenme", "#diyetisyen", "#sağlıklıbeslenme", "#onlinediyetisyen", "#pazartesibaşlarım", "#alışkanlık", "#mindora"],
+      "alt": "Koyu yeşil zemin üzerinde sırayla beliren yazılar: Pazar: Yarın her şey değişiyor. Pazartesi: Kusursuz plan. Çarşamba: Plan biraz sarktı. Perşembe: Pazartesi yeniden. Kusursuz hafta yok. Küçük adımlar var.",
+      "music": "Hafif esprili, sözsüz bir trend ses ekle (düşük ses)."
+    },
+    {
+      "id": "2-kaydirmali-psikolog-psikiyatrist",
+      "format": "feed",
+      "theme": "cream",
+      "publish": "Çarşamba 20:00 (11 Kasım)",
+      "slides": [
+        {
+          "type": "cover",
+          "kicker": "Kafan mı karıştı?",
+          "title": "Psikolog, klinik psikolog, psikiyatrist: **farkı ne?**",
+          "subtitle": "Kim kimdir, kime ne zaman başvurabilirsin? Sade bir dille."
+        },
+        {
+          "type": "point",
+          "number": "1",
+          "heading": "Psikolog",
+          "text": "Üniversitede dört yıllık psikoloji lisansını tamamlamış kişidir. İnsan davranışı ve zihinsel süreçler üzerine eğitim almıştır."
+        },
+        {
+          "type": "point",
+          "number": "2",
+          "heading": "Klinik psikolog",
+          "text": "Psikoloji lisansının ardından klinik psikoloji alanında yüksek lisans ya da doktora yapmıştır. Psikolojik değerlendirme ve terapi süreçlerine odaklanır."
+        },
+        {
+          "type": "point",
+          "number": "3",
+          "heading": "Psikiyatrist",
+          "text": "Tıp fakültesinin ardından psikiyatri uzmanlığı yapmış bir **hekimdir**. Tanı koyabilir, gerektiğinde ilaç tedavisi planlayabilir."
+        },
+        {
+          "type": "point",
+          "number": "4",
+          "heading": "Terapide unvan kadar eğitim de önemli.",
+          "text": "Uzmanının hangi terapi eğitimlerini aldığını ve süpervizyon alıp almadığını sormak **senin hakkın**."
+        },
+        {
+          "type": "point",
+          "number": "5",
+          "heading": "Kime gideceğini bilmiyorsan sorun değil.",
+          "text": "İlk görüşmede uzman ihtiyacını seninle birlikte değerlendirir; gerekirse seni doğru meslektaşına yönlendirir."
+        },
+        {
+          "type": "cta",
+          "theme": "pine",
+          "heading": "Kafası karışan birine gönder.",
+          "text": "Kaydet; ihtiyaç duyduğunda yeniden bak.",
+          "button": "Kaydet ve gönder",
+          "url": "@mindora.live"
+        }
+      ],
+      "caption": "Psikolog, klinik psikolog ve psikiyatrist aynı şey mi? Kısa cevap: Hayır. 🧠\n\nPsikolog dört yıllık psikoloji lisansını bitirmiş kişidir. Klinik psikolog bunun üstüne klinik psikoloji alanında yüksek lisans ya da doktora yapmıştır. Psikiyatrist ise tıp eğitiminin ardından psikiyatri uzmanlığı yapmış bir hekimdir ve gerektiğinde ilaç tedavisi planlayabilir. Kime gideceğinden emin değilsen ilk görüşme bunu netleştirmek için de var; iyi bir uzman gerekirse seni doğru meslektaşına yönlendirir.\n\nKafası karışan bir arkadaşına bu gönderiyi gönder. 📩\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez. Acil bir durumda 112'yi ara.",
+      "hashtags": ["#psikolog", "#klinikpsikolog", "#psikiyatrist", "#terapi", "#ruhsağlığı", "#onlineterapi", "#mindora"],
+      "alt": "Yedi sayfalık kaydırmalı gönderi: Psikolog, klinik psikolog, psikiyatrist; farkı ne? Psikolog dört yıllık psikoloji lisansını tamamlamıştır. Klinik psikolog klinik psikoloji alanında yüksek lisans ya da doktora yapmıştır. Psikiyatrist psikiyatri uzmanı bir hekimdir. Terapide unvan kadar eğitim de önemlidir. Kime gideceğini bilmiyorsan ilk görüşmede birlikte değerlendirilir."
+    },
+    {
+      "id": "3-tekli-mit-ter",
+      "format": "feed",
+      "theme": "mint",
+      "publish": "Perşembe 13:00 (12 Kasım)",
+      "slides": [
+        {
+          "type": "mythfact",
+          "myth": "Ne kadar çok terlersen antrenman o kadar iyi geçmiştir.",
+          "fact": "Ter, bedenin kendini serinletme yoludur; ortama ve kişiye göre değişir. Antrenmanın verimini terden çok düzenlilik, doğru teknik ve sana uygun yoğunluk belirler.",
+          "footnote": "Bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez."
+        }
+      ],
+      "caption": "Antrenmandan sırılsıklam çıkmadıysan boşa mı çalıştın? Hiç de değil. 💧\n\nTer, bedenin ısındığında kendini serinletme yolu. Ne kadar terlediğin ortamın sıcaklığına, neme ve kişiden kişiye değişir. Bir antrenmanın sana ne kattığını terden çok düzenli devam etmen, hareketleri doğru yapman ve seviyene uygun bir yoğunlukta çalışman belirler. Evde antrenman ya da salon fark etmez; kişisel antrenörün bu dengeyi seninle birlikte kurar.\n\nHer antrenmanı ter miktarıyla ölçen spor arkadaşına gönder. 🏋️\n\nBir sağlık durumun varsa ya da uzun süredir hareketsizsen başlamadan önce doktoruna danış. Bu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#spor", "#kişiselantrenör", "#evdeantrenman", "#antrenman", "#mitvegerçek", "#fitness", "#mindora"],
+      "alt": "Mit ve gerçek kartı. Mit: Ne kadar çok terlersen antrenman o kadar iyi geçmiştir (üstü çizili). Gerçek: Ter, bedenin kendini serinletme yoludur; antrenmanın verimini düzenlilik, doğru teknik ve uygun yoğunluk belirler."
+    },
+    {
+      "id": "4-reel-nezaket-ikinci-soru",
+      "format": "reel",
+      "theme": "lilac",
+      "seconds": 13,
+      "step": 1.9,
+      "publish": "Cuma 20:00 (13 Kasım, Dünya Nezaket Günü)",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "13 Kasım · Dünya Nezaket Günü",
+          "lines": [
+            { "text": "“Nasılsın?”\n“İyiyim.”" },
+            { "text": "Konuşma çoğu zaman burada biter." },
+            { "text": "Bugün bir soru daha sor:" },
+            { "text": "“Gerçekten nasılsın?”" },
+            { "text": "Bazen nezaket, ikinci soruyu sormaktır.", "accent": true }
+          ]
+        }
+      ],
+      "caption": "“İyiyim” diyen herkes gerçekten iyi olmayabilir. Bugün Dünya Nezaket Günü. 💜\n\n“Gerçekten nasılsın?” küçük bir soru ama bir kapıyı aralar. Cevap vermesi için zorlamana gerek yok; acele etmeden dinlemek çoğu zaman yeter. Aynı soruyu kendine sormayı da unutma. Bir yakının uzun süredir zorlanıyorsa, bir psikologla konuşmayı nazikçe önermek de bir nezakettir.\n\nBugün “Gerçekten nasılsın?” diye sormak istediğin kişiye bu Reels'i gönder. 📩\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez. Acil bir durumda 112'yi ara.",
+      "hashtags": ["#dünyanezaketgünü", "#nezaket", "#ruhsağlığı", "#psikolog", "#terapi", "#arkadaşlık", "#mindora"],
+      "alt": "Mor zemin üzerinde sırayla beliren yazılar: Nasılsın? İyiyim. Konuşma çoğu zaman burada biter. Bugün bir soru daha sor: Gerçekten nasılsın? Bazen nezaket, ikinci soruyu sormaktır.",
+      "music": "Sıcak, yumuşak, sözsüz bir trend ses ekle (düşük ses)."
+    },
+    {
+      "id": "5-kaydirmali-uzmana-guvenmeden",
+      "format": "feed",
+      "theme": "pine",
+      "publish": "Pazar 11:00 (15 Kasım)",
+      "slides": [
+        {
+          "type": "cover",
+          "kicker": "Psikolog · Diyetisyen · Antrenör",
+          "title": "Bir uzmana güvenmeden önce bakman gereken **5 şey**",
+          "subtitle": "Kime emanet olduğunu bilmek, ilk adımı kolaylaştırır."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "1",
+          "heading": "Unvanı ve belgesi net mi?",
+          "text": "Diploması, uzmanlık alanı ve mesleki belgeleri doğrulanabilir olmalı."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "2",
+          "heading": "Ücret baştan belli mi?",
+          "text": "Toplam ücreti ödemeden önce açıkça görebilmelisin. Sürpriz ek ücret ya da zorunlu paket olmamalı."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "3",
+          "heading": "Gizliliğin korunuyor mu?",
+          "text": "Görüşmelerin kaydedilip kaydedilmediğini ve bilgilerinin nasıl saklandığını sorabilirsin."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "4",
+          "heading": "Vaatleri gerçekçi mi?",
+          "text": "“Kesin sonuç” ya da “X günde garanti” gibi sözler bir uyarı işaretidir. İyi bir uzman süreci **seninle birlikte** planlar."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "5",
+          "heading": "Kendini rahat hissediyor musun?",
+          "text": "İlk görüşmede anlaşılmadığını hissedersen başka bir uzmana geçmek tamamen normal."
+        },
+        {
+          "type": "cta",
+          "heading": "Mindora'da ilk üçünü biz kontrol ediyoruz.",
+          "text": "Belgeler tek tek incelenir, ücret baştan görünür, görüşmeler kaydedilmez. Ön eşleşme ücretsiz.",
+          "button": "Ücretsiz eşleşme",
+          "url": "Bağlantı profilde"
+        }
+      ],
+      "caption": "Psikolog, diyetisyen ya da kişisel antrenör: Bir uzmana güvenmeden önce kendine sorman gereken 5 soru var. 🔍\n\nUnvanı ve belgeleri doğrulanabilir mi? Toplam ücreti baştan görebiliyor musun? Görüşmelerin ve bilgilerin nasıl korunuyor? “Kesin sonuç” gibi gerçek dışı vaatler var mı? Ve en önemlisi: Kendini rahat hissediyor musun? Mindora'da ilk üçünü biz üstleniyoruz: Uzmanların belgeleri tek tek incelenir, ücret ödemeden önce görünür, görüşmeler kaydedilmez.\n\nBu listeyi kaydet; uzman ararken yanında olsun. 🔖",
+      "hashtags": ["#onlinepsikolog", "#onlinediyetisyen", "#onlineantrenör", "#uzmanseçimi", "#psikolog", "#diyetisyen", "#kişiselantrenör", "#mindora"],
+      "alt": "Yedi sayfalık kaydırmalı gönderi: Bir uzmana güvenmeden önce bakman gereken 5 şey. Unvanı ve belgesi net mi, ücret baştan belli mi, gizliliğin korunuyor mu, vaatleri gerçekçi mi, kendini rahat hissediyor musun. Son sayfa: Mindora'da ilk üçünü biz kontrol ediyoruz."
+    },
+    {
+      "id": "6-hikayeler",
+      "format": "story",
+      "theme": "cream",
+      "publish": "Her gün bir tane (Pazartesi–Cuma)",
+      "slides": [
+        {
+          "type": "poll",
+          "heading": "Psikolog, diyetisyen, antrenör: En çok hangisiyle konuşmak isterdin?",
+          "text": "Cevapların sonraki içeriklerimize yön verecek.",
+          "sticker": "Anket (4 seçenek): “Psikolog” / “Diyetisyen” / “Antrenör” / “Hepsi”"
+        },
+        {
+          "type": "poll",
+          "theme": "pine",
+          "heading": "“Pazartesi başlarım” dediğin oldu mu hiç?",
+          "text": "Bu akşam Reels'te bu döngüyü konuşuyoruz.",
+          "sticker": "Anket: “Her hafta 🙋” / “Hiç olmadı”"
+        },
+        {
+          "type": "poll",
+          "theme": "lilac",
+          "heading": "Psikolog ile psikiyatrist aynı şey mi?",
+          "text": "Cevap bu akşamki kaydırmalı gönderide.",
+          "sticker": "Test çıkartması: “Evet” / “Hayır” (doğru cevap: Hayır)"
+        },
+        {
+          "type": "poll",
+          "theme": "mint",
+          "heading": "Bugün ne kadar hareket ettin?",
+          "text": "Merdiven çıkmak da sayılır. 🙂",
+          "sticker": "Kaydırıcı çıkartması (“Hiç” ← → “Bolca”)"
+        },
+        {
+          "type": "poll",
+          "theme": "pine",
+          "heading": "Bugün Dünya Nezaket Günü. Bu hafta sana iyi gelen küçük bir nezaket neydi?",
+          "text": "Bazılarını isimsiz olarak hikâyede paylaşacağız.",
+          "sticker": "Soru kutusu çıkartması"
+        }
+      ]
+    }
+  ]
+}
