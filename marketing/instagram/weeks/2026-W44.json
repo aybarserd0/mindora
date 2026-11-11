@@ -1,0 +1,117 @@
+{
+  "week": "2026-W44",
+  "theme": "Terapiye ilk adım",
+  "posts": [
+    {
+      "id": "1-reel-yeterince-kotu",
+      "format": "reel",
+      "theme": "pine",
+      "seconds": 13,
+      "step": 1.7,
+      "publish": "Salı 20:00",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Terapi için yeterli sebep",
+          "lines": [
+            { "text": "Terapiye gitmek için “yeterince kötü” olman gerekmiyor." },
+            { "text": "Uyuyamıyorsan." },
+            { "text": "Aynı tartışmayı tekrar tekrar yaşıyorsan." },
+            { "text": "Sadece biriyle konuşmak istiyorsan." },
+            { "text": "Bu da yeterli bir sebep.", "accent": true }
+          ]
+        }
+      ],
+      "caption": "Terapiye gitmek için “yeterince kötü” olmayı beklemek zorunda değilsin.\n\nÇoğumuz “Benden daha zor durumda olanlar var” diyerek ertele ertele ilerliyoruz. Oysa terapi yalnızca kriz anları için değil. Uykunu, ilişkilerini, işini ya da kendinle konuşma şeklini etkileyen her şey konuşmaya değer.\n\nBu videoyu, bunu duymaya ihtiyacı olan birine gönder. 💬\n\nMindora'da kimi seçeceğini bilmeden de başlayabilirsin: ihtiyacını anlat, sana uygun psikoloğu birlikte bulalım. Bağlantı profilde.\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez. Acil bir durumda 112'yi ara.",
+      "hashtags": ["#terapi", "#psikolog", "#onlineterapi", "#ruhsağlığı", "#kaygı", "#psikolojikdestek", "#mindora"],
+      "alt": "Koyu yeşil zemin üzerinde sırayla beliren yazılar: Terapiye gitmek için yeterince kötü olman gerekmiyor. Uyuyamıyorsan. Aynı tartışmayı tekrar tekrar yaşıyorsan. Sadece biriyle konuşmak istiyorsan. Bu da yeterli bir sebep.",
+      "music": "Instagram'da sakin, enstrümantal ve trend olan bir ses ekle (sözsüz, düşük ses)."
+    },
+    {
+      "id": "2-kaydirmali-ilk-seans",
+      "format": "feed",
+      "theme": "cream",
+      "publish": "Çarşamba 20:00",
+      "slides": [
+        { "type": "cover", "kicker": "Kaydet, ilk seanstan önce bak", "title": "İlk terapi seansında **ne olur?**", "subtitle": "Kimsenin önceden anlatmadığı 5 şey." },
+        { "type": "point", "number": "1", "heading": "Hemen her şeyi anlatman beklenmez.", "text": "İlk seans çoğunlukla tanışmadır. Ne kadarını paylaşacağına **sen** karar verirsin." },
+        { "type": "point", "number": "2", "heading": "Psikoloğun çok soru sorar.", "text": "Bu bir sınav değil. Seni ve neden geldiğini anlamaya çalışır; “bilmiyorum” da geçerli bir cevap." },
+        { "type": "point", "number": "3", "heading": "Gizlilik konuşulur.", "text": "Neyin aranızda kalacağı ve hangi durumlarda istisna olabileceği ilk seansta netleşir." },
+        { "type": "point", "number": "4", "heading": "Sen de soru sorabilirsin.", "text": "Çalışma yaklaşımı, seans sıklığı, ücret ve iptal koşulları. Sormak hakkın." },
+        { "type": "point", "number": "5", "heading": "“Uyuşmadık” demek normal.", "text": "İlk seanstan sonra psikoloğunla devam etmek istemeyebilirsin. Bu başarısızlık değil, doğru kişiyi bulma sürecinin bir parçası." },
+        { "type": "cta", "theme": "pine", "heading": "Kimi seçeceğini bilmiyor musun?", "text": "Kısa formu doldur, ihtiyacına uygun psikoloğu birlikte bulalım.", "button": "Ücretsiz eşleşme", "url": "Bağlantı profilde" }
+      ],
+      "caption": "İlk terapi seansından önce içinde bir gerginlik olması çok doğal. Bilinmeyen her şey biraz korkutur. 🌿\n\nBu yüzden ilk seansta genelde neler olduğunu tek tek yazdık. Kaydet, zamanı geldiğinde yeniden bak.\n\nSen ilk seansından önce en çok neyi merak etmiştin? Yorumlarda yaz, sonraki içeriklerde cevaplayalım. 👇\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#terapi", "#ilkseans", "#psikolog", "#onlineterapi", "#ruhsağlığı", "#psikoloji", "#mindora"],
+      "alt": "Yedi sayfalık kaydırmalı gönderi: İlk terapi seansında ne olur? Her şeyi anlatman beklenmez, psikoloğun çok soru sorar, gizlilik konuşulur, sen de soru sorabilirsin, uyuşmadık demek normal."
+    },
+    {
+      "id": "3-tekli-mit-zayiflik",
+      "format": "feed",
+      "theme": "mint",
+      "publish": "Perşembe 13:00",
+      "slides": [
+        { "type": "mythfact", "myth": "Psikoloğa gitmek zayıflıktır.", "fact": "Yardım istemek, kendinle ilgili en cesur kararlardan biridir. Fiziksel bir ağrı için doktora gitmek gibi, zihinsel yük için de destek almak sağlıklı bir adımdır.", "footnote": "Bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez." }
+      ],
+      "caption": "“Psikoloğa gitmek zayıflıktır.”\n\nBunu hâlâ çok sık duyuyoruz. Oysa yardım istemek, bir şeylerin değişmesini istediğini kabul etmek demek. Bu da güç ister. 💪\n\nKatılıyorsan bu gönderiyi hikâyende paylaş; belki birinin ihtiyacı olan cümle budur.",
+      "hashtags": ["#psikoloji", "#terapi", "#ruhsağlığı", "#farkındalık", "#psikolog", "#mindora"],
+      "alt": "Mit ve gerçek kartı. Mit: Psikoloğa gitmek zayıflıktır (üstü çizili). Gerçek: Yardım istemek, kendinle ilgili en cesur kararlardan biridir."
+    },
+    {
+      "id": "4-reel-psikologun-psikologu",
+      "format": "reel",
+      "theme": "lilac",
+      "seconds": 13,
+      "step": 1.9,
+      "publish": "Cuma 20:00",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Bunu biliyor muydun?",
+          "lines": [
+            { "text": "Psikoloğunun da danıştığı biri var." },
+            { "text": "Buna süpervizyon denir." },
+            { "text": "Zor bir vakada kıdemli bir meslektaşla konuşmak demek." },
+            { "text": "Senin adın hiç geçmeden.", "accent": true },
+            { "text": "Daha iyi terapi, yalnız çalışmayan terapistle olur." }
+          ]
+        }
+      ],
+      "caption": "Psikoloğunun da danıştığı biri olduğunu biliyor muydun? 🤝\n\nBuna süpervizyon denir: terapist, zorlandığı bir vakayı kıdemli bir meslektaşıyla konuşur. Danışanın adı, iletişim bilgileri ya da onu tanıtan herhangi bir detay paylaşılmaz.\n\nMindora'da psikologlar süpervizyonu platformun içinden alabiliyor. Düzenli süpervizyon alan uzmanlar profillerinde “Süpervizyonlu Uzman” rozetiyle görünüyor.\n\nBunu daha önce duymuş muydun? Evet ya da hayır, yorumlara yaz. 👇",
+      "hashtags": ["#süpervizyon", "#psikolog", "#terapi", "#klinikpsikoloji", "#psikoloji", "#onlineterapi", "#mindora"],
+      "alt": "Mor zemin üzerinde sırayla beliren yazılar: Psikoloğunun da danıştığı biri var. Buna süpervizyon denir. Zor bir vakada kıdemli bir meslektaşla konuşmak demek. Senin adın hiç geçmeden.",
+      "music": "Merak uyandıran, sakin bir trend ses ekle."
+    },
+    {
+      "id": "5-kaydirmali-psikolog-secerken",
+      "format": "feed",
+      "theme": "pine",
+      "publish": "Pazar 11:00",
+      "slides": [
+        { "type": "cover", "kicker": "Kaydet ve paylaş", "title": "Psikolog seçerken sorman gereken **5 soru**", "subtitle": "Doğru kişiyi bulmak şansa kalmasın." },
+        { "type": "point", "theme": "cream", "number": "1", "heading": "Unvanı ve belgeleri neler?", "text": "Psikolog, klinik psikolog, psikolojik danışman… Eğitimini ve belgelerini sormak tamamen normal." },
+        { "type": "point", "theme": "cream", "number": "2", "heading": "Hangi yaklaşımla çalışıyor?", "text": "Bilişsel davranışçı, şema, psikodinamik… Yaklaşımı ve bunun sana nasıl uyacağını sor." },
+        { "type": "point", "theme": "cream", "number": "3", "heading": "Ücret ve süre net mi?", "text": "Seans ücreti, süresi ve ek ücret olup olmadığı **baştan** belli olmalı." },
+        { "type": "point", "theme": "cream", "number": "4", "heading": "Kendisi destek alıyor mu?", "text": "Düzenli süpervizyon alan terapistler zor vakalarda yalnız kalmaz. Bunu sormak bile önemli bir işaret." },
+        { "type": "point", "theme": "cream", "number": "5", "heading": "İptal ve gizlilik kuralı ne?", "text": "Son dakika iptalde ne olur, görüşmeler kaydediliyor mu? Bunları önceden bilmek içini rahatlatır." },
+        { "type": "cta", "heading": "Mindora'da bu 5 sorunun cevabı baştan belli.", "text": "Belgeleri kontrol edilmiş psikologlar, baştan yazan ücret, kaydedilmeyen görüşmeler.", "button": "Psikologları incele", "url": "Bağlantı profilde" }
+      ],
+      "caption": "Psikolog seçmek, hayatındaki önemli kararlardan biri. Ama çoğumuz bunu bir profil fotoğrafına bakarak yapıyoruz. 🔎\n\nGörüşmeye başlamadan önce sorabileceğin 5 soruyu derledik. Kaydet; psikolog arayan bir arkadaşına da gönder.\n\nSence listeye hangi soru eklenmeli? Yorumlarda yaz. 👇",
+      "hashtags": ["#psikolog", "#terapi", "#onlineterapi", "#psikologseçimi", "#ruhsağlığı", "#psikolojikdestek", "#mindora"],
+      "alt": "Yedi sayfalık kaydırmalı gönderi: Psikolog seçerken sorman gereken 5 soru. Unvanı ve belgeleri, çalışma yaklaşımı, ücret ve süre, süpervizyon, iptal ve gizlilik kuralı."
+    },
+    {
+      "id": "6-hikayeler",
+      "format": "story",
+      "theme": "cream",
+      "publish": "Her gün bir tane (Pazartesi–Cuma)",
+      "slides": [
+        { "type": "poll", "heading": "Hiç terapiye gitmeyi düşündün mü?", "sticker": "Anket: “Evet, gidiyorum” / “Düşünüyorum ama erteliyorum”" },
+        { "type": "poll", "theme": "mint", "heading": "Terapi hakkında en çok merak ettiğin şey ne?", "text": "Soruları sonraki gönderilerde cevaplıyoruz.", "sticker": "Soru kutusu çıkartması" },
+        { "type": "mythfact", "theme": "pine", "myth": "Online terapi yüz yüze kadar işe yaramaz.", "fact": "Araştırmalar pek çok konuda online terapinin yüz yüze kadar etkili olabildiğini gösteriyor. Önemli olan doğru uzman ve düzenli devam." },
+        { "type": "poll", "theme": "lilac", "heading": "Psikoloğunun da bir psikoloğu olduğunu biliyor muydun?", "sticker": "Test çıkartması: “Biliyordum” / “İlk kez duyuyorum”" },
+        { "type": "cta", "theme": "pine", "heading": "Kimi seçeceğini bilmeden başlayabilirsin.", "text": "3 dakikalık form, ücretsiz ön eşleşme.", "button": "Bağlantıya dokun", "url": "Bağlantı çıkartması: mindora → /eslesme" }
+      ]
+    }
+  ]
+}
