@@ -1,0 +1,228 @@
+{
+  "week": "2026-W47",
+  "theme": "Yardım istemek de güçtür (19 Kasım Dünya Erkekler Günü haftası)",
+  "posts": [
+    {
+      "id": "1-reel-masa-basi-mola",
+      "format": "reel",
+      "theme": "mint",
+      "seconds": 14,
+      "step": 2.0,
+      "publish": "Salı 20:00 (17 Kasım)",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Masa başındaysan 5 dakika ayır",
+          "lines": [
+            { "text": "1 dk: Kalk, biraz yürü." },
+            { "text": "1 dk: Omuzlarını geriye çevir." },
+            { "text": "1 dk: Boynunu iki yana yavaşça esnet." },
+            { "text": "2 dk: Pencereye bak, derin nefes al." },
+            { "text": "Az hareket, hiç hareketten iyidir.", "accent": true }
+          ]
+        }
+      ],
+      "caption": "Saatlerdir aynı sandalyedesin, değil mi? Bu Reels'i bir mola sinyali say. ⏱️\n\nUzun süre oturmak boyunda, omuzlarında ve dikkatinde kendini hissettirebilir. Spor kıyafeti ya da ekipman gerekmez: Kalkıp biraz yürümek, omuzlarını çevirmek, boynunu nazikçe esnetmek ve birkaç derin nefes almak 5 dakika sürer. Gün içinde düzenli hareket etmek istiyor ama nereden başlayacağını bilmiyorsan, bir kişisel antrenör evde antrenman ya da ofis temposuna uygun küçük bir plan kurmana yardımcı olabilir.\n\nBu Reels'i kaydet; bir sonraki uzun toplantıdan sonra aç. 🔖\n\nBir sağlık durumun varsa ya da uzun süredir hareketsizsen başlamadan önce doktoruna danış. Bu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#spor", "#kişiselantrenör", "#evdeantrenman", "#masabaşı", "#hareketmolası", "#ofishayatı", "#mindora"],
+      "alt": "Açık yeşil zemin üzerinde sırayla beliren yazılar: Masa başındaysan 5 dakika ayır. 1 dakika kalk, biraz yürü. 1 dakika omuzlarını geriye çevir. 1 dakika boynunu iki yana yavaşça esnet. 2 dakika pencereye bak, derin nefes al. Az hareket, hiç hareketten iyidir.",
+      "music": "Enerjik ama sakin, sözsüz bir trend ses ekle (düşük ses)."
+    },
+    {
+      "id": "2-kaydirmali-ilk-diyetisyen-gorusmesi",
+      "format": "feed",
+      "theme": "cream",
+      "publish": "Çarşamba 20:00 (18 Kasım)",
+      "slides": [
+        {
+          "type": "cover",
+          "kicker": "Merak edenler için",
+          "title": "İlk diyetisyen görüşmesinde **ne olur?**",
+          "subtitle": "Tartıya çıkmadan, yasak listesi almadan önce bilmen gerekenler."
+        },
+        {
+          "type": "point",
+          "number": "1",
+          "heading": "Önce seni tanır.",
+          "text": "Günlük temponu, iş saatlerini, uykunu ve yemekle ilgili alışkanlıklarını konuşursunuz. Doğru ya da yanlış cevap yok."
+        },
+        {
+          "type": "point",
+          "number": "2",
+          "heading": "Hedefini birlikte netleştirirsiniz.",
+          "text": "Daha düzenli beslenmek, enerjini dengelemek, antrenmanını desteklemek… Hedef **senin** önceliğine göre belirlenir."
+        },
+        {
+          "type": "point",
+          "number": "3",
+          "heading": "Sağlık geçmişin sorulur.",
+          "text": "Bir sağlık durumun, kullandığın ilaçlar ya da yakın zamanda yaptırdığın tahliller varsa paylaşman planı daha doğru kılar."
+        },
+        {
+          "type": "point",
+          "number": "4",
+          "heading": "Hazır bir liste beklemesin.",
+          "text": "İyi bir plan sevdiğin yemekleri, bütçeni ve günlük düzenini hesaba katar. Herkese aynı liste verilmez."
+        },
+        {
+          "type": "point",
+          "number": "5",
+          "heading": "Küçük ilk adımlarla çıkarsın.",
+          "text": "Görüşme genellikle uygulanabilir birkaç değişiklik ve bir sonraki görüşmenin planıyla biter."
+        },
+        {
+          "type": "cta",
+          "theme": "pine",
+          "heading": "İlk görüşmeyi merak eden birine gönder.",
+          "text": "Kaydet; görüşme öncesi yeniden bak.",
+          "button": "Kaydet ve gönder",
+          "url": "@mindora.live"
+        }
+      ],
+      "caption": "İlk diyetisyen görüşmesinde ne olacağını bilmemek, randevu almayı ertelemenin en yaygın nedenlerinden biri. 🥗\n\nİlk görüşme bir sınav değil, bir tanışma. Diyetisyen önce günlük temponu, uykunu ve beslenme alışkanlıklarını dinler; hedefini seninle birlikte netleştirir; sağlık geçmişini sorar. Herkese aynı hazır liste verilmez: İyi bir plan sevdiğin yemekleri, bütçeni ve düzenini hesaba katar. Online diyetisyen görüşmesi de aynı adımlarla ilerler.\n\nİlk görüşmeyi merak eden bir arkadaşına bu gönderiyi gönder. 📩\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#beslenme", "#diyetisyen", "#sağlıklıbeslenme", "#onlinediyetisyen", "#diyetisyengörüşmesi", "#beslenmeplanı", "#mindora"],
+      "alt": "Yedi sayfalık kaydırmalı gönderi: İlk diyetisyen görüşmesinde ne olur? Önce seni tanır. Hedefini birlikte netleştirirsiniz. Sağlık geçmişin sorulur. Hazır bir liste beklemesin. Küçük ilk adımlarla çıkarsın. Son sayfa: İlk görüşmeyi merak eden birine gönder."
+    },
+    {
+      "id": "3-tekli-erkekler-gunu",
+      "format": "feed",
+      "theme": "pine",
+      "publish": "Perşembe 13:00 (19 Kasım, Dünya Erkekler Günü)",
+      "slides": [
+        {
+          "type": "quote",
+          "text": "Güçlü olmak, her şeyi **tek başına** taşımak demek değil.",
+          "caption": "19 Kasım · Dünya Erkekler Günü"
+        }
+      ],
+      "caption": "“Erkek adam dert anlatmaz” cümlesini kaç kez duydun? Bugün Dünya Erkekler Günü. 💚\n\nPek çok erkek zorlandığında bunu kimseye söylemeden içinde taşımayı öğreniyor. Oysa dertleşmek, bir arkadaşa açılmak ya da bir psikologla konuşmak zayıflık değil; kendine ve sevdiklerine gösterilen bir özen. Online terapi, ilk adımı atmayı isteyenler için daha erişilebilir bir başlangıç olabilir.\n\nBu gönderiyi bugün aklına gelen o erkeğe gönder. 📩\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez. Acil bir durumda 112'yi ara.",
+      "hashtags": ["#dünyaerkeklergünü", "#erkeklergünü", "#ruhsağlığı", "#psikolog", "#terapi", "#onlineterapi", "#mindora"],
+      "alt": "Koyu yeşil zemin üzerinde alıntı: Güçlü olmak, her şeyi tek başına taşımak demek değil. Altında: 19 Kasım, Dünya Erkekler Günü."
+    },
+    {
+      "id": "4-reel-terapide-ilk-5-dakika",
+      "format": "reel",
+      "theme": "lilac",
+      "seconds": 14,
+      "step": 2.0,
+      "publish": "Cuma 20:00 (20 Kasım)",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Terapide ilk 5 dakika",
+          "lines": [
+            { "text": "“Nereden başlasam?”" },
+            { "text": "“Çok mu saçma konuşuyorum?”" },
+            { "text": "“Belki de gelmemeliydim.”" },
+            { "text": "Bunları düşünen tek kişi sen değilsin." },
+            { "text": "İlk dakikalardaki gerginlik çok normal.", "accent": true }
+          ]
+        }
+      ],
+      "caption": "Terapinin ilk dakikalarında aklından “Belki de gelmemeliydim” geçtiyse, yalnız değilsin. 💜\n\nTanımadığın biriyle kendin hakkında konuşmaya başlamak gerginlik yaratabilir. Nereden başlayacağını bilmemek, susmak ya da kafanın karışması ilk seanslarda çok sık yaşanır. Psikoloğun seni acele ettirmez; konuşmanın akışını birlikte bulursunuz. Online terapide de, yüz yüzede de bu ilk tedirginlik zamanla yerini rahatlığa bırakabilir.\n\nİlk seansında en çok neyi düşündün? Yorumlarda paylaş. 👇\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez. Acil bir durumda 112'yi ara.",
+      "hashtags": ["#terapi", "#psikolog", "#ruhsağlığı", "#onlineterapi", "#ilkseans", "#kaygı", "#mindora"],
+      "alt": "Mor zemin üzerinde sırayla beliren yazılar: Terapide ilk 5 dakika. Nereden başlasam? Çok mu saçma konuşuyorum? Belki de gelmemeliydim. Bunları düşünen tek kişi sen değilsin. İlk dakikalardaki gerginlik çok normal.",
+      "music": "Sakin, piyanolu, sözsüz bir trend ses ekle (düşük ses)."
+    },
+    {
+      "id": "5-kaydirmali-kisisel-antrenor-kimler-icin",
+      "format": "feed",
+      "theme": "pine",
+      "publish": "Pazar 11:00 (22 Kasım)",
+      "slides": [
+        {
+          "type": "cover",
+          "kicker": "Hareket",
+          "title": "Kişisel antrenörle çalışmak **kimler için** uygun?",
+          "subtitle": "Kısa cevap: Sandığından çok daha fazla kişi için."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "1",
+          "heading": "Nereden başlayacağını bilmeyenler",
+          "text": "Hangi hareketi, kaç tekrar, ne sıklıkla? Antrenör ilk planı **senin seviyene** göre kurar."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "2",
+          "heading": "Başlayıp bırakmaktan yorulanlar",
+          "text": "Düzenli takip ve ölçülü hedefler, hareketi kısa bir hevesten alışkanlığa çevirmeye yardımcı olur."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "3",
+          "heading": "Evde çalışmak isteyenler",
+          "text": "Salona gitmek şart değil. Ekipmansız ya da az ekipmanla evde antrenman planı yapılabilir."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "4",
+          "heading": "Tekniğinden emin olmayanlar",
+          "text": "Hareketin doğru yapılışını öğrenmek, antrenmanı daha güvenli ve keyifli hâle getirir."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "5",
+          "heading": "Vakti kısıtlı olanlar",
+          "text": "20–30 dakikalık, temposuna uygun planlar da bir başlangıçtır. Mükemmel program değil, sürdürülebilir program."
+        },
+        {
+          "type": "cta",
+          "heading": "Mindora'da antrenörler de belgeleriyle seçilir.",
+          "text": "Psikolog, diyetisyen ve kişisel antrenör tek yerde. Ücret baştan görünür, ön eşleşme ücretsiz.",
+          "button": "Ücretsiz eşleşme",
+          "url": "Bağlantı profilde"
+        }
+      ],
+      "caption": "Kişisel antrenör sadece sporcular için değil. Asıl fark, yeni başlayanlarda hissediliyor. 🏃\n\nNereden başlayacağını bilmiyorsan, birkaç kez başlayıp bıraktıysan, evde antrenman yapmak istiyorsan, tekniğinden emin değilsen ya da günün sadece 20 dakikasını ayırabiliyorsan bir kişisel antrenör sana uygun bir plan kurmana yardımcı olabilir. Mindora'da online antrenörlerin belgeleri tek tek incelenir, ücreti ödemeden önce görürsün; psikolog ve diyetisyen de aynı yerde.\n\nÜcretsiz ön eşleşme için bağlantı profilde. 🔗\n\nBir sağlık durumun varsa ya da uzun süredir hareketsizsen başlamadan önce doktoruna danış.",
+      "hashtags": ["#spor", "#kişiselantrenör", "#evdeantrenman", "#onlineantrenör", "#yenibaşlayanlar", "#hareket", "#mindora"],
+      "alt": "Yedi sayfalık kaydırmalı gönderi: Kişisel antrenörle çalışmak kimler için uygun? Nereden başlayacağını bilmeyenler, başlayıp bırakmaktan yorulanlar, evde çalışmak isteyenler, tekniğinden emin olmayanlar, vakti kısıtlı olanlar. Son sayfa: Mindora'da antrenörler de belgeleriyle seçilir; ön eşleşme ücretsiz."
+    },
+    {
+      "id": "6-hikayeler",
+      "format": "story",
+      "theme": "cream",
+      "publish": "Her gün bir tane (Pazartesi–Cuma)",
+      "slides": [
+        {
+          "type": "poll",
+          "theme": "lilac",
+          "heading": "Haftanın başında zihnin ne kadar dolu?",
+          "text": "Dürüst ol, kimse görmüyor. 🙂",
+          "sticker": "Kaydırıcı çıkartması (“Bomboş” ← → “Ağzına kadar”)"
+        },
+        {
+          "type": "poll",
+          "theme": "mint",
+          "heading": "Bugün kaç saattir oturuyorsun?",
+          "text": "Bu akşam Reels'te 5 dakikalık bir mola var.",
+          "sticker": "Anket: “2 saatten az” / “Saymayı bıraktım 🪑”"
+        },
+        {
+          "type": "poll",
+          "heading": "Diyetisyene yalnızca kilo vermek için mi gidilir?",
+          "text": "Cevap bu akşamki kaydırmalı gönderide.",
+          "sticker": "Test çıkartması: “Evet” / “Hayır” (doğru cevap: Hayır)"
+        },
+        {
+          "type": "poll",
+          "theme": "pine",
+          "heading": "Bugün Dünya Erkekler Günü. Hayatındaki erkeklere bugün ne söylemek isterdin?",
+          "text": "Bazılarını isimsiz olarak hikâyede paylaşacağız.",
+          "sticker": "Soru kutusu çıkartması"
+        },
+        {
+          "type": "poll",
+          "theme": "lilac",
+          "heading": "İlk seansta gergin hissetmek normal mi?",
+          "text": "Bu akşamki Reels tam bunun hakkında.",
+          "sticker": "Test çıkartması: “Evet” / “Hayır” (doğru cevap: Evet)"
+        }
+      ]
+    }
+  ]
+}
