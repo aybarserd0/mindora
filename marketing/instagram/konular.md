@@ -6,7 +6,7 @@ Alanı belirtilmeyen konular psikolojidir; beslenme ve hareket konuları `(besle
 ## Reels (kısa, kancalı)
 - [2026-W44] Terapiye gitmek için “yeterince kötü” olman gerekmiyor
 - [2026-W44] Psikoloğunun da danıştığı biri var (süpervizyon)
-- Terapide ilk 5 dakikada hissettiklerin normal
+- [2026-W47] Terapide ilk 5 dakikada hissettiklerin normal
 - “İyiyim” dediğin ama aslında iyi olmadığın 4 an
 - Terapist seni yargılamaz, işte nedeni
 - [2026-W45] Gece 3'te tekrar oynattığın o konuşma
@@ -22,8 +22,8 @@ Alanı belirtilmeyen konular psikolojidir; beslenme ve hareket konuları `(besle
 - [2026-W45] (hareket) Spora başlamak için önce forma girmen gerekmiyor
 - (hareket) Antrenmanı bırakmana neden olan o ilk hafta
 - (hareket) 10 dakikalık hareketin günlük ruh haline etkisi (genel, iddiasız)
-- Dünya Erkekler Günü (19 Kasım): Erkekler de destek ister (normalleştirme)
-- (hareket) Masa başında çalışanlar için 5 dakikalık hareket molası
+- [2026-W47] Dünya Erkekler Günü (19 Kasım): Erkekler de destek ister (normalleştirme) — tekli alıntı olarak kullanıldı
+- [2026-W47] (hareket) Masa başında çalışanlar için 5 dakikalık hareket molası
 - Kendinle bir arkadaşınla konuştuğun gibi konuş (öz şefkat)
 
 ## Kaydırmalı (kaydedilmelik)
@@ -42,11 +42,11 @@ Alanı belirtilmeyen konular psikolojidir; beslenme ve hareket konuları `(besle
 - [2026-W45] Stres Farkındalık Günü (Kasım'ın ilk çarşambası): Stresi hafifletmeye yardımcı 6 küçük alışkanlık
 - Kış aylarında modun düşüyorsa: güne iyi gelen küçük adımlar (tanı koymadan)
 - Terapiden sonra neden yorgun hissedersin? (normalleştirme)
-- (beslenme) İlk diyetisyen görüşmesinde ne olur?
+- [2026-W47] (beslenme) İlk diyetisyen görüşmesinde ne olur?
 - (beslenme) Diyetisyen seçerken sorman gereken 5 soru
 - (beslenme) Yoğun iş temposunda düzenli beslenmenin 5 küçük yolu
 - (hareket) Evde ekipmansız başlamak: ilk haftan için 5 öneri
-- (hareket) Kişisel antrenörle çalışmak kimler için uygun?
+- [2026-W47] (hareket) Kişisel antrenörle çalışmak kimler için uygun?
 - (hareket) Salona ilk gidişinde bilmen gereken 6 şey
 - [2026-W46] Bir uzmana güvenmeden önce bakman gereken 5 şey (üç alan, kalite ve güven)
 - (beslenme) Kış aylarında su içmeyi unutmamak için 5 küçük hatırlatıcı
@@ -79,7 +79,7 @@ Alanı belirtilmeyen konular psikolojidir; beslenme ve hareket konuları `(besle
 - [2026-W45] Haftanın gönderilerinin hatırlatması
 - [2026-W45] Soru kutusu: Stresli bir günde sana en çok ne iyi geliyor?
 - Test: Kaygı ile korku aynı şey mi? (o haftanın Reels'ine hazırlık)
-- Kaydırıcı: Bugün zihnin ne kadar dolu?
+- [2026-W47] Kaydırıcı: Bugün zihnin ne kadar dolu?
 - [2026-W45] (hareket) Test: Spora başlamak için önce forma girmek mi gerekir?
 - (beslenme) Anket: Kahvaltı yapar mısın?
 - [2026-W46] (hareket) Kaydırıcı: Bugün kaç adım attın? / ne kadar hareket ettin?
@@ -87,3 +87,9 @@ Alanı belirtilmeyen konular psikolojidir; beslenme ve hareket konuları `(besle
 - [2026-W46] (beslenme) Anket: “Pazartesi başlarım” dediğin oldu mu?
 - [2026-W46] Test: Psikolog ile psikiyatrist aynı şey mi?
 - [2026-W46] Soru kutusu: Bu hafta sana iyi gelen küçük bir nezaket (Dünya Nezaket Günü)
+- [2026-W47] (hareket) Anket: Bugün kaç saattir oturuyorsun?
+- [2026-W47] (beslenme) Test: Diyetisyene yalnızca kilo vermek için mi gidilir?
+- [2026-W47] Soru kutusu: Hayatındaki erkeklere bugün ne söylemek isterdin? (Dünya Erkekler Günü)
+- [2026-W47] Test: İlk seansta gergin hissetmek normal mi?
+- (beslenme) Soru kutusu: Diyetisyene sormak isteyip çekindiğin soru
+- (hareket) Anket: Sabah mı akşam mı hareket etmeyi seversin?
