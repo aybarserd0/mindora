@@ -1,0 +1,236 @@
+{
+  "week": "2026-W48",
+  "theme": "Kendine iyi bir öğretmen ol: kışa nazik bir başlangıç (24 Kasım Öğretmenler Günü haftası)",
+  "posts": [
+    {
+      "id": "1-reel-ogretmenler-gunu-oz-sefkat",
+      "format": "reel",
+      "theme": "cream",
+      "seconds": 14,
+      "step": 2.0,
+      "publish": "Salı 20:00 (24 Kasım, Öğretmenler Günü)",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "24 Kasım · Öğretmenler Günü",
+          "lines": [
+            { "text": "En iyi öğretmenin, hata yaptığında ne derdi?" },
+            { "text": "“Olsun, tekrar deneriz.”" },
+            { "text": "“Bak, bir şey öğrendin.”" },
+            { "text": "“Acele etme, buradayım.”" },
+            { "text": "Kendinle de böyle konuşmayı dene.", "accent": true }
+          ]
+        }
+      ],
+      "caption": "Okulda sana en iyi gelen öğretmen, hata yaptığında seni nasıl karşılardı? 🍎\n\nBugün Öğretmenler Günü. Çoğumuzun aklında sabırla konuşan, “Olsun, tekrar deneriz” diyen bir öğretmen vardır. İlginçtir; aynı nezaketi başkalarına kolayca gösterirken kendimize karşı çok daha sert olabiliyoruz. Psikolojide öz şefkat diye anılan yaklaşım, zorlandığında kendinle iyi bir öğretmen ya da yakın bir arkadaş gibi konuşmak demek. İç sesin hep eleştiriyorsa, bunu bir psikologla konuşmak da iyi bir başlangıç olabilir.\n\nBu Reels'i hayatındaki o öğretmene gönder. 📩\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#öğretmenlergünü", "#24kasım", "#özşefkat", "#ruhsağlığı", "#psikolog", "#terapi", "#mindora"],
+      "alt": "Krem zemin üzerinde sırayla beliren yazılar: 24 Kasım, Öğretmenler Günü. En iyi öğretmenin, hata yaptığında ne derdi? Olsun, tekrar deneriz. Bak, bir şey öğrendin. Acele etme, buradayım. Kendinle de böyle konuşmayı dene.",
+      "music": "Sıcak, akustik gitarlı, sözsüz bir trend ses ekle (düşük ses)."
+    },
+    {
+      "id": "2-kaydirmali-yogun-tempoda-beslenme",
+      "format": "feed",
+      "theme": "mint",
+      "publish": "Çarşamba 20:00 (25 Kasım)",
+      "slides": [
+        {
+          "type": "cover",
+          "kicker": "Beslenme",
+          "title": "Yoğun tempoda **düzenli beslenmenin** 5 küçük yolu",
+          "subtitle": "Kusursuz bir menü değil, sürdürülebilir küçük alışkanlıklar."
+        },
+        {
+          "type": "point",
+          "number": "1",
+          "heading": "Öğün saatlerini takvimine yaz.",
+          "text": "Toplantılar kadar öğünler de yer kaplamayı hak ediyor. Kısa bir hatırlatıcı, öğün atlamayı azaltmana yardımcı olabilir."
+        },
+        {
+          "type": "point",
+          "number": "2",
+          "heading": "Hafta başında küçük bir hazırlık yap.",
+          "text": "Birkaç temel malzemeyi önceden yıkayıp doğramak, yoğun bir akşamda **işini kolaylaştırır**."
+        },
+        {
+          "type": "point",
+          "number": "3",
+          "heading": "Çantanda pratik bir ara öğün olsun.",
+          "text": "Meyve, kuruyemiş ya da yoğurt gibi seçenekler, uzun bir günde plansız kalmamana yardımcı olur."
+        },
+        {
+          "type": "point",
+          "number": "4",
+          "heading": "Su şişeni göz önünde tut.",
+          "text": "Masanda duran bir şişe, gün içinde su içmeyi hatırlatmanın en kolay yollarından biri."
+        },
+        {
+          "type": "point",
+          "number": "5",
+          "heading": "Ekran başında değil, masada ye.",
+          "text": "Birkaç dakikalığına da olsa ara vermek, ne yediğini ve ne kadar doyduğunu **fark etmeni** kolaylaştırır."
+        },
+        {
+          "type": "cta",
+          "theme": "pine",
+          "heading": "Bu hafta hangisini deneyeceksin?",
+          "text": "Kaydet; yoğun bir günde yeniden bak.",
+          "button": "Kaydet",
+          "url": "@mindora.live"
+        }
+      ],
+      "caption": "Gün bitiyor ve fark ediyorsun: Doğru düzgün bir şey yemedin. Tanıdık mı? ⏰\n\nYoğun iş temposunda beslenme çoğu zaman listenin en altına düşüyor. Oysa düzen kurmak için kusursuz bir menüye gerek yok: Öğünleri takvime yazmak, hafta başında küçük bir hazırlık yapmak, çantada pratik bir ara öğün bulundurmak, su şişesini göz önünde tutmak ve birkaç dakikalığına da olsa ekrandan uzakta yemek fark yaratabilir. Sana özel bir düzen kurmak istersen online diyetisyen görüşmesi iyi bir başlangıç olabilir.\n\nBu gönderiyi kaydet; yoğun bir günde yeniden bak. 🔖\n\nBir sağlık durumun varsa beslenme düzenini diyetisyeninle birlikte planla. Bu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#beslenme", "#diyetisyen", "#sağlıklıbeslenme", "#onlinediyetisyen", "#yoğuntempo", "#ofishayatı", "#mindora"],
+      "alt": "Yedi sayfalık kaydırmalı gönderi: Yoğun tempoda düzenli beslenmenin 5 küçük yolu. Öğün saatlerini takvimine yaz. Hafta başında küçük bir hazırlık yap. Çantanda pratik bir ara öğün olsun. Su şişeni göz önünde tut. Ekran başında değil, masada ye. Son sayfa: Bu hafta hangisini deneyeceksin?"
+    },
+    {
+      "id": "3-tekli-mit-karbonhidrat",
+      "format": "feed",
+      "theme": "cream",
+      "publish": "Perşembe 13:00 (26 Kasım)",
+      "slides": [
+        {
+          "type": "mythfact",
+          "myth": "Karbonhidrat düşmandır; tamamen bırakmak gerekir.",
+          "fact": "Karbonhidratlar bedenin temel enerji kaynaklarından biridir. Önemli olan türü, miktarı ve öğündeki denge; sana uygun düzeni diyetisyeninle birlikte belirlersin.",
+          "footnote": "Bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez."
+        }
+      ],
+      "caption": "Ekmeği görünce suçluluk hissediyorsan, bu gönderi tam sana göre. 🍞\n\n“Karbonhidrat düşmandır” inanışı çok yaygın ama besinleri iyi ve kötü diye ayırmak, yemekle ilişkiyi gereksiz yere zorlaştırabilir. Karbonhidratlar bedenin temel enerji kaynaklarından biri; tam tahıllar, baklagiller, sebze ve meyveler de bu gruba girer. Fark yaratan çoğu zaman türü, miktarı ve öğündeki denge. Günlük düzenine ve sağlık durumuna neyin uygun olduğunu bir diyetisyenle birlikte belirleyebilirsin.\n\nBu mite hâlâ inanan bir arkadaşına gönder. 📩\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#beslenme", "#diyetisyen", "#sağlıklıbeslenme", "#karbonhidrat", "#beslenmemitleri", "#onlinediyetisyen", "#mindora"],
+      "alt": "Krem zemin üzerinde mit ve gerçek kartı. Mit: Karbonhidrat düşmandır; tamamen bırakmak gerekir. Gerçek: Karbonhidratlar bedenin temel enerji kaynaklarından biridir. Önemli olan türü, miktarı ve öğündeki denge; sana uygun düzeni diyetisyeninle birlikte belirlersin."
+    },
+    {
+      "id": "4-reel-spora-baslayinca-ilk-hafta",
+      "format": "reel",
+      "theme": "pine",
+      "seconds": 14,
+      "step": 2.0,
+      "publish": "Cuma 20:00 (27 Kasım)",
+      "slides": [
+        {
+          "type": "lines",
+          "kicker": "Spora başlayınca ilk hafta",
+          "lines": [
+            { "text": "1. gün: “Bu sefer kararlıyım!”" },
+            { "text": "3. gün: Her yerin sızlıyor." },
+            { "text": "5. gün: “Bana göre değil galiba.”" },
+            { "text": "Bu, yeni başlayanlarda çok sık yaşanır." },
+            { "text": "Hafif başla, düzenli devam et.", "accent": true }
+          ]
+        }
+      ],
+      "caption": "Spora başladın, üçüncü gün her yerin sızlıyor ve aklından “Bana göre değil galiba” geçiyor. Bırakmadan önce bunu oku. 🏃\n\nYeni başlayanların çoğu ilk haftada fazla yüklenip sonra bırakıyor. Alışık olmadığın hareketlerden sonra hafif kas ağrısı ve yorgunluk sık görülür; bu, spora uygun olmadığın anlamına gelmez. Daha kısa ve hafif antrenmanlarla başlamak, dinlenme günlerine yer açmak ve hedefi “her gün çok” yerine “her hafta biraz” diye koymak devam etmeyi kolaylaştırabilir. Evde antrenman ya da salon fark etmez; bir kişisel antrenör seviyene uygun bir başlangıç planı kurmana yardımcı olabilir.\n\nSpora yeni başlayan bir arkadaşına bu Reels'i gönder. 📩\n\nKeskin ya da geçmeyen bir ağrı hissedersen ara ver. Bir sağlık durumun varsa ya da uzun süredir hareketsizsen başlamadan önce doktoruna danış. Bu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez.",
+      "hashtags": ["#spor", "#kişiselantrenör", "#evdeantrenman", "#yenibaşlayanlar", "#sporamotivasyon", "#antrenman", "#mindora"],
+      "alt": "Koyu yeşil zemin üzerinde sırayla beliren yazılar: Spora başlayınca ilk hafta. 1. gün: Bu sefer kararlıyım! 3. gün: Her yerin sızlıyor. 5. gün: Bana göre değil galiba. Bu, yeni başlayanlarda çok sık yaşanır. Hafif başla, düzenli devam et.",
+      "music": "Ritmik, enerjik, sözsüz bir trend ses ekle (düşük ses)."
+    },
+    {
+      "id": "5-kaydirmali-kis-modu-kucuk-adimlar",
+      "format": "feed",
+      "theme": "lilac",
+      "publish": "Pazar 11:00 (29 Kasım)",
+      "slides": [
+        {
+          "type": "cover",
+          "kicker": "Kış geldi",
+          "title": "Kışın modun düşüyorsa: güne iyi gelen **6 küçük adım**",
+          "subtitle": "Zihin, beslenme ve hareket bir arada. Tanı değil, küçük öneriler."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "1",
+          "heading": "Gün ışığına çık.",
+          "text": "Öğle arasında kısa bir yürüyüş, kısa kış günlerinde **ışıkla buluşmanın** kolay bir yolu."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "2",
+          "heading": "Uyku saatini sabitle.",
+          "text": "Her gün benzer saatlerde yatıp kalkmak, kışın değişen enerjini dengelemeye yardımcı olabilir."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "3",
+          "heading": "Öğünlerini düzenli tut.",
+          "text": "Uzun aralıklar enerjini dalgalandırabilir. Sıcak çorbalar ve mevsim sebzeleri kışın iyi bir başlangıç."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "4",
+          "heading": "Her gün biraz hareket et.",
+          "text": "Birkaç esneme, merdivenler ya da kısa bir yürüyüş. Az da olsa **düzenli** hareket."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "5",
+          "heading": "Birileriyle bağ kur.",
+          "text": "Kışın içe kapanmak kolay. Bir arkadaşı aramak ya da kısa bir buluşma gününe iyi gelebilir."
+        },
+        {
+          "type": "point",
+          "theme": "cream",
+          "number": "6",
+          "heading": "Uzun sürüyorsa destek al.",
+          "text": "Bu düşüklük haftalarca sürüyor ve günlük hayatını zorlaştırıyorsa bir psikologla konuşmak iyi gelebilir."
+        },
+        {
+          "type": "cta",
+          "theme": "pine",
+          "heading": "Psikolog, diyetisyen, antrenör: tek yerde.",
+          "text": "Mindora'da uzmanların belgeleri incelenir, ücret baştan görünür. Ön eşleşme ücretsiz.",
+          "button": "Ücretsiz eşleşme",
+          "url": "Bağlantı profilde"
+        }
+      ],
+      "caption": "Günler kısaldı ve sabah yataktan çıkmak her zamankinden zor mu geliyor? Yalnız değilsin. ❄️\n\nKısa günler, soğuk hava ve evde geçen uzun saatler pek çok kişinin enerjisini ve modunu etkileyebilir. Gün ışığına çıkmak, uyku saatini sabitlemek, öğünleri düzenli tutmak, her gün biraz hareket etmek ve sevdiklerinle bağ kurmak bu dönemde küçük ama değerli adımlar. Bu düşüklük haftalarca sürüyor ve günlük hayatını zorlaştırıyorsa bir psikologla konuşmak iyi gelebilir. Mindora'da online psikolog, online diyetisyen ve kişisel antrenör tek yerde; uzmanların belgeleri incelenir, ücreti baştan görürsün.\n\nÜcretsiz ön eşleşme için bağlantı profilde. 🔗\n\nBu içerik bilgilendirme amaçlıdır; tanı ve tedavinin yerine geçmez. Bir sağlık durumun varsa ya da uzun süredir hareketsizsen başlamadan önce doktoruna danış. Acil bir durumda 112'yi ara.",
+      "hashtags": ["#ruhsağlığı", "#psikolog", "#onlineterapi", "#onlinediyetisyen", "#kişiselantrenör", "#kışmodu", "#mindora"],
+      "alt": "Sekiz sayfalık kaydırmalı gönderi: Kışın modun düşüyorsa, güne iyi gelen 6 küçük adım. Gün ışığına çık. Uyku saatini sabitle. Öğünlerini düzenli tut. Her gün biraz hareket et. Birileriyle bağ kur. Uzun sürüyorsa destek al. Son sayfa: Psikolog, diyetisyen, antrenör tek yerde; ön eşleşme ücretsiz."
+    },
+    {
+      "id": "6-hikayeler",
+      "format": "story",
+      "theme": "cream",
+      "publish": "Her gün bir tane (Pazartesi–Cuma)",
+      "slides": [
+        {
+          "type": "poll",
+          "heading": "Kahvaltı yapar mısın?",
+          "text": "Bu hafta beslenmeye biraz daha yakından bakıyoruz.",
+          "sticker": "Anket: “Her sabah 🍳” / “Kahve sayılır mı? ☕”"
+        },
+        {
+          "type": "poll",
+          "theme": "pine",
+          "heading": "Bugün Öğretmenler Günü. Bir öğretmeninin sana söylediği, hâlâ aklında olan cümle ne?",
+          "text": "Bazılarını isimsiz olarak hikâyede paylaşacağız.",
+          "sticker": "Soru kutusu çıkartması"
+        },
+        {
+          "type": "poll",
+          "theme": "mint",
+          "heading": "Diyetisyene sormak isteyip çekindiğin bir soru var mı?",
+          "text": "Sorular isimsiz. En çok gelenleri ileride gönderilerde ele alacağız.",
+          "sticker": "Soru kutusu çıkartması"
+        },
+        {
+          "type": "poll",
+          "heading": "Sağlıklı beslenmek için karbonhidratı tamamen bırakmak gerekir mi?",
+          "text": "Cevap bugünkü gönderide.",
+          "sticker": "Test çıkartması: “Evet” / “Hayır” (doğru cevap: Hayır)"
+        },
+        {
+          "type": "poll",
+          "theme": "lilac",
+          "heading": "Sabah mı akşam mı hareket etmeyi seversin?",
+          "text": "Bu akşamki Reels spora yeni başlayanlar için.",
+          "sticker": "Anket: “Sabah 🌅” / “Akşam 🌙”"
+        }
+      ]
+    }
+  ]
+}
